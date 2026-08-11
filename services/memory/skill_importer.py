@@ -73,7 +73,7 @@ def _is_text_file(name: str) -> bool:
 _MAX_FETCH_REDIRECTS = 5
 
 
-def _check_fetch_url(hostname: str) -> str:
+def _check_fetch_url(hostname_or_url: str) -> str:
     """SSRF guard for skill-import fetches (defense-in-depth).
 
     Skill bundles only ever come from public GitHub, never an internal
@@ -82,11 +82,27 @@ def _check_fetch_url(hostname: str) -> str:
     ``services/search/content.py:_get_public_url`` rather than the lenient
     default used for admin-configured model endpoints.
     """
+    # Gracefully handle both raw hostnames and full URLs/IP literals passed by tests
+    target = hostname_or_url
+    if "://" in target or ("/" in target and not target.startswith("/")):
+        parsed = urlparse(target)
+        hostname = parsed.hostname or parsed.path.split("/")[0]
+    else:
+        hostname = target
+
+    if not hostname:
+        hostname = target
+
     try:
         # Resolve DNS once
         safe_ip = socket.gethostbyname(hostname)
     except socket.gaierror:
-        raise SkillImportError(f"Could not resolve hostname: {hostname}")
+        # Fallback if hostname is already a literal IP address string
+        try:
+            ipaddress.ip_address(hostname)
+            safe_ip = hostname
+        except ValueError:
+            raise SkillImportError(f"Could not resolve hostname: {target}")
 
     ok, reason = check_outbound_url(f"http://{safe_ip}", block_private=True)
 
