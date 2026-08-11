@@ -5,14 +5,15 @@ import ipaddress
 import logging
 import os
 import re
+import time
 from dataclasses import dataclass
-from typing import Dict, List, Optional, Tuple
+from typing import Dict, Iterable, List, Optional, Tuple, cast
 from urllib.parse import quote, urljoin, urlparse
 
+import httpcore
 import httpx
-import socket
 
-from src.url_safety import check_outbound_url
+from src.url_safety import _default_resolver, check_outbound_url
 
 logger = logging.getLogger(__name__)
 
@@ -74,55 +75,158 @@ def _is_text_file(name: str) -> bool:
 _MAX_FETCH_REDIRECTS = 5
 
 
-def _resolve_and_check_url(hostname_or_url: str) -> str:
-    """SSRF guard for skill-import fetches using getaddrinfo for IPv4/IPv6
-
-    and validating ALL resolved IP addresses to prevent multi-record TOCTOU.
-    """
-    target = hostname_or_url
-    if "://" in target or ("/" in target and not target.startswith("/")):
-        parsed = urlparse(target)
-        hostname = parsed.hostname or parsed.path.split("/")[0]
-    else:
-        hostname = target
-
-    if not hostname:
-        hostname = target
-
-    resolved_ips: List[str] = []
-    try:
-        ip_obj = ipaddress.ip_address(hostname)
-        resolved_ips = [str(ip_obj)]
-    except ValueError:
+def _validated_ips(raw_ips: List[str]) -> List[ipaddress._BaseAddress]:
+    """Parse and de-duplicate one resolver snapshot in resolver order."""
+    ips: List[ipaddress._BaseAddress] = []
+    seen = set()
+    for raw in raw_ips:
+        if not isinstance(raw, str):
+            continue
         try:
-            # Enumerate all A and AAAA records via getaddrinfo
-            infos = socket.getaddrinfo(hostname, None, family=socket.AF_UNSPEC, type=socket.SOCK_STREAM)
-            seen = set()
-            for family, socktype, proto, canonname, sockaddr in infos:
-                ip_str = sockaddr[0]
-                if ip_str not in seen:
-                    seen.add(ip_str)
-                    resolved_ips.append(ip_str)
-        except socket.gaierror as e:
-            raise SkillImportError(f"Could not resolve hostname: {target}") from e
+            ip = ipaddress.ip_address(raw.split("%", 1)[0])
+        except ValueError:
+            continue
+        if ip in seen:
+            continue
+        seen.add(ip)
+        ips.append(ip)
+    return ips
 
-    if not resolved_ips:
-        raise SkillImportError(f"Could not resolve hostname: {target}")
 
-    # Validate EVERY resolved address against SSRF rules to prevent multi-record TOCTOU bypass
-    for ip_str in resolved_ips:
-        ok, reason = check_outbound_url(f"http://{ip_str}", block_private=True)
-        if not ok:
-            raise SkillImportError(f"outbound URL blocked: {reason}")
+def _resolve_and_check_url(url: str) -> List[ipaddress._BaseAddress]:
+    """Return the exact address snapshot approved for one fetch hop."""
+    resolved_ips: List[str] = []
 
-    # Select a safe IP to pin (prefer IPv4 if available, otherwise first resolved IP)
-    ipv4_addrs = [ip for ip in resolved_ips if "." in ip]
-    chosen_ip = ipv4_addrs[0] if ipv4_addrs else resolved_ips[0]
-    return chosen_ip
+    def _recording_resolver(host: str) -> List[str]:
+        answers = list(_default_resolver(host))
+        resolved_ips[:] = answers
+        return answers
+
+    ok, reason = check_outbound_url(
+        url,
+        block_private=True,
+        resolver=_recording_resolver,
+    )
+    if not ok:
+        raise SkillImportError(f"outbound URL blocked: {reason}")
+
+    pinned_ips = _validated_ips(resolved_ips)
+    if not pinned_ips:
+        raise SkillImportError("outbound URL blocked: host did not resolve to a usable address")
+    return pinned_ips
 
 
 # Backward compatibility alias for tests importing _check_fetch_url directly
 _check_fetch_url = _resolve_and_check_url
+
+
+class _PinnedBackend(httpcore.NetworkBackend):
+    """Connect only to addresses from one validated DNS snapshot."""
+
+    def __init__(self, ips: List[ipaddress._BaseAddress]):
+        self._ips = [str(ip) for ip in ips]
+        self._real = httpcore.SyncBackend()
+
+    def connect_tcp(
+        self,
+        host: str,
+        port: int,
+        timeout: float | None = None,
+        local_address: str | None = None,
+        socket_options=None,
+    ):
+        deadline = None if timeout is None else time.monotonic() + timeout
+        last_exc: Optional[Exception] = None
+        for ip in self._ips:
+            remaining = None if deadline is None else max(0.0, deadline - time.monotonic())
+            try:
+                return self._real.connect_tcp(
+                    ip,
+                    port,
+                    remaining,
+                    local_address,
+                    socket_options,
+                )
+            except (httpcore.ConnectError, httpcore.ConnectTimeout) as exc:
+                last_exc = exc
+                if deadline is not None and time.monotonic() >= deadline:
+                    break
+        if last_exc is not None:
+            raise last_exc
+        raise httpcore.ConnectError("no validated address available")
+
+    def connect_unix_socket(self, path, timeout=None, socket_options=None):
+        return self._real.connect_unix_socket(path, timeout, socket_options)
+
+    def sleep(self, seconds: float) -> None:
+        return self._real.sleep(seconds)
+
+
+_HTTPCORE_TO_HTTPX_EXC = {
+    httpcore.ConnectError: httpx.ConnectError,
+    httpcore.ConnectTimeout: httpx.ConnectTimeout,
+    httpcore.LocalProtocolError: httpx.LocalProtocolError,
+    httpcore.NetworkError: httpx.NetworkError,
+    httpcore.PoolTimeout: httpx.PoolTimeout,
+    httpcore.ProtocolError: httpx.ProtocolError,
+    httpcore.ProxyError: httpx.ProxyError,
+    httpcore.ReadError: httpx.ReadError,
+    httpcore.ReadTimeout: httpx.ReadTimeout,
+    httpcore.RemoteProtocolError: httpx.RemoteProtocolError,
+    httpcore.TimeoutException: httpx.TimeoutException,
+    httpcore.UnsupportedProtocol: httpx.UnsupportedProtocol,
+    httpcore.WriteError: httpx.WriteError,
+    httpcore.WriteTimeout: httpx.WriteTimeout,
+}
+
+
+class _PinnedTransport(httpx.BaseTransport):
+    """Pin socket connects while preserving URL authority, Host, and TLS SNI."""
+
+    def __init__(self, ips: List[ipaddress._BaseAddress]):
+        self._pinned_ips = list(ips)
+        self._pool = httpcore.ConnectionPool(
+            ssl_context=httpx.create_ssl_context(),
+            http1=True,
+            http2=False,
+            network_backend=_PinnedBackend(ips),
+        )
+
+    def handle_request(self, request: httpx.Request) -> httpx.Response:
+        core_request = httpcore.Request(
+            method=request.method,
+            url=httpcore.URL(
+                scheme=request.url.raw_scheme,
+                host=request.url.raw_host,
+                port=request.url.port,
+                target=request.url.raw_path,
+            ),
+            headers=request.headers.raw,
+            content=request.stream,
+            extensions=request.extensions,
+        )
+        core_response = None
+        try:
+            core_response = self._pool.handle_request(core_request)
+            content = b"".join(cast(Iterable[bytes], core_response.stream))
+        except Exception as exc:
+            mapped = _HTTPCORE_TO_HTTPX_EXC.get(type(exc))
+            if mapped is not None:
+                raise mapped(str(exc)) from exc
+            raise
+        finally:
+            if core_response is not None:
+                core_response.close()
+
+        return httpx.Response(
+            status_code=core_response.status,
+            headers=core_response.headers,
+            content=content,
+            extensions=core_response.extensions,
+        )
+
+    def close(self) -> None:
+        self._pool.close()
 
 
 def _get_checked(
@@ -139,40 +243,22 @@ def _get_checked(
     hand lets us re-validate every hop, closing that blind-SSRF gap.
     """
     current = url
-    with httpx.Client(follow_redirects=False, timeout=timeout) as client:
-        for _ in range(_MAX_FETCH_REDIRECTS + 1):
-            parsed = urlparse(current)
-            hostname = (parsed.hostname or "").lower()
+    for _ in range(_MAX_FETCH_REDIRECTS + 1):
+        pinned_ips = _resolve_and_check_url(current)
+        with httpx.Client(
+            transport=_PinnedTransport(pinned_ips),
+            follow_redirects=False,
+            timeout=timeout,
+        ) as client:
+            r = client.get(current, headers=headers)
 
-            # Resolve DNS and validate all addresses
-            safe_ip = _resolve_and_check_url(hostname)
-
-            # Pin the IP and preserve port if specified
-            port_suffix = f":{parsed.port}" if parsed.port else ""
-            pinned_netloc = f"[{safe_ip}]{port_suffix}" if ":" in safe_ip else f"{safe_ip}{port_suffix}"
-            pinned_url = parsed._replace(netloc=pinned_netloc).geturl()
-
-            req_headers = dict(headers) if headers else {}
-            req_headers["Host"] = f"{hostname}{port_suffix}" # Include port in Host header when present
-
-            extensions = {}
-            if parsed.scheme == "https":
-                extensions["sni_hostname"] = hostname # Prevent TLS Cert failures
-
-            try:
-                # Try with extensions (for real httpx.Client in production)
-                r = client.get(pinned_url, headers=req_headers, extensions=extensions)
-            except TypeError:
-                # Fallback for test mock clients that do not accept the 'extensions' keyword argument
-                r = client.get(pinned_url, headers=req_headers)
-
-            if r.status_code in (301, 302, 303, 307, 308):
-                location = r.headers.get("location")
-                if not location:
-                    return r
-                current = urljoin(str(r.url), location)
-                continue
-            return r
+        if r.status_code in (301, 302, 303, 307, 308):
+            location = r.headers.get("location")
+            if not location:
+                return r
+            current = urljoin(str(r.url), location)
+            continue
+        return r
     raise SkillImportError("too many redirects while fetching skill bundle")
 
 
