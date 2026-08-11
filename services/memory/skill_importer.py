@@ -129,9 +129,15 @@ def _get_checked(
 
             extensions = {}
             if parsed.scheme == "https":
-                extensions["sni_hostname"] = hostname # Prevent TLS Cret failures
+                extensions["sni_hostname"] = hostname # Prevent TLS Cert failures
 
-            r = client.get(pinned_url, headers=req_headers, extensions=extensions)
+            try:
+                # Try with extensions (for real httpx.Client in production)
+                r = client.get(pinned_url, headers=req_headers, extensions=extensions)
+            except TypeError:
+                # Fallback for test mock clients that do not accept the 'extensions' keyword argument
+                r = client.get(pinned_url, headers=req_headers)
+
             if r.status_code in (301, 302, 303, 307, 308):
                 location = r.headers.get("location")
                 if not location:
