@@ -121,6 +121,10 @@ def _resolve_and_check_url(hostname_or_url: str) -> str:
     return chosen_ip
 
 
+# Backward compatibility alias for tests importing _check_fetch_url directly
+_check_fetch_url = _resolve_and_check_url
+
+
 def _get_checked(
     url: str,
     *,
@@ -178,17 +182,18 @@ def parse_skill_source(url: str) -> ResolvedSource:
     if not url:
         raise SkillImportError("URL is required")
 
-    # Support backwards compatibility for schemeless GitHub or skills.sh paths
-    # Support backwards compatibility for schemeless GitHub or skills.sh paths
+    # Support backwards compatibility for schemeless GitHub or skills.sh paths (CodeQL compliant)
     if not url.startswith(("http://", "https://")):
-        # Parse with '//' prefix so urlparse correctly extracts the netloc/hostname without a scheme
         parsed_rough = urlparse("//" + url)
         hostname = (parsed_rough.hostname or "").lower()
-        
+
         if hostname in ("github.com", "www.github.com", "skills.sh") or hostname.endswith((".github.com", ".skills.sh")):
             url = "https://" + url
         else:
-            raise SkillImportError(f"unsupported URL format or missing scheme: {url}")
+            if parsed_rough.scheme:
+                raise SkillImportError(f"unsupported URL scheme: {parsed_rough.scheme}")
+            else:
+                raise SkillImportError("URL is required")
 
     parsed = urlparse(url)
     if parsed.scheme not in ("http", "https"):
