@@ -179,15 +179,16 @@ def parse_skill_source(url: str) -> ResolvedSource:
         raise SkillImportError("URL is required")
 
     # Support backwards compatibility for schemeless GitHub or skills.sh paths
+    # Support backwards compatibility for schemeless GitHub or skills.sh paths
     if not url.startswith(("http://", "https://")):
-        if url.startswith("github.com/") or url.startswith("skills.sh/"):
+        # Parse with '//' prefix so urlparse correctly extracts the netloc/hostname without a scheme
+        parsed_rough = urlparse("//" + url)
+        hostname = (parsed_rough.hostname or "").lower()
+        
+        if hostname in ("github.com", "www.github.com", "skills.sh") or hostname.endswith((".github.com", ".skills.sh")):
             url = "https://" + url
         else:
-            parsed_rough = urlparse(url)
-            if parsed_rough.scheme:
-                raise SkillImportError(f"unsupported URL scheme: {parsed_rough.scheme}")
-            else:
-                raise SkillImportError("URL is required")
+            raise SkillImportError(f"unsupported URL format or missing scheme: {url}")
 
     parsed = urlparse(url)
     if parsed.scheme not in ("http", "https"):
