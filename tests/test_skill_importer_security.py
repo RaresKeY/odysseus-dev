@@ -53,7 +53,7 @@ def test_parse_skill_source_valid_github():
     assert source.path == "docs"
 
 
-## 2. Tests for SSRF Guard, CGNAT, & Local Exceptions
+## 2. Tests for SSRF Guard & CGNAT
 
 def test_check_outbound_url_blocks_cgnat():
     """Ensure Carrier-Grade NAT (RFC 6598) block 100.64.0.0/10 is blocked."""
@@ -80,26 +80,6 @@ def test_check_outbound_url_blocks_metadata():
 
     ok, reason = check_outbound_url("http://metadata.google.internal", block_private=True, resolver=mock_resolver)
     assert not ok
-
-
-def test_check_outbound_url_allows_local_exception():
-    """Ensure operator-configured allowed_dist overrides the private IP block."""
-    def mock_resolver(host):
-        return ["127.0.0.1"]
-
-    # Without exception, it fails
-    ok, reason = check_outbound_url("http://127.0.0.1:7860/v1/models", block_private=True, resolver=mock_resolver)
-    assert not ok
-
-    # With matching allowed_dist, it succeeds
-    ok, reason = check_outbound_url(
-        "http://127.0.0.1:7860/v1/models",
-        block_private=True,
-        resolver=mock_resolver,
-        allowed_dist="127.0.0.1:7860"
-    )
-    assert ok
-    assert reason == "ok"
 
 
 def test_check_outbound_url_allows_public_ip():

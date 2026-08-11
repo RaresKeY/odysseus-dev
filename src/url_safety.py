@@ -62,7 +62,6 @@ def check_outbound_url(
     *,
     block_private: bool = False,
     resolver: Optional[Callable[[str], List[str]]] = None,
-    allowed_dist: Optional[str] = None
 ) -> Tuple[bool, str]:
     """Validate a user-supplied outbound URL.
 
@@ -75,9 +74,6 @@ def check_outbound_url(
         return False, "URL is required"
     try:
         parsed = urlparse(url.strip())
-        if allowed_dist and parsed.netloc.lower() == allowed_dist.lower():
-            block_private = False
-        
     except Exception as e:  # pragma: no cover - urlparse is very tolerant
         return False, f"unparseable URL: {e}"
 
