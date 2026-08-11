@@ -108,10 +108,20 @@ def test_fetch_bytes_blocks_redirect_to_internal(monkeypatch, internal):
 
 def test_skills_sh_entry_blocks_redirect_to_metadata(monkeypatch):
     # The skills.sh unwrap path (user-supplied host) must also revalidate hops.
-    raw = "http://1.1.1.1/skills.sh"  # contains "skills.sh", not "github.com"
+    raw = "https://skills.sh/example/skill"
+    checked = []
+
+    def _check_hop(url):
+        checked.append(url)
+        if url == raw:
+            return [skill_importer.ipaddress.ip_address("1.1.1.1")]
+        raise SkillImportError("outbound URL blocked: private target")
+
+    monkeypatch.setattr(skill_importer, "_resolve_and_check_url", _check_hop)
     _install_fake_client(monkeypatch, redirect_from=raw, redirect_to=METADATA)
     with pytest.raises(SkillImportError, match="blocked"):
         parse_skill_source(raw)
+    assert checked == [raw, METADATA]
 
 
 # --- Positive: a legitimate public->public redirect is still followed --------

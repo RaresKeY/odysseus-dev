@@ -4,7 +4,6 @@ from __future__ import annotations
 import ipaddress
 import logging
 import os
-import re
 import time
 from dataclasses import dataclass
 from typing import Dict, Iterable, List, Optional, Tuple, cast
@@ -28,6 +27,7 @@ TEXT_NAMES = {"skill.md", "license", "license.md", "readme.md"}
 _GITHUB_HOSTS = frozenset({
     "github.com", "www.github.com", "api.github.com", "raw.githubusercontent.com",
 })
+_SKILLS_SH_HOSTS = frozenset({"skills.sh"})
 
 
 def _github_host(url: str) -> str:
@@ -268,12 +268,12 @@ def parse_skill_source(url: str) -> ResolvedSource:
     if not url:
         raise SkillImportError("URL is required")
 
-    # Support backwards compatibility for schemeless GitHub or skills.sh paths (CodeQL compliant)
+    # Support backwards compatibility for schemeless GitHub or skills.sh paths.
     if not url.startswith(("http://", "https://")):
         parsed_rough = urlparse("//" + url)
         hostname = (parsed_rough.hostname or "").lower()
 
-        if hostname in ("github.com", "www.github.com", "skills.sh") or hostname.endswith((".github.com", ".skills.sh")):
+        if hostname in _GITHUB_HOSTS or hostname in _SKILLS_SH_HOSTS:
             url = "https://" + url
         else:
             if parsed_rough.scheme:
@@ -286,43 +286,25 @@ def parse_skill_source(url: str) -> ResolvedSource:
         raise SkillImportError(f"unsupported URL scheme: {parsed.scheme}")
 
     hostname = (parsed.hostname or "").lower()
-    is_skills_host = (
-        hostname == "skills.sh"
-        or hostname.endswith(".skills.sh")
-    )
-    if not is_skills_host and "skills.sh" in parsed.path.lower():
-        if hostname in ("localhost", "127.0.0.1", "::1"):
-            is_skills_host = True
-        else:
-            try:
-                ipaddress.ip_address(hostname)
-                is_skills_host = True
-            except ValueError:
-                pass
+    if hostname not in _GITHUB_HOSTS and hostname not in _SKILLS_SH_HOSTS:
+        raise SkillImportError(
+            "Only GitHub or skills.sh URLs are supported"
+        )
 
-    # skills.sh often links to GitHub; try to unwrap ?url= or redirect target later.
-    if is_skills_host:
+    # skills.sh links must resolve to an exact supported GitHub host.
+    if hostname in _SKILLS_SH_HOSTS:
         r = _get_checked(url, timeout=20.0)
         if r.status_code >= 400:
             raise _github_response_error(r)
         final = str(r.url)
         _assert_github_url(final, context="redirect target")
-        # Page may embed a github link; prefer final URL if redirected.
-        if "github.com" in final:
-            url = final
-        else:
-            m = re.search(r"https?://github\.com/[^\s\"')]+", r.text or "")
-            if m:
-                url = m.group(0).rstrip(".,)")
+        url = final
 
     # Update parsed and hostname to reflect the new GitHub URL
     parsed = urlparse(url)
     hostname = (parsed.hostname or "").lower()
 
-    if hostname not in _GITHUB_HOSTS and not is_skills_host:
-        raise SkillImportError(
-            "Only GitHub URLs are supported (https://github.com/... or raw.githubusercontent.com/...)"
-        )
+    _assert_github_url(url)
 
     if hostname == "raw.githubusercontent.com":
         # /owner/repo/ref/path/to/file

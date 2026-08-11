@@ -1,42 +1,44 @@
-import pytest
-import ipaddress
-from unittest.mock import patch, MagicMock
-from urllib.parse import urlparse
+from unittest.mock import MagicMock, patch
 
-# UNCOMMENT AND ADJUST THESE IMPORTS TO MATCH YOUR FILE PATHS:
+import pytest
+
 from services.memory.skill_importer import (
-    parse_skill_source, 
-    check_outbound_url, 
-    _get_checked, 
+    ResolvedSource,
     SkillImportError,
-    ResolvedSource
+    check_outbound_url,
+    parse_skill_source,
 )
 
 ## 1. Tests for Hostname Dispatch & Substring Spoofing
 
-def test_parse_skill_source_blocks_spoofed_domains():
-    """Ensure substring attacks like skills.sh.attacker.com or evilskills.sh are rejected."""
-    spoofed_urls = [
+@pytest.mark.parametrize(
+    "url",
+    [
         "https://skills.sh.attacker.com/owner/repo",
         "https://evilskills.sh/owner/repo",
-        "https://notskills.sh/owner/repo"
-    ]
-    for url in spoofed_urls:
+        "https://notskills.sh/owner/repo",
+        "https://api.skills.sh/owner/repo",
+        "https://1.1.1.1/skills.sh/owner/repo",
+        "http://localhost/skills.sh/owner/repo",
+    ],
+)
+def test_parse_skill_source_rejects_unsupported_host_before_fetch(url):
+    """Unsupported authorities must never reach the network unwrap path."""
+    with patch("services.memory.skill_importer._get_checked") as mock_get:
         with pytest.raises(SkillImportError):
             parse_skill_source(url)
+    mock_get.assert_not_called()
 
 
-def test_parse_skill_source_allows_valid_subdomains():
-    """Ensure true subdomains like api.skills.sh and the main domain work."""
-    # Note: This will attempt a network call unless mocked, 
-    # but we can verify the dispatch logic triggers correctly.
+def test_parse_skill_source_allows_exact_skills_host():
+    """The documented skills.sh host may unwrap to an exact GitHub host."""
     with patch("services.memory.skill_importer._get_checked") as mock_get:
         mock_response = MagicMock()
         mock_response.status_code = 200
         mock_response.url = "https://github.com/test-owner/test-repo"
         mock_get.return_value = mock_response
 
-        source = parse_skill_source("https://api.skills.sh/my-skill")
+        source = parse_skill_source("https://skills.sh/my-skill")
         assert source.owner == "test-owner"
         assert source.repo == "test-repo"
 
@@ -91,9 +93,9 @@ def test_check_outbound_url_allows_local_exception():
 
     # With matching allowed_dist, it succeeds
     ok, reason = check_outbound_url(
-        "http://127.0.0.1:7860/v1/models", 
-        block_private=True, 
-        resolver=mock_resolver, 
+        "http://127.0.0.1:7860/v1/models",
+        block_private=True,
+        resolver=mock_resolver,
         allowed_dist="127.0.0.1:7860"
     )
     assert ok
@@ -108,4 +110,3 @@ def test_check_outbound_url_allows_public_ip():
     ok, reason = check_outbound_url("http://example.com", block_private=True, resolver=mock_resolver)
     assert ok
     assert reason == "ok"
-    
