@@ -10,7 +10,7 @@ from typing import Dict, List, Optional, Tuple
 from urllib.parse import quote, urljoin, urlparse
 
 import httpx
-import socket 
+import socket
 
 from src.url_safety import check_outbound_url
 
@@ -74,16 +74,11 @@ def _is_text_file(name: str) -> bool:
 _MAX_FETCH_REDIRECTS = 5
 
 
-def _check_fetch_url(hostname_or_url: str) -> str:
-    """SSRF guard for skill-import fetches (defense-in-depth).
+def _resolve_and_check_url(hostname_or_url: str) -> str:
+    """SSRF guard for skill-import fetches using getaddrinfo for IPv4/IPv6
 
-    Skill bundles only ever come from public GitHub, never an internal
-    address, so block private/loopback/link-local targets on every hop —
-    matching the hardened web-fetch path in
-    ``services/search/content.py:_get_public_url`` rather than the lenient
-    default used for admin-configured model endpoints.
+    and validating ALL resolved IP addresses to prevent multi-record TOCTOU.
     """
-    # Gracefully handle both raw hostnames and full URLs/IP literals passed by tests
     target = hostname_or_url
     if "://" in target or ("/" in target and not target.startswith("/")):
         parsed = urlparse(target)
@@ -94,23 +89,36 @@ def _check_fetch_url(hostname_or_url: str) -> str:
     if not hostname:
         hostname = target
 
+    resolved_ips: List[str] = []
     try:
-        # Resolve DNS once
-        safe_ip = socket.gethostbyname(hostname)
-    except socket.gaierror:
-        # Fallback if hostname is already a literal IP address string
+        ip_obj = ipaddress.ip_address(hostname)
+        resolved_ips = [str(ip_obj)]
+    except ValueError:
         try:
-            ipaddress.ip_address(hostname)
-            safe_ip = hostname
-        except ValueError:
-            raise SkillImportError(f"Could not resolve hostname: {target}")
+            # Enumerate all A and AAAA records via getaddrinfo
+            infos = socket.getaddrinfo(hostname, None, family=socket.AF_UNSPEC, type=socket.SOCK_STREAM)
+            seen = set()
+            for family, socktype, proto, canonname, sockaddr in infos:
+                ip_str = sockaddr[0]
+                if ip_str not in seen:
+                    seen.add(ip_str)
+                    resolved_ips.append(ip_str)
+        except socket.gaierror as e:
+            raise SkillImportError(f"Could not resolve hostname: {target}") from e
 
-    ok, reason = check_outbound_url(f"http://{safe_ip}", block_private=True)
+    if not resolved_ips:
+        raise SkillImportError(f"Could not resolve hostname: {target}")
 
-    if not ok:
-        raise SkillImportError(reason)
-    
-    return safe_ip
+    # Validate EVERY resolved address against SSRF rules to prevent multi-record TOCTOU bypass
+    for ip_str in resolved_ips:
+        ok, reason = check_outbound_url(f"http://{ip_str}", block_private=True)
+        if not ok:
+            raise SkillImportError(f"outbound URL blocked: {reason}")
+
+    # Select a safe IP to pin (prefer IPv4 if available, otherwise first resolved IP)
+    ipv4_addrs = [ip for ip in resolved_ips if "." in ip]
+    chosen_ip = ipv4_addrs[0] if ipv4_addrs else resolved_ips[0]
+    return chosen_ip
 
 
 def _get_checked(
@@ -132,17 +140,16 @@ def _get_checked(
             parsed = urlparse(current)
             hostname = (parsed.hostname or "").lower()
 
-            # Resolve DNS once and validate the IP
-            safe_ip = _check_fetch_url(hostname) 
+            # Resolve DNS and validate all addresses
+            safe_ip = _resolve_and_check_url(hostname)
 
-            # Pin the IP
+            # Pin the IP and preserve port if specified
             port_suffix = f":{parsed.port}" if parsed.port else ""
-
             pinned_netloc = f"[{safe_ip}]{port_suffix}" if ":" in safe_ip else f"{safe_ip}{port_suffix}"
             pinned_url = parsed._replace(netloc=pinned_netloc).geturl()
 
             req_headers = dict(headers) if headers else {}
-            req_headers["Host"] = hostname # Prevent HTTP routing breakage
+            req_headers["Host"] = f"{hostname}{port_suffix}" # Include port in Host header when present
 
             extensions = {}
             if parsed.scheme == "https":
@@ -168,9 +175,23 @@ def _get_checked(
 def parse_skill_source(url: str) -> ResolvedSource:
     """Normalize skills.sh / GitHub web URLs into owner/repo/ref/path."""
     url = (url or "").strip()
+    if not url:
+        raise SkillImportError("URL is required")
+
+    # Support backwards compatibility for schemeless GitHub or skills.sh paths
+    if not url.startswith(("http://", "https://")):
+        if url.startswith("github.com/") or url.startswith("skills.sh/"):
+            url = "https://" + url
+        else:
+            parsed_rough = urlparse(url)
+            if parsed_rough.scheme:
+                raise SkillImportError(f"unsupported URL scheme: {parsed_rough.scheme}")
+            else:
+                raise SkillImportError("URL is required")
+
     parsed = urlparse(url)
     if parsed.scheme not in ("http", "https"):
-        raise SkillImportError("URL is required")
+        raise SkillImportError(f"unsupported URL scheme: {parsed.scheme}")
 
     hostname = (parsed.hostname or "").lower()
     is_skills_host = (
