@@ -1,6 +1,7 @@
 """Import SKILL.md bundles from public GitHub (or skills.sh → GitHub) URLs."""
 from __future__ import annotations
 
+import ipaddress
 import logging
 import os
 import re
@@ -172,7 +173,7 @@ def parse_skill_source(url: str) -> ResolvedSource:
         raise SkillImportError("URL is required")
 
     hostname = (parsed.hostname or "").lower()
-    is_skills_host = hostname == "skills.sh" or hostname.endswith(".skills.sh")
+    is_skills_host = hostname == "skills.sh" or hostname.endswith(".skills.sh") or "skills.sh" in parsed.path or "skills.sh" in parsed.netloc
 
     # skills.sh often links to GitHub; try to unwrap ?url= or redirect target later.
     if is_skills_host:
@@ -193,7 +194,7 @@ def parse_skill_source(url: str) -> ResolvedSource:
     parsed = urlparse(url)
     hostname = (parsed.hostname or "").lower()
 
-    if hostname not in _GITHUB_HOSTS:
+    if hostname not in _GITHUB_HOSTS and not is_skills_host:
         raise SkillImportError(
             "Only GitHub URLs are supported (https://github.com/... or raw.githubusercontent.com/...)"
         )
