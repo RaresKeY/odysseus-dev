@@ -9,6 +9,7 @@ from typing import Dict, List, Optional, Tuple
 from urllib.parse import quote, urljoin, urlparse
 
 import httpx
+import socket 
 
 from src.url_safety import check_outbound_url
 
@@ -72,7 +73,7 @@ def _is_text_file(name: str) -> bool:
 _MAX_FETCH_REDIRECTS = 5
 
 
-def _check_fetch_url(url: str) -> None:
+def _check_fetch_url(hostname: str) -> str:
     """SSRF guard for skill-import fetches (defense-in-depth).
 
     Skill bundles only ever come from public GitHub, never an internal
@@ -81,9 +82,18 @@ def _check_fetch_url(url: str) -> None:
     ``services/search/content.py:_get_public_url`` rather than the lenient
     default used for admin-configured model endpoints.
     """
-    ok, reason = check_outbound_url(url, block_private=True)
+    try:
+        # Resolve DNS once
+        safe_ip = socket.gethostbyname(hostname)
+    except socket.gaierror:
+        raise SkillImportError(f"Could not resolve hostname: {hostname}")
+
+    ok, reason = check_outbound_url(f"http://{safe_ip}", block_private=True)
+
     if not ok:
         raise SkillImportError(reason)
+    
+    return safe_ip
 
 
 def _get_checked(
@@ -102,8 +112,26 @@ def _get_checked(
     current = url
     with httpx.Client(follow_redirects=False, timeout=timeout) as client:
         for _ in range(_MAX_FETCH_REDIRECTS + 1):
-            _check_fetch_url(current)
-            r = client.get(current, headers=headers)
+            parsed = urlparse(current)
+            hostname = (parsed.hostname or "").lower()
+
+            # Resolve DNS once and validate the IP
+            safe_ip = _check_fetch_url(hostname) 
+
+            # Pin the IP
+            port_suffix = f":{parsed.port}" if parsed.port else ""
+
+            pinned_netloc = f"[{safe_ip}]{port_suffix}" if ":" in safe_ip else f"{safe_ip}{port_suffix}"
+            pinned_url = parsed._replace(netloc=pinned_netloc).geturl()
+
+            req_headers = dict(headers) if headers else {}
+            req_headers["Host"] = hostname # Prevent HTTP routing breakage
+
+            extensions = {}
+            if parsed.scheme == "https":
+                extensions["sni_hostname"] = hostname # Prevent TLS Cret failures
+
+            r = client.get(pinned_url, headers=req_headers, extensions=extensions)
             if r.status_code in (301, 302, 303, 307, 308):
                 location = r.headers.get("location")
                 if not location:
