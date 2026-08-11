@@ -108,3 +108,4 @@ def test_check_outbound_url_allows_public_ip():
     ok, reason = check_outbound_url("http://example.com", block_private=True, resolver=mock_resolver)
     assert ok
     assert reason == "ok"
+    
