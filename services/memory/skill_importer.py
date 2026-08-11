@@ -173,7 +173,7 @@ def parse_skill_source(url: str) -> ResolvedSource:
         raise SkillImportError("URL is required")
 
     hostname = (parsed.hostname or "").lower()
-    is_skills_host = hostname == "skills.sh" or hostname.endswith(".skills.sh") or "skills.sh" in parsed.path or "skills.sh" in parsed.netloc
+    is_skills_host = hostname == "skills.sh" or hostname.endswith(".skills.sh")
 
     # skills.sh often links to GitHub; try to unwrap ?url= or redirect target later.
     if is_skills_host:
