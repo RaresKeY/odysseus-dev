@@ -116,33 +116,39 @@ def _get_checked(
 
 def parse_skill_source(url: str) -> ResolvedSource:
     """Normalize skills.sh / GitHub web URLs into owner/repo/ref/path."""
-    raw = (url or "").strip()
-    if not raw:
+    url = (url or "").strip()
+    parsed = urlparse(url)
+    if parsed.scheme not in ("http", "https"):
         raise SkillImportError("URL is required")
 
+    hostname = (parsed.hostname or "").lower()
+    is_skills_host = hostname == "skills.sh" or hostname.endswith(".skills.sh")
+
     # skills.sh often links to GitHub; try to unwrap ?url= or redirect target later.
-    if "skills.sh" in raw and "github.com" not in raw:
-        r = _get_checked(raw, timeout=20.0)
+    if is_skills_host:
+        r = _get_checked(url, timeout=20.0)
         if r.status_code >= 400:
             raise _github_response_error(r)
         final = str(r.url)
         _assert_github_url(final, context="redirect target")
         # Page may embed a github link; prefer final URL if redirected.
         if "github.com" in final:
-            raw = final
+            url = final
         else:
             m = re.search(r"https?://github\.com/[^\s\"')]+", r.text or "")
             if m:
-                raw = m.group(0).rstrip(".,)")
+                url = m.group(0).rstrip(".,)")
 
-    parsed = urlparse(raw)
-    host = _github_host(raw)
-    if host not in _GITHUB_HOSTS:
+    # Update parsed and hostname to reflect the new GitHub URL
+    parsed = urlparse(url)
+    hostname = (parsed.hostname or "").lower()
+
+    if hostname not in _GITHUB_HOSTS:
         raise SkillImportError(
             "Only GitHub URLs are supported (https://github.com/... or raw.githubusercontent.com/...)"
         )
 
-    if host == "raw.githubusercontent.com":
+    if hostname == "raw.githubusercontent.com":
         # /owner/repo/ref/path/to/file
         bits = [p for p in parsed.path.split("/") if p]
         if len(bits) < 4:
