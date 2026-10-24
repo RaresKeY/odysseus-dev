@@ -477,6 +477,8 @@ def setup_auth_routes(auth_manager: AuthManager) -> APIRouter:
                     )
                 from src.chat_automation import rename_automation_owner
                 rename_automation_owner(db, old_username, new_username)
+                from src.decisions.observability import rename_observability_owner
+                rename_observability_owner(db, old_username, new_username)
                 db.commit()
             except Exception:
                 db.rollback()
