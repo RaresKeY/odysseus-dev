@@ -10,6 +10,7 @@ from __future__ import annotations
 
 import asyncio
 import base64
+from contextlib import asynccontextmanager
 import hashlib
 import json
 from pathlib import Path
@@ -84,6 +85,18 @@ async def fixture_channel(grant, command):
     return Channel()
 
 
+@asynccontextmanager
+async def fixture_profile(report):
+    # Teardown the owned browser before its filesystem/profile disappears,
+    # including exceptions and cancellation partway through qualification.
+    with tempfile.TemporaryDirectory(prefix='ody-pipe-qualification-') as directory:
+        try:
+            yield directory
+        finally:
+            outcome = await browser.close('qualification', 'local-fixture')
+            report['cleanup_verified'] = bool(outcome and outcome.dead)
+
+
 async def main():
     report = {'schema': 'odysseus-browser-pipe-qualification/v1', 'inference_calls': 0,
               'network': 'none; fixed local HTTPS response interception', 'sandbox_disabled': False,
@@ -95,7 +108,7 @@ async def main():
             binary = hashlib.file_digest(stream, 'sha256').hexdigest()
         observer = hashlib.sha256(browser.OBSERVER.read_bytes()).hexdigest()
         manifest = browser.ProducerManifest(str(executable), binary, observer, platform.machine(), browser.digest(['qualification-candidate', binary, observer]))
-        with tempfile.TemporaryDirectory(prefix='ody-pipe-qualification-') as directory:
+        async with fixture_profile(report) as directory:
             stage = 'contained_chromium_startup'
             record = await browser.enrol('qualification', 'local-fixture', manifest, directory, channel_factory=fixture_channel)
             grant = browser.BrowserTaskGrant('qualification', 'local-fixture', 'qualification',
@@ -141,7 +154,7 @@ async def main():
     except Exception as error:
         report.update(failed_stage=stage, failure_kind=getattr(error, 'code', type(error).__name__))
     finally:
-        if record is not None:
+        if browser.get('qualification', 'local-fixture') is not None:
             outcome = await browser.close('qualification', 'local-fixture')
             report['cleanup_verified'] = bool(outcome and outcome.dead)
     print(json.dumps(report, sort_keys=True, allow_nan=False))

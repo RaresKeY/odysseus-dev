@@ -31,7 +31,9 @@ text describe only supported opaque operations.
   nonce. It never pretends to be an agent-browser observation.
 - A trusted, expiring `BrowserTaskGrant` provides exact owner/chat/run,
   origins, effects, prepared field text and original navigation URLs. Its
-  immutable contents filter targets before ranking. It is not operation
+  immutable contents filter targets before ranking. Supported effect switches
+  are click, fill and submit; they do not pretend to classify business intent
+  such as purchase/delete from a page label. It is not operation
   authority and cannot bypass deterministic admission or child approval.
 - Each operation binds the actual session, target, frame, loader, isolated-world
   context unique ID and document epoch. CDP events invalidate continuously,
@@ -99,5 +101,8 @@ installed. Runtime browser acceptance remains incomplete until that precise
 prerequisite passes; source contracts do not establish usability on this host.
 URL admission rejects private IP literals, localhost and credentials; CDP origin
 checks do not claim DNS/socket pinning. Semantic effects of arbitrary site
-handlers cannot be proved from labels: unknown clicks require explicit effect
-permission, and all resource requests are separately origin/method filtered.
+handlers cannot be proved from labels: every DOM click, including an anchor,
+requires explicit click permission and may invoke page-owned handlers within
+the admitted network scope. Fill may also invoke handlers; submit additionally
+permits form/non-GET requests. All resource requests are separately origin/method
+filtered, without claiming these switches prove a business effect safe.

@@ -516,9 +516,20 @@ def seal_browser_resources(authority):
     except ResourceIdentityError:
         return (), ()
     if record.session.observation.producer_namespace == 'native:odysseus-cdp-pipe':
-        # The admitted user task owns a target/page; each proposed document
-        # action is separately bound to the current isolated-world observation.
-        return (record.session,), tuple(replace(page, scope='page', loader_id='', context_unique_id='') for page in record.pages)
+        from src.browser_pipe import BrowserTaskGrant
+        from src.chat_automation import current_turn
+        grant, turn = record.task_grant, current_turn()
+        if isinstance(grant, BrowserTaskGrant) and turn is not None:
+            try:
+                grant.check(authority.owner, authority.session_id)
+                if (grant.run_id == turn.run_id and (turn.owner or '').casefold() == authority.owner
+                        and turn.session_id == authority.session_id and turn.current()):
+                    # Only an explicit current task owns this target across
+                    # navigation. Each child still binds a new document/nonce.
+                    return (record.session,), tuple(replace(page, scope='page', loader_id='', context_unique_id='') for page in record.pages)
+            except ResourceIdentityError:
+                pass
+        return (record.session,), record.pages
     return (record.session,), record.pages
 
 
