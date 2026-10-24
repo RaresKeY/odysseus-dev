@@ -13,6 +13,17 @@ from src.chat_automation import AutomationStore
 _PIXELS = {}
 
 
+async def close_owner_browsers(owner):
+    from src.browser_pipe import REGISTRY, close
+    key = str(owner or '').strip().casefold()
+    for record_owner, sid in tuple(REGISTRY):
+        if record_owner == key:
+            await close(record_owner, sid)
+    for identifier, image in tuple(_PIXELS.items()):
+        if image['owner'] == key:
+            _PIXELS.pop(identifier, None)
+
+
 def _owner(request, session_id):
     owner = interactive_owner(request)
     manager = getattr(request.app.state, 'auth_manager', None)
@@ -24,8 +35,6 @@ def _owner(request, session_id):
         if not privileges.get('can_use_browser', True):
             raise HTTPException(403, "Browser access is disabled for this account")
     AutomationStore().policy(owner, session_id)
-    if not owner:
-        raise HTTPException(409, "Sign in to use a private browser")
     return owner.strip().casefold()
 
 
@@ -39,7 +48,7 @@ def _record(owner, session_id):
 
 def _grant(owner, sid, body):
     from src.browser_pipe import BrowserTaskGrant, origin
-    if (not isinstance(body, dict) or set(body) - {"url", "effects", "fields"}
+    if (not isinstance(body, dict) or set(body) - {"url", "effects", "fields", "checks"}
             or not isinstance(body.get("url"), str) or not isinstance(body.get("effects", []), list)
             or not isinstance(body.get("fields", []), list) or len(body.get("fields", [])) > 12):
         raise HTTPException(422, "Choose a page, allowed actions and optional named fields")
@@ -53,7 +62,7 @@ def _grant(owner, sid, body):
             fields[item["label"]] = item["value"]
         return BrowserTaskGrant(owner, sid, 'human-' + uuid.uuid4().hex,
             frozenset({origin(body["url"])}), frozenset(body.get("effects", [])), fields,
-            time.time() + 120, frozenset({body["url"]}))
+            time.time() + 120, frozenset({body["url"]}), completion_checks=tuple(body.get('checks', [])))
     except (ValueError, TypeError):
         raise HTTPException(422, "The page or allowed actions are invalid") from None
 

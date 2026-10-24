@@ -2102,7 +2102,6 @@ import { invalidateSettings } from './appConfig.js';
       uiModule.showError('Chat settings were not saved. Check the displayed choice before sending again.');
       return;
     }
-    e.preventDefault();
     // Cancel research clarification timeout if active
     if (window._researchTimeoutTimer) {
       clearTimeout(window._researchTimeoutTimer);

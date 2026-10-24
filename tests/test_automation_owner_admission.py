@@ -19,6 +19,8 @@ def admin(store, tmp_path, monkeypatch):
         'privileges': {'allowed_models':['cheap'], 'allowed_models_restricted':True}}}}
     monkeypatch.setattr(model_admission, '_AUTH_MANAGER', manager)
     monkeypatch.setattr(d, 'SessionLocal', store.session_factory)
+    import src.endpoint_resolver as resolver
+    monkeypatch.setattr(resolver, 'SessionLocal', store.session_factory)
     with store.transaction() as db:
         db.add(d.ModelEndpoint(id='registered',name='shared',base_url='https://synthetic.invalid/v1',
             is_enabled=True,cached_models=json.dumps(['cheap','premium']), owner=None))

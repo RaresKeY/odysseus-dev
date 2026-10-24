@@ -8567,7 +8567,10 @@ async def stream_preview(*, endpoint_url, model, messages, headers, turn_contrac
                     # session with one base64 page image per interaction.
                     visual_blocks = bounded_visual_result_blocks(result, max_images=3)
                     if visual_blocks:
-                        tool_event['screenshot'] = visual_blocks[0]['image_url']['url']
+                        from src.browser_visual_evidence import screenshot_for_display
+                        screenshot_url = screenshot_for_display(result)
+                        if screenshot_url:
+                            tool_event['screenshot'] = screenshot_url
                         round_visual_blocks.extend(visual_blocks)
                     record_tool_execution(executions, tool_event)
                     yield event(tool_event)

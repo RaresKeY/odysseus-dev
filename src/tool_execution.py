@@ -1784,6 +1784,9 @@ async def _review_bound_chat_action(bound, block, *, owner, session_id, workspac
                 'target': {k: node[k] for k in ('ref', 'label', 'role', 'destination', 'form_action', 'form_method', 'submits_form', 'disabled') if k in node} if node else None,
                 'scope': {'origins': sorted(grant.allowed_origins), 'effects': sorted(grant.allowed_effects),
                     'prepared_labels': sorted(grant.prepared_values)} if grant else None}
+            if grant is not None:
+                from src.browser_automation import redact_prepared_evidence
+                evidence = redact_prepared_evidence(evidence, grant)
     outcome = await ApprovalReviewService(tool_approval_store).review(
         pending, policy, deterministically_admitted=deterministically_admitted,
         evaluator=evaluate, cancelled=lambda: not bound.current(), evidence=evidence)

@@ -88,7 +88,8 @@ not establish calibration, safety, general speed or reliability.
 
 The task runner currently cannot establish the mount/PID/procfs boundary needed
 for sandboxed Chromium; actual producer/UI runtime qualification is pending.
-No manifest is fabricated to bypass qualification. The browser requires a named
-signed-in owner. CDP origin checks do not provide DNS/socket pinning. No paid
+No manifest is fabricated to bypass qualification. Browser ownership accepts a
+signed-in owner or the explicit auth-disabled local operator; a missing
+authenticated owner never selects the local namespace. CDP origin checks do not provide DNS/socket pinning. No paid
 provider or application smoke is part of this port's evidence. Runtime gaps are
 distinct from passing fake-provider and fake-channel regression contracts.

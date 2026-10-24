@@ -801,9 +801,10 @@ _QWEN38_TOOL_ROUTER_PROMPT = (
     "manage_settings: app settings. manage_endpoints: configured API endpoints; list_models: available models. "
     "manage_mcp: MCP servers. manage_skills: skills. manage_webhooks: webhooks. manage_bg_jobs: running/background jobs. "
     "search_chats: past chats. web_search: public web lookup, URLs, links; web_fetch: fetch a concrete URL/domain. "
-    "private_browser: rendered site interaction; start with one batch containing open then snapshot, "
-    "and only click/fill element refs returned by snapshot (for example @e12), never guessed labels. "
-    "If a global/landing page lacks the requested control, follow its shopping/store link; do not repeat find. "
+    "private_browser: when an admitted private-pipe producer is enrolled, use single actions with page t1, "
+    "a fresh snapshot observation token and its exact nN target ref. Fill uses a prepared value_id, never raw values. "
+    "automate runs only within a separately granted task scope. No batches, selectors, raw scripts or guessed refs. "
+    "Without that producer, only registered session metadata is available; use web_search/web_fetch. "
     "youtube_tool: YouTube comments, transcripts, metadata, and latest channel video. "
     "read_file: workspace text, PDF, or Office document path; edit_file: exact replacement in an existing "
     "workspace file; write_file: create or fully rewrite a workspace file; "
@@ -7948,7 +7949,7 @@ Get current conditions and a three-day forecast using Open-Meteo. Use this for w
 ```private_browser
 {"action": "session_info"}
 ```
-Registered browser session metadata only: session_info. Page/document reads and effects are unavailable because the configured local producer cannot guarantee captured-target binding. Do not send batches, raw commands, flags, URLs or guessed page handles. Use web_search/web_fetch for supported web access.""",
+Use session_info to inspect the registered producer. Only an enrolled private-pipe producer with a current user task scope supports page actions. For that producer, send one action at a time with page "t1". snapshot returns an observation token and nN target refs; click/fill must echo that exact observation and ref. Fill accepts a prepared value_id rather than raw text. automate takes a goal within the already granted page/origin/effect scope. Never use batches, raw commands, selectors, scripts, legacy @e refs or guessed handles. The legacy producer still supports session metadata only; when unavailable use web_search/web_fetch or report the prerequisite.""",
 
     "youtube_tool": """\
 ```youtube_tool
@@ -34509,9 +34510,10 @@ async def stream_agent_loop(
                 if k in result:
                     tool_output_data[k] = result[k]
             # Forward screenshots from browser tools (base64 images)
-            if result.get("images"):
-                img = result["images"][0]
-                tool_output_data["screenshot"] = f"data:{img['mimeType']};base64,{img['data']}"
+            from src.browser_visual_evidence import screenshot_for_display
+            _display_screenshot = screenshot_for_display(result)
+            if _display_screenshot:
+                tool_output_data["screenshot"] = _display_screenshot
             if block.tool_type == "manage_calendar":
                 if result.get("uid"):
                     tool_output_data["uid"] = result.get("uid")
@@ -35384,10 +35386,9 @@ async def stream_agent_loop(
                 for ik in ("image_url", "image_prompt", "image_model", "image_size", "image_quality"):
                     if result.get(ik):
                         tool_event[ik] = result[ik]
-            if result.get("images"):
-                img = result["images"][0]
-                if isinstance(img, dict) and img.get("data") and img.get("mimeType"):
-                    tool_event["screenshot"] = f"data:{img['mimeType']};base64,{img['data']}"
+            _display_screenshot = screenshot_for_display(result)
+            if _display_screenshot:
+                tool_event["screenshot"] = _display_screenshot
             if result.get("doc_id"):
                 tool_event["doc_id"] = result["doc_id"]
                 tool_event["doc_title"] = result.get("title", "")
