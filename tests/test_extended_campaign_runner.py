@@ -60,3 +60,66 @@ async def test_corrupted_capture_refused_without_ledger_change(tmp_path, monkeyp
     with pytest.raises(DecisionError, match="invalid_capture"):
         runner.replay_capture(capture, ledger)
     assert ledger.path.read_bytes() == before
+
+
+@pytest.mark.asyncio
+async def test_partial_canonical_stage_restart_replays_then_finishes_unrun_cases(tmp_path, monkeypatch):
+    from core import database as d
+    monkeypatch.setattr(d, "SessionLocal", d.SessionLocal)
+    original = d.SessionLocal
+    first = await runner.run(tmp_path, wall_seconds=30, max_new_cases=1)
+    assert d.SessionLocal is original
+    assert first["totals"]["actual_dispatches"] == 1
+    first_attempt = first["accounting"]["attempts"][0]
+    resumed = await runner.run(tmp_path, wall_seconds=30)
+    assert resumed["version"] == first["version"]
+    assert resumed["totals"]["cached"] == 1
+    assert resumed["totals"]["actual_dispatches"] == len(runner.load_suite()["cases"]) - 1
+    assert len(resumed["accounting"]["attempts"]) == len(runner.load_suite()["cases"])
+    assert resumed["accounting"]["attempts"][0] == first_attempt
+    assert resumed["accounting"]["charged_or_held"] == 30 * len(runner.load_suite()["cases"])
+    all_cached = await runner.run(tmp_path, wall_seconds=30)
+    assert all_cached["totals"]["cached"] == len(runner.load_suite()["cases"])
+    assert all_cached["totals"]["actual_dispatches"] == 0
+    assert all_cached["accounting"] == resumed["accounting"]
+    assert d.SessionLocal is original
+
+
+@pytest.mark.asyncio
+async def test_harness_restores_original_sql_factory_and_ordinary_store(tmp_path, monkeypatch):
+    from core import database as d
+    from sqlalchemy import create_engine
+    from sqlalchemy.orm import sessionmaker
+    from src.chat_automation import AutomationStore
+    engine = create_engine("sqlite:///" + str(tmp_path / "ordinary.sqlite3"))
+    d.Base.metadata.create_all(engine)
+    ordinary_factory = sessionmaker(bind=engine)
+    monkeypatch.setattr(d, "SessionLocal", ordinary_factory)
+    with ordinary_factory() as db:
+        db.add(d.Session(id="ordinary", name="ordinary", owner="alice", endpoint_url="https://ordinary.invalid/v1", model="ordinary"))
+        db.commit()
+    await runner.run(tmp_path / "campaign", wall_seconds=30, max_new_cases=1)
+    assert d.SessionLocal is ordinary_factory
+    with AutomationStore().transaction() as db:
+        assert db.query(d.Session).filter_by(id="ordinary", owner="alice").one().name == "ordinary"
+    engine.dispose()
+
+
+@pytest.mark.asyncio
+@pytest.mark.parametrize("missing", [True, False])
+async def test_resume_missing_or_changed_capture_fails_closed_without_new_spend(tmp_path, monkeypatch, missing):
+    from core import database as d
+    monkeypatch.setattr(d, "SessionLocal", d.SessionLocal)
+    first = await runner.run(tmp_path, wall_seconds=30, max_new_cases=1)
+    capture = next((tmp_path / "captures").glob("*.json"))
+    if missing:
+        capture.unlink()
+    else:
+        payload = runner.decode(capture.read_bytes())
+        payload["request"]["state"]["ask"] = "changed"
+        payload["wire_sha256"] = digest(payload["request"])
+        capture.write_bytes(runner.encode(payload))
+    ledger_bytes = (tmp_path / "budget/campaign.sqlite3").read_bytes()
+    with pytest.raises(DecisionError):
+        await runner.run(tmp_path, wall_seconds=30)
+    assert (tmp_path / "budget/campaign.sqlite3").read_bytes() == ledger_bytes

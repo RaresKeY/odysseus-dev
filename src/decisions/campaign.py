@@ -6,7 +6,7 @@ owner leaves a held reservation; a later owner cannot infer that it was free.
 """
 from __future__ import annotations
 
-from contextlib import contextmanager
+from contextlib import closing, contextmanager
 from dataclasses import dataclass
 import hashlib
 import json
@@ -47,6 +47,7 @@ class BillingContract:
 
     def checked(self):
         if (type(self.input_tokens) is not int or type(self.output_tokens) is not int
+                or type(self.verified) is not bool
                 or min(self.input_tokens, self.output_tokens) < 1
                 or self.input_tokens + self.output_tokens > HARD_LIMIT
                 or len(self.evidence_sha256) != 64
@@ -115,6 +116,8 @@ class CampaignLedger:
                 db.execute("INSERT INTO campaign(id,identity) VALUES (1,?)", (identity,))
             elif previous[0] != identity:
                 raise DecisionError("campaign_identity_mismatch")
+            if (self.path.parent / "HALT_REQUESTED.json").exists():
+                db.execute("UPDATE campaign SET halted=1,halt_reason='root_stop_requested' WHERE id=1")
         self._fsync_directory()
 
     def _fsync_directory(self):
@@ -173,6 +176,9 @@ class CampaignLedger:
 
     def reserve(self, *, attempt_id, case_key, version, stage, binding, contract):
         contract.checked()
+        if (self.path.parent / "HALT_REQUESTED.json").exists():
+            self.halt("root_stop_requested")
+            raise DecisionError("campaign_halted")
         if not contract.verified:
             raise DecisionError("campaign_billing_bound_unverified")
         if stage not in STAGES or not isinstance(case_key, str) or not case_key or len(case_key) > 256:
@@ -197,6 +203,9 @@ class CampaignLedger:
                 encode(binding).decode(), contract.input_tokens, contract.output_tokens, str(charge), time.time()))
 
     def dispatch(self, attempt_id, binding):
+        if (self.path.parent / "HALT_REQUESTED.json").exists():
+            self.halt("root_stop_requested")
+            raise DecisionError("campaign_halted")
         with self._transaction() as db:
             row = self._attempt(db, attempt_id)
             if db.execute("SELECT halted FROM campaign WHERE id=1").fetchone()[0]:
@@ -264,7 +273,7 @@ class CampaignLedger:
 
     def report(self):
         # Read-only connection: offline report/replay never changes ledger bytes.
-        with sqlite3.connect(self.path.as_uri() + "?mode=ro", uri=True) as db:
+        with closing(sqlite3.connect(self.path.as_uri() + "?mode=ro", uri=True)) as db:
             db.row_factory = sqlite3.Row
             campaign = dict(db.execute("SELECT * FROM campaign WHERE id=1").fetchone())
             attempts = [dict(x) for x in db.execute("SELECT * FROM attempts ORDER BY created,id")]
