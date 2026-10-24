@@ -1149,6 +1149,9 @@ def _resolve_tool_path_in_workspace(workspace: str, raw_path: str) -> str:
 _active_workspace: contextvars.ContextVar = contextvars.ContextVar(
     "agent_active_workspace", default=None
 )
+_browser_automation_runtime: contextvars.ContextVar = contextvars.ContextVar(
+    "browser_automation_runtime", default=None
+)
 
 
 def get_active_workspace() -> Optional[str]:
@@ -1572,6 +1575,10 @@ async def _direct_fallback(
             "resource_operation": active_resource_operation(),
             "owned_operation": active_owned_operation(),
         }
+        if tool == "private_browser" and _browser_automation_runtime.get() is not None:
+            # This value is constructed only by the canonical dispatcher. A
+            # caller-supplied runtime-context key never becomes an executor.
+            ctx["_browser_automation_runtime"] = _browser_automation_runtime.get()
 
         from src.agent_tools import TOOL_HANDLERS
         if tool in TOOL_HANDLERS:
@@ -1627,6 +1634,115 @@ from src.browser_identity import (
 )
 
 
+def _bound_chat_turn():
+    """Read the canonical ingress binding without making a parallel policy."""
+    try:
+        from src.chat_automation import current_turn
+    except ModuleNotFoundError as error:
+        # Compatibility for pre-migration/offline standalone deployments only.
+        if error.name != "src.chat_automation":
+            raise
+        return None
+    return current_turn()
+
+
+def _registered_browser_page(owner, session_id, action):
+    try:
+        from src.browser_pipe import supports
+    except ModuleNotFoundError as error:
+        if error.name != "src.browser_pipe":
+            raise
+        return False
+    return supports(owner, session_id, action)
+
+
+def _browser_decision_runtime(bound, *, owner, session_id, workspace, authority,
+                              security_context, disabled_tools, tool_policy,
+                              client_runtime_context, progress_cb):
+    from src.chat_automation import SqlAttemptStore
+    from src.decisions import DecisionContext, DecisionProvider
+    async def dispatch(args, grant):
+        from src.browser_pipe import get
+        record = get(owner, session_id)
+        if (record is None or record.task_grant is not grant or not bound.current()
+                or not isinstance(args, dict) or args.get("action") == "automate"):
+            return {"error": "Browser task permissions are no longer current.", "exit_code": 1,
+                    "blocked": True, "executed": False, "failure_kind": "browser_task_stale"}
+        _, result = await execute_tool_block(ToolBlock("private_browser", json.dumps(args)),
+            owner=owner, session_id=session_id, workspace=workspace, request_authority=authority,
+            security_context=security_context, disabled_tools=disabled_tools, tool_policy=tool_policy,
+            client_runtime_context=client_runtime_context, progress_cb=progress_cb)
+        return result
+    return {"provider": DecisionProvider(SqlAttemptStore(bound.store)),
+            "config": bound.configuration.get("decision_provider", {}),
+            "decision_context": DecisionContext(owner, str(session_id or ""), bound.run_id,
+                policy_revision=bound.policy["policy_revision"],
+                authority_epoch=bound.policy["authority_epoch"], cancelled=lambda: not bound.current()),
+            "dispatch": dispatch}
+
+
+async def _review_bound_chat_action(bound, block, *, owner, session_id, workspace,
+                                    authority, security_context, active_document_id,
+                                    client_runtime_context, deterministically_admitted):
+    """Propose through the existing store; only this dispatcher claims effects."""
+    from src.approval_review import ApprovalReviewService
+    from src.chat_policy import policy_matches_binding
+    from src.chat_automation import SqlAttemptStore
+    from src.decisions import DecisionProvider
+    from src.tool_approvals import tool_approval_store
+    from src.tool_capabilities import capabilities_for_action
+
+    def current(pending):
+        return (bound.current() is True
+                and pending.owner == str(bound.owner or "").strip().casefold()
+                and pending.session_id == str(bound.session_id)
+                and policy_matches_binding(pending.policy_binding,
+                    bound.store.policy(bound.owner, bound.session_id,
+                                       entrypoint=bound.policy.get("entrypoint", "interactive")),
+                    owner=pending.owner, session_id=pending.session_id))
+
+    if (not bound.current() or str(owner or "").strip().casefold() != str(bound.owner or "").strip().casefold()
+            or str(session_id or "") != str(bound.session_id)):
+        return None, {"error": "This action belongs to an expired chat turn.", "exit_code": 1,
+                      "blocked": True, "executed": False, "failure_kind": "approval_stale"}
+    if bound.pending:
+        previous = tool_approval_store.peek(getattr(bound, "pending_approval_id", ""))
+        if previous is not None and previous.policy_is_current():
+            return None, {"output": "Waiting for your decision on the pending action.",
+                "exit_code": None, "executed": False, "approval_required": True,
+                "ask_user": previous.public_payload()}
+        return None, {"error": "The pending approval expired. Request the action again.",
+            "exit_code": 1, "blocked": True, "executed": False, "failure_kind": "approval_stale"}
+    policy = bound.store.policy(bound.owner, bound.session_id,
+                               entrypoint=bound.policy.get("entrypoint", "interactive"))
+    pending = tool_approval_store.create(
+        owner=owner, session_id=session_id, origin_run_id=bound.run_id,
+        tool_name=block.tool_type, content=block.content, workspace=workspace,
+        document_id=active_document_id,
+        external_untrusted_context_seen=bool(getattr(security_context, "external_untrusted_context_seen", False)),
+        selected_tools=[grant.tool for grant in authority.grants],
+        continuation_query=bound.raw_ask, request_text=bound.raw_ask,
+        capabilities=capabilities_for_action(block.tool_type, block.content),
+        request_authority=authority, client_runtime_context=client_runtime_context,
+        policy_record=policy, policy_validator=current,
+        submission_id=bound.submission_id, bound_turn=bound)
+    provider = DecisionProvider(SqlAttemptStore(bound.store))
+    async def evaluate(request, context):
+        return await provider.evaluate(request, context,
+                                       config=bound.configuration.get("decision_provider", {}))
+    outcome = await ApprovalReviewService(tool_approval_store).review(
+        pending, policy, deterministically_admitted=deterministically_admitted,
+        evaluator=evaluate, cancelled=lambda: not bound.current())
+    if outcome.status == "approved":
+        return outcome.approval, None
+    if outcome.status == "bypass":
+        return None, None
+    if outcome.status in {"manual", "denied"}:
+        bound.pending = True
+        bound.pending_approval_id = pending.approval_id
+    return None, outcome.tool_result()
+
+
 @record_action
 async def execute_tool_block(
     block: Any,
@@ -1675,6 +1791,11 @@ async def execute_tool_block(
             return blocked_tool_result(block.tool_type, decision.reason)
 
     authority = active_request_authority() if request_authority is MISSING_AUTHORITY else request_authority
+    bound_chat = _bound_chat_turn()
+    if bound_chat is not None and exact_approval is not None and exact_approval.pending.policy_binding is None:
+        # Saved broad chat/task authority predates the new policy and cannot
+        # satisfy any action in a versioned turn, even after switching modes.
+        exact_approval = None
     parent = active_request_authority()
     if isinstance(authority, RequestAuthority) and parent is not None and authority is not parent:
         authority = parent.intersect(authority)
@@ -1697,7 +1818,8 @@ async def execute_tool_block(
             "exit_code": 1, "blocked": True,
             "failure_kind": "request_authority_denied",
         }
-    if not admitted:
+    if not admitted and not (bound_chat is not None and valid and not authority.inherited
+                            and not authority.restricted(operation)):
         reason = "The exact operation is outside server request authority."
         if tool_policy and any(tool_policy.blocks(name) for name in email_tool_policy_names(getattr(block, "tool_type", ""))):
             reason = f"Execution of tool '{getattr(block, 'tool_type', '')}' is forbade by the active tool policy."
@@ -1716,13 +1838,24 @@ async def execute_tool_block(
             "exit_code": 1, "failure_kind": "turn_contract_denied",
         }
 
+    if not admitted:
+        # Missing semantic authority may be requested explicitly from a human;
+        # an independent model never manufactures it. All hard admission above
+        # remains absolute and exact continuation re-seals resources below.
+        _, paused = await _review_bound_chat_action(bound_chat, block,
+            owner=owner, session_id=session_id, workspace=workspace, authority=authority,
+            security_context=security_context, active_document_id=active_document_id,
+            client_runtime_context=client_runtime_context, deterministically_admitted=False)
+        return f"{getattr(block, 'tool_type', '')}: APPROVAL REQUIRED", paused
+
     transport = operation.transport_tool
     if operation.tool == "private_browser":
         try:
             _, browser_args = parse_browser_operation(operation.input)
         except (ValueError, TypeError):
             return f"{transport}: UNSUPPORTED", {**page_unavailable(), "error": "Browser raw commands, flags and batches are unsupported."}
-        if browser_args["action"] not in SESSION_ACTIONS:
+        if (browser_args["action"] not in SESSION_ACTIONS
+                and not _registered_browser_page(owner, session_id, browser_args["action"])):
             return f"{transport}: UNSUPPORTED", page_unavailable()
     # Raw global Playwright MCP has no authoritative session/page observation.
     # Its transport process and remote backend identity cannot substitute for it.
@@ -1749,7 +1882,8 @@ async def execute_tool_block(
         browser_operation = None
         if native_browser(operation, backend_operation.resource):
             _, browser_args = parse_browser_operation(operation.input)
-            if browser_args["action"] not in SESSION_ACTIONS:
+            if (browser_args["action"] not in SESSION_ACTIONS
+                    and not _registered_browser_page(owner, session_id, browser_args["action"])):
                 return f"{transport}: UNSUPPORTED", page_unavailable()
             if pending is not None and pending.browser_operation is None:
                 raise ResourceIdentityError("Approved action has no sealed browser identity")
@@ -1800,9 +1934,41 @@ async def execute_tool_block(
                 "failure_kind": "resource_identity_denied",
             }
 
+    if bound_chat is not None:
+        from src.chat_automation import validate_elevation_operation
+        try:
+            validate_elevation_operation(operation, resource_operation)
+        except ValueError as error:
+            return f"{transport}: BLOCKED", {"error": str(error), "exit_code": 1,
+                "blocked": True, "failure_kind": "elevation_scope_denied"}
+    browser_orchestration = (operation.tool == "private_browser" and operation.action == "automate"
+                             and _registered_browser_page(owner, session_id, "automate"))
+    if bound_chat is not None and exact_approval is None and not browser_orchestration:
+        exact_approval, paused = await _review_bound_chat_action(bound_chat, block,
+            owner=owner, session_id=session_id, workspace=workspace, authority=authority,
+            security_context=security_context, active_document_id=active_document_id,
+            client_runtime_context=client_runtime_context, deterministically_admitted=True)
+        if paused is not None:
+            return f"{getattr(block, 'tool_type', '')}: APPROVAL REQUIRED", paused
+        if exact_approval is not None and any(
+            actual != getattr(exact_approval.pending, field)
+            for field, actual in (("backend_operation", backend_operation),
+                ("resource_operation", resource_operation), ("owned_operation", owned_operation),
+                ("process_operation", process_operation), ("browser_operation", browser_operation))
+        ):
+            return f"{transport}: BLOCKED", {"error": "The action identity changed during approval.",
+                "exit_code": 1, "blocked": True, "failure_kind": "resource_identity_denied"}
+        # The provider wait must not freeze browser document identities.
+        if browser_operation is not None:
+            try:
+                await revalidate_browser_operation(browser_operation)
+            except (ValueError, TypeError, OSError) as error:
+                return f"{transport}: BLOCKED", {"error": str(error), "exit_code": 1,
+                    "blocked": True, "failure_kind": "resource_identity_denied"}
+
     approval_claimed = False
     if exact_approval is not None:
-        if (
+        if exact_approval.pending.policy_binding is None and (
             not isinstance(security_context, ToolRunSecurityContext)
             or not security_context.external_untrusted_context_seen
             or not exact_approval.pending.external_untrusted_context_seen
@@ -1869,7 +2035,8 @@ async def execute_tool_block(
                 },
             )
 
-    if isinstance(security_context, ToolRunSecurityContext) and not approval_claimed:
+    if (isinstance(security_context, ToolRunSecurityContext) and not approval_claimed
+            and bound_chat is None):
         decision = security_context.decision_for(
             getattr(block, "tool_type", None),
             getattr(block, "content", None),
@@ -1884,9 +2051,23 @@ async def execute_tool_block(
                 decision.reason or "Tool blocked by external-context policy.",
             )
 
+    if bound_chat is not None and not bound_chat.current():
+        return f"{transport}: BLOCKED", {"error": "The chat policy changed before dispatch.",
+            "exit_code": 1, "blocked": True, "executed": False, "failure_kind": "approval_stale"}
+    browser_runtime = (
+        _browser_decision_runtime(bound_chat, owner=owner, session_id=session_id, workspace=workspace,
+            authority=authority, security_context=security_context, disabled_tools=disabled_tools,
+            tool_policy=tool_policy, client_runtime_context=client_runtime_context, progress_cb=progress_cb)
+        if bound_chat is not None and browser_orchestration else None)
     token = _active_workspace.set(workspace or None)
+    browser_runtime_token = _browser_automation_runtime.set(browser_runtime)
     try:
         backend_operation.validate(client_runtime_context)
+        # Recheck captured identities after any asynchronous reviewer and at
+        # the actual dispatcher boundary, including fake-provider regressions.
+        for captured in (resource_operation, owned_operation, process_operation):
+            if captured is not None:
+                captured.validate()
         if process_operation is not None and approval_claimed:
             process_operation = replace(process_operation, exact_approval=exact_approval)
         if browser_operation is not None and approval_claimed:
@@ -1924,6 +2105,7 @@ async def execute_tool_block(
             "failure_kind": "resource_identity_denied",
         }
     finally:
+        _browser_automation_runtime.reset(browser_runtime_token)
         _active_workspace.reset(token)
 
 

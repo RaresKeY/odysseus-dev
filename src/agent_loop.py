@@ -21196,6 +21196,11 @@ async def stream_agent_loop(
                 client_runtime_context.pop(_key, None)
         logger.info("[agent-intent] SFT fixture owner=%s disabled workspace/TUI tool routing", owner)
 
+    from src.tool_execution import _bound_chat_turn
+    _automation_bound_turn = _bound_chat_turn()
+    if (_automation_bound_turn is not None and exact_approval is not None
+            and exact_approval.pending.policy_binding is None):
+        exact_approval = None
     run_security = ToolRunSecurityContext(
         external_untrusted_context_seen=(
             bool(external_untrusted_context_seen)
@@ -21206,7 +21211,7 @@ async def stream_agent_loop(
             or messages_contain_external_untrusted_context(messages)
         ),
         approval_gate_bypassed=bool(
-            exact_approval and exact_approval.allow_remaining_actions
+            _automation_bound_turn is None and exact_approval and exact_approval.allow_remaining_actions
         ),
         delegated_credential=bool(delegated_credential),
     )
@@ -33353,7 +33358,7 @@ async def stream_agent_loop(
                     "Tool blocked before approval by current policy: %s",
                     block.tool_type,
                 )
-            elif not security_decision.allowed:
+            elif not security_decision.allowed and _automation_bound_turn is None:
                 approval_document = (
                     active_document
                     if block.tool_type
