@@ -326,3 +326,26 @@ def test_symlink_ledger_and_writable_directory_refused(tmp_path):
     ledger.path.parent.chmod(0o755)
     with pytest.raises(DecisionError, match="unsafe_ledger_directory"):
         CampaignLedger(ledger.path, authorization=AUTH)
+
+
+def test_host_stop_sentinel_blocks_existing_and_restarted_owner(tmp_path):
+    ledger, version = setup(tmp_path)
+    (ledger.path.parent / "HALT_REQUESTED.json").write_text('{"campaign_id":"odysseus-jev-extended-20261024-v1"}')
+    with pytest.raises(DecisionError, match="halted"):
+        reserve(ledger, version)
+    assert CampaignLedger(ledger.path, authorization=AUTH).report()["halted"]
+
+
+def test_host_stop_sentinel_between_reserve_and_dispatch_retains_hold(tmp_path):
+    ledger, version = setup(tmp_path)
+    reserve(ledger, version)
+    (ledger.path.parent / "HALT_REQUESTED.json").write_text('{}')
+    with pytest.raises(DecisionError, match="halted"):
+        ledger.dispatch("one", {"wire": "one"})
+    assert ledger.report()["held"] == 200 and ledger.report()["halted"]
+
+
+@pytest.mark.parametrize("verified", ["false", "true", 1, None])
+def test_verified_contract_requires_exact_boolean(verified):
+    with pytest.raises(DecisionError, match="invalid_billing_contract"):
+        replace(CONTRACT, verified=verified).checked()

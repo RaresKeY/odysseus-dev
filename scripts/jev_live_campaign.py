@@ -10,6 +10,7 @@ from __future__ import annotations
 import argparse
 import asyncio
 from collections import Counter
+from datetime import datetime
 import hashlib
 import json
 import os
@@ -154,7 +155,8 @@ def registered_store(app_state, *, api_key=None):
             raise DecisionError("campaign_application_state_not_fresh")
         db.add(d.ModelEndpoint(id=ENDPOINT_ID, name="Synthetic Jev campaign only", base_url=URL,
             api_key=api_key, owner=OWNER, is_enabled=True, pinned_models=json.dumps([MODEL]),
-            cached_models=json.dumps([{ "id": MODEL }]), model_refresh_mode="disabled", endpoint_kind="api"))
+            cached_models=json.dumps([{ "id": MODEL }]), model_refresh_mode="disabled", endpoint_kind="api",
+            created_at=datetime(2026, 10, 24), updated_at=datetime(2026, 10, 24)))
         db.commit()
     return SqlAttemptStore(AutomationStore(factory)), engine
 
@@ -183,7 +185,9 @@ def live_process_boundary():
         raise DecisionError("campaign_runtime_boundary_invalid")
 
 
-async def run(directory, *, stage="smoke", live=False, config=None, wall_seconds=120):
+async def run(directory, *, stage="smoke", live=False, config=None, wall_seconds=120, max_new_cases=None):
+    if max_new_cases is not None and (type(max_new_cases) is not int or max_new_cases < 1):
+        raise DecisionError("campaign_invalid_case_limit")
     suite = load_suite()
     source, suite_sha = source_identity(), digest(suite)
     if live:
@@ -210,18 +214,45 @@ async def run(directory, *, stage="smoke", live=False, config=None, wall_seconds
     for admitted in stages:
         ledger.advance(admitted, evidence=config["admitted_stages"][admitted] if live else "synthetic-offline-gate/v1")
     key = read_test_key() if live else None
-    rows, totals, started = [], Counter(), time.monotonic()
+    rows, totals, started = [], Counter({key: 0 for key in ("attempted", "valid", "rejected", "unresolved", "cached",
+        "actual_dispatches", "abstained", "label_agreement", "false_complete", "unsafe_advice", "false_no_tools")}), time.monotonic()
     import httpx
     # Ephemeral SQL state and encrypted registration disappear with the process's
     # private tmpfs; only accounting and explicitly synthetic captures persist.
+    from core import database as d
+    original_factory = d.SessionLocal
     with tempfile.TemporaryDirectory(prefix="jev-campaign-app-") as temporary:
-        store, engine = registered_store(temporary, api_key=key)
+        engine = None
         try:
+            store, engine = registered_store(temporary, api_key=key)
             selected = [case for case in suite["cases"] if not live or case["split"] == stage]
             for case in selected:
-                if time.monotonic() - started >= wall_seconds:
+                if (time.monotonic() - started >= wall_seconds
+                        or max_new_cases is not None and totals["actual_dispatches"] >= max_new_cases):
                     break
                 case_stage = stage if live else case["split"]
+                case_key = digest({"case": case["id"], "version": version})
+                prior = next((item for item in ledger.report()["attempts"] if item["case_key"] == case_key), None)
+                if prior is not None:
+                    # A matching completed attempt is replayed, never resent.
+                    # Missing, failed or transformed evidence is a hard stop.
+                    from src.decisions.config import resolve_decision_endpoint
+                    endpoint = resolve_decision_endpoint({"endpoint_id": ENDPOINT_ID, "model": MODEL,
+                                                         "protocol": "systemone"}, OWNER)
+                    expected_wire = encode({"model": MODEL, "state": case["state"], "questions": request_for(case).questions()})
+                    capture_path = directory / "captures" / (prior["id"] + ".json")
+                    if (prior["version"] != version or prior["stage"] != case_stage
+                            or decode(prior["binding"]) != CampaignGovernor.binding(endpoint, expected_wire)
+                            or not capture_path.is_file()):
+                        raise DecisionError("campaign_cached_identity_unavailable")
+                    cached = replay_capture(capture_path, ledger)
+                    if cached["case_id"] != case["id"]:
+                        raise DecisionError("campaign_capture_ledger_mismatch")
+                    rows.append({"case_id": case["id"], "feature": case["feature"], "split": case["split"],
+                        "status": "cached", "attempt_id": prior["id"], "choice": cached["answers"]["decision"]["choice"],
+                        "actual_dispatches": 0, "evidence_kind": "offline_cached_replay"})
+                    totals.update(cached=1)
+                    continue
                 governor = CampaignGovernor(ledger, version=version, stage=case_stage, case_id=case["id"], contract=contract)
                 kwargs = {}
                 if not live:
@@ -267,15 +298,18 @@ async def run(directory, *, stage="smoke", live=False, config=None, wall_seconds
                 if ledger.report()["halted"] or row["status"] != "valid" or row["false_complete"] or row["unsafe_advice"]:
                     break  # Protocol/identity/accounting failures block expansion.
         finally:
-            engine.dispose()
+            d.SessionLocal = original_factory
+            if engine is not None:
+                engine.dispose()
     report = ledger.report()
     replayed = [replay_capture(path, ledger) for path in sorted((directory / "captures").glob("*.json"))]
     features = {}
     for feature in sorted({case["feature"] for case in suite["cases"]}):
-        outcomes = [row for row in rows if row["feature"] == feature]
+        all_outcomes = [row for row in rows if row["feature"] == feature]
+        outcomes = [row for row in all_outcomes if row["status"] != "cached"]
         features[feature] = {"attempted": len(outcomes), "valid": sum(row["status"] == "valid" for row in outcomes),
             "rejected": sum(row["status"] == "rejected" for row in outcomes), "unresolved": sum(row["status"] == "unresolved" for row in outcomes),
-            "abstained": sum(row.get("abstained", False) for row in outcomes), "cached": 0,
+            "abstained": sum(row.get("abstained", False) for row in outcomes), "cached": sum(row["status"] == "cached" for row in all_outcomes),
             "missing_case_ids": [case["id"] for case in suite["cases"] if case["feature"] == feature
                                  and (not live or case["split"] == stage) and case["id"] not in {row["case_id"] for row in rows}]}
     return {"schema": "odysseus-jev-campaign-report/v1", "mode": "new_live" if live else "offline_contract_simulation",
