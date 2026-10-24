@@ -1837,6 +1837,8 @@ async def execute_tool_block(
         )
 
     # Credential denial precedes authority, exact approval claim and bridges.
+    from src.owner_identity import effective_storage_owner
+    owner = effective_storage_owner(owner) or owner
     if _bound_chat_turn() is None and session_id and getattr(block, "tool_type", None) not in {"ask_user", "update_plan"}:
         # Saved chat/task grants predate this contract. They cannot invent a
         # fresh user turn or inherit its mode/elevation across an unattended

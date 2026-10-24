@@ -15,6 +15,7 @@ from contextvars import ContextVar
 from dataclasses import dataclass, field
 from functools import wraps
 from typing import Any
+from src.automation_task_state import transition_status, submission_is_current
 
 from fastapi import HTTPException
 
@@ -64,6 +65,10 @@ class AutomationStore:
             db.close()
 
     def owner(self, db, owner):
+        from src.owner_identity import effective_storage_owner
+        owner = effective_storage_owner(owner)
+        if owner is None:
+            raise HTTPException(401, "A chat owner is required")
         d = _models()
         key = owner_key(owner)
         row = db.query(d.OwnerChatAutomation).filter_by(owner_key=key).with_for_update().first()
@@ -190,6 +195,10 @@ class AutomationStore:
                     "elevation_ceiling": p.elevation_ceiling, **copy.deepcopy(config)}
 
     def acquire(self, owner, session_id, raw_ask, entrypoint, submission_id=None):
+        from src.owner_identity import effective_storage_owner
+        owner = effective_storage_owner(owner)
+        if owner is None:
+            raise HTTPException(401, "A chat owner is required")
         d = _models()
         sid = str(session_id)
         identifier = submission_id or uuid.uuid4().hex
@@ -235,11 +244,16 @@ class AutomationStore:
             with self.transaction() as db:
                 p, s = self.state(db, bound.owner, bound.session_id)
                 row = db.query(d.ChatAutomationSubmission).filter_by(submission_id=bound.submission_id).first()
+                lease = db.query(d.ChatAutomationLease).filter_by(session_id=bound.session_id,
+                    token=bound.token, submission_id=bound.submission_id, owner_key=owner_key(bound.owner)).first() if row and row.status == 'preparing' else None
+                fresh = self._policy(p, s, bound.owner, bound.policy.get('entrypoint', 'interactive'))
                 return bool(row and row.owner_key == owner_key(bound.owner)
-                    and row.status in {"preparing", "bound", "running", "awaiting_approval"}
+                    and submission_is_current(row.status, lease_token=lease.token if lease else None,
+                        expected_token=bound.token, lease_expires_at=lease.expires_at if lease else None, now=self.clock())
                     and row.intent_digest == digest(bound.raw_ask)
                     and p.authority_epoch == bound.policy["authority_epoch"]
                     and digest(p.configuration or {}) == bound.policy["configuration_digest"]
+                    and digest(fresh['effective_roots']) == digest(bound.policy.get('effective_roots', []))
                     and s.policy_revision == bound.policy["policy_revision"])
         except HTTPException:
             return False
@@ -250,9 +264,10 @@ class AutomationStore:
             row = db.query(d.ChatAutomationSubmission).filter_by(submission_id=bound.submission_id).first()
             if row is None or row.owner_key != owner_key(bound.owner):
                 raise HTTPException(409, "Turn binding is unavailable")
+            next_status = transition_status(row.status, status)
             if row.status in {"completed", "failed", "cancelled"}:
                 return
-            row.status = status
+            row.status = next_status
             if descriptor is not None:
                 row.descriptor = copy.deepcopy(descriptor)
             lease = db.query(d.ChatAutomationLease).filter_by(session_id=bound.session_id, token=bound.token).first()
@@ -364,7 +379,8 @@ class SqlAttemptStore:
             previous = db.query(d.DecisionAttempt).filter_by(owner_key=owner_key(record["owner"]),
                 session_id=record["session_id"], run_id=record["run_id"]).all()
             if (db.query(d.DecisionAttempt).filter_by(attempt_id=record["attempt_id"]).first()
-                    or len(previous) >= max_calls or any(r.status in {"reserved", "unresolved"} for r in previous)):
+                    or len(previous) >= max_calls or any(r.status in {"reserved", "unresolved"}
+                        or (r.record or {}).get('failure_kind') == 'decision_usage_exceeded_reservation' for r in previous)):
                 raise DecisionError("decision_budget_unavailable")
             db.add(d.DecisionAttempt(attempt_id=record["attempt_id"], owner_key=owner_key(record["owner"]),
                 session_id=record["session_id"], run_id=record["run_id"], status="reserved", record=copy.deepcopy(record)))
@@ -568,6 +584,11 @@ def validate_elevation_operation(operation, resource_operation):
     if resource_operation is None:
         return
     roots = effective_elevation_roots()
+    bound = current_turn()
+    originally_expanded = {r['path'] for r in bound.policy.get('effective_roots', [])} if bound else set()
+    live = {r['path'] for r in roots}
+    if any(binding.resource.root.path in originally_expanded - live for binding in resource_operation.bindings):
+        raise ValueError("This additional folder grant expired or was revoked")
     readonly = {r["path"] for r in roots if r["access"] == "read"}
     # Explicit read operations only. Unknown operation classes cannot write
     # through a read-only root merely because a reviewer accepted the action.
@@ -637,7 +658,10 @@ def automation_ingress(session_manager):
             from routes.chat_helpers import _enforce_chat_privileges
             _enforce_chat_privileges(request, session)
             store = AutomationStore()
-            owner = effective_user(request)
+            from src.owner_identity import effective_storage_owner
+            owner = effective_storage_owner(effective_user(request))
+            if owner is None:
+                raise HTTPException(401, "A chat owner is required")
             if data.get("tool_approval_id"):
                 from src.tool_approvals import tool_approval_store
                 pending = tool_approval_store.peek(data["tool_approval_id"])

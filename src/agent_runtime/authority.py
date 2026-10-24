@@ -26,6 +26,8 @@ from src.turn_contract import (
 
 
 def _owner(value):
+    from src.owner_identity import effective_storage_owner
+    value = effective_storage_owner(value) or value
     return str(value or "").strip().casefold()
 
 
