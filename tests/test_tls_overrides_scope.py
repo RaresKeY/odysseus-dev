@@ -39,6 +39,7 @@ REPO = Path(__file__).resolve().parents[1]
 ALLOWED_CALLERS = frozenset({
     "src/llm_core.py",          # shared AsyncClient used by stream_llm
     "routes/model_routes.py",   # _probe_endpoint + _ping_endpoint
+    "src/decisions/provider.py",  # registered owner-visible decision inference only; never page URL fetching
 })
 
 
