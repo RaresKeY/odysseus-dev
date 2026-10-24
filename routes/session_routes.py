@@ -24,6 +24,7 @@ from src.session_image_cleanup import _generated_image_path_for_cleanup, session
 from src.session_actions import is_session_recently_active
 from src.upload_handler import reserve_message_upload_references
 from src.tool_approval_scopes import sanitize_client_message_metadata
+from src.decisions.observability import delete_observability_session
 
 
 def _sanitize_export_filename(name: str) -> str:
@@ -411,6 +412,7 @@ def setup_session_routes(
                     if active_incognito_id and _g.id == active_incognito_id:
                         continue
                     _purge_db.query(_DbMsg).filter(_DbMsg.session_id == _g.id).delete()
+                    delete_observability_session(_purge_db, _g.id)
                     _purge_db.delete(_g)
                     if hasattr(session_manager, "delete_session"):
                         try:
@@ -831,6 +833,8 @@ def setup_session_routes(
                     db_sess = db.query(DbSession).filter(DbSession.id == sid).first()
                     if db_sess and db_sess.is_important:
                         continue
+                    delete_observability_session(db, sid)
+                    db.commit()
                 finally:
                     db.close()
 
@@ -867,6 +871,8 @@ def setup_session_routes(
                         status_code=403,
                         detail={"error": "SESSION_STARRED", "message": "Unstar the session before deleting it"}
                     )
+                delete_observability_session(db, sid)
+                db.commit()
             finally:
                 db.close()
 
@@ -933,6 +939,8 @@ def setup_session_routes(
             db.query(GalleryImage).filter(GalleryImage.session_id.in_(session_ids)).update(
                 {GalleryImage.session_id: None}, synchronize_session=False
             )
+            for sid in session_ids:
+                delete_observability_session(db, sid)
             db.query(DbChatMessage).delete()
             db.query(DbSession).delete()
             db.commit()
@@ -1373,6 +1381,7 @@ def setup_session_routes(
                 if (row.name or "").strip() == "Incognito":
                     should_delete = True
                     deleted_throwaway += 1
+                    delete_observability_session(db, row.id)
                     db.delete(row)
                     if hasattr(session_manager, 'delete_session'):
                         session_manager.delete_session(row.id)
@@ -1406,6 +1415,7 @@ def setup_session_routes(
                         should_delete = True
                         deleted_throwaway += 1
                 if should_delete:
+                    delete_observability_session(db, row.id)
                     db.delete(row)
                     if hasattr(session_manager, 'delete_session'):
                         session_manager.delete_session(row.id)
