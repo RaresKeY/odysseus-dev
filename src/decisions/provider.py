@@ -79,11 +79,12 @@ class DecisionProvider:
     """
 
     def __init__(self, store: AttemptStore, *, resolver=resolve_decision_endpoint,
-                 client_factory=None, clock=time.monotonic):
+                 client_factory=None, clock=time.monotonic, campaign=None, observer=None):
         if store is None:
             raise DecisionError("decision_attempt_store_unavailable")
         self.store, self.resolver, self.clock = store, resolver, clock
         self.client_factory = client_factory or httpx.AsyncClient
+        self.campaign, self.observer = campaign, observer
         # Strong ownership survives request cancellation. SQL operations use a
         # fresh session in their worker thread and are never retried here.
         self._store_tasks = set()
@@ -116,11 +117,11 @@ class DecisionProvider:
             self._own_store_task(cancel_late_reservation())
             raise
 
-    async def _invoke(self, callback, *args):
+    async def _invoke(self, callback, *args, **kwargs):
         # The canonical resolver reads local registration/SQL, never performs
         # provider probes. Keep blocking admission off the event loop; a timed
         # out result is discarded and can never proceed to HTTP dispatch.
-        value = await callback(*args) if inspect.iscoroutinefunction(callback) else await asyncio.to_thread(callback, *args)
+        value = await callback(*args, **kwargs) if inspect.iscoroutinefunction(callback) else await asyncio.to_thread(callback, *args, **kwargs)
         return await value if inspect.isawaitable(value) else value
 
     async def _check(self, context):
@@ -157,9 +158,12 @@ class DecisionProvider:
         except TimeoutError:
             # _evaluate settles a reserved call on cancellation. A preflight
             # timeout has no attempt/reservation and definitely made no HTTP.
-            raise DecisionError("decision_transport_failed" if state.get("dispatched") else "decision_deadline_exceeded",
-                                attempt_id=state.get("attempt_id")) from None
-        except DecisionError:
+            error = DecisionError("decision_transport_failed" if state.get("dispatched") else "decision_deadline_exceeded",
+                                  attempt_id=state.get("attempt_id"))
+            error.dispatched = bool(state.get("dispatched"))
+            raise error from None
+        except DecisionError as error:
+            error.dispatched = bool(state.get("dispatched"))
             raise
         except Exception:
             raise DecisionError("decision_admission_failed", attempt_id=state.get("attempt_id")) from None
@@ -195,13 +199,30 @@ class DecisionProvider:
                   "request_sha256": hashlib.sha256(wire).hexdigest(), "request_bytes": len(wire),
                   "provider_identity": identity, "status": "reserved", "usage": None,
                   "reservation": {"input_tokens": 65536, "output_tokens": 65536}}
+        campaign_reserved = False
         try:
+            if self.campaign is not None:
+                await self._invoke(self.campaign.reserve, record, endpoint, wire)
+                campaign_reserved = True
+                record["reservation"] = {"input_tokens": self.campaign.contract.input_tokens,
+                                         "output_tokens": self.campaign.contract.output_tokens}
             await self._reserve(record, min(context.max_calls, endpoint.max_calls), state)
-        except DecisionError:
-            raise
-        except Exception:
+        except BaseException as error:
+            if campaign_reserved:
+                # No transport is reachable until both durable owners admit.
+                task = self._own_store_task(self._invoke(self.campaign.finish, attempt_id,
+                    status="cancelled", failure_kind="decision_admission_failed", dispatched=False))
+                await asyncio.shield(task)
+            if isinstance(error, (DecisionError, asyncio.CancelledError)):
+                raise
             raise DecisionError("decision_attempt_store_unavailable") from None
-        dispatched, settled, measured = False, False, None
+        dispatched, settled, measured, ticket, result = False, False, None, None, None
+        campaign_tasks = []
+
+        async def govern(callback, *args):
+            task = self._own_store_task(self._invoke(callback, *args))
+            campaign_tasks.append(task)
+            return await asyncio.shield(task)
 
         async def settle(status, failure=None, *, wait=True):
             nonlocal settled
@@ -213,18 +234,70 @@ class DecisionProvider:
             try:
                 if wait:
                     await asyncio.shield(task)
+                if self.campaign is not None:
+                    # Cross-store failure is conservative: a global reservation
+                    # remains held until canonical settlement actually commits.
+                    async def finish_campaign():
+                        for pending in campaign_tasks:
+                            try:
+                                await asyncio.shield(pending)
+                            except Exception:
+                                pass  # A response-bound breach has already been committed.
+                        try:
+                            await asyncio.shield(task)
+                        except Exception:
+                            await self._invoke(self.campaign.ledger.halt)
+                            raise
+                        await self._invoke(self.campaign.finish, attempt_id, status=status,
+                            failure_kind=failure, dispatched=dispatched)
+                    campaign_task = self._own_store_task(finish_campaign())
+                    if wait:
+                        await asyncio.shield(campaign_task)
+                if self.observer:
+                    async def notify():
+                        try:
+                            await asyncio.shield(task)
+                            await self._invoke(self.observer.after_attempt, ticket, status=status,
+                                usage=measured, result=result, failure_kind=failure)
+                        except Exception:
+                            pass  # Observation cannot change accounting or cause a resend.
+                    notify_task = self._own_store_task(notify())
+                    if wait:
+                        await asyncio.shield(notify_task)
             except Exception:
                 # An unsettled durable reservation prevents replay after this failure.
+                if self.campaign is not None:
+                    try:
+                        await self._invoke(self.campaign.ledger.halt)
+                    except Exception:
+                        pass  # Existing reservation still refuses future dispatch.
                 raise DecisionError("decision_attempt_store_unavailable", attempt_id=attempt_id) from None
 
         try:
             await self._check(context)
+            if self.observer is None:
+                try:
+                    from .observability import default_observability
+                    self.observer = default_observability()
+                except Exception:
+                    self.observer = False
+            if self.observer:
+                try:
+                    ticket = await self._invoke(self.observer.before_dispatch, request, context, record)
+                except DecisionError as error:
+                    if error.code.startswith("decision_capture_"):
+                        raise
+                except Exception:
+                    pass  # Optional observation never blocks a decision call.
             from src.tls_overrides import llm_verify
             async with asyncio.timeout(timeout):
                 async with self.client_factory(verify=llm_verify(), follow_redirects=False,
                                                timeout=httpx.Timeout(timeout)) as client:
                     headers = {**endpoint.headers, "Content-Type": "application/json",
                                "Accept": "application/json", "Accept-Encoding": "identity"}
+                    await self._check(context)
+                    if self.campaign is not None:
+                        await govern(self.campaign.dispatch, attempt_id, endpoint, wire)
                     dispatched = True  # Even connect/timeout failures may have reached the provider.
                     state["dispatched"] = True
                     async with client.stream("POST", endpoint.url, content=wire, headers=headers,
@@ -248,7 +321,14 @@ class DecisionProvider:
                             if size > MAX_RESPONSE_BYTES:
                                 raise DecisionError("decision_response_too_large")
                             chunks.append(chunk)
-                        raw = decode(b"".join(chunks))
+                        response_wire = b"".join(chunks)
+                        raw = decode(response_wire)
+                        # Campaign preserves partial usage before strict answer
+                        # interpretation, including malformed/wrong-model answers.
+                        if self.campaign is not None:
+                            measured = valid_usage(raw.get("usage"))
+                            await govern(self.campaign.response, attempt_id, raw.get("usage"),
+                                         hashlib.sha256(response_wire).hexdigest(), hashlib.sha256(encode(raw)).hexdigest())
                         if endpoint.protocol == "openai_json":
                             external_usage = raw.get("usage")
                             if isinstance(external_usage, dict):
@@ -265,10 +345,11 @@ class DecisionProvider:
                 current = await self._invoke(self.resolver, checked_config, context.owner)
                 if current != endpoint:
                     raise DecisionError("decision_endpoint_changed")
-            await settle("settled")
             primary = answers[request.question_id]
-            return DecisionResult(primary["choice"], float(primary["confidence"]),
-                                  dict(primary["probabilities"]), measured, attempt_id, identity, answers)
+            result = DecisionResult(primary["choice"], float(primary["confidence"]),
+                                    dict(primary["probabilities"]), measured, attempt_id, identity, answers)
+            await settle("settled")
+            return result
         except asyncio.CancelledError:
             if not settled:
                 expired = state.get("scope") is not None and state["scope"].expired()
