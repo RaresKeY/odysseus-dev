@@ -15,12 +15,13 @@ import secrets
 import threading
 import time
 from dataclasses import dataclass, field
-from typing import Any, TYPE_CHECKING
+from typing import Any, Callable, TYPE_CHECKING
 
 from src.tool_approval_scopes import (
     CHAT_SESSION_APPROVAL_DECISION,
     DENY_APPROVAL_DECISION,
     TASK_APPROVAL_DECISION,
+    SINGLE_ACTION_APPROVAL_DECISION,
     ToolApprovalScope,
     scope_for_decision,
 )
@@ -131,8 +132,11 @@ def _binding_payload(
     owned_operation=None,
     process_operation=None,
     browser_operation=None,
+    policy_binding=None,
+    user_intent_digest: str = "",
+    submission_id: str = "",
 ) -> dict[str, Any]:
-    return {
+    payload = {
         "owner": _normalized_owner(owner),
         "session_id": str(session_id or ""),
         "origin_run_id": str(origin_run_id or ""),
@@ -158,6 +162,11 @@ def _binding_payload(
         "process_operation": process_operation.to_dict() if process_operation is not None else None,
         "browser_operation": browser_operation.to_dict() if browser_operation is not None else None,
     }
+    if policy_binding is not None:
+        payload.update(policy_binding=dict(policy_binding),
+                       user_intent_digest=user_intent_digest,
+                       submission_id=submission_id)
+    return payload
 
 
 @dataclass(frozen=True)
@@ -192,9 +201,27 @@ class PendingToolApproval:
     owned_operation: BoundOwnedOperation | None = None
     process_operation: BoundProcessOperation | None = None
     browser_operation: BoundBrowserOperation | None = None
+    # Versioned policy and intent are part of the exact digest. The validator
+    # is a server-only fresh-policy/run check, never serialized to the UI.
+    policy_binding: dict[str, Any] | None = None
+    user_intent_digest: str = ""
+    submission_id: str = ""
+    bound_turn: Any = field(default=None, repr=False, compare=False)
+    policy_validator: Callable[["PendingToolApproval"], bool] | None = field(
+        default=None, repr=False, compare=False)
+    _review_started: threading.Event = field(default_factory=threading.Event,
+                                            repr=False, compare=False)
+
+    def policy_is_current(self) -> bool:
+        if self.policy_binding is None:
+            return True
+        try:
+            return callable(self.policy_validator) and self.policy_validator(self) is True
+        except Exception:
+            return False
 
     def public_payload(self, *, reason: str | None = None) -> dict[str, Any]:
-        return {
+        payload = {
             "kind": "tool_approval",
             "approval_id": self.approval_id,
             # The browser already owns this chat id. Persisting it with the
@@ -243,6 +270,19 @@ class PendingToolApproval:
                 "document_version": self.document_version,
             },
         }
+        if self.policy_binding is not None:
+            payload.update(
+                automation_contract_version=1,
+                question="Allow this action?",
+                description=reason or "Review this exact action before it runs.",
+                options=[
+                    {"label": "Allow once", "value": SINGLE_ACTION_APPROVAL_DECISION,
+                     "description": "Allow only this exact action within the current execution scope."},
+                    {"label": "Deny", "value": DENY_APPROVAL_DECISION,
+                     "description": "Do not execute this action."},
+                ],
+            )
+        return payload
 
 
 @dataclass
@@ -257,6 +297,8 @@ class ExactToolApproval:
     # chat still get SINGLE_ACTION, which leaves the gate armed behind the
     # sealed action.
     allow_remaining_actions: bool = True
+    reviewer: str = "human"
+    decision_attempt_id: str | None = None
     _claimed: bool = field(default=False, init=False, repr=False)
     _lock: threading.Lock = field(default_factory=threading.Lock, init=False, repr=False)
 
@@ -273,7 +315,19 @@ class ExactToolApproval:
         content: Any,
         workspace: Any,
     ) -> bool:
-        if self._claimed:
+        # A consumed card may wait before actual dispatch. Removing it from
+        # the registry never extends its expiry or freezes a previous policy.
+        if self._claimed or self.pending.expires_at <= time.time():
+            return False
+        if self.pending.policy_binding is not None and (
+            self.scope is not ToolApprovalScope.SINGLE_ACTION
+            or self.allow_remaining_actions
+            or not self.pending.policy_is_current()
+        ):
+            return False
+        if (self.pending.policy_binding is not None
+                and hashlib.sha256(self.pending.request_text.encode("utf-8")).hexdigest()
+                != self.pending.user_intent_digest):
             return False
         capabilities = capabilities_for_action(tool_name, content)
         effects = tuple(sorted(effect.value for effect in capabilities.effects))
@@ -306,6 +360,9 @@ class ExactToolApproval:
             owned_operation=self.pending.owned_operation,
             process_operation=self.pending.process_operation,
             browser_operation=self.pending.browser_operation,
+            policy_binding=self.pending.policy_binding,
+            user_intent_digest=self.pending.user_intent_digest,
+            submission_id=self.pending.submission_id,
         )
         return _canonical_digest(expected) == self.pending.digest
 
@@ -391,9 +448,27 @@ class ToolApprovalStore:
         request_text: Any = "",
         request_authority: RequestAuthority | None = None,
         client_runtime_context: dict | None = None,
+        policy_record: dict | None = None,
+        policy_validator: Callable[[PendingToolApproval], bool] | None = None,
+        submission_id: str = "",
+        bound_turn: Any = None,
     ) -> PendingToolApproval:
         if request_authority is not None and not isinstance(request_authority, RequestAuthority):
             raise TypeError("Approval authority must be server-owned RequestAuthority")
+        policy_binding = None
+        user_intent_digest = ""
+        if policy_record is not None:
+            from src.chat_policy import ChatPolicy
+            if not callable(policy_validator):
+                raise ValueError("Versioned approvals require fresh policy validation")
+            policy_binding = ChatPolicy.from_record(
+                policy_record, owner=owner, session_id=session_id).binding()
+            if not isinstance(request_text, str) or not isinstance(submission_id, str):
+                raise ValueError("Versioned approval intent must be text")
+            user_intent_digest = hashlib.sha256(request_text.encode("utf-8")).hexdigest()
+            if (policy_record.get("original_intent_digest") is not None
+                    and policy_record["original_intent_digest"] != user_intent_digest):
+                raise ValueError("Versioned approval intent changed")
         now = time.time()
         from src.agent_runtime.authority import ExactOperation
         from src.agent_runtime.resource_binding import NATIVE_FILESYSTEM_TOOLS, resolve_filesystem_operation
@@ -493,6 +568,9 @@ class ToolApprovalStore:
             owned_operation=owned_operation,
             process_operation=process_operation,
             browser_operation=browser_operation,
+            policy_binding=policy_binding,
+            user_intent_digest=user_intent_digest,
+            submission_id=submission_id,
         )
         pending = PendingToolApproval(
             approval_id=secrets.token_urlsafe(32),
@@ -522,6 +600,11 @@ class ToolApprovalStore:
             owned_operation=owned_operation,
             process_operation=process_operation,
             browser_operation=browser_operation,
+            policy_binding=policy_binding,
+            user_intent_digest=user_intent_digest,
+            submission_id=submission_id,
+            policy_validator=policy_validator,
+            bound_turn=bound_turn,
         )
         with self._lock:
             self._purge_expired_locked(now)
@@ -571,6 +654,7 @@ class ToolApprovalStore:
         value.
         """
         now = time.time()
+        normalized_decision = str(decision or "").strip().lower()
         with self._lock:
             self._purge_expired_locked(now)
             approval_key = str(approval_id or "")
@@ -585,12 +669,27 @@ class ToolApprovalStore:
                 # a leaked/guessed opaque id cannot be used to invalidate
                 # another owner's pending action.
                 return None
+        # Fresh-policy validation may read SQL; never hold the store lock over
+        # that callback or invert the persistence -> revocation lock ordering.
+        if pending.policy_binding is not None:
+            if normalized_decision not in {SINGLE_ACTION_APPROVAL_DECISION, DENY_APPROVAL_DECISION}:
+                return None
+            if not pending.policy_is_current():
+                return None
+        with self._lock:
+            self._purge_expired_locked(time.time())
+            if self._pending.get(approval_key) is not pending:
+                return None
             self._pending.pop(approval_key, None)
-        normalized_decision = str(decision or "").strip().lower()
+        if (pending.bound_turn is not None
+                and getattr(pending.bound_turn, "pending_approval_id", None) == pending.approval_id):
+            pending.bound_turn.pending = False
+            pending.bound_turn.pending_approval_id = None
         scope = scope_for_decision(normalized_decision)
         if scope is None:
             return None
-        if not allow_continuation:
+        if (not allow_continuation or scope is ToolApprovalScope.SINGLE_ACTION
+                or pending.policy_binding is not None):
             return ExactToolApproval(
                 pending,
                 scope=ToolApprovalScope.SINGLE_ACTION,
@@ -601,6 +700,54 @@ class ToolApprovalStore:
             scope=scope,
             allow_remaining_actions=True,
         )
+
+    def consume_reviewed(
+        self,
+        pending: PendingToolApproval,
+        *,
+        owner: Any,
+        session_id: Any,
+        decision_attempt_id: str,
+    ) -> ExactToolApproval | None:
+        """Issue a single-action grant after trusted independent review.
+
+        This is an internal server seam. HTTP approval endpoints must continue
+        to require a human request and must never accept a reviewer/attempt ID.
+        """
+        if (pending.policy_binding is None or not pending._review_started.is_set()
+                or not isinstance(decision_attempt_id, str)
+                or not 1 <= len(decision_attempt_id) <= 160):
+            return None
+        with self._lock:
+            if self._pending.get(pending.approval_id) is not pending:
+                return None
+        grant = self.consume(pending.approval_id, decision=SINGLE_ACTION_APPROVAL_DECISION,
+                             owner=owner, session_id=session_id, allow_continuation=False)
+        if grant is not None:
+            grant.reviewer = "decision_provider"
+            grant.decision_attempt_id = decision_attempt_id
+        return grant
+
+    def begin_review(self, pending: PendingToolApproval) -> bool:
+        """Reserve one review invocation; uncertainty never schedules a retry."""
+        with self._lock:
+            self._purge_expired_locked(time.time())
+            if (self._pending.get(pending.approval_id) is not pending
+                    or pending.policy_binding is None or pending._review_started.is_set()):
+                return False
+            pending._review_started.set()
+            return True
+
+    def discard(self, approval_id: Any, *, owner: Any, session_id: Any) -> bool:
+        """Retire only this owner's exact pending card, without approving it."""
+        with self._lock:
+            key = str(approval_id or "")
+            pending = self._pending.get(key)
+            if (pending is None or pending.owner != _normalized_owner(owner)
+                    or pending.session_id != str(session_id or "")):
+                return False
+            self._pending.pop(key, None)
+            return True
 
     def peek(self, approval_id: Any) -> PendingToolApproval | None:
         now = time.time()
