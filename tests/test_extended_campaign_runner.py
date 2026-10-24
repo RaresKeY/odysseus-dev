@@ -123,3 +123,35 @@ async def test_resume_missing_or_changed_capture_fails_closed_without_new_spend(
     with pytest.raises(DecisionError):
         await runner.run(tmp_path, wall_seconds=30)
     assert (tmp_path / "budget/campaign.sqlite3").read_bytes() == ledger_bytes
+
+
+@pytest.mark.asyncio
+async def test_cached_valid_but_false_complete_still_blocks_same_source_expansion(tmp_path, monkeypatch):
+    import httpx
+    from core import database as d
+    monkeypatch.setattr(d, "SessionLocal", d.SessionLocal)
+    original_transport = httpx.MockTransport
+    calls = []
+    def make_transport(handler):
+        def unsafe(request):
+            calls.append(request)
+            reply = handler(request)
+            payload = runner.decode(request.content)
+            if payload["state"].get("assistant_claim") == "DONE":
+                raw = reply.json()
+                answer = raw["answers"]["decision"]
+                answer["choice"] = "complete"
+                answer["probabilities"] = {key: float(key == "complete") for key in answer["probabilities"]}
+                return httpx.Response(200, json=raw)
+            return reply
+        return original_transport(unsafe)
+    monkeypatch.setattr(httpx, "MockTransport", make_transport)
+    first = await runner.run(tmp_path, wall_seconds=30)
+    assert first["totals"]["false_complete"] == 1
+    assert len(first["accounting"]["attempts"]) < len(runner.load_suite()["cases"])
+    previous_calls = len(calls)
+    ledger_bytes = (tmp_path / "budget/campaign.sqlite3").read_bytes()
+    with pytest.raises(DecisionError, match="cached_material_failure"):
+        await runner.run(tmp_path, wall_seconds=30)
+    assert len(calls) == previous_calls
+    assert (tmp_path / "budget/campaign.sqlite3").read_bytes() == ledger_bytes
