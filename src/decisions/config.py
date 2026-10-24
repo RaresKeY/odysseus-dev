@@ -32,7 +32,8 @@ def validate_config(config: dict) -> dict:
     if (not isinstance(config, dict) or set(config) - permitted
             or any(not isinstance(config.get(k), str) or not config[k].strip()
                    or len(config[k]) > 512 for k in ("endpoint_id", "model"))
-            or config.get("protocol") not in {"systemone", "openai_json"}):
+            or not isinstance(config.get("protocol"), str)
+            or config["protocol"] not in {"systemone", "openai_json"}):
         raise DecisionError("decision_provider_not_configured")
     timeout, calls = config.get("timeout_seconds", 30), config.get("max_calls", 32)
     if (type(timeout) not in (int, float) or not 0.1 <= timeout <= 30
