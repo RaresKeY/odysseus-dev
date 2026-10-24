@@ -243,20 +243,22 @@ class FollowupDecision:
                 'attempt_id': self.attempt_id, 'intent_only': True}
 
 
-async def prepare_tool_routing(bound, inventory, *, preparation=None, provider=None):
+async def prepare_tool_routing(bound, inventory, *, preparation=None, provider=None, semantic_only=False):
     """Run once before context/tool preprocessing, then bind an explicit selection."""
     from src.chat_automation import SqlAttemptStore
     from src.decisions import DecisionProvider
     if bound.tool_selection is not None:
         bound.tool_selection.validate(bound, inventory)
         return bound.tool_selection
+    if semantic_only and getattr(bound, '_semantic_prepared', False):
+        return None
     catalog = ToolCatalogSnapshot.freeze(bound, inventory)
     receipt = preparation or bound.preparation or preparation_receipt(bound)
     receipt.validate(bound)
     bound.preparation = receipt
     mode = bound.policy.get('tool_routing', 'existing')
-    followup_enabled = bool(bound.policy.get('followup_enabled'))
-    diagnostics_enabled = bool(bound.policy.get('preparation_enabled'))
+    followup_enabled = bool(bound.policy.get('followup_enabled')) and bool(bound.prior_task) and not getattr(bound, '_semantic_prepared', False)
+    diagnostics_enabled = bool(bound.policy.get('preparation_enabled')) and not getattr(bound, '_semantic_prepared', False)
     questions = {}
     choices = {'no_tools': 'No tools are needed for this turn.', 'abstain': 'Cannot safely choose from these tools.'}
     if mode == 'jev':
@@ -317,9 +319,12 @@ async def prepare_tool_routing(bound, inventory, *, preparation=None, provider=N
     else:
         selection = ToolSelection('all_available' if mode == 'all' else 'existing',
                                   frozenset(item.name for item in catalog.entries), catalog, mode)
-    bound.tool_selection = selection
+    if followup_enabled or diagnostics_enabled:
+        bound._semantic_prepared = True
+    if not semantic_only:
+        bound.tool_selection = selection
     bound.store.record_preparation(bound)
-    return selection
+    return selection if not semantic_only else None
 
 
 async def select_effort(bound, selected_route, supported_efforts, *, provider=None):
