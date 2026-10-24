@@ -298,7 +298,7 @@ def validate_elevation_roots(owner, roots):
         if not path or not any(Path(path).is_relative_to(Path(p).resolve()) for p in allowed if isinstance(p, str)):
             raise HTTPException(403, "Folder is outside the deployment elevation scope")
         from src.agent_runtime.resources import FilesystemRoot
-        sealed = FilesystemRoot.seal(path, owner=owner or "")
+        sealed = FilesystemRoot.seal(path, owner=str(owner or "").strip().casefold())
         result.append({"path": path, "access": entry["access"], "identity": sealed.to_dict()})
     return result
 
@@ -353,6 +353,7 @@ class BoundChatTurn:
     headers: dict = field(default_factory=dict, repr=False)
     endpoint_url: str = ""
     pending: bool = False
+    pending_approval_id: str | None = None
 
     @property
     def run_id(self):
@@ -444,6 +445,14 @@ def validate_provider_binding(url, model, headers, session_id, reasoning_effort=
         return
     if not bound.current():
         raise RuntimeError("Chat policy changed before provider dispatch")
+    endpoint_id = bound.descriptor["endpoint_id"]
+    if endpoint_id:
+        from src.endpoint_resolver import resolve_endpoint_by_id
+        from src.owner_identity import DEFAULT_LOCAL_OWNER
+        resolved = resolve_endpoint_by_id(endpoint_id, bound.descriptor["model"],
+            owner=bound.owner or DEFAULT_LOCAL_OWNER, require_exact_model=True)
+        if resolved != (bound.endpoint_url, bound.descriptor["model"], bound.headers):
+            raise RuntimeError("Selected provider changed before dispatch")
     if (str(url).rstrip("/") != bound.endpoint_url.rstrip("/")
             or model != bound.descriptor["model"] or dict(headers or {}) != bound.headers
             or (reasoning_effort or "") != bound.descriptor["reasoning_effort"]):
@@ -507,6 +516,8 @@ def automation_ingress(session_manager):
                 bound = getattr(pending, "bound_turn", None)
                 if bound is None or bound.owner != owner or bound.session_id != sid or not bound.current():
                     raise HTTPException(409, "Approval expired; request the action again")
+                bound.pending = False
+                bound.pending_approval_id = None
             elif not str(data.get("message") or "").strip():
                 # Attachment-only requests keep their explicit empty user text;
                 # automatic approach choice needs text and cannot guess a task.
