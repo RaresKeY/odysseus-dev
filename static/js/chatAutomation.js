@@ -27,7 +27,7 @@ function render() {
   $('chat-approval-mode').value = policy?.approval_mode || configuration?.last_explicit_mode || 'always_ask';
   $('chat-route-mode').value = policy?.route_mode || 'manual';
   const roots = policy?.effective_roots || [];
-  $('chat-automation-state').textContent = roots.length ? `${roots.length} extra folder(s) granted · process controls retained` : 'Workspace sandbox · no extra folders';
+  $('chat-automation-state').textContent = roots.length ? `${roots.length} extra folder(s) requested · sandbox checked at execution` : 'Workspace scope requested · sandbox checked at execution';
   $('chat-automation-state').title = 'Actual execution requires a working sandbox. YOLO skips discretionary approval within the current permissions.';
 }
 async function refresh() {

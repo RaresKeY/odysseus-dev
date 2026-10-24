@@ -2037,6 +2037,10 @@ def _reconcile_selected_route_from_request(
     stream request includes the route that was selected at click/send time.
     Trust only registered endpoint ids, or the session's existing endpoint URL.
     """
+    if getattr(sess, "_automation_bound", False):
+        # The ingress barrier already resolved the committed selection. A
+        # stale browser model picker is display metadata, not a second route.
+        return False
     selected_model = str(form_data.get("selected_model") or "").strip()
     selected_endpoint_id = str(form_data.get("selected_endpoint_id") or "").strip()
     selected_endpoint_url = str(form_data.get("selected_endpoint_url") or "").strip()
@@ -2284,7 +2288,9 @@ def setup_chat_routes(
         if not supports_user_thinking_toggle(sess.model):
             thinking_mode = "off"
         reasoning_effort = None
-        req_effort = getattr(chat_request, "reasoning_effort", None)
+        from src.chat_automation import current_turn
+        _bound_turn = current_turn()
+        req_effort = _bound_turn.descriptor["reasoning_effort"] if _bound_turn else getattr(chat_request, "reasoning_effort", None)
         if req_effort:
             reasoning_effort = str(req_effort).strip().lower()
         elif session_mode.startswith("effort:"):
@@ -2383,7 +2389,7 @@ def setup_chat_routes(
             sess.headers,
             owner=owner,
             policy=foreground_policy,
-            selected_endpoint_id=chat_request.selected_endpoint_id or getattr(sess, "endpoint_id", None),
+            selected_endpoint_id=getattr(sess, "endpoint_id", None) if getattr(sess, "_automation_bound", False) else chat_request.selected_endpoint_id or getattr(sess, "endpoint_id", None),
         )
         candidate_request_factory = None
         selected_context_length = getattr(ctx, "context_length", 0)
@@ -2803,7 +2809,11 @@ def setup_chat_routes(
             from src.model_profiles import supports_user_thinking_toggle
             if not supports_user_thinking_toggle(sess.model):
                 thinking_mode = "off"
-            if reasoning_effort is None and session_mode.startswith("effort:"):
+            from src.chat_automation import current_turn
+            _bound_turn = current_turn()
+            if _bound_turn is not None:
+                reasoning_effort = _bound_turn.descriptor["reasoning_effort"] or None
+            elif reasoning_effort is None and session_mode.startswith("effort:"):
                 reasoning_effort = session_mode[7:].strip()
             from src.chatgpt_subscription import validate_reasoning_effort
             reasoning_effort = validate_reasoning_effort(sess.model, reasoning_effort)
@@ -2857,7 +2867,8 @@ def setup_chat_routes(
                     external_untrusted_context_seen or pending_taint
                 )
                 decision = str(tool_approval_decision or "").strip().lower()
-                if decision not in {"approve", "approve_task", "deny"}:
+                allowed_decisions = {"approve_once", "deny"} if pending_tool_approval.policy_binding is not None else {"approve", "approve_task", "deny"}
+                if decision not in allowed_decisions:
                     raise HTTPException(400, "Invalid tool approval decision.")
                 if plan_mode:
                     raise HTTPException(
@@ -2872,7 +2883,7 @@ def setup_chat_routes(
                 )
                 tool_approval_continuation = True
                 if (
-                    decision in {"approve", "approve_task"}
+                    decision in {"approve", "approve_task", "approve_once"}
                     and exact_tool_approval is None
                 ):
                     raise HTTPException(
@@ -4107,7 +4118,7 @@ def setup_chat_routes(
                 sess.headers,
                 owner=_user,
                 policy=_foreground_policy,
-                selected_endpoint_id=selected_endpoint_id or getattr(sess, "endpoint_id", None),
+                selected_endpoint_id=getattr(sess, "endpoint_id", None) if getattr(sess, "_automation_bound", False) else selected_endpoint_id or getattr(sess, "endpoint_id", None),
             )
             _chat_request_factory = None
             _selected_context_length = getattr(ctx, "context_length", 0)
