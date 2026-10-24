@@ -26,6 +26,7 @@ DEFAULT_FIXTURES = ROOT / "tests/fixtures/decision_port/synthetic-v1.json"
 IMPLEMENTATION_FILES = (
     "src/decisions/contracts.py", "src/decisions/config.py", "src/decisions/provider.py",
     "src/decisions/store.py", "src/approach_routing.py", "scripts/decision_experiments.py",
+    "src/automation_task_state.py", "src/automation_catalog.py",
 )
 
 
