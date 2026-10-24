@@ -82,6 +82,7 @@ async def test_partial_canonical_stage_restart_replays_then_finishes_unrun_cases
     assert all_cached["totals"]["cached"] == len(runner.load_suite()["cases"])
     assert all_cached["totals"]["actual_dispatches"] == 0
     assert all_cached["accounting"] == resumed["accounting"]
+    assert all_cached["quality_denominators"] == resumed["quality_denominators"]
     assert d.SessionLocal is original
 
 
@@ -288,3 +289,25 @@ def test_expected_answers_independent_fields_remain_outside_inference(tmp_path):
     assert runner.answer_gold(checked, "fresh_information") == "unclear"
     assert runner.answer_gold(checked, "project_context") == "yes"
     assert runner.encode({"state": runner.request_for(checked).state, "questions": runner.request_for(checked).questions()}) == before
+
+
+def test_frozen_independent_cohort_uses_bounded_native_requests_and_no_labels():
+    from types import SimpleNamespace
+    from src.decisions.campaign import RootApprovedChoiceProfile
+    profile = RootApprovedChoiceProfile('1' * 64, True)
+    suite = runner.load_suite()
+    assert {split: sum(c['split'] == split for c in suite['cases']) for split in ('smoke','small','development','heldout')} == {'smoke':2,'small':24,'development':80,'heldout':80}
+    for case in suite['cases']:
+        request = runner.request_for(case)
+        wire = runner.encode({'model':runner.MODEL,'state':request.state,'questions':request.questions()})
+        profile.check_wire(SimpleNamespace(url=runner.URL, model=runner.MODEL, protocol='systemone', headers={}), wire)
+        assert 'expected_answers' not in request.state
+        for question, gold in case.get('expected_answers', {}).items():
+            assert gold in request.questions()[question]['criteria']
+
+
+def test_multiquestion_uncertainty_is_identical_on_live_and_cached_answers():
+    answers = {'primary': {'choice':'ready','confidence':.99}, 'secondary': {'choice':'no','confidence':.6}}
+    assert runner.answers_abstained(answers)
+    assert runner.answers_abstained({'decision': {'choice':'unclear','confidence':.99}})
+    assert not runner.answers_abstained({'decision': {'choice':'yes','confidence':.99}})

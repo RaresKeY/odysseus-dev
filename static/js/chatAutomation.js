@@ -3,7 +3,7 @@ import './decision-activity.js';
 
 const $ = id => document.getElementById(id);
 const categories = [['established_procedure','Established procedure'],['bounded_domain','Bounded domain'],['approach_discovery','Approach discovery']];
-let policy, configuration, endpoints = [], sequence = 0;
+let policy, configuration, endpoints = [], decisionEndpoints = [], sequence = 0;
 let settingsWrite = Promise.resolve(true);
 let navigationGeneration = 0;
 let settingsChatId = null, settingsNavigation = 0;
@@ -86,10 +86,11 @@ function routeFields(key, title, value={}) {
   function label(text,element){const l=document.createElement('label');l.append(document.createTextNode(text),element);row.append(l);}
   const endpoint=document.createElement('select');endpoint.dataset.field='endpoint_id';
   endpoint.append(new Option('Choose endpoint',''));
-  endpoints.forEach(e=>endpoint.append(new Option(e.name,e.id)));endpoint.value=value.endpoint_id||'';label('Endpoint',endpoint);
+  const choices=key==='decision'?decisionEndpoints:endpoints;
+  choices.forEach(e=>endpoint.append(new Option(e.name,e.id)));endpoint.value=value.endpoint_id||'';label('Endpoint',endpoint);
   const model=document.createElement('input');model.dataset.field='model';model.value=value.model||'';model.autocomplete='off';model.setAttribute('list',`chat-models-${key}`);label('Model',model);
   const list=document.createElement('datalist');list.id=`chat-models-${key}`;row.append(list);
-  const options=()=>{list.replaceChildren();(endpoints.find(e=>e.id===endpoint.value)?.models||[]).forEach(m=>list.append(new Option(m)));};endpoint.addEventListener('change',options);options();
+  const options=()=>{list.replaceChildren();(choices.find(e=>e.id===endpoint.value)?.models||[]).forEach(m=>list.append(new Option(m)));};endpoint.addEventListener('change',options);options();
   if(key!=='decision') {
     const effort=document.createElement('select');effort.dataset.field='reasoning_effort';
     [['','Default'],...['none','minimal','low','medium','high','xhigh','max'].map(v=>[v,v])].forEach(([v,t])=>effort.append(new Option(t,v)));
@@ -111,7 +112,7 @@ function readRoute(key) {
 }
 async function openSettings() {
   try {
-    await refresh(); endpoints=(await api('/api/chat-settings/models')).endpoints;
+    await refresh(); const choices=await api('/api/chat-settings/models');endpoints=choices.endpoints;decisionEndpoints=choices.decision_endpoints||choices.endpoints;
     $('chat-elevation-ceiling').checked=!!configuration.elevation_ceiling;
     $('chat-elevation-explanation').textContent=configuration.elevation_available ? 'Allows a separate chat grant for listed folders. Mode or ceiling changes revoke existing grants. Process controls remain required.' : 'The deployment currently disallows extra folders. The ceiling cannot override that restriction.';
     $('chat-elevation-folders').replaceChildren();

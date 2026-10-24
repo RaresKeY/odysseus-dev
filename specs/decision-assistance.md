@@ -84,18 +84,36 @@ replay can resume a stage without a new paid denominator or duplicate call.
 
 Offline campaign execution uses the actual registered endpoint resolver,
 SQL attempt owner and provider with mocked HTTP. Live admission requires a
-reviewed restrictive host runner, Jev-only credential mount and a numerical
-service input/output/branch billing bound. Historical campaign caps and HTTP
-response-byte limits are not that bound. Feature-shaped synthetic decisions do
+reviewed restrictive host runner and Jev-only credential mount. The separate
+`RootApprovedChoiceProfile` admits the root-reviewed finite native-Choice
+operational profile with conservative 65,536 input plus 65,536 output planning
+reservations. This is an explicit trusted-service accounting assumption, not
+a published vendor output maximum or a guarantee against misreporting. HTTP
+byte caps and historical campaign caps are not billing bounds. A durable one-
+million known-plus-held operational stop additionally limits this initial
+campaign; the immutable five-million authorization remains shared across all
+versions and stages. Ordinary advisory label disagreements are scored without
+retry; material protocol, identity, lifecycle, privacy or accounting failures halt. Feature-shaped synthetic decisions do
 not establish real task success, broad safety, calibration, provider ranking
 or general browser speed/reliability.
 
 ## Current Gaps
 
 No live Jev qualification or refreshed deployment is asserted by source/offline
-tests. The current references leave the numerical output/branch billing bound
-unresolved, so the authored host configuration refuses live dispatch. Browser
+tests. A frozen source/config/profile bundle and explicit host stage review
+remain required before any live dispatch. Browser
 and native execution remain unavailable without their own containment
 qualification; no manifest or sandbox bypass is fabricated. Desktop/narrow
 render evidence requires an available qualified offscreen runtime or the
 separately preserved private deployment after its reviewed refresh.
+
+## Endpoint purpose and UI updates
+
+Canonical `model_type=decision` rows are eligible only for structured decision
+providers. Registration and manual model-ID editing send no provider probes.
+General model lists, aliases, first prompts, saved chats, comparison routes and
+actual execution transport reject these rows. Ordinary `llm` rows may still
+serve both openai_json decisions and chat. The decision settings picker sees
+both supported purposes; the three execution approach slots see only `llm`.
+The service-worker revision refreshes changed control modules without deleting
+accounts, cookies, IndexedDB or other user storage.

@@ -2332,8 +2332,9 @@
               <div class="admin-model-form">
                 <div class="admin-model-form-row">
                   <div class="adm-fused-group" style="display:flex;flex:1 1 180px;min-width:0;">
-                    <select id="adm-epLocalType" style="padding:5px;width:66px;flex-shrink:0;border-top-right-radius:0;border-bottom-right-radius:0;border-right:0;">
+                    <select id="adm-epLocalType" aria-label="Endpoint purpose" style="padding:5px;width:114px;flex-shrink:0;border-top-right-radius:0;border-bottom-right-radius:0;border-right:0;">
                       <option value="llm" selected>LLM</option>
+                      <option value="decision">Decision only</option>
                       <option value="image">Image</option>
                     </select>
                     <input id="adm-epLocalUrl" type="text" placeholder="Paste endpoint URL, e.g. http://localhost:11434/v1" style="flex:1;min-width:0;border-top-left-radius:0;border-bottom-left-radius:0;">
@@ -2723,6 +2724,6 @@
 <script type="module" src="/static/app.js?v=20260929csssplit"></script>  <!-- app.js must be LAST -->
   <script type="module" src="/static/js/init.js?v=20260829chatstyle12"></script>
 <script type="module" src="/static/js/a11y.js"></script>
-<script nonce="{{CSP_NONCE}}">if('serviceWorker' in navigator){navigator.serviceWorker.register('/static/sw.js?v=20260916autoscroll1').catch(()=>{});}</script>
+<script nonce="{{CSP_NONCE}}">if('serviceWorker' in navigator){navigator.serviceWorker.register('/static/sw.js?v=20261024decisionruntime',{updateViaCache:'none'}).catch(()=>{});}</script>
 </body>
 </html>
