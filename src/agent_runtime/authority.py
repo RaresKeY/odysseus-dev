@@ -394,6 +394,12 @@ def create_request_authority(request_text, *, owner=None, session_id=None, works
             if re.search(r"\b(?:browser|browse|private_browser)\b", request_text, re.I):
                 actions |= frozenset(action for action in ("click", "fill", "type", "press", "evaluate", "select")
                                      if re.search(r"\b" + action + r"\b", request_text, re.I))
+            from src.chat_automation import current_browser_grant
+            browser_grant = current_browser_grant(owner, session_id)
+            if browser_grant is not None:
+                # The human scope was consumed for this exact submission.
+                # Orchestration grants no child operation by itself.
+                actions |= frozenset({"automate"}) | (browser_grant.allowed_effects & {"click", "fill"})
         if operation is not None and name == canonical_tool(operation.tool):
             inputs = frozenset({ExactOperation.normalize(name, _json(dict(operation.args))).input})
         grants.append(OperationGrant(name, actions, inputs))

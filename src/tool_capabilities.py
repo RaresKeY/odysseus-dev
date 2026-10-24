@@ -501,6 +501,15 @@ def capabilities_for_action(tool_name: Any, content: Any) -> ToolCapabilities:
     if not isinstance(tool_name, str):
         return base
 
+    if tool_name == "private_browser":
+        action = _action_from_content(tool_name, content)
+        if action in {"snapshot", "read", "text", "find", "screenshot", "wait", "status", "tabs", "session_info"}:
+            return base
+        # A captured click/fill/navigation can invoke page handlers or network
+        # effects. Whole-tool read classification must not bless those actions.
+        return _capabilities(ToolEffect.EXTERNAL_SIDE_EFFECT, ToolEffect.NETWORK_EGRESS,
+            ToolEffect.UI_SIDE_EFFECT, result_integrity=ResultIntegrity.EXTERNAL_UNTRUSTED)
+
     if tool_name in {"web_fetch", "pdf_extract"}:
         payload = content
         raw = content.strip() if isinstance(content, str) else ""

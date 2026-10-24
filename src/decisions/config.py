@@ -72,6 +72,11 @@ def decision_url(base: str, protocol: str) -> str:
 def resolve_decision_endpoint(config: dict, owner: str | None) -> ResolvedDecisionEndpoint:
     """No raw URL/key overrides and no ownerless fall-through to named owners."""
     config = validate_config(config)
+    from src.model_admission import require_owner_model
+    try:
+        require_owner_model(owner, config['model'])
+    except ValueError:
+        raise DecisionError('decision_model_not_allowed') from None
     from core.database import ModelEndpoint, SessionLocal
     from src.auth_helpers import owner_filter
     from src.owner_identity import DEFAULT_LOCAL_OWNER
