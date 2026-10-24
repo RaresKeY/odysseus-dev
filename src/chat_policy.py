@@ -132,4 +132,3 @@ def review_requirement(policy: ChatPolicy, *, tool_name: str,
     if policy.approval_mode == "auto_approve":
         return ReviewRequirement.INDEPENDENT_MODEL
     return ReviewRequirement.NONE
-
