@@ -293,6 +293,7 @@ class ChatAutomationState(TimestampMixin, Base):
     policy_revision = Column(Integer, nullable=False, default=0)
     route_mode = Column(String, nullable=False, default="manual")
     elevation_grant = Column(JSON, nullable=True)
+    feature_settings = Column(JSON, nullable=False, default=dict)
 
 
 class ChatAutomationLease(Base):
@@ -316,6 +317,31 @@ class ChatAutomationSubmission(Base):
     descriptor = Column(JSON, nullable=False, default=dict)
     status = Column(String, nullable=False, default="preparing")
     created_at = Column(Float, nullable=False)
+    current_ask = Column(Text, nullable=True)
+    task_lineage_id = Column(String, nullable=True)
+    original_submission_id = Column(String, nullable=True)
+    previous_submission_id = Column(String, nullable=True)
+    prior_task = Column(JSON, nullable=True)
+    previous_answer = Column(Text, nullable=True)
+    answer_message_id = Column(String, nullable=True)
+    preparation = Column(JSON, nullable=True)
+    routing = Column(JSON, nullable=True)
+
+
+class ChatAutomationInputCard(Base):
+    """Ordinary clarification only; never an exact-action approval."""
+    __tablename__ = "chat_automation_input_cards"
+    card_id = Column(String, primary_key=True)
+    owner_key = Column(String, nullable=False, index=True)
+    session_id = Column(String, nullable=False, index=True)
+    submission_id = Column(String, nullable=False, index=True)
+    question = Column(Text, nullable=False)
+    payload = Column(JSON, nullable=False, default=dict)
+    status = Column(String, nullable=False, default="pending")
+    created_at = Column(Float, nullable=False)
+    expires_at = Column(Float, nullable=False)
+    resolved_by_submission_id = Column(String, nullable=True)
+    answer = Column(Text, nullable=True)
 
 
 class DecisionAttempt(Base):
@@ -1891,6 +1917,27 @@ def _migrate_add_calendar_source_email_cols():
     except Exception as e:
         logging.getLogger(__name__).warning(f"calendar source-email migration: {e}")
 
+def _migrate_chat_automation_semantics():
+    """Add nullable legacy semantic facts without reconstructing transcript authority."""
+    additions = {
+        "chat_automation_state": {"feature_settings": "JSON"},
+        "chat_automation_submissions": {
+            "current_ask": "TEXT", "task_lineage_id": "VARCHAR",
+            "original_submission_id": "VARCHAR", "previous_submission_id": "VARCHAR",
+            "prior_task": "JSON", "previous_answer": "TEXT", "answer_message_id": "VARCHAR",
+            "preparation": "JSON", "routing": "JSON"},
+    }
+    with engine.begin() as conn:
+        inspector = inspect(conn)
+        for table, columns in additions.items():
+            if not inspector.has_table(table):
+                continue
+            existing = {item["name"] for item in inspector.get_columns(table)}
+            for column, kind in columns.items():
+                if column not in existing:
+                    conn.execute(text(f"ALTER TABLE {table} ADD COLUMN {column} {kind}"))
+
+
 def _migrate_add_task_automation_columns():
     """Add automation columns to scheduled_tasks table if missing."""
     new_cols = {
@@ -2475,6 +2522,7 @@ def init_db():
     _migrate_add_calendar_source_email_cols()
     _migrate_add_oauth_config()
     _migrate_add_email_oauth_columns()
+    _migrate_chat_automation_semantics()
     _migrate_add_task_automation_columns()
     _migrate_add_task_authority_column()
     _migrate_add_disabled_tools()
