@@ -417,8 +417,9 @@ def bound_session_view(session):
     return bound.view(session) if bound else session
 
 
-async def prepare_chat_turn(store, owner, session, raw_ask, *, entrypoint="interactive", submission_id=None):
-    if not isinstance(raw_ask, str) or not raw_ask.strip() or len(raw_ask) > 50000:
+async def prepare_chat_turn(store, owner, session, raw_ask, *, entrypoint="interactive", submission_id=None,
+                            reasoning_effort=None, allow_empty=False):
+    if not isinstance(raw_ask, str) or (not raw_ask.strip() and not allow_empty) or len(raw_ask) > 50000:
         raise HTTPException(422, "Enter a nonblank message of at most 50000 characters")
     bound = store.acquire(owner, session.id, raw_ask, entrypoint, submission_id)
     try:
@@ -440,6 +441,10 @@ async def prepare_chat_turn(store, owner, session, raw_ask, *, entrypoint="inter
             effort = selected.get("reasoning_effort") or ""
         else:
             endpoint_id, model = getattr(session, "endpoint_id", None), session.model
+            if reasoning_effort is not None:
+                if reasoning_effort not in EFFORTS:
+                    raise HTTPException(422, "Invalid reasoning effort")
+                effort = reasoning_effort or ""
         if endpoint_id:
             from src.endpoint_resolver import resolve_endpoint_by_id
             from src.owner_identity import DEFAULT_LOCAL_OWNER
@@ -564,18 +569,23 @@ def automation_ingress(session_manager):
                 bound = getattr(pending, "bound_turn", None)
                 if bound is None or bound.owner != owner or bound.session_id != sid or not bound.current():
                     raise HTTPException(409, "Approval expired; request the action again")
-                bound.pending = False
-                bound.pending_approval_id = None
             elif not str(data.get("message") or "").strip():
                 # Attachment-only requests keep their explicit empty user text;
                 # automatic approach choice needs text and cannot guess a task.
                 if store.policy(owner, sid)["route_mode"] == "auto":
                     raise HTTPException(422, "Add a message or select a model manually")
-                return await func(request, *args, **kwargs)
+                attachments = data.get("attachments")
+                if not attachments:
+                    raise HTTPException(422, "Add a message or attachment")
+                bound = await prepare_chat_turn(store, owner, session, data.get("message") or "",
+                    entrypoint="delegated" if is_delegated_credential(request) else "interactive",
+                    submission_id=request.headers.get("X-Chat-Submission-Id"),
+                    reasoning_effort=data.get("reasoning_effort"), allow_empty=True)
             else:
                 bound = await prepare_chat_turn(store, owner, session, data["message"],
                     entrypoint="delegated" if is_delegated_credential(request) else "interactive",
-                    submission_id=request.headers.get("X-Chat-Submission-Id"))
+                    submission_id=request.headers.get("X-Chat-Submission-Id"),
+                    reasoning_effort=data.get("reasoning_effort"))
             try:
                 with bound.activate():
                     response = await func(request, *args, **kwargs)
@@ -594,7 +604,7 @@ def automation_ingress(session_manager):
                     store.record(bound, "awaiting_approval" if bound.pending else "completed")
                 return response
             except BaseException:
-                store.record(bound, "failed")
+                store.record(bound, "awaiting_approval" if data.get("tool_approval_id") and bound.pending else "failed")
                 raise
         return wrapped
     return decorate
