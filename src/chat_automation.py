@@ -126,21 +126,33 @@ class AutomationStore:
 
     def _policy(self, p, s, owner, entrypoint="interactive"):
         grant = copy.deepcopy(s.elevation_grant)
+        requested_grant = copy.deepcopy(grant)
+        restriction = None
         if (not p.elevation_ceiling or not grant
                 or grant.get("authority_epoch") != p.authority_epoch
                 or grant.get("policy_revision") != s.policy_revision
                 or grant.get("expires_at", 0) <= self.clock()
                 or entrypoint != "interactive"):
             grant = None
+        if grant:
+            try:
+                validate_elevation_roots(owner, [{'path':r['path'],'access':r['access']} for r in grant['roots']])
+                from src.agent_runtime.resources import FilesystemRoot
+                for item in grant['roots']:
+                    FilesystemRoot.from_dict(item['identity']).validate()
+            except (HTTPException, ValueError, OSError):
+                grant = None
+                restriction = 'Additional folder access is unavailable under the current deployment policy'
         return {"contract_version": 1, "owner": owner, "session_id": s.session_id,
                 "approval_mode": s.approval_mode, "policy_revision": s.policy_revision,
                 "authority_epoch": p.authority_epoch, "configuration_revision": p.revision,
                 "configuration_digest": digest(p.configuration or {}),
                 "elevation_ceiling": bool(p.elevation_ceiling), "elevation_grant": grant,
+                "requested_elevation_grant": requested_grant, "sandbox_state": "required_at_execution",
                 "effective_roots": (grant or {}).get("roots", []),
                 "route_mode": s.route_mode, "entrypoint": entrypoint,
                 "execution_scope": "expanded" if grant else "workspace",
-                "restriction": None if grant or not p.elevation_ceiling else "No additional scope is granted"}
+                "restriction": restriction or (None if grant or not p.elevation_ceiling else "No additional scope is granted")}
 
     def policy(self, owner, session_id, entrypoint="interactive"):
         with self.transaction() as db:
@@ -657,7 +669,8 @@ def automation_ingress(session_manager):
     def decorate(func):
         @wraps(func)
         async def wrapped(request, *args, **kwargs):
-            from src.auth_helpers import effective_user, is_delegated_credential
+            from src.auth_helpers import effective_user, is_delegated_credential, require_api_token_scope
+            require_api_token_scope(request, 'chat')
             from routes.chat_routes import _verify_session_owner
             payload = kwargs.get("chat_request") or (args[0] if args else None)
             if payload is not None:
@@ -681,6 +694,10 @@ def automation_ingress(session_manager):
             if owner is None:
                 raise HTTPException(401, "A chat owner is required")
             if data.get("tool_approval_id"):
+                from src.agent_runtime.authority import require_user_approval_request
+                require_user_approval_request(request)
+                if is_delegated_credential(request):
+                    raise HTTPException(403, 'API tokens cannot approve chat actions')
                 from src.tool_approvals import tool_approval_store
                 pending = tool_approval_store.peek(data["tool_approval_id"])
                 bound = getattr(pending, "bound_turn", None)

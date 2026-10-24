@@ -148,6 +148,7 @@ class DecisionProvider:
             timeout = min(timeout, context.deadline - self.clock())
         if timeout <= 0:
             raise DecisionError("decision_deadline_exceeded")
+        context = replace(context, deadline=self.clock() + timeout)
         state = {}
         try:
             async with asyncio.timeout(timeout) as scope:

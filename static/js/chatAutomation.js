@@ -4,6 +4,7 @@ const $ = id => document.getElementById(id);
 const categories = [['established_procedure','Established procedure'],['bounded_domain','Bounded domain'],['approach_discovery','Approach discovery']];
 let policy, configuration, endpoints = [], sequence = 0;
 let settingsWrite = Promise.resolve(true);
+let navigationGeneration = 0;
 export async function whenAutomationSettingsReady() {
   const ready = await settingsWrite;
   if (!ready) settingsWrite = Promise.resolve(true);
@@ -23,16 +24,23 @@ async function api(path, method='GET', body) {
 }
 function message(text) { $('chat-automation-feedback').textContent = text; }
 async function currentChat() {
-  if (!sid()) {
+  const existingId=sid(), navigation=navigationGeneration;
+  if (!existingId) {
     if (!sessions.hasPendingChat()) {
       const model = await api('/api/default-chat');
+      if(navigationGeneration!==navigation || sid()) throw new Error('The chat changed. Choose the setting again.');
       if (!model.endpoint_url || !model.model) throw new Error('Choose a model first');
       sessions.createDirectChat(model.endpoint_url,model.model,model.endpoint_id);
     }
-    await sessions.materializePendingSession();
+    let materializedId=null;
+    const capture=event=>{if(event.detail?.materialized)materializedId=event.detail.sessionId;};
+    window.addEventListener('odysseus:session-changed',capture);
+    let materialized=false;
+    try{materialized=await sessions.materializePendingSession();}finally{window.removeEventListener('odysseus:session-changed',capture);}
+    if(!materialized || !materializedId || sid()!==materializedId)throw new Error('The chat changed. Choose the setting again.');
+    return materializedId;
   }
-  if (!sid()) throw new Error('Choose a model first');
-  return sid();
+  return existingId;
 }
 function render() {
   $('chat-approval-mode').value = policy?.approval_mode || configuration?.last_explicit_mode || 'always_ask';
@@ -51,12 +59,14 @@ async function refresh() {
   } catch(e) { if(ticket===sequence) $('chat-automation-state').textContent=e.message; }
 }
 function changeChat(changes) {
+  const requestedId=sid(), requestedNavigation=navigationGeneration;
   return writeSettings(async()=>{
     $('chat-approval-mode').disabled=$('chat-route-mode').disabled=true;
     $('chat-automation-default').disabled=true;
     $('chat-automation-state').textContent='Saving chat settings…';
     try {
-      const id = await currentChat(), ticket=++sequence;
+      if(requestedNavigation!==navigationGeneration || sid()!==requestedId) throw new Error('The chat changed. Choose the setting again in the current chat.');
+      const id = requestedId || await currentChat(), ticket=++sequence;
       const previous=policy?.session_id===id ? policy : await api(`/api/session/${encodeURIComponent(id)}/automation`);
       const saved=await api(`/api/session/${encodeURIComponent(id)}/automation`,'PUT',{policy_revision:previous.policy_revision,changes});
       if(id===sid() && ticket===sequence){++sequence;policy=saved;render();}else await refresh();
@@ -108,7 +118,7 @@ async function initialize(){
   for(const [id,handler] of [['chat-browser-open',async()=>{await api(await browserPath(),'POST');$('chat-browser-status').textContent='Browser opened. Choose a page and allowed actions before using it.';}],['chat-browser-close',async()=>{const result=await api(await browserPath(),'DELETE');$('chat-browser-status').textContent=result.status==='closed'?'Browser closed.':'Browser cleanup is incomplete.';$('chat-browser-screenshot').hidden=true;$('chat-browser-targets').replaceChildren();}],['chat-browser-scope',async()=>{await api((await browserPath())+'/scope','POST',browserScope());$('chat-browser-status').textContent='Allowed for your next message for two minutes. Only the selected site and actions are permitted.';}],['chat-browser-navigate',async()=>{await api((await browserPath())+'/scope','POST',browserScope());await api((await browserPath())+'/action','POST',{action:'navigate',page:'t1',url:$('chat-browser-url').value});await viewBrowser();}],['chat-browser-view',viewBrowser]]) $(id).addEventListener('click',async()=>{try{await handler();}catch(e){$('chat-browser-status').textContent=e.message;}});
   $('chat-elevation-save').addEventListener('click',async()=>{try{const roots=[...$('chat-elevation-folders').querySelectorAll('label')].filter(l=>l.querySelector('input').checked).map(l=>({path:l.querySelector('input').value,access:l.querySelector('select').value}));await changeChat({elevation_roots:roots});$('chat-elevation-status').textContent='Folder grant saved for this chat for one hour.';}catch(e){$('chat-elevation-status').textContent=e.message;}});
   $('chat-automation-form').addEventListener('submit',async e=>{e.preventDefault();const button=e.submitter;button.disabled=true;try{const changes={elevation_ceiling:$('chat-elevation-ceiling').checked};const decision=readRoute('decision');if(decision.endpoint_id||decision.model)changes.decision_provider={...decision,protocol:$('chat-decision-protocol').value,timeout_seconds:30,max_calls:32};const mappings=Object.fromEntries(categories.map(([key])=>[key,readRoute(key)]));if(Object.values(mappings).some(m=>m.endpoint_id||m.model))changes.approaches=mappings;configuration=await api('/api/chat-settings','PUT',{revision:configuration.revision,changes});await refresh();message('Settings saved. New messages use the committed selection.');}catch(error){message(error.message);}finally{button.disabled=false;}});
-  window.addEventListener('odysseus:session-changed',refresh);
+  window.addEventListener('odysseus:session-changed',()=>{++navigationGeneration;policy=null;refresh();});
   window.addEventListener('odysseus:automation-changed',refresh);
   document.addEventListener('visibilitychange',()=>{if(!document.hidden)refresh();});
   await refresh();
