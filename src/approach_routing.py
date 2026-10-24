@@ -23,7 +23,9 @@ def validate_mapping(mapping: dict) -> dict:
             or set(mapping) != {"endpoint_id", "model", "reasoning_effort"}
             or any(not isinstance(mapping.get(k), str) or not mapping[k].strip()
                    or len(mapping[k]) > 512 for k in ("endpoint_id", "model"))
-            or mapping["reasoning_effort"] is not None and mapping["reasoning_effort"] not in EFFORTS):
+            or mapping["reasoning_effort"] is not None and (
+                not isinstance(mapping["reasoning_effort"], str)
+                or mapping["reasoning_effort"] not in EFFORTS)):
         raise DecisionError("approach_mapping_invalid")
     return dict(mapping)
 
