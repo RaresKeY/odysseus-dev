@@ -31,7 +31,10 @@ def runtime(store,monkeypatch):
         async def handle_memory_command(self,*args):return None
     async def context(sess,request,*args,**kwargs):
         return SimpleNamespace(user='alice',messages=[{'role':'user','content':kwargs['message']}],context_length=32768,
-            uprefs={},preset=SimpleNamespace(character_name=None),route_messages=[])
+            uprefs={},preset=SimpleNamespace(character_name=None,temperature=.2,max_tokens=128),route_messages=[],
+            preprocessed=SimpleNamespace(attachment_meta=[]),auto_opened_docs=[],rag_sources=[],web_sources=[],
+            used_memories=[],uploaded_files=[],was_compacted=False,context_trimmed=False,
+            context_messages_before_trim=1,context_messages_after_trim=1,context_tokens_before_trim=10,context_tokens_after_trim=10)
     monkeypatch.setattr(chat_routes,'build_chat_context',context)
     monkeypatch.setattr(chat_routes,'run_post_response_tasks',lambda *a,**kw:None)
     monkeypatch.setattr(chat_routes,'clean_thinking_for_save',lambda content,metadata:(content,metadata))
@@ -42,7 +45,9 @@ def runtime(store,monkeypatch):
     monkeypatch.setattr(llm_core,'_is_host_dead',lambda *a:False)
     app=FastAPI();app.state.auth_manager=SimpleNamespace(get_privileges=lambda owner:{})
     @app.middleware('http')
-    async def identity(request,call_next):request.state.current_user='alice';return await call_next(request)
+    async def identity(request,call_next):
+        request.state.current_user=None if request.headers.get('test-local-operator') else 'alice'
+        return await call_next(request)
     app.include_router(chat_routes.setup_chat_routes(manager,Handler(),SimpleNamespace(),SimpleNamespace(),SimpleNamespace(),SimpleNamespace()))
     return SimpleNamespace(app=app,manager=manager,store=store)
 
@@ -117,3 +122,48 @@ async def test_unconfigured_auto_choice_returns_visible_action_without_execution
     assert 'manually' in response.json()['detail'] and calls==[]
     with runtime.store.transaction() as db:
         assert db.query(d.ChatAutomationSubmission).one().status=='failed'
+
+
+@pytest.mark.asyncio
+async def test_auth_disabled_allow_once_resumes_sealed_action_through_sse(runtime,tmp_path,monkeypatch):
+    from src import tool_execution,tool_approvals
+    from src.owner_identity import DEFAULT_LOCAL_OWNER
+    from src.chat_automation import prepare_chat_turn
+    from src.agent_runtime.authority import RequestAuthority,OperationGrant
+    from src.tool_capabilities import ToolRunSecurityContext
+    from src.tool_types import ToolBlock
+    from routes import chat_routes
+    monkeypatch.setenv('AUTH_ENABLED','false')
+    workspace=tmp_path/'workspace';workspace.mkdir();target=workspace/'note.txt';target.write_text('before')
+    with runtime.store.transaction() as db:
+        db.add(d.Session(id='local',name='local',owner=DEFAULT_LOCAL_OWNER,model='manual',cwd=str(workspace),
+            endpoint_id='local-registered',endpoint_url='https://execution.invalid/v1/chat/completions'))
+        db.add(d.ModelEndpoint(id='local-registered',name='local',owner=DEFAULT_LOCAL_OWNER,is_enabled=True,
+            base_url='https://execution.invalid/v1',cached_models='["manual"]'))
+    cached=Session(id='local',name='local',owner=DEFAULT_LOCAL_OWNER,model='manual',cwd=str(workspace),
+        endpoint_id='local-registered',endpoint_url='https://execution.invalid/v1/chat/completions')
+    runtime.manager.sessions['local']=cached
+    bound=await prepare_chat_turn(runtime.store,None,cached,'  Write the requested note.  ')
+    approvals=tool_approvals.ToolApprovalStore();monkeypatch.setattr(tool_approvals,'tool_approval_store',approvals)
+    monkeypatch.setattr(chat_routes,'tool_approval_store',approvals)
+    authority=RequestAuthority('local-request',DEFAULT_LOCAL_OWNER,'local',str(workspace),(OperationGrant('write_file'),))
+    block=ToolBlock('write_file',json.dumps({'path':str(target),'content':'after'}))
+    effects=[]
+    async def executor(*args,**kwargs):effects.append(True);return 'write',{'output':'written','exit_code':0}
+    monkeypatch.setattr(tool_execution,'_execute_tool_block_impl',executor)
+    with bound.activate():
+        _,pending=await tool_execution.execute_tool_block(block,owner=None,session_id='local',workspace=str(workspace),
+            request_authority=authority,security_context=ToolRunSecurityContext())
+    runtime.store.record(bound,'awaiting_approval')
+    async def agent(*args,**kwargs):
+        assert kwargs.get('exact_approval') is not None
+        _,result=await tool_execution.execute_tool_block(block,owner=None,session_id='local',workspace=str(workspace),
+            request_authority=authority,security_context=ToolRunSecurityContext(),exact_approval=kwargs['exact_approval'])
+        yield 'data: '+json.dumps({'type':'tool_output','tool':'write_file','output':result.get('output'),'exit_code':result.get('exit_code')})+'\n\n'
+        yield 'data: [DONE]\n\n'
+    monkeypatch.setattr(chat_routes,'_stream_agent_with_execution_bridge',agent)
+    async with httpx.AsyncClient(transport=httpx.ASGITransport(app=runtime.app),base_url='http://test',headers={'test-local-operator':'yes'}) as client:
+        response=await client.post('/api/chat_stream',json={'session':'local','message':'','tool_approval_id':pending['ask_user']['approval_id'],
+            'tool_approval_decision':'approve_once'})
+    assert response.status_code==200,response.text
+    assert effects==[True],response.text

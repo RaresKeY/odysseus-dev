@@ -238,6 +238,33 @@ class PipeProducerTests(unittest.IsolatedAsyncioTestCase):
             await self.record.execute_bound(bound, json.loads(bound.operation.input), readonly)
         self.assertEqual(len(self.channel.requests), before)
 
+    async def test_queued_network_continue_rechecks_scope_inside_wire_lock(self):
+        self.record.task_grant=self.grant
+        self.record.network_policy_validator=lambda:True
+        await self.record.cdp.write_lock.acquire()
+        self.channel.event('Fetch.requestPaused', {'requestId':'queued', 'request':{'url':'https://example.com/image','method':'GET'}})
+        await asyncio.sleep(.01)
+        self.record.network_policy_validator=lambda:False
+        self.record.cdp.write_lock.release()
+        await asyncio.sleep(.01)
+        controls=[r['method'] for r in self.channel.requests if r['params'].get('requestId')=='queued']
+        self.assertEqual(controls,['Fetch.failRequest'])
+
+    async def test_public_observation_preserves_nondefault_origin_port(self):
+        await self.record.observe()
+        self.record.current.packet['url']='https://example.com:8443/path?private=query'
+        self.assertEqual(self.record.public_observation()['url'],'https://example.com:8443/path')
+
+    async def test_constructor_failure_closes_the_already_owned_channel(self):
+        from src import containment
+        channel=FakeChannel()
+        async def factory(grant,command):return channel
+        with tempfile.TemporaryDirectory() as directory, patch.object(containment,'acquire',return_value=SimpleNamespace(id='owned')):
+            with patch.object(pipe,'PipeBrowserRecord',side_effect=pipe.BrowserPipeError('browser_producer_changed')):
+                with self.assertRaises(pipe.BrowserPipeError):
+                    await pipe.enrol('constructor-owner','constructor-thread',self.manifest,directory,channel_factory=factory)
+        self.assertTrue(channel.closed)
+
     async def test_popups_and_workers_never_resume_an_unobserved_target(self):
         before = len(self.channel.requests)
         self.channel.event('Target.attachedToTarget', {'targetInfo': {'targetId': 'D' * 32, 'type': 'page'}, 'sessionId': 'E' * 32, 'waitingForDebugger': True}, session=None)

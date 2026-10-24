@@ -25,6 +25,20 @@ def test_expired_preparation_requires_its_live_lease(store):
         assert db.query(d.ChatAutomationSubmission).filter_by(submission_id=bound.submission_id).one().status=='preparing'
 
 
+def test_inherited_process_scope_cannot_add_writable_roots(tmp_path):
+    from dataclasses import replace
+    from src.agent_runtime.resources import ProcessLaunchScope,NativeBackendResource,PathObservation,FileObjectIdentity
+    from src.agent_runtime.process_resources import intersect_launch_scopes
+    from src.containment import DEFAULT_REQUIRED
+    workspace=tmp_path/'w';workspace.mkdir();extra=tmp_path/'extra';extra.mkdir()
+    parent=ProcessLaunchScope(NativeBackendResource('bash'),FilesystemRoot.seal(workspace,owner='alice'),DEFAULT_REQUIRED)
+    child=replace(parent,writable_roots=(PathObservation(str(extra),FileObjectIdentity.observe(extra)),))
+    assert intersect_launch_scopes((parent,),(child,))==()
+    assert intersect_launch_scopes((child,),(child,))==(child,)
+    assert 'writable_roots' not in parent.to_dict()
+    assert ProcessLaunchScope.from_dict(parent.to_dict())==parent
+
+
 @pytest.mark.asyncio
 async def test_same_mode_explicit_default_does_not_revoke_other_chat(store):
     a=store.policy('alice','a')

@@ -333,12 +333,18 @@ class PipeBrowserRecord:
         self.changed.set()
         self._resources()
 
-    def _control(self, method, params, session=None):
+    def _control(self, method, params, session=None, before_send=None):
         async def send():
             try:
-                await self.cdp.call(method, params, session=session)
-            except Exception:
-                self.invalidate()
+                await self.cdp.call(method, params, session=session, before_send=before_send)
+            except Exception as error:
+                if method == 'Fetch.continueRequest' and getattr(error, 'code', '') == 'browser_network_scope_changed':
+                    try:
+                        await self.cdp.call('Fetch.failRequest', {'requestId':params['requestId'], 'errorReason':'BlockedByClient'}, session=session)
+                    except Exception:
+                        self.invalidate()
+                else:
+                    self.invalidate()
         task = asyncio.create_task(send())
         self.control_tasks.add(task)
         task.add_done_callback(self.control_tasks.discard)
@@ -392,17 +398,25 @@ class PipeBrowserRecord:
         elif relevant and method == 'Fetch.requestPaused':
             request = params.get('request') or {}
             network = self.task_grant or self.network_grant
-            allowed = self.live and network is not None and time.time() < network.expires_at and network.permits_navigation(request.get('url', ''))
-            validator = getattr(self, 'network_policy_validator', None)
-            if validator is not None:
+            def allowed_now():
+                allowed = (self.live and network is not None and (self.task_grant or self.network_grant) is network
+                    and time.time() < network.expires_at and network.permits_navigation(request.get('url', '')))
+                validator = getattr(self, 'network_policy_validator', None)
                 try:
-                    allowed = allowed and validator() is True
+                    if validator is not None:
+                        allowed = allowed and validator() is True
                 except Exception:
                     allowed = False
-            if request.get('method') not in {'GET', 'HEAD'} and (network is None or 'submit' not in network.allowed_effects):
-                allowed = False
+                if request.get('method') not in {'GET', 'HEAD'} and (network is None or 'submit' not in network.allowed_effects):
+                    allowed = False
+                return allowed
+            def network_guard():
+                if not allowed_now():
+                    raise BrowserPipeError('browser_network_scope_changed')
+            allowed = allowed_now()
             self._control('Fetch.continueRequest' if allowed else 'Fetch.failRequest',
-                          {'requestId': params.get('requestId'), **({} if allowed else {'errorReason': 'BlockedByClient'})}, message.get('sessionId'))
+                          {'requestId': params.get('requestId'), **({} if allowed else {'errorReason': 'BlockedByClient'})}, message.get('sessionId'),
+                          before_send=network_guard if allowed else None)
         elif relevant and method == 'Page.javascriptDialogOpening':
             self._control('Page.handleJavaScriptDialog', {'accept': False}, message.get('sessionId'))
 
@@ -519,7 +533,7 @@ class PipeBrowserRecord:
             elements.append({k: node[k] for k in ('ref', 'label', 'role', 'editable', 'disabled') if k in node})
         # Destinations and form metadata remain in the host's action table.
         parsed = urlsplit(str(packet['url']))
-        public_url = (parsed.scheme + '://' + str(parsed.hostname) + parsed.path[:512]) if parsed.scheme == 'https' and parsed.hostname else ''
+        public_url = (origin(packet['url']) + parsed.path[:512]) if parsed.scheme == 'https' and parsed.hostname else ''
         result = {'observation': self.current.nonce, 'page': 't1', 'url': public_url, 'title': str(packet['title'])[:160], 'text': str(packet['text'])[:2000], 'elements': elements,
                   'truncated': packet['truncated'] or len(packet['elements']) > len(elements), 'ready': packet['ready']}
         while len(json.dumps(result, ensure_ascii=False).encode()) > 16000 and result['elements']:
@@ -786,13 +800,17 @@ async def _enrol_locked(owner, thread_id, manifest, profile_root, *, channel_fac
     except BaseException:
         containment.release(acquired)
         raise
-    record = PipeBrowserRecord(owner, thread_id, manifest, channel, acquired)
+    record = None
     try:
+        record = PipeBrowserRecord(owner, thread_id, manifest, channel, acquired)
         await record.start()
         REGISTRY[(owner, thread_id)] = record
         return record
     except BaseException:
-        await record.close()
+        if record is not None:
+            await record.close()
+        else:
+            await channel.close()
         raise
 
 

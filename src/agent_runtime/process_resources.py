@@ -213,6 +213,7 @@ def intersect_launch_scopes(parent, child):
             if (left.backend != right.backend or not left.required <= right.required
                     or right.max_runtime_s > left.max_runtime_s
                     or not set(right.runtime_roots) <= set(left.runtime_roots)
+                    or not set(right.writable_roots) <= set(left.writable_roots)
                     or (left.network == "none" and right.network != "none")):
                 continue
             if Path(right.root.path).is_relative_to(left.root.path):

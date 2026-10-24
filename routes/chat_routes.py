@@ -2828,7 +2828,8 @@ def setup_chat_routes(
                 current_workspace=workspace,
                 current_rejected=workspace_rejected,
             )
-            owner = effective_user(request)
+            from src.owner_identity import effective_storage_owner
+            owner = effective_storage_owner(effective_user(request))
             selected_notes = []
             if selected_note_ids:
                 notes_db = SessionLocal()

@@ -594,10 +594,12 @@ class ProcessLaunchScope:
                 raise ResourceIdentityError("Launch runtime root changed")
 
     def to_dict(self):
-        return {"backend": self.backend.to_dict(), "root": self.root.to_dict(), "required": sorted(self.required),
+        result = {"backend": self.backend.to_dict(), "root": self.root.to_dict(), "required": sorted(self.required),
                 "runtime_roots": [{"path": r.path, "identity": asdict(r.identity)} for r in self.runtime_roots],
-                "network": self.network, "max_runtime_s": self.max_runtime_s,
-                "writable_roots": [{"path": r.path, "identity": asdict(r.identity)} for r in self.writable_roots]}
+                "network": self.network, "max_runtime_s": self.max_runtime_s}
+        if self.writable_roots:
+            result['writable_roots'] = [{"path": r.path, "identity": asdict(r.identity)} for r in self.writable_roots]
+        return result
 
     @classmethod
     def from_dict(cls, value):

@@ -337,4 +337,10 @@ async def execute_automation(record, bound, args, ctx):
     if result.get('approval_required'):
         output.update(approval_required=True, ask_user=result['ask_user'], exit_code=None,
                       executed=False, status='awaiting_approval')
+    elif result.get('stop_reason') == 'effect_indeterminate':
+        output.update(exit_code=1, executed=None, outcome='indeterminate', retryable=False,
+            failure_kind='browser_action_indeterminate', status='indeterminate')
+    elif result.get('stop_reason') not in {'done','handoff','conditions_met','uncertain','repeated_packet','step_limit'}:
+        output.update(exit_code=1, executed=False, retryable=False,
+            failure_kind=result.get('stop_reason','browser_stopped'), status='stopped')
     return output

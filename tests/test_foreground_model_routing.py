@@ -293,7 +293,10 @@ def _chat_stream_endpoint(
         SimpleNamespace(),
         SimpleNamespace(),
     )
-    return next(route.endpoint for route in router.routes if route.path == "/api/chat_stream")
+    # These fixtures deliberately isolate foreground route behavior with a
+    # metadata-only session double. The transactional ingress is exercised with
+    # real SQL and actual provider transport in test_chat_automation_ingress.py.
+    return next(route.endpoint for route in router.routes if route.path == "/api/chat_stream").__wrapped__
 
 
 @pytest.mark.asyncio
@@ -1217,7 +1220,7 @@ def _chat_endpoint(
         SimpleNamespace(),
     )
     endpoint = next(route.endpoint for route in router.routes if route.path == "/api/chat")
-    return endpoint, saved
+    return endpoint.__wrapped__, saved
 
 
 @pytest.mark.asyncio

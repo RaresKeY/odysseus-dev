@@ -312,6 +312,25 @@ class BrowserAutomationTests(unittest.IsolatedAsyncioTestCase):
         self.assertEqual(len(attempts), 1)
         self.assertEqual(len(provider.requests), 1)
 
+    async def test_actual_automate_entrypoint_keeps_ambiguous_effect_indeterminate(self):
+        provider=FrozenProvider(['TARGET_0'])
+        async def ambiguous(args,grant):
+            if args['action']=='fill':return {'executed':None,'outcome':'indeterminate','exit_code':1}
+            return await self.dispatch(args,grant)
+        args={'action':'automate','page':'t1','goal':'Fill Email'}
+        operation=ExactOperation.normalize('private_browser',json.dumps(args))
+        authority=RequestAuthority('request','alice','thread','',(OperationGrant('private_browser'),),
+            browser_sessions=(self.record.session,),browser_pages=self.record.pages)
+        bound=browser_identity.resolve_browser_operation(authority,operation)
+        runtime={'provider':provider,'config':{},'decision_context':SimpleNamespace(owner='alice',session_id='thread',run_id='run'),'dispatch':ambiguous}
+        with bind_request_authority(authority),browser_identity.bind_browser_operation(bound):
+            output=await browser_identity.execute_browser(json.dumps(args),{'owner':'alice','session_id':'thread','_browser_automation_runtime':runtime})
+        self.assertIsNone(output['executed'])
+        self.assertEqual(output['outcome'],'indeterminate')
+        self.assertFalse(output['retryable'])
+        self.assertEqual(output['exit_code'],1)
+        self.assertFalse(any(r['method']=='Page.captureScreenshot' for r in self.channel.requests))
+
     async def test_explicit_check_is_reported_as_untrusted_evidence(self):
         provider = FrozenProvider([])
         output = await self.run_driver(provider, checks=[{'kind': 'text_contains', 'value': 'Fixture'}])
