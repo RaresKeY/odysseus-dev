@@ -115,6 +115,11 @@ def resolve_execution_route(mapping: dict, owner: str | None, *, allowed_models:
                             source="manual", approach_id=None, attempt_id=None,
                             resolver=None) -> BoundExecutionRoute:
     mapping = validate_mapping(mapping)
+    from src.model_admission import require_owner_model
+    try:
+        require_owner_model(owner, mapping['model'])
+    except ValueError:
+        raise DecisionError('execution_model_not_allowed') from None
     if allowed_models is not None and mapping["model"] not in allowed_models:
         raise DecisionError("execution_model_not_allowed")
     if resolver is None:

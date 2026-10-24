@@ -1301,7 +1301,10 @@ async def open_channel(grant: ContainmentGrant, command: list[str]):
         return ContainedChannel(live, proc)
     except BaseException:
         if proc is not None:
-            proc._ody_info_read = info_read
+            # Namespace capture owns/closes this fd. Never resurrect it after
+            # readiness: its integer may already identify a different handle.
+            if not hasattr(proc, "_ody_info_read"):
+                proc._ody_info_read = info_read
             live = replace(live, pid=proc.pid, pgid=proc.pid)
             await _complete_cleanup(_release_awaited(live, proc), propagate_cancel=False)
         else:

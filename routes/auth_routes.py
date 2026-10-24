@@ -473,6 +473,8 @@ def setup_auth_routes(auth_manager: AuthManager) -> APIRouter:
                         .filter(func.lower(model.owner) == old_username)
                         .update({"owner": new_username}, synchronize_session=False)
                     )
+                from src.chat_automation import rename_automation_owner
+                rename_automation_owner(db, old_username, new_username)
                 db.commit()
             except Exception:
                 db.rollback()

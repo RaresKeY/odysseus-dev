@@ -15,6 +15,14 @@ _PIXELS = {}
 
 def _owner(request, session_id):
     owner = interactive_owner(request)
+    manager = getattr(request.app.state, 'auth_manager', None)
+    if manager is not None:
+        try:
+            privileges = manager.get_privileges(owner) or {}
+        except Exception:
+            raise HTTPException(403, "Browser access could not be verified") from None
+        if not privileges.get('can_use_browser', True):
+            raise HTTPException(403, "Browser access is disabled for this account")
     AutomationStore().policy(owner, session_id)
     if not owner:
         raise HTTPException(409, "Sign in to use a private browser")
@@ -104,6 +112,18 @@ def setup_browser_control_routes():
         record = _record(owner, session_id)
         grant = _grant(owner, session_id, body)
         policy = AutomationStore().policy(owner, session_id)
+        manager = getattr(request.app.state, 'auth_manager', None)
+        def network_policy_is_current():
+            from src.model_admission import owner_privileges
+            if (owner_privileges(owner) or {}).get('_account_available') is False:
+                return False
+            fresh = AutomationStore().policy(owner, session_id)
+            if (fresh['policy_revision'], fresh['authority_epoch']) != (policy['policy_revision'], policy['authority_epoch']):
+                return False
+            if manager is not None and not (manager.get_privileges(owner) or {}).get('can_use_browser', True):
+                return False
+            return time.time() < grant.expires_at
+        record.network_policy_validator = network_policy_is_current
         record.pending_task_grant = (grant, policy["policy_revision"], policy["authority_epoch"])
         record.human_scope = grant
         return {"status": "ready_for_next_message", "expires_in_seconds": 120,

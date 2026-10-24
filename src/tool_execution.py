@@ -1769,9 +1769,24 @@ async def _review_bound_chat_action(bound, block, *, owner, session_id, workspac
     async def evaluate(request, context):
         return await provider.evaluate(request, context,
                                        config=bound.configuration.get("decision_provider", {}))
+    evidence = None
+    if block.tool_type == 'private_browser':
+        from src.browser_pipe import get
+        record = get(str(owner or '').strip().casefold(), str(session_id or ''))
+        if record is not None:
+            args = json.loads(block.content)
+            current_document = record.current
+            packet = current_document.packet if current_document else {}
+            node = next((n for n in packet.get('elements', []) if n.get('ref') == args.get('ref')), None)
+            grant = record.task_grant
+            evidence = {'source': 'captured_isolated_observer', 'page_content_trusted': False,
+                'document': {k: str(packet.get(k, ''))[:1000] for k in ('url', 'title')},
+                'target': {k: node[k] for k in ('ref', 'label', 'role', 'destination', 'form_action', 'form_method', 'submits_form', 'disabled') if k in node} if node else None,
+                'scope': {'origins': sorted(grant.allowed_origins), 'effects': sorted(grant.allowed_effects),
+                    'prepared_labels': sorted(grant.prepared_values)} if grant else None}
     outcome = await ApprovalReviewService(tool_approval_store).review(
         pending, policy, deterministically_admitted=deterministically_admitted,
-        evaluator=evaluate, cancelled=lambda: not bound.current())
+        evaluator=evaluate, cancelled=lambda: not bound.current(), evidence=evidence)
     if outcome.status == "approved":
         return outcome.approval, None
     if outcome.status == "bypass":

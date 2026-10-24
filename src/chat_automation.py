@@ -217,6 +217,8 @@ class AutomationStore:
             lease.owner_key, lease.token, lease.submission_id = owner_key(owner), token, identifier
             lease.expires_at = self.clock() + 90
             policy = self._policy(p, s, owner, entrypoint)
+            from src.model_admission import owner_policy_fingerprint
+            policy["owner_policy_fingerprint"] = owner_policy_fingerprint(owner)
             policy["original_intent_digest"] = digest(raw_ask)
             db.add(d.ChatAutomationSubmission(submission_id=identifier, owner_key=owner_key(owner),
                 session_id=sid, policy_revision=s.policy_revision, authority_epoch=p.authority_epoch,
@@ -226,15 +228,21 @@ class AutomationStore:
 
     def current(self, bound):
         d = _models()
-        with self.transaction() as db:
-            p, s = self.state(db, bound.owner, bound.session_id)
-            row = db.query(d.ChatAutomationSubmission).filter_by(submission_id=bound.submission_id).first()
-            return bool(row and row.owner_key == owner_key(bound.owner)
-                and row.status in {"preparing", "bound", "running", "awaiting_approval"}
-                and row.intent_digest == digest(bound.raw_ask)
-                and p.authority_epoch == bound.policy["authority_epoch"]
-                and digest(p.configuration or {}) == bound.policy["configuration_digest"]
-                and s.policy_revision == bound.policy["policy_revision"])
+        from src.model_admission import owner_policy_fingerprint
+        if owner_policy_fingerprint(bound.owner) != bound.policy.get('owner_policy_fingerprint'):
+            return False
+        try:
+            with self.transaction() as db:
+                p, s = self.state(db, bound.owner, bound.session_id)
+                row = db.query(d.ChatAutomationSubmission).filter_by(submission_id=bound.submission_id).first()
+                return bool(row and row.owner_key == owner_key(bound.owner)
+                    and row.status in {"preparing", "bound", "running", "awaiting_approval"}
+                    and row.intent_digest == digest(bound.raw_ask)
+                    and p.authority_epoch == bound.policy["authority_epoch"]
+                    and digest(p.configuration or {}) == bound.policy["configuration_digest"]
+                    and s.policy_revision == bound.policy["policy_revision"])
+        except HTTPException:
+            return False
 
     def record(self, bound, status, descriptor=None):
         d = _models()
@@ -301,6 +309,47 @@ def validate_elevation_roots(owner, roots):
         sealed = FilesystemRoot.seal(path, owner=str(owner or "").strip().casefold())
         result.append({"path": path, "access": entry["access"], "identity": sealed.to_dict()})
     return result
+
+
+def rename_automation_owner(db, old_owner, new_owner):
+    """Move preferences with account data, never live capabilities."""
+    d = _models()
+    old_key, new_key = owner_key(old_owner), owner_key(new_owner)
+    existing = db.query(d.OwnerChatAutomation).filter_by(owner_key=new_key).first()
+    if existing is not None:
+        raise ValueError('Destination already has chat settings')
+    prefs = db.query(d.OwnerChatAutomation).filter_by(owner_key=old_key).first()
+    if prefs is not None:
+        prefs.owner_key = new_key
+        prefs.authority_epoch += 1
+        prefs.revision += 1
+    for state in db.query(d.ChatAutomationState).filter_by(owner_key=old_key):
+        state.owner_key = new_key
+        state.policy_revision += 1
+        state.elevation_grant = None
+    db.query(d.ChatAutomationLease).filter_by(owner_key=old_key).delete(synchronize_session=False)
+    db.query(d.ChatAutomationSubmission).filter_by(owner_key=old_key).update(
+        {'owner_key': new_key, 'status': 'cancelled'}, synchronize_session=False)
+    for attempt in db.query(d.DecisionAttempt).filter_by(owner_key=old_key):
+        attempt.owner_key = new_key
+        if attempt.status == 'reserved':
+            attempt.status = 'unresolved'
+            attempt.record = {**attempt.record, 'status': 'unresolved', 'failure_kind': 'owner_changed', 'usage': None}
+
+
+def retire_automation_owner(db, owner):
+    d = _models()
+    key = owner_key(owner)
+    # A later account with the same spelling must not inherit these settings.
+    db.query(d.OwnerChatAutomation).filter_by(owner_key=key).delete(synchronize_session=False)
+    for state in db.query(d.ChatAutomationState).filter_by(owner_key=key):
+        state.approval_mode, state.route_mode, state.elevation_grant = 'always_ask', 'manual', None
+        state.policy_revision += 1
+    db.query(d.ChatAutomationLease).filter_by(owner_key=key).delete(synchronize_session=False)
+    retired = 'retired:' + uuid.uuid4().hex
+    db.query(d.ChatAutomationSubmission).filter_by(owner_key=key).update(
+        {'owner_key': retired, 'status': 'cancelled'}, synchronize_session=False)
+    db.query(d.DecisionAttempt).filter_by(owner_key=key).update({'owner_key': retired}, synchronize_session=False)
 
 
 class SqlAttemptStore:
@@ -445,6 +494,11 @@ async def prepare_chat_turn(store, owner, session, raw_ask, *, entrypoint="inter
                 if reasoning_effort not in EFFORTS:
                     raise HTTPException(422, "Invalid reasoning effort")
                 effort = reasoning_effort or ""
+        from src.model_admission import require_owner_model
+        try:
+            require_owner_model(owner, model)
+        except ValueError:
+            raise HTTPException(403, "This model is not allowed for your account") from None
         if endpoint_id:
             from src.endpoint_resolver import resolve_endpoint_by_id
             from src.owner_identity import DEFAULT_LOCAL_OWNER
@@ -478,6 +532,8 @@ def validate_provider_binding(url, model, headers, session_id, reasoning_effort=
         return
     if not bound.current():
         raise RuntimeError("Chat policy changed before provider dispatch")
+    from src.model_admission import require_owner_model
+    require_owner_model(bound.owner, model)
     endpoint_id = bound.descriptor["endpoint_id"]
     if endpoint_id:
         from src.endpoint_resolver import resolve_endpoint_by_id
@@ -540,6 +596,23 @@ def bind_prepared_browser_scope(bound):
     record.task_grant = replace(grant, run_id=bound.run_id)
 
 
+def current_browser_grant(owner, session_id):
+    bound = current_turn()
+    if (bound is None or owner_key(owner) != owner_key(bound.owner)
+            or str(session_id or "") != bound.session_id or not bound.current()):
+        return None
+    from src.browser_pipe import get
+    record = get(str(owner or "").strip().casefold(), str(session_id or ""))
+    grant = getattr(record, "task_grant", None)
+    if grant is None or grant.run_id != bound.run_id:
+        return None
+    try:
+        grant.check(str(owner or "").strip().casefold(), str(session_id or ""))
+    except ValueError:
+        return None
+    return grant
+
+
 def automation_ingress(session_manager):
     """One barrier for existing JSON and SSE chat endpoints, including replay."""
     def decorate(func):
@@ -554,6 +627,8 @@ def automation_ingress(session_manager):
                 data = await request.json()
             else:
                 data = dict(await request.form())
+            if not isinstance(data, dict):
+                raise HTTPException(400, "A chat request must be an object")
             sid = data.get("session")
             if not sid:
                 return await func(request, *args, **kwargs)

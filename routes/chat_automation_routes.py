@@ -58,12 +58,14 @@ def setup_chat_automation_routes(session_manager):
         from src.chat_automation import validate_configuration
         validate_configuration(body["changes"])
         try:
+            from src.model_admission import require_owner_model
             if "decision_provider" in body["changes"]:
                 resolve_decision_endpoint(body["changes"]["decision_provider"], owner)
             for mapping in body["changes"].get("approaches", {}).values():
+                require_owner_model(owner, mapping["model"])
                 if not resolve_endpoint_by_id(mapping["endpoint_id"], mapping["model"], owner=owner, require_exact_model=True):
                     raise HTTPException(422, "An approach model is unavailable")
-        except DecisionError:
+        except (DecisionError, ValueError):
             raise HTTPException(422, "The decision model is unavailable") from None
         return AutomationStore().update_configuration(owner, body["changes"], body["revision"])
 

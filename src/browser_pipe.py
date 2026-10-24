@@ -376,6 +376,12 @@ class PipeBrowserRecord:
             request = params.get('request') or {}
             network = self.task_grant or self.network_grant
             allowed = self.live and network is not None and time.time() < network.expires_at and network.permits_navigation(request.get('url', ''))
+            validator = getattr(self, 'network_policy_validator', None)
+            if validator is not None:
+                try:
+                    allowed = allowed and validator() is True
+                except Exception:
+                    allowed = False
             if request.get('method') not in {'GET', 'HEAD'} and (network is None or 'submit' not in network.allowed_effects):
                 allowed = False
             self._control('Fetch.continueRequest' if allowed else 'Fetch.failRequest',
