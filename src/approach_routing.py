@@ -94,14 +94,9 @@ class BoundExecutionRoute:
             self.url, self.model, self.headers, self.reasoning_effort)
 
 
-async def classify_approach(raw_ask: str, provider, context: DecisionContext, *, config: dict,
-                            evidence: dict | None = None) -> ApproachSelection:
-    if (not isinstance(raw_ask, str) or not raw_ask.strip()
-            or len(raw_ask.encode("utf-8")) > MAX_TASK_BYTES):
-        raise DecisionError("approach_ask_invalid")
-    if evidence is not None and not isinstance(evidence, dict):
-        raise DecisionError("approach_evidence_invalid")
-    request = DecisionRequest(
+def build_approach_request(raw_ask: str, *, evidence: dict | None = None):
+    """Production typed request, also reused by the frozen synthetic campaign."""
+    return DecisionRequest(
         "approach", {"policy": APPROACH_POLICY, "ask": raw_ask, "evidence": evidence or {}},
         APPROACHES, question_id="approach", additional_questions={"readiness": {
             "ready": "The aim and decisive constraints permit a meaningful approach choice.",
@@ -109,6 +104,16 @@ async def classify_approach(raw_ask: str, provider, context: DecisionContext, *,
         instructions=("Select approach and readiness independently. These are approach categories, "
                       "not vendor/model capability rankings. Task duration alone does not imply "
                       "approach discovery; ordinary implementation unknowns do not imply missing context."))
+
+
+async def classify_approach(raw_ask: str, provider, context: DecisionContext, *, config: dict,
+                            evidence: dict | None = None) -> ApproachSelection:
+    if (not isinstance(raw_ask, str) or not raw_ask.strip()
+            or len(raw_ask.encode("utf-8")) > MAX_TASK_BYTES):
+        raise DecisionError("approach_ask_invalid")
+    if evidence is not None and not isinstance(evidence, dict):
+        raise DecisionError("approach_evidence_invalid")
+    request = build_approach_request(raw_ask, evidence=evidence)
     decision = await provider.evaluate(request, context, config=config)
     readiness = decision.answers.get("readiness", {})
     if (decision.choice not in APPROACHES or decision.confidence < MINIMUM_CONFIDENCE

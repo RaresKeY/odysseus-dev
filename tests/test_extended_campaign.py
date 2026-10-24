@@ -349,3 +349,84 @@ def test_host_stop_sentinel_between_reserve_and_dispatch_retains_hold(tmp_path):
 def test_verified_contract_requires_exact_boolean(verified):
     with pytest.raises(DecisionError, match="invalid_billing_contract"):
         replace(CONTRACT, verified=verified).checked()
+
+
+# Planning allowances are deliberately separate from verified vendor bounds.
+def planning_profile(**changes):
+    from src.decisions.campaign import RootApprovedChoiceProfile
+    return RootApprovedChoiceProfile("2" * 64, root_approved=True, **changes)
+
+
+def test_planning_profile_is_distinct_and_requires_exact_root_approval(tmp_path):
+    from src.decisions.campaign import RootApprovedChoiceProfile
+    ledger, version = setup(tmp_path)
+    profile = planning_profile()
+    assert not hasattr(profile, "verified")
+    assert "not a published vendor maximum" in profile.basis
+    reserve(ledger, version, contract=profile)
+    assert ledger.report()["held"] == 131072
+    other, identity = setup(tmp_path / "other")
+    with pytest.raises(DecisionError, match="profile_not_approved"):
+        reserve(other, identity, contract=RootApprovedChoiceProfile("2" * 64))
+
+
+@pytest.mark.parametrize("field,value", [("root_approved", 1), ("root_approved", "true"),
+    ("input_tokens", 65535), ("output_tokens", 0), ("basis", "published vendor maximum"),
+    ("service_assumption", "guaranteed zero output"), ("evidence_sha256", "0" * 64)])
+def test_planning_profile_rejects_changed_allowance_or_provenance(field, value):
+    with pytest.raises(DecisionError, match="invalid_planning_profile"):
+        replace(planning_profile(), **{field: value}).checked()
+
+
+def test_operational_stop_is_persisted_without_changing_authorization(tmp_path):
+    from src.decisions.campaign import OPERATIONAL_STOP
+    ledger, version = setup(tmp_path)
+    for stage in ("small", "development"):
+        ledger.advance(stage, evidence="offline")
+    contract = BillingContract(50000, 50000, "3" * 64, True)
+    for i in range(10):
+        key = str(i)
+        ledger.reserve(attempt_id=key, case_key=key, version=version, stage="development", binding={}, contract=contract)
+        ledger.dispatch(key, {})
+        ledger.response(key, {"input_tokens": 50000, "output_tokens": 50000}, "4" * 64)
+        ledger.finish(key, status="settled", dispatched=True)
+    report = ledger.report()
+    assert report["limit"] == 5000000 and report["operational_stop"] == OPERATIONAL_STOP == 1000000
+    assert report["halted"] and report["charged_or_held"] == 1000000
+    assert report["remaining"] == 4000000 and report["operational_remaining"] == 0
+    assert CampaignLedger(ledger.path, authorization=AUTH).report()["halted"]
+    with sqlite3.connect(ledger.path) as db, pytest.raises(sqlite3.IntegrityError):
+        db.execute("UPDATE operational_policy SET stop=5000000")
+
+
+def test_projected_operational_stop_counts_held_reservation(tmp_path):
+    ledger, version = setup(tmp_path)
+    for stage in ("small", "development"):
+        ledger.advance(stage, evidence="offline")
+    contract = BillingContract(50000, 50000, "3" * 64, True)
+    for i in range(9):
+        key = str(i)
+        ledger.reserve(attempt_id=key, case_key=key, version=version, stage="development", binding={}, contract=contract)
+        ledger.dispatch(key, {})
+        ledger.response(key, {"input_tokens": 50000, "output_tokens": 50000}, "4" * 64)
+        ledger.finish(key, status="settled", dispatched=True)
+    with pytest.raises(DecisionError, match="budget_unavailable"):
+        ledger.reserve(attempt_id="new", case_key="new", version=version, stage="development", binding={}, contract=planning_profile())
+    assert len(ledger.report()["attempts"]) == 9
+    assert ledger.report()["charged_or_held"] == 900000
+
+
+@pytest.mark.parametrize("mutation", ["model", "url", "header", "state", "free_text", "option_count", "question_count"])
+def test_guarded_profile_rejects_unsupported_wire_before_reservation(tmp_path, mutation):
+    from src.decisions.campaign import MODEL, URL
+    endpoint = replace(ENDPOINT, model=MODEL, url=URL)
+    payload = {"model": MODEL, "state": {"effects": "mocked"}, "questions": REQUEST.questions()}
+    if mutation == "model": payload["model"] = "other"
+    if mutation == "url": endpoint = replace(endpoint, url=URL + "?redirect=1")
+    if mutation == "header": endpoint = replace(endpoint, headers={"Typesafe-danger-zone-long-context": "true"})
+    if mutation == "state": payload["state"]["text"] = "x" * 4096
+    if mutation == "free_text": payload["max_tokens"] = 100
+    if mutation == "option_count": payload["questions"]["decision"]["criteria"] = {str(i): "a" for i in range(17)}
+    if mutation == "question_count": payload["questions"]["another"] = payload["questions"]["decision"]
+    with pytest.raises(DecisionError, match="profile_refused"):
+        planning_profile().check_wire(endpoint, encode(payload), smoke=True)
