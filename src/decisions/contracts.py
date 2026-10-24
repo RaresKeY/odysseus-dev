@@ -22,8 +22,28 @@ class DecisionError(RuntimeError):
 
 
 def encode(value: Any) -> bytes:
-    return json.dumps(value, ensure_ascii=False, separators=(",", ":"),
-                      sort_keys=True, allow_nan=False).encode("utf-8")
+    # Adapted from concern-series decision_contracts._json: JSON-shaped input
+    # cannot contain tuple/coerced-key aliases that change meaning on the wire.
+    def check(item):
+        if item is None or type(item) in (str, bool, int):
+            return
+        if type(item) is float and math.isfinite(item):
+            return
+        if type(item) is list:
+            for child in item:
+                check(child)
+            return
+        if type(item) is dict and all(type(key) is str for key in item):
+            for child in item.values():
+                check(child)
+            return
+        raise DecisionError("decision_invalid_request")
+    try:
+        check(value)
+        return json.dumps(value, ensure_ascii=False, separators=(",", ":"),
+                          sort_keys=True, allow_nan=False).encode("utf-8")
+    except (ValueError, TypeError, RecursionError, UnicodeError, OverflowError):
+        raise DecisionError("decision_invalid_request") from None
 
 
 def decode(value: bytes | str) -> dict:

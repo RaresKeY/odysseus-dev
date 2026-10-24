@@ -7,10 +7,11 @@ import inspect
 import math
 import time
 import uuid
+from dataclasses import replace
 
 import httpx
 
-from .config import ResolvedDecisionEndpoint, resolve_decision_endpoint, validate_config
+from .config import ResolvedDecisionEndpoint, resolve_decision_endpoint, validate_config, admit_decision_owner
 from .contracts import (DecisionContext, DecisionError, DecisionRequest, DecisionResult,
                         MAX_REQUEST_BYTES, MAX_RESPONSE_BYTES, SCHEMA_VERSION,
                         decode, encode, valid_usage, validate_answers)
@@ -84,11 +85,18 @@ class DecisionProvider:
         self.store, self.resolver, self.clock = store, resolver, clock
         self.client_factory = client_factory or httpx.AsyncClient
 
+    async def _invoke(self, callback, *args):
+        # The canonical resolver reads local registration/SQL, never performs
+        # provider probes. Keep blocking admission off the event loop; a timed
+        # out result is discarded and can never proceed to HTTP dispatch.
+        value = await callback(*args) if inspect.iscoroutinefunction(callback) else await asyncio.to_thread(callback, *args)
+        return await value if inspect.isawaitable(value) else value
+
     async def _check(self, context):
+        if context.deadline is not None and self.clock() >= context.deadline:
+            raise DecisionError("decision_deadline_exceeded")
         if context.cancelled is not None:
-            cancelled = context.cancelled()
-            if inspect.isawaitable(cancelled):
-                cancelled = await cancelled
+            cancelled = await self._invoke(context.cancelled)
             if cancelled:
                 raise DecisionError("decision_cancelled")
         if context.deadline is not None and self.clock() >= context.deadline:
@@ -103,10 +111,30 @@ class DecisionProvider:
                 or context.deadline is not None and (type(context.deadline) not in (int, float) or not math.isfinite(context.deadline))):
             raise DecisionError("decision_invalid_context")
         checked_config = validate_config(config)
+        context = replace(context, owner=admit_decision_owner(context.owner))
+        timeout = checked_config["timeout_seconds"]
+        if context.deadline is not None:
+            timeout = min(timeout, context.deadline - self.clock())
+        if timeout <= 0:
+            raise DecisionError("decision_deadline_exceeded")
+        state = {}
+        try:
+            async with asyncio.timeout(timeout) as scope:
+                state["scope"] = scope
+                return await self._evaluate(request, context, checked_config, state)
+        except TimeoutError:
+            # _evaluate settles a reserved call on cancellation. A preflight
+            # timeout has no attempt/reservation and definitely made no HTTP.
+            raise DecisionError("decision_transport_failed" if state.get("dispatched") else "decision_deadline_exceeded",
+                                attempt_id=state.get("attempt_id")) from None
+        except DecisionError:
+            raise
+        except Exception:
+            raise DecisionError("decision_admission_failed", attempt_id=state.get("attempt_id")) from None
+
+    async def _evaluate(self, request, context, checked_config, state):
         await self._check(context)
-        endpoint = self.resolver(checked_config, context.owner)
-        if inspect.isawaitable(endpoint):
-            endpoint = await endpoint
+        endpoint = await self._invoke(self.resolver, checked_config, context.owner)
         if not isinstance(endpoint, ResolvedDecisionEndpoint):
             raise DecisionError("decision_endpoint_unavailable")
         questions = request.questions()
@@ -126,6 +154,7 @@ class DecisionProvider:
         if timeout <= 0:
             raise DecisionError("decision_deadline_exceeded")
         attempt_id = uuid.uuid4().hex
+        state["attempt_id"] = attempt_id
         identity = endpoint.public_identity()
         record = {"attempt_id": attempt_id, "owner": context.owner,
                   "session_id": context.session_id, "run_id": context.run_id,
@@ -160,6 +189,7 @@ class DecisionProvider:
                     headers = {**endpoint.headers, "Content-Type": "application/json",
                                "Accept": "application/json", "Accept-Encoding": "identity"}
                     dispatched = True  # Even connect/timeout failures may have reached the provider.
+                    state["dispatched"] = True
                     async with client.stream("POST", endpoint.url, content=wire, headers=headers,
                                              follow_redirects=False) as response:
                         if 300 <= response.status_code < 400:
@@ -187,27 +217,26 @@ class DecisionProvider:
                             if isinstance(external_usage, dict):
                                 measured = valid_usage({"input_tokens": external_usage.get("prompt_tokens"),
                                                         "output_tokens": external_usage.get("completion_tokens")})
+                            _enforce_reservation(measured, record)
                             raw = _decode_openai(raw, endpoint.model)
                         else:
                             measured = valid_usage(raw.get("usage"))
                         measured = valid_usage(raw.get("usage")) or measured
+                        _enforce_reservation(measured, record)
                         answers = validate_answers(raw, questions, model=endpoint.model)
                 await self._check(context)
-                current = self.resolver(checked_config, context.owner)
-                if inspect.isawaitable(current):
-                    current = await current
+                current = await self._invoke(self.resolver, checked_config, context.owner)
                 if current != endpoint:
                     raise DecisionError("decision_endpoint_changed")
-            if any(measured[k] > record["reservation"][k] for k in record["reservation"]):
-                settle("unresolved", "decision_usage_exceeded_reservation")
-                raise DecisionError("decision_usage_exceeded_reservation", attempt_id=attempt_id)
             settle("settled")
             primary = answers[request.question_id]
             return DecisionResult(primary["choice"], float(primary["confidence"]),
                                   dict(primary["probabilities"]), measured, attempt_id, identity, answers)
         except asyncio.CancelledError:
             if not settled:
-                settle("unresolved" if dispatched else "cancelled", "decision_cancelled")
+                expired = state.get("scope") is not None and state["scope"].expired()
+                settle("unresolved" if dispatched else "cancelled",
+                       "decision_deadline_exceeded" if expired else "decision_cancelled")
             raise
         except DecisionError as error:
             if not settled:
@@ -217,3 +246,10 @@ class DecisionProvider:
             if not settled:
                 settle("unresolved" if dispatched else "cancelled", "decision_transport_failed")
             raise DecisionError("decision_transport_failed", attempt_id=attempt_id) from None
+
+
+def _enforce_reservation(measured, record):
+    # Known over-budget usage stays known even when the decision is malformed.
+    # Stores block this explicit spent condition without inventing unknown use.
+    if measured is not None and any(measured[k] > record["reservation"][k] for k in record["reservation"]):
+        raise DecisionError("decision_usage_exceeded_reservation")
