@@ -12,15 +12,22 @@ The owner configuration stores `decision_provider` with `endpoint_id`, `model`,
 and `max_calls` (1–128). URLs and keys come from canonical encrypted endpoint
 registration, never decision input. Normal owner visibility, enabled/hidden
 models and deployment admission still apply. Auth-disabled ownership resolves
-to its explicit local owner scope. Shared registrations retain canonical
+to its explicit local owner scope only when authentication is explicitly off.
+An absent authenticated identity, request sentinel, or local-owner identity in
+authenticated mode fails before resolver/credential access or HTTP. Shared registrations retain canonical
 visibility rules; they do not confer another named owner's private credential.
 
 Each call reserves a durable attempt before transport. The supplied store must
 atomically enforce the run's call limit and reject a pending or unresolved
-attempt; the in-memory implementation is only for offline fixtures. Requests
+attempt, plus any known over-reservation result; the in-memory implementation is only for offline fixtures. Requests
 are bounded at 60 KiB (12,000 bytes for browser decisions), responses at 128 KiB,
-and execution at the earlier of its deadline and configured timeout. Unknown
-usage retains its reservation. Ambiguous transport outcomes never retry.
+and the asynchronous admission/transport lifecycle at the earlier of its deadline
+and configured timeout. Local synchronous resolver/cancellation callbacks run off
+the event loop; a timed-out late result cannot dispatch HTTP. Canonical SQL
+transactions retain their own finite database lock/connection limits. A timeout
+before dispatch has no ambiguous provider spend; after dispatch it preserves the
+unresolved reservation. Known over-budget usage remains known, including when
+the answer is malformed, and blocks another call in the same run. Ambiguous transport outcomes never retry.
 Returned identity includes endpoint ID, exact model, configuration digest and
 distribution provenance, with no URL or credential. The route is re-resolved
 after inference to reject changed or revoked registration.
@@ -31,6 +38,14 @@ valid usage. Duplicate JSON keys, booleans as numbers, extra answer keys and
 untrusted redirects fail closed. `openai_json` distributions are model-reported;
 this contract does not turn them into calibrated probabilities. The caller's
 deterministic admission and human fallback remain authoritative.
+
+The strict JSON-shaped request check adapts the earlier concern-series
+`decision_contracts._json` mechanics: tuple values and coerced/non-string keys
+cannot change meaning on the wire. The current probability tolerance remains
+`1e-5`; older model IDs, global endpoints and experiment-only runtime policy are
+not carried into chat execution. A literal SystemOne wire pair lives in
+`tests/fixtures/decision_port/systemone-wire-v1.json`, independently of the
+request-generation helper.
 
 `src/approach_routing.py` uses the stable IDs `established_procedure`,
 `bounded_domain` and `approach_discovery`. The owner maps each to an admitted

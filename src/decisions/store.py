@@ -32,7 +32,8 @@ class MemoryAttemptStore:
         with self._lock:
             previous = self.records_for_run(record["owner"], record["session_id"], record["run_id"])
             if (record["attempt_id"] in self.records or len(previous) >= max_calls
-                    or any(r["status"] in {"reserved", "unresolved"} for r in previous)):
+                    or any(r["status"] in {"reserved", "unresolved"}
+                           or r.get("failure_kind") == "decision_usage_exceeded_reservation" for r in previous)):
                 raise DecisionError("decision_budget_unavailable")
             self.records[record["attempt_id"]] = deepcopy(record)
 

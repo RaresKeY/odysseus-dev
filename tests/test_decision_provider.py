@@ -209,9 +209,12 @@ def test_registered_resolver_owner_disabled_and_exact_model_gates(monkeypatch):
                     database.ModelEndpoint(id="disabled", name="Disabled", owner="alice", is_enabled=False, base_url="http://127.0.0.1:8000")])
         db.commit()
     monkeypatch.setattr(database, "SessionLocal", sessions)
-    for owner in ["alice", None]:
+    for owner in ["alice"]:
         with pytest.raises(DecisionError, match="endpoint_unavailable"):
             resolve_decision_endpoint({**CONFIG, "endpoint_id": "private"}, owner)
+    monkeypatch.setenv("AUTH_ENABLED", "true")
+    with pytest.raises(DecisionError, match="owner_unavailable"):
+        resolve_decision_endpoint({**CONFIG, "endpoint_id": "private"}, None)
     result = resolve_decision_endpoint({**CONFIG, "endpoint_id": "shared"}, "alice")
     assert result.url == "http://127.0.0.1:8000/v1/systemone"
     with pytest.raises(DecisionError, match="model_unavailable"):

@@ -115,6 +115,8 @@ def resolve_execution_route(mapping: dict, owner: str | None, *, allowed_models:
                             source="manual", approach_id=None, attempt_id=None,
                             resolver=None) -> BoundExecutionRoute:
     mapping = validate_mapping(mapping)
+    from src.decisions.config import admit_decision_owner
+    owner = admit_decision_owner(owner)
     from src.model_admission import require_owner_model
     try:
         require_owner_model(owner, mapping['model'])
@@ -125,8 +127,7 @@ def resolve_execution_route(mapping: dict, owner: str | None, *, allowed_models:
     if resolver is None:
         from src.endpoint_resolver import _resolve_endpoint_by_id_with_descriptor
         resolver = _resolve_endpoint_by_id_with_descriptor
-    from src.owner_identity import DEFAULT_LOCAL_OWNER
-    route = resolver(mapping["endpoint_id"], mapping["model"], owner=owner or DEFAULT_LOCAL_OWNER,
+    route = resolver(mapping["endpoint_id"], mapping["model"], owner=owner,
                      require_exact_model=True)
     if not route:
         raise DecisionError("execution_route_unavailable")
