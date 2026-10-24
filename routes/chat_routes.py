@@ -2248,7 +2248,10 @@ def setup_chat_routes(
     # ------------------------------------------------------------------ #
     # POST /api/chat (non-streaming)
     # ------------------------------------------------------------------ #
+    from src.chat_automation import automation_ingress
+
     @router.post("/api/chat", response_model=Dict[str, Any])
+    @automation_ingress(session_manager)
     async def chat_endpoint(request: Request, chat_request: ChatRequest) -> Dict[str, Any]:
         require_api_token_scope(request, "chat")
         _set_user_time_from_request(request)
@@ -2466,6 +2469,7 @@ def setup_chat_routes(
     # POST /api/chat_stream
     # ------------------------------------------------------------------ #
     @router.post("/api/chat_stream")
+    @automation_ingress(session_manager)
     async def chat_stream(request: Request) -> StreamingResponse:
         require_api_token_scope(request, "chat")
         body = None
@@ -4965,6 +4969,10 @@ def setup_chat_routes(
                     yield chunk
             finally:
                 _active_streams.pop(session, None)
+                from src.chat_automation import current_turn
+                bound = current_turn()
+                if bound is not None:
+                    bound.store.record(bound, "awaiting_approval" if bound.pending else "completed")
 
         # Compare panes and explicitly unattended native clients are
         # short-lived, single-shot generations with nobody to resume them.

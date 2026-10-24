@@ -18,7 +18,9 @@ class ChatRequest(BaseModel):
     @field_validator('message')
     @classmethod
     def clean_message(cls, v):
-        return v.strip()
+        if not v.strip():
+            raise ValueError("Message cannot be blank")
+        return v
     
     @field_validator('time_filter')
     @classmethod

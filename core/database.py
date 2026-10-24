@@ -274,6 +274,60 @@ class Session(TimestampMixin, Base):
             'crew_member_id': self.crew_member_id,
         }
 
+class OwnerChatAutomation(TimestampMixin, Base):
+    """Canonical owner preferences coupled transactionally to chat policy."""
+    __tablename__ = "owner_chat_automation"
+    owner_key = Column(String, primary_key=True)
+    last_explicit_mode = Column(String, nullable=False, default="always_ask")
+    elevation_ceiling = Column(Boolean, nullable=False, default=False)
+    authority_epoch = Column(Integer, nullable=False, default=0)
+    revision = Column(Integer, nullable=False, default=0)
+    configuration = Column(JSON, nullable=False, default=dict)
+
+
+class ChatAutomationState(TimestampMixin, Base):
+    __tablename__ = "chat_automation_state"
+    session_id = Column(String, ForeignKey("sessions.id", ondelete="CASCADE"), primary_key=True)
+    owner_key = Column(String, nullable=False, index=True)
+    approval_mode = Column(String, nullable=False, default="always_ask")
+    policy_revision = Column(Integer, nullable=False, default=0)
+    route_mode = Column(String, nullable=False, default="manual")
+    elevation_grant = Column(JSON, nullable=True)
+
+
+class ChatAutomationLease(Base):
+    """Admission only; agent_runs remains the stream/run lifecycle owner."""
+    __tablename__ = "chat_automation_leases"
+    session_id = Column(String, ForeignKey("sessions.id", ondelete="CASCADE"), primary_key=True)
+    owner_key = Column(String, nullable=False)
+    token = Column(String, nullable=False)
+    submission_id = Column(String, nullable=False)
+    expires_at = Column(Float, nullable=False)
+
+
+class ChatAutomationSubmission(Base):
+    __tablename__ = "chat_automation_submissions"
+    submission_id = Column(String, primary_key=True)
+    owner_key = Column(String, nullable=False, index=True)
+    session_id = Column(String, nullable=False, index=True)
+    policy_revision = Column(Integer, nullable=False)
+    authority_epoch = Column(Integer, nullable=False)
+    intent_digest = Column(String, nullable=False)
+    descriptor = Column(JSON, nullable=False, default=dict)
+    status = Column(String, nullable=False, default="preparing")
+    created_at = Column(Float, nullable=False)
+
+
+class DecisionAttempt(Base):
+    __tablename__ = "decision_attempts"
+    attempt_id = Column(String, primary_key=True)
+    owner_key = Column(String, nullable=False, index=True)
+    session_id = Column(String, nullable=False, index=True)
+    run_id = Column(String, nullable=False, index=True)
+    status = Column(String, nullable=False)
+    record = Column(JSON, nullable=False)
+
+
 class ChatMessage(Base):
     """
     SQLAlchemy model for ChatMessage table.

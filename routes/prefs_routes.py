@@ -1,7 +1,7 @@
 """User preferences API — per-user key/value store backed by a JSON file."""
 import json
 from typing import Optional
-from fastapi import APIRouter, Request
+from fastapi import APIRouter, Request, HTTPException
 from core.atomic_io import atomic_write_json
 from src.auth_helpers import get_current_user
 from src.constants import USER_PREFS_FILE
@@ -116,6 +116,8 @@ def setup_prefs_routes():
 
     @router.put("/{key}")
     async def set_pref(request: Request, key: str, body: dict):
+        if key in {"approval_mode", "route_mode", "elevation_ceiling", "elevation_grant", "approaches", "decision_provider", "chat_automation"}:
+            raise HTTPException(422, "Use chat settings for automation preferences")
         user = get_current_user(request)
         prefs = _load_for_user(user)
         prefs[key] = body.get("value")
