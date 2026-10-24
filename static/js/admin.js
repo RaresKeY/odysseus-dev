@@ -2432,11 +2432,15 @@ function initEndpointForm() {
   // Local "Add" button — sibling form for self-hosted base URLs.
   const localAddBtn = el('adm-epLocalAddBtn');
   const localTestBtn = el('adm-epLocalTestBtn');
+  const localType = el('adm-epLocalType');
+  const syncLocalPurpose=()=>{if(localTestBtn)localTestBtn.disabled=localType?.value==='decision';};
+  localType?.addEventListener('change',syncLocalPurpose);syncLocalPurpose();
   if (localTestBtn) {
     localTestBtn.addEventListener('click', async () => {
       const testOriginalHtml = localTestBtn.innerHTML || '>Test';
       const msg = _endpointMsg('local');
       msg.textContent = ''; msg.className = 'adm-ep-inline-msg';
+      if(localType?.value==='decision'){msg.textContent='Decision endpoints are saved without chat probes.';return;}
       const raw = (el('adm-epLocalUrl').value || '').trim();
       if (!raw) { msg.textContent = 'Enter a base URL to test'; msg.className = 'admin-error'; return; }
       const url = _normalizeBaseUrl(raw);
@@ -2476,27 +2480,29 @@ function initEndpointForm() {
         fd.append('base_url', url);
         if (apiKey) fd.append('api_key', apiKey);
         fd.append('endpoint_kind', 'local');
-        fd.append('model_refresh_mode', 'auto');
         const lt = el('adm-epLocalType');
+        const isDecision=lt?.value==='decision';
+        fd.append('model_refresh_mode', isDecision?'manual':'auto');
         if (lt) fd.append('model_type', lt.value);
-        fd.append('skip_probe', 'false');
+        fd.append('skip_probe', isDecision?'true':'false');
         const res = await fetch('/api/model-endpoints', { method: 'POST', body: fd, credentials: 'same-origin' });
         const d = await res.json();
         if (res.ok) {
           el('adm-epLocalUrl').value = '';
           if (keyEl) keyEl.value = '';
           if (lt) lt.value = 'llm';
+          syncLocalPurpose();
           if (d.id) _recentlyAddedEpId = String(d.id);
           await loadEndpoints();
-          await _selectAddedModelInChat(d);
+          if(!isDecision)await _selectAddedModelInChat(d);
           const count = (d.models || []).length;
-          const baseText = d.status === 'empty'
+          const baseText = isDecision ? 'Saved for decisions — add model IDs below; no provider request was sent' : d.status === 'empty'
             ? 'Added — Ollama is running, no models pulled yet'
             : d.online
             ? `Added — found ${count} model${count !== 1 ? 's' : ''}`
             : 'Added (offline — will retry on next load)';
           msg.innerHTML = `${baseText} <a href="#" data-go-added-models style="margin-left:6px;text-decoration:underline;color:inherit;font-weight:600;">Added Models →</a>`;
-          msg.className = d.online ? 'admin-success' : 'admin-error';
+          msg.className = isDecision || d.online ? 'admin-success' : 'admin-error';
         } else { msg.textContent = d.detail || 'Failed'; msg.className = 'admin-error'; }
       } catch (e) { msg.textContent = 'Request failed'; msg.className = 'admin-error'; }
       localAddBtn.disabled = false;

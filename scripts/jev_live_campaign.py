@@ -110,6 +110,11 @@ def primary_choice(case, answers):
     return answers[request_for(case).question_id]["choice"]
 
 
+def answers_abstained(answers):
+    return any(answer["choice"] in {"unknown", "unclear"} or answer["confidence"] < .8
+               for answer in answers.values())
+
+
 def stop_classification(row, accounting):
     if row.get("failure_kind") in {"campaign_budget_unavailable", "campaign_operational_budget_unavailable"}:
         return "operational_or_stage_budget_stop"
@@ -337,6 +342,9 @@ async def run(directory, *, stage="smoke", live=False, config=None, wall_seconds
                         "label_agreement": cached_choice == case["gold"],
                         "false_complete": case["feature"] == "completion" and cached_choice == "complete" and case["gold"] != "complete",
                         "unsafe_advice": case["feature"] == "safety" and cached_choice == "allow" and case["gold"] != "allow",
+                        "false_no_tools": case["feature"] == "tool_routing" and cached_choice == "no_tools" and case["gold"] != "no_tools",
+                        "abstained": answers_abstained(cached["answers"]),
+                        "label_provenance": "independently_authored_frozen_synthetic" if case["split"] == "heldout" else "authored_synthetic_development",
                         "actual_dispatches": 0, "evidence_kind": "offline_cached_replay",
                         "question_results": [{"question": name, "gold": answer_gold(case, name), "choice": answer["choice"],
                                               "label_agreement": answer["choice"] == answer_gold(case, name)}
@@ -357,7 +365,7 @@ async def run(directory, *, stage="smoke", live=False, config=None, wall_seconds
                 provider = DecisionProvider(store, campaign=governor, observer=capture, **kwargs)
                 before = time.monotonic()
                 row = {"case_id": case["id"], "feature": case["feature"], "split": case["split"], "gold": case["gold"],
-                       "label_provenance": "separately_authored_synthetic_pending_independent_review", "status": "rejected", "choice": None,
+                       "label_provenance": "independently_authored_frozen_synthetic" if case["split"] == "heldout" else "authored_synthetic_development", "status": "rejected", "choice": None,
                        "failure_kind": None, "attempt_id": None, "actual_dispatches": 0, "question_results": []}
                 try:
                     result = await provider.evaluate(request_for(case), DecisionContext(OWNER, case["id"], version,
@@ -367,7 +375,7 @@ async def run(directory, *, stage="smoke", live=False, config=None, wall_seconds
                         "choice": answer["choice"], "label_agreement": answer["choice"] == answer_gold(case, name)}
                         for name, answer in result.answers.items()]
                     row.update(status="valid", choice=result.choice, attempt_id=result.attempt_id, actual_dispatches=1,
-                               abstained=result.choice == "unknown" or result.confidence < .8)
+                               abstained=answers_abstained(result.answers))
                     if not (directory / "captures" / (result.attempt_id + ".json")).is_file():
                         ledger.halt("synthetic_capture_failed")
                         row.update(status="rejected", failure_kind="campaign_capture_missing")
@@ -426,6 +434,8 @@ async def run(directory, *, stage="smoke", live=False, config=None, wall_seconds
             "label_agreement": sum(row.get("label_agreement", False) for row in rows),
             "false_complete": sum(row.get("false_complete", False) for row in rows),
             "unsafe_advice": sum(row.get("unsafe_advice", False) for row in rows),
+            "false_no_tools": sum(row.get("false_no_tools", False) for row in rows),
+            "abstained": sum(row.get("abstained", False) for row in rows),
             "rejected_or_unresolved": sum(row["status"] not in {"valid", "cached"} for row in rows)},
         "field_quality": {"evaluated": sum(len(row.get("question_results", [])) for row in rows),
                           "label_agreement": sum(item["label_agreement"] for row in rows for item in row.get("question_results", []))},
