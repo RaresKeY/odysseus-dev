@@ -1,12 +1,13 @@
 # LLM Models And Endpoints
 
-Last updated: dev@86b886c | 2026-10-15
+Last updated: dev@f8e043e | 2026-10-24
 
 ## Scope
 
 This spec covers model/provider behavior in:
 
 - `src/llm_core.py`;
+- `src/decisions/`, `src/approach_routing.py`, and the provider boundary in `src/chat_automation.py`;
 - `src/endpoint_resolver.py`;
 - `src/foreground_model_routing.py`;
 - `src/model_discovery.py`;
@@ -31,6 +32,28 @@ This spec covers model/provider behavior in:
 `src.llm_core` owns provider-call mechanics. It handles OpenAI-compatible calls, Ollama normalization, Anthropic payload conversion, GitHub Copilot and ChatGPT Subscription provider detection/header injection, NVIDIA provider routing, streaming, fallback calls, upstream error formatting, async/streaming host liveness caching, configured model-list cache reads, tool-call sanitization, reasoning/thinking stream routing, and provider-specific parameter rules. GitHub Copilot OAuth/device-flow orchestration lives in `routes/copilot_routes.py` and `src/copilot.py`; ChatGPT Subscription device flow uses `routes/chatgpt_subscription_routes.py`, shared device-flow helpers, and `ProviderAuthSession` rows.
 
 `llm_core` owns payload shape. Route files and chat/agent code should request a call; they should not duplicate provider-specific payload quirks.
+
+### Bound chat approaches and independent decisions
+
+`src/chat_automation.py` binds each accepted ask to committed owner settings and
+an execution descriptor. `src/llm_core.py` rechecks that descriptor before the
+actual asynchronous or streaming transport, including after a local-model wait.
+Automatic approach routes use one admitted execution route without an automatic
+provider fallback or ambiguous-call retry. Manual fallback retains current,
+explicit owner foreground consent and rebinds the committed descriptor after an
+eligible availability failure. Unsupported effective reasoning effort fails
+instead of reporting an effort the request cannot supply.
+
+`src/approach_routing.py` owns `established_procedure`, `bounded_domain` and
+`approach_discovery`; each owner maps these stable IDs to an admitted
+endpoint/model/effort. Manual selection makes no classification call. The exact
+original ask is preserved. `src/decisions/` owns independent, bounded one-call
+decisions through an explicitly registered Systemone or OpenAI-compatible JSON
+provider. It has strict response/distribution validation, durable attempt
+reservation, owner admission, no redirects/retries and secretless identity
+metadata. Decision results confer no execution authority. See
+[decision-provider.md](../docs/decision-provider.md) for the configuration,
+failure and offline report contracts.
 
 Kimi Code User-Agent discovery has both sync and async implementations. Async post and stream paths probe `/models` through their existing async client and await each candidate, so header negotiation does not block the event loop; both paths share the accepted-value cache and 403 fallback policy.
 

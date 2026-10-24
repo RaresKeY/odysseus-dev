@@ -49,6 +49,7 @@ live mode. It replays `tests/fixtures/decision_port/synthetic-v1.json` through t
 same bounded provider and an HTTP mock; it never executes a classified action.
 The report identifies fixture/source hashes, policy versions, thresholds,
 ordering, distributions, failures, unknown usage and safety denominators.
+The portable contract is [decision-experiment-v1.schema.json](decision-experiment-v1.schema.json).
 Latency and task success remain explicitly unmeasured. One deliberately unsafe
 negative control verifies that reporting retains unsafe allows.
 

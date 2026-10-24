@@ -380,6 +380,33 @@ class BoundChatTurn:
         view._automation_bound = True
         return view
 
+    def rebind_manual(self, candidate, *, status, reasoning_effort=None):
+        """Admit only a current owner's explicit availability fallback route."""
+        from src.foreground_model_routing import (
+            FOREGROUND_AVAILABILITY_STATUSES, resolve_foreground_model_policy,
+        )
+        if (self.policy.get("route_mode") != "manual" or not self.current()
+                or type(status) is not int or status not in FOREGROUND_AVAILABILITY_STATUSES):
+            raise RuntimeError("Manual fallback is unavailable for this turn")
+        policy = resolve_foreground_model_policy(self.owner)
+        chosen = next(((route, descriptor) for route, descriptor in zip(
+            policy.fallback_candidates, policy.fallback_descriptors)
+            if policy.enabled and tuple(route) == tuple(candidate)), None)
+        if chosen is None or not chosen[1].get("endpoint_id"):
+            raise RuntimeError("Fallback has no current explicit owner consent")
+        from src.endpoint_resolver import resolve_endpoint_by_id
+        from src.owner_identity import DEFAULT_LOCAL_OWNER
+        resolved = resolve_endpoint_by_id(chosen[1]["endpoint_id"], candidate[1],
+            owner=self.owner or DEFAULT_LOCAL_OWNER, require_exact_model=True)
+        if resolved is None or tuple(resolved) != tuple(candidate):
+            raise RuntimeError("Fallback registration changed before dispatch")
+        descriptor = {**self.descriptor, "endpoint_id": chosen[1]["endpoint_id"],
+            "model": candidate[1], "reasoning_effort": reasoning_effort or "",
+            "source": "explicit_fallback"}
+        self.store.record(self, "bound", descriptor)
+        self.endpoint_url, self.headers = candidate[0], dict(candidate[2] or {})
+        self.descriptor = descriptor
+
 
 def current_turn():
     return _BOUND.get()
