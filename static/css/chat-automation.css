@@ -3,7 +3,9 @@
 .chat-automation-controls select,.chat-automation-controls button{font:inherit;color:inherit;background:var(--bg);border:1px solid color-mix(in srgb,var(--fg) 20%,transparent);border-radius:7px;padding:5px 7px}
 .chat-automation-controls [role=status]{color:var(--muted,var(--fg));font-size:12px;min-width:0}
 .chat-automation-controls select{max-width:160px;min-height:32px;min-width:0;text-overflow:ellipsis}
-.chat-automation-menu{position:relative;margin-left:auto}
+/* This popup extends above its summary; the global research-details clipping
+   must not hide the menu while leaving its buttons keyboard-focusable. */
+.chat-automation-menu{position:relative;margin-left:auto;overflow:visible}
 .chat-automation-menu summary,.chat-decision-disclosure>summary{cursor:pointer;padding:6px;min-height:32px;box-sizing:border-box}
 .chat-automation-menu>div{position:absolute;right:0;bottom:100%;z-index:40;display:grid;gap:4px;min-width:210px;background:var(--panel,var(--bg));padding:6px;border:1px solid var(--border);border-radius:6px}
 .chat-decision-disclosure{width:100%;max-width:800px;box-sizing:border-box;margin:0 auto 6px;font-size:12px;min-width:0}
