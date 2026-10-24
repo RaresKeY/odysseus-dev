@@ -129,6 +129,7 @@ async def run(record, goal, grant, provider, provider_config, decision_context, 
     latest_checks = []
     screenshot = {'available': False, 'reason': 'not_captured'}
     attempts = []
+    pending_card = None
     async def bounded(awaitable):
         async with asyncio.timeout(max(.001, wall_seconds - (clock() - started))):
             return await awaitable
@@ -139,6 +140,7 @@ async def run(record, goal, grant, provider, provider_config, decision_context, 
                 raise BrowserPipeError('browser_initial_url_not_granted')
             initial = await bounded(dispatch({'action': 'navigate', 'page': 't1', 'url': initial_url}, grant))
             if initial.get('approval_required'):
+                pending_card = initial.get('ask_user')
                 raise BrowserPipeError('human_approval_required')
             if initial.get('outcome') == 'indeterminate' or initial.get('executed') is None:
                 raise BrowserPipeError('browser_action_indeterminate', indeterminate=True)
@@ -153,6 +155,7 @@ async def run(record, goal, grant, provider, provider_config, decision_context, 
                 raise BrowserPipeError('browser_task_revoked')
             observation = await bounded(dispatch({'action': 'snapshot', 'page': 't1'}, grant))
             if observation.get('approval_required'):
+                pending_card = observation.get('ask_user')
                 stop = 'human_approval_required'; break
             if observation.get('exit_code') not in (None, 0) or observation.get('executed') is not True:
                 stop = observation.get('failure_kind', 'observation_failed'); break
@@ -187,6 +190,7 @@ async def run(record, goal, grant, provider, provider_config, decision_context, 
             # independent review here, after inference and before producer IO.
             output = await bounded(dispatch(offered[result.choice], grant))
             if output.get('approval_required'):
+                pending_card = output.get('ask_user')
                 stop = 'human_approval_required'; break
             if output.get('outcome') == 'indeterminate' or output.get('executed') is None:
                 stop = 'effect_indeterminate'; break
@@ -219,12 +223,17 @@ async def run(record, goal, grant, provider, provider_config, decision_context, 
                 screenshot = {'available': False, 'reason': 'artifact_store_unavailable'}
         except Exception as error:
             screenshot = {'available': False, 'reason': getattr(error, 'code', 'capture_unavailable')}
-    return {'status': 'awaiting_review', 'stop_reason': stop, 'executor': 'decision_provider', 'run_id': grant.run_id,
+    result = {'status': 'awaiting_approval' if stop == 'human_approval_required' else 'awaiting_review', 'stop_reason': stop, 'executor': 'decision_provider', 'run_id': grant.run_id,
             'decisions_completed': decisions, 'actions_executed': actions, 'recent_outcomes': history[-3:],
             'decision_attempts': attempts, 'usage_scope': 'browser_choices_only; canonical_ledger_accounts_for_action_reviews',
             'checks': latest_checks, 'screenshot': screenshot, 'handoff_required': True,
             'producer_namespace': 'native:odysseus-cdp-pipe', 'producer_version': '1',
             'completion_verified': False, 'page': record.public_observation() if record.current and record.live else None}
+    if stop == 'human_approval_required':
+        # Preserve the canonical public card at the tool boundary. A reason
+        # string alone cannot drive the chat approval UI or exact continuation.
+        result.update(approval_required=True, ask_user=pending_card)
+    return result
 
 
 async def execute_automation(record, bound, args, ctx):
@@ -249,5 +258,9 @@ async def execute_automation(record, bound, args, ctx):
         raise BrowserPipeError('browser_decision_binding_changed')
     result = await run(record, args.get('goal'), grant, runtime['provider'], runtime['config'], context,
                        runtime['dispatch'], initial_url=args.get('url'), max_steps=args.get('max_steps', 20))
-    return {'output': json.dumps(result, allow_nan=False), 'exit_code': 0,
-            'executed': True, 'actor': 'decision_provider', 'browser_handoff': result}
+    output = {'output': json.dumps(result, allow_nan=False), 'exit_code': 0,
+              'executed': True, 'actor': 'decision_provider', 'browser_handoff': result}
+    if result.get('approval_required'):
+        output.update(approval_required=True, ask_user=result['ask_user'], exit_code=None,
+                      executed=False, status='awaiting_approval')
+    return output

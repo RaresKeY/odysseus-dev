@@ -74,14 +74,14 @@ class BrowserAutomationTests(unittest.IsolatedAsyncioTestCase):
     async def test_permissions_before_ranking_private_values_redacted_shortlist_bounded(self):
         await self.record.observe()
         self.record.current.packet['text'] += ' private@example.test'
-        state, choices, offered = automation.decision_packet(self.record, self.grant, 'private@example.test', [])
+        state, choices, offered = automation.decision_packet(self.record, replace(self.grant, allowed_effects=frozenset({'fill'})), 'private@example.test', [])
         serialized = json.dumps({'state': state, 'choices': choices})
         self.assertNotIn('private@example.test', serialized)
         self.assertNotIn('Delete', serialized)
         self.assertNotIn('captured-object', serialized)
         self.assertLessEqual(len(serialized.encode()), 12000)
         self.assertLessEqual(sum(key.startswith('TARGET_') for key in offered), 12)
-        self.assertEqual({args.get('ref') for args in offered.values() if args and args.get('ref')}, {'n0', 'n1'})
+        self.assertEqual({args.get('ref') for args in offered.values() if args and args.get('ref')}, {'n1'})
 
     async def test_done_is_handoff_with_actual_screenshot_and_ambiguous_usage(self):
         provider = FrozenProvider(['DONE'])
@@ -104,15 +104,87 @@ class BrowserAutomationTests(unittest.IsolatedAsyncioTestCase):
         self.assertEqual(len(calls), 1)
         self.assertEqual(calls[0]['params']['arguments'][0]['value']['action'], 'fill')
 
+    async def test_traversal_uses_one_task_page_scope_and_fresh_document_bindings(self):
+        await self.record.observe()  # A human view exists before task admission.
+        original = RequestAuthority('request', 'alice', 'thread', '', (OperationGrant('private_browser'),))
+        sessions, pages = browser_identity.seal_browser_resources(original)
+        authority = replace(original, browser_sessions=sessions, browser_pages=pages)
+        self.assertEqual(authority.browser_pages[0].scope, 'page')
+        captured = []
+        async def admitted_child(args, grant):
+            operation = ExactOperation.normalize('private_browser', json.dumps(args))
+            bound = browser_identity.resolve_browser_operation(authority, operation)
+            captured.append((args['action'], bound.page.loader_id, bound.page.context_unique_id))
+            with bind_request_authority(authority), browser_identity.bind_browser_operation(bound):
+                return await browser_identity.execute_browser(json.dumps(args), {'owner': 'alice', 'session_id': 'thread'})
+        self.channel.traverse_on_click = True
+        provider = FrozenProvider(['TARGET_0', 'DONE'])
+        # Only click is allowed so TARGET_0 is the admitted Next link.
+        self.grant = replace(self.grant, allowed_effects=frozenset({'click'}), prepared_values={})
+        self.record.task_grant = self.grant
+        output = await self.run_driver(provider, admitted_child)
+        self.assertEqual(output['stop_reason'], 'done')
+        self.assertEqual(output['actions_executed'], 1)
+        self.assertEqual(len(provider.requests), 2)
+        self.assertEqual(self.record.loader, 'loader-2')
+        snapshots = [loader for action, loader, _ in captured if action == 'snapshot']
+        self.assertEqual(snapshots, ['loader-1', ''])
+        self.assertEqual(self.record.current.loader, 'loader-2')
+
     async def test_pending_child_preserves_only_existing_expiring_scope(self):
         provider = FrozenProvider(['TARGET_0'])
+        card = {'kind': 'tool_approval', 'approval_id': 'opaque-canonical-id', 'session_id': 'thread'}
         async def pending(args, grant):
-            return {'approval_required': True, 'executed': False} if args['action'] == 'fill' else await self.dispatch(args, grant)
+            return {'approval_required': True, 'ask_user': card, 'executed': False} if args['action'] == 'fill' else await self.dispatch(args, grant)
         output = await self.run_driver(provider, pending)
         self.assertEqual(output['stop_reason'], 'human_approval_required')
         self.assertIs(self.record.task_grant, self.grant)
         self.assertEqual(output['actions_executed'], 0)
         self.assertEqual(output['executor'], 'decision_provider')
+        self.assertEqual(output['status'], 'awaiting_approval')
+        self.assertIs(output['ask_user'], card)
+
+    async def test_actual_automate_entrypoint_propagates_canonical_always_ask_card(self):
+        try:
+            from src.approval_review import ApprovalReviewService
+            from src.tool_approvals import ToolApprovalStore
+            from src.tool_capabilities import capabilities_for_action
+        except ImportError:
+            self.skipTest('requires integrated canonical approval provider/policy package')
+        policy = {'contract_version': 1, 'owner': 'alice', 'session_id': 'thread',
+            'approval_mode': 'always_ask', 'policy_revision': 1, 'authority_epoch': 1,
+            'elevation_ceiling': False, 'elevation_grant': None, 'effective_roots': []}
+        args = {'action': 'automate', 'page': 't1', 'goal': 'Review the observed page'}
+        operation = ExactOperation.normalize('private_browser', json.dumps(args))
+        authority = RequestAuthority('request', 'alice', 'thread', '', (OperationGrant('private_browser'),),
+            browser_sessions=(self.record.session,), browser_pages=self.record.pages)
+        bound = browser_identity.resolve_browser_operation(authority, operation)
+        store, children = ToolApprovalStore(), []
+        async def canonical_child(child_args, grant):
+            content = json.dumps(child_args)
+            children.append(child_args)
+            pending = store.create(owner='alice', session_id='thread', origin_run_id='run',
+                tool_name='private_browser', content=content, workspace='', request_authority=authority,
+                request_text='Original user browser task', capabilities=capabilities_for_action('private_browser', content),
+                policy_record=policy, submission_id='submission', policy_validator=lambda _: True)
+            outcome = await ApprovalReviewService(store).review(pending, policy, deterministically_admitted=True)
+            return outcome.tool_result()
+        provider = FrozenProvider([])
+        runtime = {'provider': provider, 'config': {},
+            'decision_context': SimpleNamespace(owner='alice', session_id='thread', run_id='run'), 'dispatch': canonical_child}
+        with bind_request_authority(authority), browser_identity.bind_browser_operation(bound):
+            output = await browser_identity.execute_browser(json.dumps(args), {'owner': 'alice', 'session_id': 'thread', '_browser_automation_runtime': runtime})
+        self.assertTrue(output['approval_required'])
+        self.assertIs(output['executed'], False)
+        self.assertIsNone(output['exit_code'])
+        self.assertEqual(output['status'], 'awaiting_approval')
+        self.assertEqual(output['ask_user']['kind'], 'tool_approval')
+        pending = store.peek(output['ask_user']['approval_id'])
+        self.assertEqual(pending.session_id, 'thread')
+        self.assertEqual(json.loads(pending.content), {'action': 'snapshot', 'page': 't1'})
+        self.assertEqual(children, [{'action': 'snapshot', 'page': 't1'}])
+        self.assertEqual(provider.requests, [])
+        self.assertIs(self.record.task_grant, self.grant)
 
     async def test_navigation_while_inference_pending_never_retargets(self):
         provider = FrozenProvider(['TARGET_0'], lambda request: self.record._event({'method': 'Page.navigatedWithinDocument', 'params': {'frameId': FRAME}, 'sessionId': SESSION}))

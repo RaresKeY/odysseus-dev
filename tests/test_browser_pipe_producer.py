@@ -46,6 +46,9 @@ class FakeChannel:
         self.next_action = {'executed': True}
         self.last_packet = None
         self.wrong_session = False
+        self.traverse_on_click = False
+        self.traversed = False
+        self.context_counter = 6
 
     def feed(self, message):
         self.stdout.feed_data(json.dumps(message).encode() + b'\0')
@@ -66,15 +69,21 @@ class FakeChannel:
             result = {'targetId': TARGET}
         elif method == 'Page.getFrameTree': result = {'frameTree': {'frame': {'id': FRAME, 'loaderId': 'loader-1'}}}
         elif method == 'Page.createIsolatedWorld':
-            self.event('Runtime.executionContextCreated', {'context': {'id': 7, 'uniqueId': 'fixture-context-7', 'name': 'odysseus-observed-v1', 'auxData': {'frameId': FRAME}}})
+            self.context_counter += 1
+            self.event('Runtime.executionContextCreated', {'context': {'id': 7, 'uniqueId': 'fixture-context-' + str(self.context_counter), 'name': 'odysseus-observed-v1', 'auxData': {'frameId': FRAME}}})
             result = {'executionContextId': 7}
-        elif method == 'Runtime.evaluate': result = {'result': {'objectId': 'captured-object-7'}}
+        elif method == 'Runtime.evaluate': result = {'result': {'objectId': 'captured-object-' + str(self.context_counter)}}
         elif method == 'Runtime.callFunctionOn':
             if request['params']['functionDeclaration'] == pipe._CALL_SNAPSHOT:
                 self.last_packet = packet(args['arguments'][0]['value'])
+                if self.traversed:
+                    self.last_packet.update(url='https://example.com/next', text='Reached second document', title='Next fixture')
                 result = {'result': {'value': self.last_packet}}
             else:
                 result = {'result': {'value': self.next_action}}
+                if self.traverse_on_click and args['arguments'][0]['value']['action'] == 'click':
+                    self.traversed = True
+                    self.event('Page.frameNavigated', {'frame': {'id': FRAME, 'loaderId': 'loader-2'}})
         elif method == 'Page.captureScreenshot':
             result = {'data': base64.b64encode(b'\x89PNG\r\n\x1a\n' + b'\0' * 8 + struct.pack('>II', 640, 480)).decode()}
         if self.before_response:
@@ -113,7 +122,7 @@ class PipeProducerTests(unittest.IsolatedAsyncioTestCase):
         await self.record.start()
         pipe.REGISTRY[('alice', 'thread')] = self.record
         self.grant = pipe.BrowserTaskGrant('alice', 'thread', 'run', frozenset({'https://example.com'}),
-            frozenset({'fill'}), {'Email': 'private@example.test'}, time.time() + 60,
+            frozenset({'click', 'fill'}), {'Email': 'private@example.test'}, time.time() + 60,
             frozenset({'https://example.com/form'}))
         self.record.task_grant = self.grant
 
@@ -146,6 +155,18 @@ class PipeProducerTests(unittest.IsolatedAsyncioTestCase):
         evaluate = next(item for item in self.channel.requests if item['method'] == 'Runtime.evaluate')
         self.assertEqual(evaluate['params']['uniqueContextId'], 'fixture-context-7')
         self.assertNotIn('contextId', evaluate['params'])
+
+    async def test_page_scope_requires_explicit_current_run_grant(self):
+        await self.record.observe()
+        authority = RequestAuthority('request', 'alice', 'thread', '', (OperationGrant('private_browser'),))
+        sessions, pages = browser_identity.seal_browser_resources(authority)
+        self.assertEqual(pages[0].scope, 'page')
+        self.record.task_grant = None
+        sessions, pages = browser_identity.seal_browser_resources(authority)
+        self.assertEqual(pages[0].scope, 'document')
+        self.record.task_grant = replace(self.grant, run_id='different')
+        sessions, pages = browser_identity.seal_browser_resources(authority)
+        self.assertEqual(pages[0].scope, 'document')
 
     async def test_action_uses_retained_object_and_prepared_field_only(self):
         observation = await self.record.observe()
@@ -196,13 +217,24 @@ class PipeProducerTests(unittest.IsolatedAsyncioTestCase):
     async def test_request_origin_method_and_unknown_target_filter(self):
         await self.record.observe()
         with self.assertRaisesRegex(pipe.BrowserPipeError, 'browser_effect_denied'):
-            self.record.permitted_node('click', 'n2', self.grant)
+            self.record.permitted_node('click', 'n2', replace(self.grant, allowed_effects=frozenset()))
         self.channel.event('Fetch.requestPaused', {'requestId': 'unsafe', 'request': {'url': 'https://evil.example/post', 'method': 'POST'}})
         self.channel.event('Fetch.requestPaused', {'requestId': 'safe', 'request': {'url': 'https://example.com/picture', 'method': 'GET'}})
         await asyncio.sleep(.01)
         controls = [(r['method'], r['params']['requestId']) for r in self.channel.requests if r['method'].startswith('Fetch.') and r['method'] != 'Fetch.enable']
         self.assertEqual(controls, [('Fetch.failRequest', 'unsafe'), ('Fetch.continueRequest', 'safe')])
         self.assertEqual(next(r for r in self.channel.requests if r['method'] == 'Fetch.enable')['params']['patterns'], [{'urlPattern': '*', 'requestStage': 'Request'}])
+
+    async def test_admitted_link_never_implies_click_handler_permission(self):
+        observed = await self.record.observe()
+        readonly = replace(self.grant, allowed_effects=frozenset())
+        with self.assertRaisesRegex(pipe.BrowserPipeError, 'browser_effect_denied'):
+            self.record.permitted_node('click', 'n0', readonly)
+        _authority, bound = await self.bind({'action': 'click', 'page': 't1', 'observation': observed['observation'], 'ref': 'n0'})
+        before = len(self.channel.requests)
+        with self.assertRaisesRegex(pipe.BrowserPipeError, 'browser_effect_denied'):
+            await self.record.execute_bound(bound, json.loads(bound.operation.input), readonly)
+        self.assertEqual(len(self.channel.requests), before)
 
     async def test_popups_and_workers_never_resume_an_unobserved_target(self):
         before = len(self.channel.requests)
@@ -283,9 +315,15 @@ class GrantTests(unittest.TestCase):
         with self.assertRaises(pipe.BrowserPipeError): replace(grant, expires_at=1).check('alice', 'thread')
 
     def test_no_credential_or_private_navigation(self):
-        for url in ['http://example.com', 'https://user:password@example.com', 'https://127.0.0.1', 'https://[::1]', 'https://localhost', 'file:///etc/passwd', 'https://example.com/#fragment']:
+        for url in ['http://example.com', 'https://user:password@example.com', 'https://127.0.0.1', 'https://[::1]', 'https://localhost', 'file:///etc/passwd']:
             with self.subTest(url=url), self.assertRaises(ValueError): pipe.origin(url)
         self.assertEqual(pipe.origin('https://example.com/path?query=private'), 'https://example.com')
+        self.assertEqual(pipe.origin('https://example.com/path#section'), 'https://example.com')
+
+    def test_grant_expiry_must_be_finite(self):
+        for expiry in (float('nan'), float('inf'), True, 'later'):
+            with self.subTest(expiry=expiry), self.assertRaises(ValueError):
+                pipe.BrowserTaskGrant('alice', 'thread', 'run', frozenset({'https://example.com'}), expires_at=expiry)
 
 
 if __name__ == '__main__': unittest.main()

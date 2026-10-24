@@ -11,6 +11,7 @@ import base64
 import hashlib
 import ipaddress
 import json
+import math
 import os
 from pathlib import Path
 import platform
@@ -57,7 +58,7 @@ def origin(url):
     if not isinstance(url, str) or len(url) > 4096:
         raise ValueError('Invalid browser URL')
     parsed = urlsplit(url)
-    if parsed.scheme != 'https' or not parsed.hostname or parsed.username or parsed.password or parsed.fragment:
+    if parsed.scheme != 'https' or not parsed.hostname or parsed.username or parsed.password:
         raise ValueError('Only admitted HTTPS origins are supported')
     host = parsed.hostname.lower()
     if host == 'localhost' or host.endswith('.localhost'):
@@ -233,11 +234,13 @@ class BrowserTaskGrant:
     navigation_urls: frozenset[str] = frozenset()
 
     def __post_init__(self):
-        if not self.owner or not self.thread_id or not self.run_id or not self.allowed_origins or self.expires_at <= 0:
+        if (not all(isinstance(value, str) and value for value in (self.owner, self.thread_id, self.run_id))
+                or not self.allowed_origins or type(self.expires_at) not in (int, float)
+                or not math.isfinite(self.expires_at) or self.expires_at <= 0):
             raise ValueError('Invalid browser task grant')
         if any(origin(item) != item for item in self.allowed_origins) or any(not isinstance(k, str) or not isinstance(v, str) or len(v) > 2000 for k, v in self.prepared_values.items()):
             raise ValueError('Invalid browser scope')
-        if not self.allowed_effects <= {'click', 'fill', 'submit', 'send', 'publish', 'purchase', 'delete', 'account_change'}:
+        if not self.allowed_effects <= {'click', 'fill', 'submit'}:
             raise ValueError('Invalid browser effects')
         if any(not self.permits_navigation(url) for url in self.navigation_urls):
             raise ValueError('Invalid browser navigation scope')
@@ -522,12 +525,13 @@ class PipeBrowserRecord:
         if action == 'fill':
             if not node.get('editable') or 'fill' not in grant.allowed_effects:
                 raise BrowserPipeError('browser_effect_denied')
-        elif node.get('destination'):
-            if not grant.permits_navigation(node['destination']):
+        else:
+            # Links may also execute arbitrary page-owned click handlers.
+            # An admitted href is never an implicit DOM click capability.
+            if 'click' not in grant.allowed_effects:
+                raise BrowserPipeError('browser_effect_denied')
+            if node.get('destination') and not grant.permits_navigation(node['destination']):
                 raise BrowserPipeError('browser_origin_denied')
-        elif 'click' not in grant.allowed_effects:
-            # Unknown JS handlers are not proved safe by an English label.
-            raise BrowserPipeError('browser_effect_denied')
         if node.get('submits_form') and ('submit' not in grant.allowed_effects or not grant.permits_navigation(node.get('form_action', ''))):
             raise BrowserPipeError('browser_effect_denied')
         return node
