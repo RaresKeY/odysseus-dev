@@ -23,8 +23,13 @@ attempt, plus any known over-reservation result; the in-memory implementation is
 are bounded at 60 KiB (12,000 bytes for browser decisions), responses at 128 KiB,
 and the asynchronous admission/transport lifecycle at the earlier of its deadline
 and configured timeout. Local synchronous resolver/cancellation callbacks run off
-the event loop; a timed-out late result cannot dispatch HTTP. Canonical SQL
-transactions retain their own finite database lock/connection limits. A timeout
+the event loop; a timed-out late result cannot dispatch HTTP. Durable SQL reserve/settle operations also run off the event loop under retained,
+shielded task ownership. A caller deadline returns without waiting for a database
+lock: a late committed reservation is then settled cancelled without dispatch,
+and an in-flight settlement continues exactly once with its original usage.
+Until completion or on store failure the durable reservation blocks replay.
+SQL transactions retain their own finite lock/connection limits; process shutdown
+can leave a reserved record, which also blocks replay rather than retrying HTTP. A timeout
 before dispatch has no ambiguous provider spend; after dispatch it preserves the
 unresolved reservation. Known over-budget usage remains known, including when
 the answer is malformed, and blocks another call in the same run. Ambiguous transport outcomes never retry.
