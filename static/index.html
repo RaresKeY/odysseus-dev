@@ -1056,13 +1056,14 @@
     </script>
     <div id="chat-history" class="chat-history" role="log" aria-live="polite"></div>
 
-    <div class="chat-automation-controls" aria-label="Chat permissions and model choice">
+    <div class="chat-automation-controls" role="group" aria-label="Chat permissions and model choice">
       <label>Approval <select id="chat-approval-mode" aria-label="Approval mode"><option value="always_ask">Always Ask</option><option value="auto_approve">Auto-Approve</option><option value="yolo">YOLO</option></select></label>
       <label>Model <select id="chat-route-mode" aria-label="Model choice"><option value="manual">Manual</option><option value="auto">Automatic</option></select></label>
-      <button type="button" id="chat-automation-settings">Chat settings</button>
-      <button type="button" id="chat-automation-default" title="Use this chat’s displayed approval mode for your new chats">Use as new-chat default</button>
+      <label>Tools <select id="chat-tool-routing" aria-label="Tool choice"><option value="existing">Existing routing</option><option value="jev">Decision model</option><option value="all">All permitted</option></select></label>
+      <details class="chat-automation-menu"><summary>Options</summary><div><button type="button" id="chat-automation-settings">Chat settings</button><button type="button" id="chat-automation-default" title="Use this chat’s displayed approval mode for your new chats">Use approval as new-chat default</button></div></details>
       <span id="chat-automation-state" role="status" aria-live="polite">Loading permissions…</span>
     </div>
+    <div id="chat-decision-activity" class="chat-decision-disclosure" role="region" aria-label="Decision activity"></div>
     <dialog id="chat-automation-dialog" aria-labelledby="chat-automation-title">
       <form id="chat-automation-form">
         <div class="chat-automation-heading"><h2 id="chat-automation-title">Chat settings</h2><button type="button" id="chat-automation-close" aria-label="Close chat settings">Close</button></div>
@@ -1072,6 +1073,7 @@
         <fieldset><legend>This chat’s extra folders</legend><div id="chat-elevation-folders"></div><button type="button" id="chat-elevation-save">Apply folder grant</button><p id="chat-elevation-status"></p></fieldset>
         <fieldset><legend>Decision model</legend><p>Reviews actions and chooses an approach. Your execution model is selected separately.</p><div id="chat-decision-route"></div><label>Connection format <select id="chat-decision-protocol"><option value="openai_json">Compatible JSON inference</option><option value="systemone">Jev SystemOne</option></select></label></fieldset>
         <fieldset><legend>Automatic model choice</legend><p>Choose a model for each approach. Manual selection keeps your chosen model.</p><div id="chat-approach-routes"></div></fieldset>
+        <fieldset><legend>Decision assistance for this chat</legend><label>Execution effort <select id="chat-effort-mode"><option value="mapped">Use chosen effort</option><option value="auto">Automatic, when supported</option></select></label><p>Automatic effort uses the selected model’s registered supported choices. It is separate from approach and model selection.</p><label><input id="chat-followup-enabled" type="checkbox"> Interpret follow-ups with prior task status</label><label><input id="chat-preparation-enabled" type="checkbox"> Include available context readiness</label><label><input id="chat-completion-advice-enabled" type="checkbox"> Check completion meaning after verified actions</label><p>Advice cannot grant tool access or prove that an action ran. Failed or missing execution evidence still prevents a success claim.</p></fieldset>
         <fieldset id="chat-browser-controls"><legend>Private browser</legend><label>Page URL <input id="chat-browser-url" type="url" placeholder="https://…"></label><label><input id="chat-browser-clicks" type="checkbox"> Allow clicks</label><label><input id="chat-browser-fill" type="checkbox"> Allow filling named fields</label><label>Field label <input id="chat-browser-field-label" type="text"></label><label>Prepared value <input id="chat-browser-field-value" type="text" autocomplete="off"></label><label>Stop when the page contains <input id="chat-browser-check" type="text" placeholder="Optional completion text"></label><label><input id="chat-browser-submit" type="checkbox"> Allow submitting forms on this site</label><div><button type="button" id="chat-browser-open">Open private browser</button><button type="button" id="chat-browser-scope">Allow for next message</button><button type="button" id="chat-browser-navigate">Open page myself</button><button type="button" id="chat-browser-view">Take control / View</button><button type="button" id="chat-browser-close">Close browser</button></div><p id="chat-browser-status" role="status"></p><img id="chat-browser-screenshot" hidden alt="Current private browser screenshot"><div id="chat-browser-targets"></div></fieldset>
         <p id="chat-automation-feedback" role="status" aria-live="polite"></p><button type="submit">Save settings</button>
       </form>

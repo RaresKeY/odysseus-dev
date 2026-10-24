@@ -66,6 +66,11 @@ import { invalidateSettings } from './appConfig.js';
   let _contextHeaderAnchorEl = null;
   let _contextHeaderPopupCleanup = null;
   let _pendingToolApproval = null;
+  let _pendingInputCard = null;
+  document.addEventListener('odysseus:input-card-answer',event=>{
+    const value=event.detail;
+    if(value?.input_card_id && value.session_id===sessionModule.getCurrentSessionId?.()) _pendingInputCard={...value};
+  });
   const _selectedNoteIdsBySession = new Map();
   let _pendingSelectedNoteIds = [];
   let _lastPrivateBrowserUrl = '';
@@ -263,6 +268,7 @@ import { invalidateSettings } from './appConfig.js';
   });
 
   window.addEventListener('odysseus:session-changed', (event) => {
+    _pendingInputCard = null;
     const sessionId = event.detail?.sessionId;
     if (sessionId && event.detail?.materialized && _pendingSelectedNoteIds.length) {
       _selectedNoteIdsBySession.set(sessionId, _pendingSelectedNoteIds);
@@ -2564,6 +2570,10 @@ import { invalidateSettings } from './appConfig.js';
       const fd = new FormData();
       fd.append('message', approvalForSend ? '' : _finalMsgWithInject);
       fd.append('session', streamSessionId);
+      if(!approvalForSend && _pendingInputCard?.session_id===streamSessionId && _pendingInputCard.answer===msg){
+        fd.append('input_card_id',_pendingInputCard.input_card_id);
+        _pendingInputCard=null;
+      }
 
       const selectedNoteIds = _selectedNoteIdsBySession.get(streamSessionId) || [];
       if(selectedNoteIds.length){

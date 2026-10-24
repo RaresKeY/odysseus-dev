@@ -1617,6 +1617,15 @@ def save_assistant_response(
         return None
     sess.add_message(ChatMessage("assistant", _content, metadata=md))
 
+    # The producer may continue after a subscriber disconnects. Record the
+    # actual gated/saved answer here as well as in the subscriber's SSE view;
+    # stream completion or prose alone never creates a pending control card.
+    from src.chat_automation import current_turn
+    automation_turn = current_turn()
+    if automation_turn is not None and automation_turn.session_id == session_id:
+        automation_turn.store.record_answer(automation_turn, _content)
+        automation_turn._canonical_answer_saved = True
+
     from core.database import update_session_last_accessed
     update_session_last_accessed(session_id)
     session_manager.save_sessions()

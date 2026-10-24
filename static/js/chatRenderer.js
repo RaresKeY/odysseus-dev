@@ -3070,6 +3070,23 @@ export function renderAskUserCard(payload, options) {
     card.appendChild(action);
   }
 
+  if (isToolApproval && aq.session_id) {
+    const advice = document.createElement('button');
+    advice.type='button'; advice.className='ask-user-option'; advice.textContent='Safety advice';
+    const status=document.createElement('p'); status.setAttribute('role','status');
+    advice.addEventListener('click',async()=>{
+      advice.disabled=true; status.textContent='Requesting advice…';
+      try {
+        const response=await fetch(`/api/session/${encodeURIComponent(aq.session_id)}/tool-approvals/${encodeURIComponent(aq.approval_id)}/advice`,{method:'POST',credentials:'same-origin'});
+        const result=await response.json();
+        if(!response.ok)throw new Error(typeof result.detail==='string'?result.detail:'Advice is unavailable.');
+        status.textContent=result.status==='ready' ? `Advice: ${result.choice}. You still decide whether to allow this action.` : (result.reason||'Advice is pending. This does not approve the action.');
+      } catch(error) {status.textContent=error.message;}
+      // Repeated clicks must not schedule a fresh inference after ambiguity.
+    });
+    card.append(advice,status);
+  }
+
   const list = document.createElement('div');
   list.className = 'ask-user-options';
   card.appendChild(list);
@@ -3088,6 +3105,7 @@ export function renderAskUserCard(payload, options) {
       return;
     }
     _markAskUserAnswered(card, text);
+    if (aq.input_card_id && aq.session_id) document.dispatchEvent(new CustomEvent('odysseus:input-card-answer', {detail:{input_card_id:aq.input_card_id,session_id:aq.session_id,answer:text}}));
     const input = uiModule.el('message');
     if (input) input.value = text;
     const sendButton = document.querySelector('.send-btn');

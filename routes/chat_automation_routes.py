@@ -25,6 +25,18 @@ def interactive_owner(request):
 def setup_chat_automation_routes(session_manager):
     router = APIRouter(tags=["chat settings"])
 
+    from src.decision_advice import SafetyAdviceService
+    from src.tool_approvals import tool_approval_store
+    safety = SafetyAdviceService(tool_approval_store)
+
+    @router.post("/api/session/{session_id}/tool-approvals/{approval_id}/advice")
+    async def safety_advice(request: Request, session_id: str, approval_id: str):
+        owner = interactive_owner(request)
+        # Session admission precedes inference and proposal lookup. The service
+        # separately binds the sealed operation, owner, current policy and run.
+        AutomationStore().policy(owner, session_id)
+        return await safety.advise(approval_id, owner=owner, session_id=session_id)
+
     @router.get("/api/chat-settings/models")
     async def model_choices(request: Request):
         owner = interactive_owner(request)
@@ -76,7 +88,10 @@ def setup_chat_automation_routes(session_manager):
     @router.get("/api/session/{session_id}/automation")
     async def chat_settings(request: Request, session_id: str):
         owner = interactive_owner(request)
-        return AutomationStore().policy(owner, session_id)
+        store = AutomationStore()
+        result = store.policy(owner, session_id)
+        result['task'] = store.task_state(owner, session_id)
+        return result
 
     @router.put("/api/session/{session_id}/automation")
     async def save_chat_settings(request: Request, session_id: str, body: dict):

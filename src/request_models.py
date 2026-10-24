@@ -14,6 +14,7 @@ class ChatRequest(BaseModel):
     preset_id: Optional[str] = Field(default=None, description="Preset identifier")
     selected_endpoint_id: Optional[str] = Field(default=None, description="Selected model endpoint ID")
     reasoning_effort: Optional[str] = Field(default=None, description="Reasoning effort override")
+    input_card_id: Optional[str] = Field(default=None, max_length=128, description="Owned clarification card")
     
     @field_validator('message')
     @classmethod
