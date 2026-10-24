@@ -76,6 +76,8 @@ Startup fire-and-forget work includes upload cleanup, background-job monitoring,
 
 Shutdown cancels upload cleanup, stops the task scheduler, closes the webhook manager, and disconnects MCP servers.
 
+Automatic ScheduledTask admission is separately controlled by `ODYSSEUS_TASK_AUTOMATION_ENABLED` (default on; restrictive profile0). `src.task_automation` is the shared predicate used by app startup, TaskScheduler automatic entrypoints, event bus and token task webhooks. It blocks automatic execution independently of `ODYSSEUS_INPROCESS_TASKS`, whose loop-only/external-worker semantics remain unchanged. Manual owned task runs retain canonical authorization; default seeding and user settings are not rewritten by the deployment flag. See `calendar-tasks-notes.md` for guarded entrypoints and queued-work behavior.
+
 ## Degraded And Platform Behavior
 
 - On Windows, HuggingFace symlink warnings are disabled so model files copy instead of symlink on network/UNC paths.

@@ -118,6 +118,10 @@ Direct DB CLIs are local compatibility tools. They bypass HTTP route behavior, C
 
 `src.event_bus` owns event-triggered task counters and scheduler handoff. Current emitters include chat/session/document/memory/research/email/skill paths. Ownerless events resolve to a primary configured user instead of broadcasting to every owner.
 
+`src.task_automation.task_automation_enabled()` owns deployment admission for automatic ScheduledTask execution. `ODYSSEUS_TASK_AUTOMATION_ENABLED` defaults to on; only `1`, `true`, `yes`, and `on` enable it. Off returns before event scheduling/owner lookup/counter writes, scheduler startup/due scans/reminder scanners, task webhook SQL lookup, automatic queue acquisition and stored authority restoration. Delayed events and queued automatic tasks recheck admission; an already queued receipt is aborted without executing when disabled. Token webhooks return503 while off. Task chaining is automatic and is suppressed even after an explicit manual run.
+
+`ODYSSEUS_INPROCESS_TASKS=0` remains loop-only: ordinary external-worker/event deployments retain event execution unless the separate automation flag is off. Manual run-now/force, assistant manual check-in, and explicit task-tool run preserve existing owner/authority checks. Default rows and their real exact-action authority snapshots are not deleted, paused or described as zero-authority metadata. The new guard blocks their automatic consumption; normal idempotent default seeding remains unchanged. Deployment flags are not a hot cancellation guarantee for an effect already executing. Other background services and browser-side reminder fallback retain their separate controls.
+
 The current event bus is not a calendar-event emitter despite the adjacent calendar/task/reminder domain.
 
 ## Timezone And Date Semantics

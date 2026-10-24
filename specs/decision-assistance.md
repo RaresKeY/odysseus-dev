@@ -119,3 +119,7 @@ The service-worker revision refreshes changed control modules without deleting
 accounts, cookies, IndexedDB or other user storage.
 The floating composer Options menu overrides generic foldout clipping so its
 buttons remain visible and reachable by both pointer and keyboard.
+
+## Restrictive task runtime
+
+`ODYSSEUS_TASK_AUTOMATION_ENABLED=0` blocks automatic ScheduledTask/event/webhook/scanner/chain admission before stored authority, handlers or inference. This is separate from the loop-only `ODYSSEUS_INPROCESS_TASKS=0`, approval modes and owner preferences. Seeded exact-action grants remain real persisted authority, but are not automatically consumed while deployment admission is off. Explicit manual owned runs preserve their existing checks; this guard neither grants elevation nor changes decision-provider settings. The canonical owners are `src/task_automation.py`, `src/task_scheduler.py`, `src/event_bus.py`, app startup and `routes/task/task_routes.py`.

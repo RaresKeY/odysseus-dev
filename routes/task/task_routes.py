@@ -21,6 +21,7 @@ from src.task_action_policy import (
     owner_has_admin_task_privileges,
 )
 from src.task_scheduler import compute_next_run, HOUSEKEEPING_DEFAULTS
+from src.task_automation import task_automation_enabled
 from routes.prefs_routes import _load_for_user, _save_for_user
 
 logger = logging.getLogger(__name__)
@@ -1123,6 +1124,8 @@ def setup_task_routes(task_scheduler) -> APIRouter:
     @router.post("/{task_id}/webhook/{token}")
     async def webhook_trigger(task_id: str, token: str):
         """Unauthenticated endpoint — the token IS the auth."""
+        if not task_automation_enabled():
+            raise HTTPException(503, "Automatic task execution disabled by deployment")
         db = SessionLocal()
         try:
             task = db.query(ScheduledTask).filter(
@@ -1142,8 +1145,10 @@ def setup_task_routes(task_scheduler) -> APIRouter:
                 raise HTTPException(403, f"Action '{task.action}' requires admin privileges")
         finally:
             db.close()
-        started = await task_scheduler.run_task_now(task_id)
+        started = await task_scheduler.run_automatic_task(task_id)
         if not started:
+            if not task_automation_enabled():
+                raise HTTPException(503, "Automatic task execution disabled by deployment")
             raise HTTPException(409, "Task is already running")
         return {"ok": True, "message": "Task triggered via webhook"}
 
