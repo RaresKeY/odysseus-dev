@@ -591,7 +591,10 @@ class SessionManager:
             db.add(db_session)
             db.flush()
             from src.chat_automation import AutomationStore
-            AutomationStore().state(db, owner, session_id, new=True)
+            from src.owner_identity import effective_storage_owner
+            automation_owner = effective_storage_owner(owner)
+            if automation_owner is not None:
+                AutomationStore().state(db, automation_owner, session_id, new=True)
             db.commit()
 
             session = Session(

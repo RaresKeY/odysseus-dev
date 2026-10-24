@@ -15,7 +15,11 @@ def interactive_owner(request):
     origin = request.headers.get("origin")
     if origin and origin.rstrip("/") != str(request.base_url).rstrip("/"):
         raise HTTPException(403, "Settings origin differs from this application")
-    return effective_user(request)
+    from src.owner_identity import effective_storage_owner
+    owner = effective_storage_owner(effective_user(request))
+    if owner is None:
+        raise HTTPException(401, "Sign in before changing chat settings")
+    return owner
 
 
 def setup_chat_automation_routes(session_manager):

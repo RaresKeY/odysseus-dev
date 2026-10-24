@@ -2292,7 +2292,7 @@ def setup_chat_routes(
         elif session_mode.startswith("effort:"):
             reasoning_effort = session_mode[7:].strip()
         from src.chatgpt_subscription import validate_reasoning_effort
-        reasoning_effort = validate_reasoning_effort(sess.model, reasoning_effort)
+        reasoning_effort = (_bound_turn.descriptor['reasoning_effort'] or None) if _bound_turn else validate_reasoning_effort(sess.model, reasoning_effort)
         owner = effective_user(request)
         _reconcile_selected_route_from_request(request, sess, session, {
             "selected_model": sess.model,
@@ -2795,7 +2795,7 @@ def setup_chat_routes(
             elif reasoning_effort is None and session_mode.startswith("effort:"):
                 reasoning_effort = session_mode[7:].strip()
             from src.chatgpt_subscription import validate_reasoning_effort
-            reasoning_effort = validate_reasoning_effort(sess.model, reasoning_effort)
+            reasoning_effort = (_bound_turn.descriptor['reasoning_effort'] or None) if _bound_turn else validate_reasoning_effort(sess.model, reasoning_effort)
             if getattr(sess, "temperature_override", None) is not None:
                 temperature_override = float(sess.temperature_override)
             # A resumed session may omit workspace/cwd from the new request.
