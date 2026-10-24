@@ -276,8 +276,8 @@ async def test_default_on_webhook_still_requires_exact_token(execution, monkeypa
     assert not effects;restored.assert_not_called();reserve.assert_not_called()
 
 
-@pytest.mark.parametrize('enabled', [False, True])
-def test_full_startup_account_after_first_boot_and_event_dispatch(tmp_path, enabled):
+@pytest.mark.parametrize('enabled,loop_setting', [(False,'0'), (False,'1'), (True,'0')])
+def test_full_startup_account_after_first_boot_and_event_dispatch(tmp_path, enabled, loop_setting):
     import json
     import os
     from pathlib import Path
@@ -287,7 +287,7 @@ def test_full_startup_account_after_first_boot_and_event_dispatch(tmp_path, enab
     data=tmp_path/'data'
     env={**os.environ, 'ODYSSEUS_DATA_DIR':str(data),'DATABASE_URL':'sqlite:///'+str(data/'app.db'),
         'AUTH_ENABLED':'true','LOCALHOST_BYPASS':'false','ODYSSEUS_DISABLE_MCP':'1',
-        'ODYSSEUS_INPROCESS_TASKS':'0','ODYSSEUS_TASK_AUTOMATION_ENABLED':'1' if enabled else '0',
+        'ODYSSEUS_INPROCESS_TASKS':loop_setting,'ODYSSEUS_TASK_AUTOMATION_ENABLED':'1' if enabled else '0',
         'ODYSSEUS_INPROCESS_POLLERS':'0','ODYSSEUS_TOOL_INDEX_PREWARM':'0','ODYSSEUS_STARTUP_WARMUPS':'0',
         'ODYSSEUS_MODEL_KEEPALIVE':'0','HF_HUB_OFFLINE':'1','TRANSFORMERS_OFFLINE':'1',
         'ANONYMIZED_TELEMETRY':'false','CHROMADB_HOST':'127.0.0.1','CHROMADB_PORT':'8100',
@@ -300,4 +300,5 @@ def test_full_startup_account_after_first_boot_and_event_dispatch(tmp_path, enab
     marker='TASK_AUTOMATION_BOOTSTRAP_PROBE='
     report=json.loads(next(line[len(marker):] for line in result.stdout.splitlines() if line.startswith(marker)))
     assert report['task_runs']==report['authority_restores']==int(enabled)
-    assert report['provider_calls']==0 and report['stored_authorities_preserved']
+    assert report['provider_calls']==report['startup_provider_and_task_handlers']==0
+    assert report['loop_setting']==loop_setting and report['stored_authorities_preserved']
