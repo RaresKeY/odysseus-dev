@@ -252,12 +252,15 @@ class DecisionObservability:
                 row.owner_key, row.policy = key, checked
         return copy.deepcopy(checked)
 
-    def bind_turn(self, owner, session_id, run_id):
+    def bind_turn(self, owner, session_id, run_id, *, ephemeral=False):
         """Consume next-turn consent at canonical admission, even for manual turns."""
         _reference(run_id)
         with self._transaction(write=True) as db:
             key = self._admit(db, owner, session_id)
             self._expire(db)
+            if ephemeral:
+                db.query(self.models.consent).filter_by(owner_key=key, session_id=session_id).delete(synchronize_session=False)
+                return None
             existing = db.query(self.models.capture).filter_by(run_id=run_id, owner_key=key, session_id=session_id).first()
             if existing is not None:
                 policy = copy.deepcopy(existing.policy)
@@ -520,17 +523,36 @@ def delete_observability_session(db, session_id):
     """Canonical session deletion transaction, independent of FK enforcement."""
     for model in _existing_observation_models(db):
         db.query(model).filter_by(session_id=session_id).delete(synchronize_session=False)
+    from core.database import Session
+    from src.chat_automation import retire_automation_session
+    row = db.query(Session).filter_by(id=str(session_id)).first()
+    if row is not None:
+        retire_automation_session(db, row.owner, session_id)
 
 
 _default = None
 _default_lock = threading.Lock()
+_factory_observers = OrderedDict()
 
 
-def default_observability():
+def default_observability(session_factory=None):
     global _default
+    from core.database import SessionLocal
+    factory = session_factory or SessionLocal
     with _default_lock:
-        if _default is None:
-            _default = DecisionObservability()
+        cached = _factory_observers.get(factory)
+        if cached is not None:
+            return cached
+        # Factories are stable in the application. Scoped test/maintenance
+        # factories must never inherit another database's cached observer.
+        if len(_factory_observers) >= 64:
+            retired = next((key for key, value in _factory_observers.items()
+                if not any(expiry > value.clock() for expiry, _ in value._required_runs.values())), None)
+            if retired is None:
+                raise DecisionError('decision_capture_store_unavailable')
+            _factory_observers.pop(retired)
+        _default = DecisionObservability(factory)
+        _factory_observers[factory] = _default
     return _default
 
 

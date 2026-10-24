@@ -34,6 +34,56 @@ def observations(tmp_path):
     engine.dispose()
 
 
+def test_default_observer_is_shared_per_factory_and_never_reuses_another_database(observations, tmp_path):
+    from src.decisions.observability import default_observability
+    first=default_observability(observations.session_factory)
+    assert default_observability(observations.session_factory) is first
+    other_engine=create_engine('sqlite:///'+str(tmp_path/'another.db'))
+    d.Base.metadata.create_all(other_engine)
+    second_factory=sessionmaker(bind=other_engine)
+    second=default_observability(second_factory)
+    assert second is not first and second.session_factory is second_factory
+    assert first.session_factory is observations.session_factory
+    other_engine.dispose()
+
+
+def test_private_turn_consumes_consent_without_creating_capture(observations):
+    observations.consent('alice','a',{'purposes':['approach']})
+    assert observations.bind_turn('alice','a','private-run',ephemeral=True) is None
+    with observations.session_factory() as db:
+        assert db.query(observations.models.consent).count()==0
+        assert db.query(observations.models.capture).count()==0
+
+
+@pytest.mark.asyncio
+async def test_actual_default_provider_observer_uses_same_sql_factory_as_admission(observations):
+    import httpx
+    from src.chat_automation import prepare_chat_turn
+    from src.decisions import DecisionProvider, ResolvedDecisionEndpoint
+    from src.decisions.observability import default_observability
+    store=AutomationStore(observations.session_factory)
+    observer=default_observability(observations.session_factory)
+    observer.consent('alice','a',{'purposes':['tools'],'required':True})
+    session=SimpleNamespace(id='a',endpoint_id=None,model='manual',endpoint_url='https://execution.invalid/v1',headers={})
+    bound=await prepare_chat_turn(store,'alice',session,'PRIVATE_EXACT_ASK')
+    request=DecisionRequest('tools',{'ask':bound.raw_ask},{'PRIVATE_CHOICE':'private description','other':'Other'})
+    def transport(req):
+        assert observer.history('alice','a')['items'][0]['status']=='reserved'
+        return httpx.Response(200,json={'model':'decision','answers':{'decision':{
+            'type':'choice','choice':'PRIVATE_CHOICE','confidence':.99,
+            'probabilities':{'PRIVATE_CHOICE':.99,'other':.01}}},'usage':{'input_tokens':12,'output_tokens':3}})
+    provider=DecisionProvider(SqlAttemptStore(store),resolver=lambda *_:ResolvedDecisionEndpoint(
+        'review','decision','systemone','https://synthetic.invalid/v1/systemone',{}),
+        client_factory=lambda **kw:httpx.AsyncClient(transport=httpx.MockTransport(transport),**kw))
+    await provider.evaluate(request,DecisionContext('alice','a',bound.run_id),
+        config={'endpoint_id':'review','model':'decision','protocol':'systemone'})
+    history=observer.history('alice','a')['items']
+    assert len(history)==1 and history[0]['status']=='settled'
+    assert history[0]['usage']=={'input_tokens':12,'output_tokens':3}
+    capture=observer.capture('alice','a',bound.run_id)
+    assert len(capture['records'])==1 and b'PRIVATE_EXACT_ASK' not in encode(capture) and b'PRIVATE_CHOICE' not in encode(capture)
+
+
 def attempt(observer, *, number='one', run='run', failure=None, usage=None, settle=True):
     sentinel = 'PRIVATE_S3CR3T_ASK_DESTINATION'
     request = DecisionRequest('browser', {'ask': sentinel, sentinel: {'prepared_values': [sentinel],

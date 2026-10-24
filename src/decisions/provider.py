@@ -85,6 +85,7 @@ class DecisionProvider:
         self.store, self.resolver, self.clock = store, resolver, clock
         self.client_factory = client_factory or httpx.AsyncClient
         self.campaign, self.observer = campaign, observer
+        self._default_observer = observer is None
         # Strong ownership survives request cancellation. SQL operations use a
         # fresh session in their worker thread and are never retried here.
         self._store_tasks = set()
@@ -275,10 +276,11 @@ class DecisionProvider:
 
         try:
             await self._check(context)
-            if self.observer is None:
+            if self._default_observer:
                 try:
                     from .observability import default_observability
-                    self.observer = default_observability()
+                    factory = getattr(getattr(self.store, 'store', None), 'session_factory', None)
+                    self.observer = default_observability(factory)
                 except Exception:
                     self.observer = False
             if self.observer:

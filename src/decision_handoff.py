@@ -16,7 +16,7 @@ def completion_checkpoint(bound, decision, ledger, journal):
     attempts = SqlAttemptStore(bound.store).records_for_run(bound.owner, bound.session_id, bound.run_id)
     def refs(values):
         return tuple(dict.fromkeys(value for value in values if isinstance(value, str) and value))[:64]
-    return default_observability().record_handoff(bound.owner, bound.session_id, bound.run_id,
+    return default_observability(bound.store.session_factory).record_handoff(bound.owner, bound.session_id, bound.run_id,
         attempt_ids=refs(item['attempt_id'] for item in attempts),
         action_ids=refs(action.action_id for action in journal.actions),
         check_ids=refs(item.get('verification_id') for item in events),

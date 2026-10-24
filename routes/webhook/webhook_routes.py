@@ -389,6 +389,7 @@ def setup_webhook_routes(
             bound.store.record(bound, "failed")
             raise
         else:
+            bound.store.record_answer(bound, reply)
             bound.store.record(bound, "completed")
         sess.add_message(ChatMessage("assistant", reply))
         session_manager.save_sessions()

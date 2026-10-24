@@ -261,7 +261,7 @@ async def prepare_tool_routing(bound, inventory, *, preparation=None, provider=N
     diagnostics_enabled = bool(bound.policy.get('preparation_enabled')) and not getattr(bound, '_semantic_prepared', False)
     questions = {}
     choices = {'no_tools': 'No tools are needed for this turn.', 'abstain': 'Cannot safely choose from these tools.'}
-    if mode == 'jev':
+    if mode == 'jev' and not semantic_only:
         choices.update({key: 'Use the complete bundle listed under this ID in state.bundles.' for key, _ in catalog.bundles})
         if catalog.entries:
             choices['all_available'] = 'Use the exact union of all tools in state.catalog; no wildcard expansion.'
@@ -291,7 +291,7 @@ async def prepare_tool_routing(bound, inventory, *, preparation=None, provider=N
                 raise DecisionError('tool_catalog_too_large', attempt_id=error.attempt_id) from None
             raise
         catalog.validate(bound, inventory)
-        if mode == 'jev':
+        if mode == 'jev' and not semantic_only:
             answer = decision.answers.get('tools')
             if not _accepted(answer) or answer.get('choice') == 'abstain':
                 raise DecisionError('tool_manual_selection_required', attempt_id=decision.attempt_id)
@@ -309,7 +309,7 @@ async def prepare_tool_routing(bound, inventory, *, preparation=None, provider=N
                     encode(followup.get('probabilities', {})), decision.attempt_id)
         if diagnostics_enabled:
             bound.diagnostics = {key: decision.answers.get(key, {}) for key in DIAGNOSTICS}
-    if mode == 'jev':
+    if mode == 'jev' and not semantic_only:
         choice = answer['choice']
         identifiers = (dict(catalog.bundles).get(choice, ()) if choice != 'all_available'
                        else tuple(item.identifier for item in catalog.entries))
@@ -325,6 +325,25 @@ async def prepare_tool_routing(bound, inventory, *, preparation=None, provider=N
         bound.tool_selection = selection
     bound.store.record_preparation(bound)
     return selection if not semantic_only else None
+
+
+def followup_context(bound):
+    """Bounded semantic evidence for execution, without deleting history/grants."""
+    if bound is None or bound.followup is None or bound.ephemeral_semantics:
+        return None
+    prior = bound.prior_task
+    def excerpt(value):
+        if not isinstance(value, str):
+            return None
+        raw = value.encode('utf-8')
+        return {'text': raw[:2048].decode('utf-8', errors='ignore'),
+                'coverage': 'complete' if len(raw) <= 2048 else 'prefix'}
+    return {'relation': bound.followup.relation, 'previous_status': prior.get('previous_status'),
+        'original_task': excerpt(prior.get('original_task')),
+        'previous_request': excerpt(prior.get('previous_request')),
+        'previous_answer': excerpt(prior.get('previous_answer')),
+        'current_ask_source': 'unchanged latest user message',
+        'authority': 'none; a relationship or yes never approves a tool or revives a pending action'}
 
 
 async def select_effort(bound, selected_route, supported_efforts, *, provider=None):

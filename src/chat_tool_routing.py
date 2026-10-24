@@ -110,13 +110,14 @@ def selected_contract(contract, bound, policy):
                and not policy.blocks(s["function"]["name"])}
     offered = frozenset(schemas)
     required = frozenset(n for n in contract.required if canonical_tool(n) in allowed and n in offered)
-    missing = contract.required - required
+    missing = frozenset(canonical_tool(n) for n in contract.required - required)
     # A trusted required operation conflicting with no_tools is a visible
     # conflict, not an excuse to restore it or silently perform partial work.
     if missing:
         offered, required, schemas = frozenset(), frozenset(), {}
+        if contract.required_read_operation is not None:
+            missing |= {canonical_tool(contract.required_read_operation.tool)}
     return replace(contract, required=required, offered=offered,
         executable=frozenset(n for n in contract.executable | offered if canonical_tool(n) in allowed),
         unavailable=contract.unavailable | missing,
-        schema_json=tuple(json.dumps(schemas[n], sort_keys=True) for n in sorted(schemas)),
-        selection_mode="decision_" + selection.kind)
+        schema_json=tuple(json.dumps(schemas[n], sort_keys=True) for n in sorted(schemas)))

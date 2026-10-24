@@ -86,6 +86,9 @@ not establish calibration, safety, general speed or reliability.
 
 ## Current Gaps
 
+Extended routing, task/input lifecycle, observation/capture, semantic advice and
+global experiment accounting are specified in [decision-assistance.md](decision-assistance.md).
+
 The task runner currently cannot establish the mount/PID/procfs boundary needed
 for sandboxed Chromium; actual producer/UI runtime qualification is pending.
 No manifest is fabricated to bypass qualification. Browser ownership accepts a
