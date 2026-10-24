@@ -239,6 +239,27 @@ def read_test_key():
         os.close(fd)
 
 
+def private_runtime_paths(state_root=Path('/state'), output_root=Path('/campaign')):
+    # Fresh container-private tmpfs parents support this installed Podman without
+    # uid/gid mount options. Only owned0700 children and existing fixed output
+    # binds are used; no source or shared host path is changed.
+    for root, names, create in ((state_root, ('home','cache','data'), True),
+                                (output_root, ('budget','captures','reports'), False)):
+        for name in names:
+            path = root / name
+            if create:
+                path.mkdir(mode=0o700, parents=False, exist_ok=True)
+            info = path.lstat()
+            if (path.is_symlink() or not stat.S_ISDIR(info.st_mode) or info.st_uid != os.getuid()
+                    or stat.S_IMODE(info.st_mode) != 0o700):
+                raise DecisionError('campaign_private_path_invalid')
+            try:
+                with tempfile.TemporaryFile(dir=path) as probe:
+                    probe.write(b'jev-permission-check'); probe.flush()
+            except OSError:
+                raise DecisionError('campaign_private_path_unwritable') from None
+
+
 def live_process_boundary():
     if os.getuid() == 0:
         raise DecisionError("campaign_nonroot_required")
@@ -275,6 +296,7 @@ async def run(directory, *, stage="smoke", live=False, config=None, wall_seconds
         if stage not in config.get("admitted_stages", {}):
             raise DecisionError("campaign_stage_not_admitted")
         live_process_boundary()
+        private_runtime_paths()
     else:
         contract = BillingContract(1000, 1000, digest({"contract": "synthetic mock usage only"}), True)
     directory = Path(directory)

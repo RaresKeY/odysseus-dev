@@ -192,6 +192,7 @@ async def test_approved_profile_uses_native_transport_and_config_change_replays_
     monkeypatch.setattr(runner, "DecisionProvider", lambda store, **kw: DecisionProvider(store,
         client_factory=lambda **client_kw: httpx.AsyncClient(transport=httpx.MockTransport(transport), **client_kw), **kw))
     monkeypatch.setattr(runner, "live_process_boundary", lambda: None)
+    monkeypatch.setattr(runner, "private_runtime_paths", lambda: None)
     monkeypatch.setattr(runner, "read_test_key", lambda: (key_reads.append("mock-only"), "synthetic-key")[1])
     monkeypatch.setenv("ODYSSEUS_JEV_HOST_LAUNCHER", "reviewed-v1")
     config = approved_config()
@@ -311,3 +312,14 @@ def test_multiquestion_uncertainty_is_identical_on_live_and_cached_answers():
     assert runner.answers_abstained(answers)
     assert runner.answers_abstained({'decision': {'choice':'unclear','confidence':.99}})
     assert not runner.answers_abstained({'decision': {'choice':'yes','confidence':.99}})
+
+
+def test_live_private_path_access_check_is_nonsecret_owned_and_before_key(tmp_path):
+    state=tmp_path/'state';state.mkdir(mode=0o1777)
+    output=tmp_path/'output';output.mkdir()
+    for name in ('budget','captures','reports'):(output/name).mkdir(mode=0o700)
+    runner.private_runtime_paths(state,output)
+    assert all(not list((state/name).iterdir()) for name in ('home','cache','data'))
+    (output/'budget').chmod(0o755)
+    with pytest.raises(DecisionError,match='campaign_private_path_invalid'):
+        runner.private_runtime_paths(state,output)
