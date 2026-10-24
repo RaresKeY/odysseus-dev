@@ -22,6 +22,8 @@ from fastapi import HTTPException
 MODES = frozenset({"always_ask", "auto_approve", "yolo"})
 APPROACHES = frozenset({"established_procedure", "bounded_domain", "approach_discovery"})
 EFFORTS = frozenset({None, "", "none", "minimal", "low", "medium", "high", "xhigh", "max"})
+FEATURE_DEFAULTS = {"tool_routing": "existing", "effort_mode": "mapped", "followup_enabled": False,
+                    "preparation_enabled": False, "completion_advice_enabled": False}
 _BOUND = ContextVar("chat_automation_bound_turn", default=None)
 
 
@@ -115,6 +117,7 @@ class AutomationStore:
             _, source = self.state(db, owner, source_id)
             _, target = self.state(db, owner, target_id)
             target.approval_mode, target.route_mode = source.approval_mode, source.route_mode
+            target.feature_settings = copy.deepcopy(source.feature_settings or {})
             target.elevation_grant = None
             target.policy_revision += 1
 
@@ -150,6 +153,7 @@ class AutomationStore:
                 "elevation_ceiling": bool(p.elevation_ceiling), "elevation_grant": grant,
                 "requested_elevation_grant": requested_grant, "sandbox_state": "required_at_execution",
                 "effective_roots": (grant or {}).get("roots", []),
+                **FEATURE_DEFAULTS, **copy.deepcopy(s.feature_settings or {}),
                 "route_mode": s.route_mode, "entrypoint": entrypoint,
                 "execution_scope": "expanded" if grant else "workspace",
                 "restriction": restriction or (None if grant or not p.elevation_ceiling else "No additional scope is granted")}
@@ -160,7 +164,7 @@ class AutomationStore:
             return self._policy(p, s, owner, entrypoint)
 
     def update_chat(self, owner, session_id, changes, expected_revision):
-        if set(changes) - {"approval_mode", "route_mode", "elevation_roots"}:
+        if set(changes) - {"approval_mode", "route_mode", "elevation_roots", *FEATURE_DEFAULTS}:
             raise HTTPException(422, "Unsupported chat setting")
         with self.transaction() as db:
             p, s = self.state(db, owner, session_id)
@@ -170,11 +174,21 @@ class AutomationStore:
             route = changes.get("route_mode", s.route_mode)
             if mode not in MODES or route not in {"manual", "auto"}:
                 raise HTTPException(422, "Invalid chat mode")
-            changed = mode != s.approval_mode or route != s.route_mode or "elevation_roots" in changes
+            features = {**FEATURE_DEFAULTS, **copy.deepcopy(s.feature_settings or {})}
+            for key in FEATURE_DEFAULTS:
+                if key in changes:
+                    value = changes[key]
+                    if (key == 'tool_routing' and value not in {'existing', 'jev', 'all'}
+                            or key == 'effort_mode' and value not in {'mapped', 'auto'}
+                            or key.endswith('_enabled') and type(value) is not bool):
+                        raise HTTPException(422, "Invalid chat feature setting")
+                    features[key] = value
+            changed = features != {**FEATURE_DEFAULTS, **(s.feature_settings or {})} or mode != s.approval_mode or route != s.route_mode or "elevation_roots" in changes
             if changed:
                 s.policy_revision += 1
                 s.elevation_grant = None
                 s.approval_mode, s.route_mode = mode, route
+                s.feature_settings = features
             if "approval_mode" in changes and p.last_explicit_mode != mode:
                 p.last_explicit_mode = mode
                 p.revision += 1
@@ -231,13 +245,20 @@ class AutomationStore:
             if lease is not None and lease.expires_at > self.clock():
                 raise HTTPException(409, "This chat is already preparing a message")
             token = uuid.uuid4().hex
+            # Snapshot semantic evidence BEFORE any earlier admission is superseded.
+            previous = db.query(d.ChatAutomationSubmission).filter_by(
+                session_id=sid, owner_key=owner_key(owner)).order_by(
+                    d.ChatAutomationSubmission.created_at.desc(), d.ChatAutomationSubmission.submission_id.desc()).first()
+            prior_task = self._task_projection(db, previous) if previous else {}
             # A new accepted ask supersedes old pending control cards as well as
             # an expired preparation. Late finally blocks may not revive them.
             db.query(d.ChatAutomationSubmission).filter(
                 d.ChatAutomationSubmission.session_id == sid,
                 d.ChatAutomationSubmission.owner_key == owner_key(owner),
-                d.ChatAutomationSubmission.status.in_(["preparing", "bound", "running", "awaiting_approval"]),
+                d.ChatAutomationSubmission.status.in_(["preparing", "bound", "running", "awaiting_approval", "awaiting_input"]),
             ).update({"status": "cancelled"}, synchronize_session=False)
+            db.query(d.ChatAutomationInputCard).filter_by(session_id=sid, owner_key=owner_key(owner),
+                status='pending').update({'status': 'superseded'}, synchronize_session=False)
             if lease is None:
                 lease = d.ChatAutomationLease(session_id=sid)
                 db.add(lease)
@@ -249,9 +270,12 @@ class AutomationStore:
             policy["original_intent_digest"] = digest(raw_ask)
             db.add(d.ChatAutomationSubmission(submission_id=identifier, owner_key=owner_key(owner),
                 session_id=sid, policy_revision=s.policy_revision, authority_epoch=p.authority_epoch,
-                intent_digest=digest(raw_ask), descriptor={}, status="preparing", created_at=self.clock()))
+                intent_digest=digest(raw_ask), descriptor={}, status="preparing", created_at=self.clock(),
+                current_ask=raw_ask, task_lineage_id=identifier, original_submission_id=identifier,
+                previous_submission_id=previous.submission_id if previous else None, prior_task=prior_task))
             return BoundChatTurn(self, owner, sid, identifier, token, raw_ask, policy,
-                                 copy.deepcopy(p.configuration or {}))
+                                 {**copy.deepcopy(p.configuration or {}), **{key: policy[key] for key in FEATURE_DEFAULTS}},
+                                 prior_task=prior_task)
 
     def current(self, bound):
         d = _models()
@@ -283,9 +307,13 @@ class AutomationStore:
             if row is None or row.owner_key != owner_key(bound.owner):
                 raise HTTPException(409, "Turn binding is unavailable")
             next_status = transition_status(row.status, status)
-            if row.status in {"completed", "failed", "cancelled"}:
+            if row.status in {"completed", "failed", "cancelled", "detached"}:
                 return
             row.status = next_status
+            if next_status in {'failed', 'cancelled', 'detached', 'completed'}:
+                db.query(d.ChatAutomationInputCard).filter_by(submission_id=bound.submission_id,
+                    owner_key=owner_key(bound.owner), status='pending').update(
+                        {'status': 'cancelled' if next_status != 'completed' else 'superseded'}, synchronize_session=False)
             if descriptor is not None:
                 row.descriptor = copy.deepcopy(descriptor)
             lease = db.query(d.ChatAutomationLease).filter_by(session_id=bound.session_id, token=bound.token).first()
@@ -294,6 +322,124 @@ class AutomationStore:
                     lease.expires_at = self.clock() + 90
                 else:
                     db.delete(lease)
+
+
+    def _task_projection(self, db, row):
+        if row is None:
+            return {}
+        from src.automation_task_state import pending_task_projection
+        d = _models()
+        if row.current_ask is None:
+            return {'submission_id': row.submission_id, 'previous_status': 'unknown'}
+        card = db.query(d.ChatAutomationInputCard).filter_by(submission_id=row.submission_id,
+            owner_key=row.owner_key, session_id=row.session_id, status='pending').first()
+        pending = ({**copy.deepcopy(card.payload or {}), 'card_id': card.card_id, 'question': card.question,
+                    'kind': 'clarification', 'expires_at': card.expires_at, 'resolved': False} if card else None)
+        status = row.status
+        if status in {'awaiting_input', 'awaiting_approval'} and card is None:
+            result = {'previous_request': row.current_ask, 'previous_answer': row.previous_answer,
+                      'previous_status': status, 'active_task': row.current_ask, 'pending_question': None}
+        else:
+            result = pending_task_projection(row.current_ask, status, previous_answer=row.previous_answer,
+                pending_question=pending, pending_expires_at=card.expires_at if card else None, now=self.clock())
+        original = db.query(d.ChatAutomationSubmission).filter_by(submission_id=row.original_submission_id,
+            owner_key=row.owner_key, session_id=row.session_id).first() if row.original_submission_id else None
+        return {**result, 'submission_id': row.submission_id, 'task_lineage_id': row.task_lineage_id,
+                'original_submission_id': row.original_submission_id,
+                'original_task': original.current_ask if original else row.current_ask,
+                'answer_message_id': row.answer_message_id}
+
+    def task_state(self, owner, session_id):
+        """Reloadable owner-scoped semantic facts, with no inferred permissions."""
+        d = _models()
+        with self.transaction() as db:
+            self.state(db, owner, session_id)
+            row = db.query(d.ChatAutomationSubmission).filter_by(session_id=str(session_id),
+                owner_key=owner_key(owner)).order_by(d.ChatAutomationSubmission.created_at.desc(),
+                    d.ChatAutomationSubmission.submission_id.desc()).first()
+            return self._task_projection(db, row)
+
+    def record_preparation(self, bound):
+        d = _models()
+        if not bound.current():
+            raise HTTPException(409, "Turn changed during preparation")
+        with self.transaction() as db:
+            row = db.query(d.ChatAutomationSubmission).filter_by(submission_id=bound.submission_id,
+                owner_key=owner_key(bound.owner), session_id=bound.session_id).one()
+            row.preparation = bound.preparation.public() if bound.preparation else None
+            row.routing = {'tools': bound.tool_selection.public() if bound.tool_selection else None,
+                'followup': bound.followup.public() if bound.followup else None,
+                'diagnostics': copy.deepcopy(bound.diagnostics), 'approach': copy.deepcopy(bound.approach_selection),
+                'effort': copy.deepcopy(bound.effort_selection)}
+            if bound.followup and bound.followup.relation in {'continuation', 'confirmation'}:
+                prior = row.prior_task or {}
+                row.task_lineage_id = prior.get('task_lineage_id') or row.task_lineage_id
+                row.original_submission_id = prior.get('original_submission_id') or row.original_submission_id
+
+    def record_input(self, bound, payload, *, ttl=3600):
+        """Persist actual ordinary ask_user events; approvals retain their owner."""
+        if (not isinstance(payload, dict) or payload.get('kind') == 'tool_approval'
+                or payload.get('approval_id')):
+            return None
+        question = payload.get('question')
+        if not isinstance(question, str) or not question.strip() or len(question) > 8000:
+            return None
+        if not bound.current():
+            return None
+        d = _models()
+        with self.transaction() as db:
+            row = db.query(d.ChatAutomationSubmission).filter_by(submission_id=bound.submission_id,
+                owner_key=owner_key(bound.owner), session_id=bound.session_id).one()
+            if row.status in {'completed', 'failed', 'cancelled', 'detached'}:
+                return None
+            existing = db.query(d.ChatAutomationInputCard).filter_by(submission_id=bound.submission_id,
+                owner_key=owner_key(bound.owner), session_id=bound.session_id, status='pending').first()
+            if existing:
+                identifier = existing.card_id
+            else:
+                identifier = uuid.uuid4().hex
+                db.add(d.ChatAutomationInputCard(card_id=identifier, owner_key=owner_key(bound.owner),
+                    session_id=bound.session_id, submission_id=bound.submission_id, question=question,
+                    payload=_clarification_payload(payload), status='pending',
+                    created_at=self.clock(), expires_at=self.clock() + min(max(ttl, 1), 3600)))
+            row.status = transition_status(row.status, 'awaiting_input')
+            bound.pending_input_id = identifier
+            return identifier
+
+    def resolve_input(self, owner, session_id, card_id, answer, *, submission_id):
+        """Explicit opaque clarification reply; no permission or old lease revival."""
+        if not isinstance(answer, str) or not answer.strip() or len(answer) > 50000:
+            raise HTTPException(422, "Enter a clarification reply")
+        d = _models()
+        with self.transaction() as db:
+            self.state(db, owner, session_id)
+            card = db.query(d.ChatAutomationInputCard).filter_by(card_id=card_id,
+                owner_key=owner_key(owner), session_id=str(session_id)).first()
+            current = db.query(d.ChatAutomationSubmission).filter_by(submission_id=submission_id,
+                owner_key=owner_key(owner), session_id=str(session_id)).first()
+            if (card is None or current is None or current.status not in {'preparing', 'bound'}
+                    or current.previous_submission_id != card.submission_id
+                    or card.status not in {'pending', 'superseded'} or card.expires_at <= self.clock()):
+                raise HTTPException(409, "Clarification expired; send a new message")
+            card.status, card.answer, card.resolved_by_submission_id = 'resolved', answer, submission_id
+            return {'card_id': card.card_id, 'kind': 'clarification', 'resolved': True}
+
+    def record_answer(self, bound, answer, *, message_id=None):
+        if not isinstance(answer, str) or len(answer.encode('utf-8')) > 256 * 1024:
+            return
+        d = _models()
+        with self.transaction() as db:
+            row = db.query(d.ChatAutomationSubmission).filter_by(submission_id=bound.submission_id,
+                owner_key=owner_key(bound.owner), session_id=bound.session_id).first()
+            if row is None or row.status in {'cancelled', 'detached', 'failed'}:
+                return
+            if message_id is not None:
+                message = db.query(d.ChatMessage).filter_by(id=message_id, session_id=bound.session_id,
+                    role='assistant').first()
+                if message is None:
+                    raise HTTPException(409, "Answer does not belong to this turn")
+            row.previous_answer, row.answer_message_id = answer, message_id
+
 
 
 def validate_configuration(changes):
@@ -363,6 +509,8 @@ def rename_automation_owner(db, old_owner, new_owner):
     db.query(d.ChatAutomationLease).filter_by(owner_key=old_key).delete(synchronize_session=False)
     db.query(d.ChatAutomationSubmission).filter_by(owner_key=old_key).update(
         {'owner_key': new_key, 'status': 'cancelled'}, synchronize_session=False)
+    db.query(d.ChatAutomationInputCard).filter_by(owner_key=old_key).update(
+        {'owner_key': new_key, 'status': 'cancelled'}, synchronize_session=False)
     for attempt in db.query(d.DecisionAttempt).filter_by(owner_key=old_key):
         attempt.owner_key = new_key
         if attempt.status == 'reserved':
@@ -378,10 +526,12 @@ def retire_automation_owner(db, owner):
     for state in db.query(d.ChatAutomationState).filter_by(owner_key=key):
         state.approval_mode, state.route_mode, state.elevation_grant = 'always_ask', 'manual', None
         state.policy_revision += 1
+        state.feature_settings = {}
     db.query(d.ChatAutomationLease).filter_by(owner_key=key).delete(synchronize_session=False)
     retired = 'retired:' + uuid.uuid4().hex
     db.query(d.ChatAutomationSubmission).filter_by(owner_key=key).update(
         {'owner_key': retired, 'status': 'cancelled'}, synchronize_session=False)
+    db.query(d.ChatAutomationInputCard).filter_by(owner_key=key).delete(synchronize_session=False)
     db.query(d.DecisionAttempt).filter_by(owner_key=key).update({'owner_key': retired}, synchronize_session=False)
 
 
@@ -437,6 +587,19 @@ class BoundChatTurn:
     endpoint_url: str = ""
     pending: bool = False
     pending_approval_id: str | None = None
+    pending_input_id: str | None = None
+    prior_task: dict = field(default_factory=dict)
+    preparation: Any = None
+    tool_selection: Any = None
+    followup: Any = None
+    diagnostics: dict = field(default_factory=dict)
+    approach_selection: dict = field(default_factory=dict)
+    effort_selection: dict = field(default_factory=dict)
+
+    @property
+    def no_tools(self):
+        return self.tool_selection is not None and self.tool_selection.kind == 'no_tools'
+
 
     @property
     def run_id(self):
@@ -501,12 +664,28 @@ def bound_session_view(session):
 
 
 async def prepare_chat_turn(store, owner, session, raw_ask, *, entrypoint="interactive", submission_id=None,
-                            reasoning_effort=None, allow_empty=False):
+                            reasoning_effort=None, allow_empty=False, tool_inventory=None,
+                            preparation=None, decision_provider=None, supported_efforts=None):
     if not isinstance(raw_ask, str) or (not raw_ask.strip() and not allow_empty) or len(raw_ask) > 50000:
         raise HTTPException(422, "Enter a nonblank message of at most 50000 characters")
     bound = store.acquire(owner, session.id, raw_ask, entrypoint, submission_id)
     owner = bound.owner
     try:
+        from src.decision_routing import preparation_receipt
+        if isinstance(preparation, dict):
+            bound.preparation = preparation_receipt(bound, preparation.get('sources', ()),
+                unknowns=preparation.get('unknowns', ()))
+        else:
+            bound.preparation = preparation or preparation_receipt(bound, unknowns=['canonical_context_not_prepared'])
+        bound.preparation.validate(bound)
+        try:
+            from src.decisions.observability import default_observability, DecisionObservability
+        except ImportError:
+            pass  # Optional module is absent in older installations.
+        else:
+            observer = DecisionObservability(store.session_factory) if store.session_factory else default_observability()
+            observer.bind_turn(owner, session.id, bound.run_id)
+
         effort = ""
         mode = str(getattr(session, "thinking_mode", "") or "")
         if mode.startswith("effort:"):
@@ -516,13 +695,23 @@ async def prepare_chat_turn(store, owner, session, raw_ask, *, entrypoint="inter
             from src.decisions import DecisionProvider
             from src.decisions.contracts import DecisionContext
             selection = await route_approach(raw_ask, bound.configuration.get("approaches", {}),
-                provider=DecisionProvider(store=SqlAttemptStore(store)),
+                provider=decision_provider or DecisionProvider(store=SqlAttemptStore(store)),
                 config=bound.configuration.get("decision_provider", {}),
                 context=DecisionContext(owner, session.id, bound.run_id,
-                    policy_revision=bound.policy["policy_revision"], authority_epoch=bound.policy["authority_epoch"]))
+                    policy_revision=bound.policy["policy_revision"], authority_epoch=bound.policy["authority_epoch"],
+                    cancelled=lambda: not bound.current()), evidence=bound.preparation.evidence())
             selected = selection.to_dict() if hasattr(selection, "to_dict") else selection
             endpoint_id, model = selected["endpoint_id"], selected["model"]
             effort = selected.get("reasoning_effort") or ""
+            bound.approach_selection = copy.deepcopy(selected.get('selection') or {})
+            if bound.policy.get('effort_mode') == 'auto':
+                from src.decision_routing import select_effort
+                efforts = supported_efforts
+                if isinstance(efforts, dict):
+                    efforts = efforts.get((endpoint_id, model)) or efforts.get(endpoint_id, {}).get(model)
+                if efforts is None:
+                    efforts = selected.get('descriptor', {}).get('supported_efforts')
+                effort = await select_effort(bound, selected, efforts, provider=decision_provider)
         else:
             endpoint_id, model = getattr(session, "endpoint_id", None), session.model
             if reasoning_effort is not None:
@@ -552,6 +741,10 @@ async def prepare_chat_turn(store, owner, session, raw_ask, *, entrypoint="inter
             "route_mode": bound.policy["route_mode"], "submission_id": bound.submission_id}
         if not bound.current():
             raise HTTPException(409, "Chat settings changed before submission")
+        if tool_inventory is not None:
+            from src.decision_routing import prepare_tool_routing
+            await prepare_tool_routing(bound, tool_inventory, provider=decision_provider)
+        store.record_preparation(bound)
         bind_prepared_browser_scope(bound)
         store.record(bound, "bound", bound.descriptor)
         return bound
@@ -664,6 +857,103 @@ def current_browser_grant(owner, session_id):
     return grant
 
 
+def session_preparation_sources(session, raw_ask):
+    """Bounded already loaded owned history; no transcript authority inference."""
+    history = list(getattr(session, 'history', ()) or ())[-6:]
+    sources = []
+    for index, message in enumerate(history):
+        role = message.get('role') if isinstance(message, dict) else getattr(message, 'role', None)
+        content = message.get('content') if isinstance(message, dict) else getattr(message, 'content', None)
+        metadata = message.get('metadata') if isinstance(message, dict) else getattr(message, 'metadata', None)
+        if role not in {'user', 'assistant'} or not isinstance(content, str) or not content:
+            continue
+        if index == len(history) - 1 and role == 'user' and content == raw_ask:
+            continue
+        raw = content.encode('utf-8')
+        excerpt = raw[:2048].decode('utf-8', errors='ignore')
+        if not excerpt:
+            continue
+        version = hashlib.sha256(raw).hexdigest()
+        message_id = metadata.get('_db_id') if isinstance(metadata, dict) else None
+        sources.append({'source_id': str(message_id) if message_id else 'owned_history:' + str(index) + ':' + version[:16],
+            'version': version, 'excerpt': excerpt,
+            'coverage': 'complete' if len(raw) <= 2048 else 'prefix', 'trust': 'untrusted_history'})
+    return {'sources': sources, 'unknowns': ['history_is_evidence_not_pending_state', 'external_sources_not_returned']}
+
+
+def _clarification_payload(payload):
+    result = {'question': payload['question'], 'kind': 'clarification'}
+    options = payload.get('options')
+    if isinstance(options, list) and len(options) <= 6:
+        result['options'] = [{'label': item['label'],
+            **({'description': item['description']} if isinstance(item.get('description'), str)
+               and len(item['description']) <= 1000 else {})}
+            for item in options if isinstance(item, dict) and isinstance(item.get('label'), str)
+            and 0 < len(item['label']) <= 300]
+    if type(payload.get('multi')) is bool:
+        result['multi'] = payload['multi']
+    return result
+
+
+class TurnEventObserver:
+    """Observe actual SSE events; prose never creates a pending card."""
+    def __init__(self, bound):
+        self.bound, self.buffer, self.answer = bound, '', ''
+
+    def feed(self, chunk):
+        if isinstance(chunk, bytes):
+            chunk = chunk.decode('utf-8', errors='replace')
+        if not isinstance(chunk, str):
+            return
+        self.buffer += chunk
+        if len(self.buffer) > 512 * 1024:
+            self.buffer = ''
+            return
+        while '\n\n' in self.buffer:
+            frame, self.buffer = self.buffer.split('\n\n', 1)
+            for line in frame.splitlines():
+                if not line.startswith('data:'):
+                    continue
+                try:
+                    event = json.loads(line[5:].strip())
+                except (ValueError, TypeError):
+                    continue
+                if not isinstance(event, dict):
+                    continue
+                if event.get('type') == 'ask_user':
+                    self.bound.store.record_input(self.bound, event.get('data'))
+                if event.get('type') == 'final_response' and isinstance(event.get('content'), str):
+                    self.answer = event['content']
+                elif isinstance(event.get('delta'), str) and not event.get('thinking'):
+                    if len((self.answer + event['delta']).encode('utf-8')) <= 256 * 1024:
+                        self.answer += event['delta']
+
+    def finish(self):
+        if self.answer:
+            self.bound.store.record_answer(self.bound, self.answer)
+
+
+def observe_json_response(bound, response):
+    body = getattr(response, 'body', None)
+    if isinstance(response, dict):
+        value = response
+    elif isinstance(body, (bytes, str)) and len(body) <= 512 * 1024:
+        try:
+            value = json.loads(body)
+        except (ValueError, TypeError):
+            return
+    else:
+        return
+    if not isinstance(value, dict):
+        return
+    for event in value.get('tool_events') or []:
+        if isinstance(event, dict):
+            bound.store.record_input(bound, event.get('ask_user'))
+    answer = value.get('response', value.get('content'))
+    if isinstance(answer, str):
+        bound.store.record_answer(bound, answer)
+
+
 def automation_ingress(session_manager):
     """One barrier for existing JSON and SSE chat endpoints, including replay."""
     def decorate(func):
@@ -693,6 +983,7 @@ def automation_ingress(session_manager):
             owner = effective_storage_owner(effective_user(request))
             if owner is None:
                 raise HTTPException(401, "A chat owner is required")
+            preparation = session_preparation_sources(session, data.get('message') or '')
             if data.get("tool_approval_id"):
                 from src.agent_runtime.authority import require_user_approval_request
                 require_user_approval_request(request)
@@ -714,28 +1005,39 @@ def automation_ingress(session_manager):
                 bound = await prepare_chat_submission(store, owner, session, data.get("message") or "",
                     entrypoint="delegated" if is_delegated_credential(request) else "interactive",
                     submission_id=request.headers.get("X-Chat-Submission-Id"),
-                    reasoning_effort=data.get("reasoning_effort"), allow_empty=True)
+                    reasoning_effort=data.get("reasoning_effort"), allow_empty=True, preparation=preparation)
             else:
                 bound = await prepare_chat_submission(store, owner, session, data["message"],
                     entrypoint="delegated" if is_delegated_credential(request) else "interactive",
                     submission_id=request.headers.get("X-Chat-Submission-Id"),
-                    reasoning_effort=data.get("reasoning_effort"))
+                    reasoning_effort=data.get("reasoning_effort"), preparation=preparation)
             try:
+                if data.get('input_card_id'):
+                    store.resolve_input(owner, sid, data['input_card_id'], bound.raw_ask,
+                                        submission_id=bound.submission_id)
                 with bound.activate():
                     response = await func(request, *args, **kwargs)
                 if hasattr(response, "body_iterator"):
                     original = response.body_iterator
                     async def body():
+                        observer = TurnEventObserver(bound)
+                        ended = False
                         try:
                             with bound.activate():
                                 async for item in original:
+                                    observer.feed(item)
                                     yield item
+                            ended = True
                         finally:
+                            observer.finish()
                             if not response.headers.get("X-Odysseus-Run-Id"):
-                                store.record(bound, "awaiting_approval" if bound.pending else "completed")
+                                store.record(bound, 'awaiting_input' if bound.pending_input_id else
+                                    'awaiting_approval' if bound.pending else 'completed' if ended else 'detached')
                     response.body_iterator = body()
                 else:
-                    store.record(bound, "awaiting_approval" if bound.pending else "completed")
+                    observe_json_response(bound, response)
+                    store.record(bound, 'awaiting_input' if bound.pending_input_id else
+                                 'awaiting_approval' if bound.pending else 'completed')
                 return response
             except BaseException:
                 store.record(bound, "awaiting_approval" if data.get("tool_approval_id") and bound.pending else "failed")

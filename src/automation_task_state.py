@@ -9,8 +9,8 @@ from __future__ import annotations
 import copy
 import math
 
-ACTIVE_STATUSES = frozenset({'preparing', 'bound', 'running', 'awaiting_approval'})
-TERMINAL_STATUSES = frozenset({'completed', 'failed', 'cancelled'})
+ACTIVE_STATUSES = frozenset({'preparing', 'bound', 'running', 'awaiting_approval', 'awaiting_input'})
+TERMINAL_STATUSES = frozenset({'completed', 'failed', 'cancelled', 'detached'})
 STATUSES = ACTIVE_STATUSES | TERMINAL_STATUSES
 
 
@@ -35,7 +35,7 @@ def transition_status(current: str, requested: str) -> str:
         return current
     if current != 'preparing' and requested == 'preparing':
         raise LifecycleError('automation_preparation_cannot_restart')
-    if current == 'preparing' and requested not in {'preparing', 'bound', 'failed', 'cancelled'}:
+    if current == 'preparing' and requested not in {'preparing', 'bound', 'failed', 'cancelled', 'detached'}:
         raise LifecycleError('automation_preparation_not_admitted')
     return requested
 
@@ -69,7 +69,7 @@ def pending_task_projection(raw_ask: str, status: str, *, previous_answer=None,
               'previous_status': status, 'active_task': None, 'pending_question': None}
     if status in {'preparing', 'bound', 'running'}:
         result['active_task'] = raw_ask
-    elif status == 'awaiting_approval':
+    elif status in {'awaiting_approval', 'awaiting_input'}:
         if (not isinstance(pending_question, dict)
                 or not isinstance(pending_question.get('question'), str)
                 or not pending_question['question'].strip()

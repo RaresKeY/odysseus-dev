@@ -62,6 +62,7 @@ class BoundExecutionRoute:
     source: str
     approach_id: str | None = None
     attempt_id: str | None = None
+    selection: dict = field(default_factory=dict)
 
     @property
     def endpoint_url(self):
@@ -71,7 +72,7 @@ class BoundExecutionRoute:
         return {"endpoint_id": self.endpoint_id, "model": self.model,
                 "reasoning_effort": self.reasoning_effort, "source": self.source,
                 "approach_id": self.approach_id, "attempt_id": self.attempt_id,
-                "descriptor": dict(self.descriptor)}
+                "descriptor": dict(self.descriptor), "selection": dict(self.selection)}
 
     def to_dict(self):
         return {**self.public(), "category": self.approach_id}
@@ -113,7 +114,7 @@ async def classify_approach(raw_ask: str, provider, context: DecisionContext, *,
 
 def resolve_execution_route(mapping: dict, owner: str | None, *, allowed_models: Collection[str] | None = None,
                             source="manual", approach_id=None, attempt_id=None,
-                            resolver=None) -> BoundExecutionRoute:
+                            resolver=None, selection=None) -> BoundExecutionRoute:
     mapping = validate_mapping(mapping)
     from src.decisions.config import admit_decision_owner
     owner = admit_decision_owner(owner)
@@ -136,7 +137,7 @@ def resolve_execution_route(mapping: dict, owner: str | None, *, allowed_models:
         raise DecisionError("execution_route_mismatch")
     return BoundExecutionRoute(owner, mapping["endpoint_id"], mapping["model"], mapping["reasoning_effort"],
                                candidate[0], dict(candidate[2] or {}), dict(descriptor), source,
-                               approach_id, attempt_id)
+                               approach_id, attempt_id, selection or {})
 
 
 async def route_chat_turn(raw_ask: str, *, route_mode: str, owner: str | None,
@@ -160,10 +161,10 @@ async def route_chat_turn(raw_ask: str, *, route_mode: str, owner: str | None,
     decision = await classify_approach(raw_ask, provider, context, config=provider_config, evidence=evidence)
     return resolve_execution_route(mappings[decision.approach_id], owner, allowed_models=allowed_models,
                                    source="auto", approach_id=decision.approach_id,
-                                   attempt_id=decision.attempt_id, resolver=resolver)
+                                   attempt_id=decision.attempt_id, resolver=resolver, selection=decision.public())
 
 
-async def route_approach(raw_ask, mappings, *, provider, config, context):
+async def route_approach(raw_ask, mappings, *, provider, config, context, evidence=None):
     """Admission-service facade; returns a descriptor, never executes the ask."""
     return await route_chat_turn(raw_ask, route_mode="auto", owner=context.owner, context=context,
-                                 approaches=mappings, provider=provider, provider_config=config)
+                                 approaches=mappings, provider=provider, provider_config=config, evidence=evidence)
