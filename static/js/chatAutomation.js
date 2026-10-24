@@ -53,13 +53,14 @@ async function refresh() {
 function changeChat(changes) {
   return writeSettings(async()=>{
     $('chat-approval-mode').disabled=$('chat-route-mode').disabled=true;
+    $('chat-automation-default').disabled=true;
     $('chat-automation-state').textContent='Saving chat settings…';
     try {
       const id = await currentChat(), ticket=++sequence;
       const previous=policy?.session_id===id ? policy : await api(`/api/session/${encodeURIComponent(id)}/automation`);
       const saved=await api(`/api/session/${encodeURIComponent(id)}/automation`,'PUT',{policy_revision:previous.policy_revision,changes});
       if(id===sid() && ticket===sequence){++sequence;policy=saved;render();}else await refresh();
-    } finally {$('chat-approval-mode').disabled=$('chat-route-mode').disabled=false;}
+    } finally {$('chat-approval-mode').disabled=$('chat-route-mode').disabled=false;$('chat-automation-default').disabled=false;}
   });
 }
 function routeFields(key, title, value={}) {
@@ -99,9 +100,10 @@ async function initialize(){
   if(!$('chat-approval-mode'))return;
   for(const [id,key] of [['chat-approval-mode','approval_mode'],['chat-route-mode','route_mode']]) $(id).addEventListener('change',async e=>{const value=e.target.value;e.target.disabled=true;try{await changeChat({[key]:value});}catch(error){$('chat-automation-state').textContent=error.message;await refresh();}finally{e.target.disabled=false;}});
   $('chat-automation-settings').addEventListener('click',openSettings);
+  $('chat-automation-default').addEventListener('click',async()=>{try{await changeChat({approval_mode:$('chat-approval-mode').value});await refresh();$('chat-automation-state').textContent='New chats will use this approval mode.';}catch(e){$('chat-automation-state').textContent=e.message;await refresh();}});
   $('chat-automation-close').addEventListener('click',()=>$('chat-automation-dialog').close());
   const browserPath=async()=>`/api/session/${encodeURIComponent(await currentChat())}/browser`;
-  function browserScope(){const effects=[];if($('chat-browser-clicks').checked)effects.push('click');if($('chat-browser-fill').checked)effects.push('fill');if($('chat-browser-submit').checked)effects.push('submit');const label=$('chat-browser-field-label').value;return {url:$('chat-browser-url').value,effects,fields:label?[{label,value:$('chat-browser-field-value').value}]:[]};}
+  function browserScope(){const effects=[];if($('chat-browser-clicks').checked)effects.push('click');if($('chat-browser-fill').checked)effects.push('fill');if($('chat-browser-submit').checked)effects.push('submit');const label=$('chat-browser-field-label').value;return {url:$('chat-browser-url').value,effects,fields:label?[{label,value:$('chat-browser-field-value').value}]:[],checks:$('chat-browser-check').value?[{kind:'text_contains',value:$('chat-browser-check').value}]:[]};}
   async function viewBrowser(){const result=await api((await browserPath())+'/view');$('chat-browser-screenshot').src=result.screenshot.url;$('chat-browser-screenshot').hidden=false;$('chat-browser-status').textContent='You have control. This is a current browser image; automation’s previous targets have been invalidated.';const obs=result.observation;$('chat-browser-targets').replaceChildren();(obs.elements||[]).filter(n=>!n.disabled).forEach(node=>{const button=document.createElement('button');button.type='button';button.textContent=(node.editable?'Fill: ':'Click: ')+(node.label||node.role||'Unnamed target');button.addEventListener('click',async()=>{try{await api((await browserPath())+'/action','POST',{action:node.editable?'fill':'click',page:'t1',observation:obs.observation,ref:node.ref,...(node.editable?{value_id:node.label}:{})});await viewBrowser();}catch(e){$('chat-browser-status').textContent=e.message;}});$('chat-browser-targets').append(button);});}
   for(const [id,handler] of [['chat-browser-open',async()=>{await api(await browserPath(),'POST');$('chat-browser-status').textContent='Browser opened. Choose a page and allowed actions before using it.';}],['chat-browser-close',async()=>{const result=await api(await browserPath(),'DELETE');$('chat-browser-status').textContent=result.status==='closed'?'Browser closed.':'Browser cleanup is incomplete.';$('chat-browser-screenshot').hidden=true;$('chat-browser-targets').replaceChildren();}],['chat-browser-scope',async()=>{await api((await browserPath())+'/scope','POST',browserScope());$('chat-browser-status').textContent='Allowed for your next message for two minutes. Only the selected site and actions are permitted.';}],['chat-browser-navigate',async()=>{await api((await browserPath())+'/scope','POST',browserScope());await api((await browserPath())+'/action','POST',{action:'navigate',page:'t1',url:$('chat-browser-url').value});await viewBrowser();}],['chat-browser-view',viewBrowser]]) $(id).addEventListener('click',async()=>{try{await handler();}catch(e){$('chat-browser-status').textContent=e.message;}});
   $('chat-elevation-save').addEventListener('click',async()=>{try{const roots=[...$('chat-elevation-folders').querySelectorAll('label')].filter(l=>l.querySelector('input').checked).map(l=>({path:l.querySelector('input').value,access:l.querySelector('select').value}));await changeChat({elevation_roots:roots});$('chat-elevation-status').textContent='Folder grant saved for this chat for one hour.';}catch(e){$('chat-elevation-status').textContent=e.message;}});

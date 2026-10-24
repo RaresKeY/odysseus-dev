@@ -118,6 +118,12 @@ class AutomationStore:
             target.elevation_grant = None
             target.policy_revision += 1
 
+    def revoke_owner(self, owner):
+        with self.transaction() as db:
+            prefs = self.owner(db, owner)
+            prefs.authority_epoch += 1
+            prefs.revision += 1
+
     def _policy(self, p, s, owner, entrypoint="interactive"):
         grant = copy.deepcopy(s.elevation_grant)
         if (not p.elevation_ceiling or not grant
@@ -487,6 +493,7 @@ async def prepare_chat_turn(store, owner, session, raw_ask, *, entrypoint="inter
     if not isinstance(raw_ask, str) or (not raw_ask.strip() and not allow_empty) or len(raw_ask) > 50000:
         raise HTTPException(422, "Enter a nonblank message of at most 50000 characters")
     bound = store.acquire(owner, session.id, raw_ask, entrypoint, submission_id)
+    owner = bound.owner
     try:
         effort = ""
         mode = str(getattr(session, "thinking_mode", "") or "")
@@ -562,6 +569,17 @@ def validate_provider_binding(url, model, headers, session_id, reasoning_effort=
             or model != bound.descriptor["model"] or dict(headers or {}) != bound.headers
             or (reasoning_effort or "") != bound.descriptor["reasoning_effort"]):
         raise RuntimeError("Execution provider does not match the acknowledged turn binding")
+
+
+async def prepare_chat_submission(*args, **kwargs):
+    """Map bounded selection failures to an actionable ingress response."""
+    from src.decisions import DecisionError
+    try:
+        return await prepare_chat_turn(*args, **kwargs)
+    except DecisionError as error:
+        raise HTTPException(409,
+            "Automatic model selection could not be completed. Choose a model manually or check chat settings.",
+            headers={'X-Decision-Failure': error.code}) from None
 
 
 def effective_elevation_roots():
@@ -676,12 +694,12 @@ def automation_ingress(session_manager):
                 attachments = data.get("attachments")
                 if not attachments:
                     raise HTTPException(422, "Add a message or attachment")
-                bound = await prepare_chat_turn(store, owner, session, data.get("message") or "",
+                bound = await prepare_chat_submission(store, owner, session, data.get("message") or "",
                     entrypoint="delegated" if is_delegated_credential(request) else "interactive",
                     submission_id=request.headers.get("X-Chat-Submission-Id"),
                     reasoning_effort=data.get("reasoning_effort"), allow_empty=True)
             else:
-                bound = await prepare_chat_turn(store, owner, session, data["message"],
+                bound = await prepare_chat_submission(store, owner, session, data["message"],
                     entrypoint="delegated" if is_delegated_credential(request) else "interactive",
                     submission_id=request.headers.get("X-Chat-Submission-Id"),
                     reasoning_effort=data.get("reasoning_effort"))

@@ -374,8 +374,8 @@ def setup_webhook_routes(
             session_id = sid
 
         # --- Send message and get response ---
-        from src.chat_automation import AutomationStore, prepare_chat_turn
-        bound = await prepare_chat_turn(AutomationStore(), token_owner, sess, message, entrypoint="delegated",
+        from src.chat_automation import AutomationStore, prepare_chat_submission
+        bound = await prepare_chat_submission(AutomationStore(), token_owner, sess, message, entrypoint="delegated",
             submission_id=request.headers.get("X-Chat-Submission-Id"))
         try:
             with bound.activate():
