@@ -2,6 +2,7 @@
 import contextlib
 from dataclasses import dataclass, replace
 import json
+import httpx
 import sys
 from types import SimpleNamespace
 import unittest
@@ -63,9 +64,10 @@ class BrowserAutomationTests(unittest.IsolatedAsyncioTestCase):
         except ImportError:
             imported = patch.dict(sys.modules, {'src.decisions': SimpleNamespace(DecisionRequest=FixtureDecisionRequest)})
         context = SimpleNamespace(owner='alice', session_id='thread', run_id='run')
+        self.record.artifact_writer = self.store
         with imported:
             return await automation.run(self.record, 'Fill Email then review', self.grant, provider, {}, context,
-                dispatch or self.dispatch, screenshot_store=lambda data: self.store(data), **kwargs)
+                dispatch or self.dispatch, **kwargs)
 
     async def store(self, data):
         self.assertTrue(data['data'].startswith(b'\x89PNG'))
@@ -74,9 +76,14 @@ class BrowserAutomationTests(unittest.IsolatedAsyncioTestCase):
     async def test_permissions_before_ranking_private_values_redacted_shortlist_bounded(self):
         await self.record.observe()
         self.record.current.packet['text'] += ' private@example.test'
+        self.record.current.packet['title'] = 'private%40example.test'
+        self.record.current.packet['url'] = 'https://example.com/private%40example.test'
         state, choices, offered = automation.decision_packet(self.record, replace(self.grant, allowed_effects=frozenset({'fill'})), 'private@example.test', [])
         serialized = json.dumps({'state': state, 'choices': choices})
         self.assertNotIn('private@example.test', serialized)
+        self.assertNotIn('private%40example.test', serialized)
+        self.assertNotIn('private%40example.test', json.dumps(automation.redact_prepared_evidence(
+            {'nested': ['private@example.test', {'value': 'private%40example.test'}]}, self.grant)))
         self.assertNotIn('Delete', serialized)
         self.assertNotIn('captured-object', serialized)
         self.assertLessEqual(len(serialized.encode()), 12000)
@@ -188,9 +195,102 @@ class BrowserAutomationTests(unittest.IsolatedAsyncioTestCase):
         self.assertEqual(provider.requests, [])
         self.assertIs(self.record.task_grant, self.grant)
         self.assertFalse(any(request['method'] == 'Page.navigate' or
+            request['method'] == 'Page.captureScreenshot' or
             (request['method'] == 'Runtime.callFunctionOn' and
              request['params']['functionDeclaration'] == browser_pipe._CALL_ACTION)
             for request in self.channel.requests))
+
+    async def test_handoff_screenshot_crosses_child_approval_and_native_visual_projection(self):
+        provider, seen = FrozenProvider(['DONE']), []
+        async def traced(args, grant):
+            seen.append(args['action'])
+            return await self.dispatch(args, grant)
+        output = await self.run_driver(provider, traced)
+        self.assertEqual(seen, ['snapshot', 'screenshot'])
+        self.assertEqual(len(output['images']), 1)
+        from src.clean_agent_preview import bounded_visual_result_blocks
+        blocks = bounded_visual_result_blocks(output)
+        self.assertEqual(len(blocks), 1)
+        self.assertTrue(blocks[0]['image_url']['url'].startswith('data:image/png;base64,iVBOR'))
+        from src.agent_loop import _append_tool_results
+        messages = [{'role': 'user', 'content': 'Review the current browser image'}]
+        _append_tool_results(messages, '', [], [], ['Browser handoff'], False, 1,
+            tool_result_records=[{'tool_name': 'private_browser', 'content': '{}', 'result': output}])
+        projected = [item for item in messages if isinstance(item.get('content'), list)]
+        self.assertEqual(len(projected), 1)
+        self.assertTrue(any(block.get('type') == 'image_url' and block['image_url']['url'].startswith('data:image/png;base64,iVBOR')
+            for block in projected[0]['content']))
+        from src import llm_core
+        requests = []
+        def answer(request):
+            requests.append(json.loads(request.content))
+            return httpx.Response(200, json={'model': 'fixture-vision', 'choices': [{'message': {'content': 'Reviewed fixture pixels'}}]})
+        async with httpx.AsyncClient(transport=httpx.MockTransport(answer)) as client:
+            with (patch.object(llm_core, '_get_http_client', return_value=client),
+                  patch.object(llm_core, '_get_cached_response', return_value=None),
+                  patch.object(llm_core, '_set_cached_response'),
+                  patch.object(llm_core, 'get_context_length', return_value=32768),
+                  patch.object(llm_core, '_is_host_dead', return_value=False)):
+                await llm_core.llm_call_async('https://vision-fixture.invalid/v1/chat/completions', 'fixture-vision',
+                    messages, max_tokens=64, max_retries=1)
+        wire_blocks = [block for message in requests[0]['messages'] if isinstance(message.get('content'), list)
+            for block in message['content'] if block.get('type') == 'image_url']
+        self.assertEqual(len(wire_blocks), 1)
+        self.assertTrue(wire_blocks[0]['image_url']['url'].startswith('data:image/png;base64,iVBOR'))
+
+    async def test_handoff_after_human_takeover_reads_no_new_pixels_or_page(self):
+        def takeover(_request):
+            self.record.task_grant = None
+            self.record.invalidate_document()
+        output = await self.run_driver(FrozenProvider(['DONE'], takeover))
+        self.assertEqual(output['stop_reason'], 'browser_task_revoked')
+        self.assertFalse(output['screenshot']['available'])
+        self.assertNotIn('images', output)
+        self.assertEqual(output['page']['title'], 'Fixture')
+        self.assertFalse(any(r['method'] == 'Page.captureScreenshot' for r in self.channel.requests))
+
+    async def test_spent_wall_budget_does_not_begin_final_capture(self):
+        clock = [0]
+        provider = FrozenProvider(['DONE'], lambda _: clock.__setitem__(0, 121))
+        output = await self.run_driver(provider, clock=lambda: clock[0])
+        self.assertEqual(output['stop_reason'], 'time_limit')
+        self.assertFalse(output['screenshot']['available'])
+        self.assertEqual(len(output['decision_attempts']), 1)
+        self.assertFalse(any(r['method'] == 'Page.captureScreenshot' for r in self.channel.requests))
+
+    async def test_final_pixels_pause_as_an_exact_read_instead_of_bypassing_approval(self):
+        card = {'kind': 'tool_approval', 'approval_id': 'screenshot-card'}
+        async def pending(args, grant):
+            if args['action'] == 'screenshot':
+                return {'approval_required': True, 'ask_user': card, 'executed': False}
+            return await self.dispatch(args, grant)
+        output = await self.run_driver(FrozenProvider(['DONE']), pending)
+        self.assertEqual(output['stop_reason'], 'human_approval_required')
+        self.assertIs(output['ask_user'], card)
+        self.assertFalse(output['screenshot']['available'])
+        self.assertIs(self.record.task_grant, self.grant)
+        self.assertFalse(any(r['method'] == 'Page.captureScreenshot' for r in self.channel.requests))
+
+    async def test_trusted_checks_reach_actual_automation_tool_without_inference(self):
+        self.grant = replace(self.grant, completion_checks=({'kind': 'text_contains', 'value': 'Fixture'},))
+        self.record.task_grant = self.grant
+        self.record.artifact_writer = self.store
+        args = {'action': 'automate', 'page': 't1', 'goal': 'Check the supplied condition'}
+        operation = ExactOperation.normalize('private_browser', json.dumps(args))
+        authority = RequestAuthority('request', 'alice', 'thread', '', (OperationGrant('private_browser'),),
+            browser_sessions=(self.record.session,), browser_pages=self.record.pages)
+        bound = browser_identity.resolve_browser_operation(authority, operation)
+        provider = FrozenProvider([])
+        runtime = {'provider': provider, 'config': {}, 'decision_context': SimpleNamespace(owner='alice', session_id='thread', run_id='run'),
+                   'dispatch': self.dispatch}
+        with bind_request_authority(authority), browser_identity.bind_browser_operation(bound):
+            output = await browser_identity.execute_browser(json.dumps(args), {'owner': 'alice', 'session_id': 'thread', '_browser_automation_runtime': runtime})
+        handoff = output['browser_handoff']
+        self.assertEqual(handoff['stop_reason'], 'conditions_met')
+        self.assertEqual(provider.requests, [])
+        self.assertEqual(len(output['images']), 1)
+        self.assertNotIn('images', handoff)
+        self.assertNotIn('iVBOR', output['output'])
 
     async def test_navigation_while_inference_pending_never_retargets(self):
         provider = FrozenProvider(['TARGET_0'], lambda request: self.record._event({'method': 'Page.navigatedWithinDocument', 'params': {'frameId': FRAME}, 'sessionId': SESSION}))

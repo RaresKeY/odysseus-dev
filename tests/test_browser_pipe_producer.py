@@ -12,6 +12,7 @@ from pathlib import Path
 import struct
 import sys
 import time
+import tempfile
 from types import SimpleNamespace
 import unittest
 from unittest.mock import patch
@@ -67,7 +68,7 @@ class FakeChannel:
         elif method == 'Target.createTarget':
             self.event('Target.attachedToTarget', {'targetInfo': {'targetId': TARGET, 'type': 'page'}, 'sessionId': SESSION, 'waitingForDebugger': True}, session=None)
             result = {'targetId': TARGET}
-        elif method == 'Page.getFrameTree': result = {'frameTree': {'frame': {'id': FRAME, 'loaderId': 'loader-1'}}}
+        elif method == 'Page.getFrameTree': result = {'frameTree': {'frame': {'id': FRAME, 'loaderId': 'loader-1', 'url': 'https://example.com/form'}}}
         elif method == 'Page.createIsolatedWorld':
             self.context_counter += 1
             self.event('Runtime.executionContextCreated', {'context': {'id': 7, 'uniqueId': 'fixture-context-' + str(self.context_counter), 'name': 'odysseus-observed-v1', 'auxData': {'frameId': FRAME}}})
@@ -83,7 +84,7 @@ class FakeChannel:
                 result = {'result': {'value': self.next_action}}
                 if self.traverse_on_click and args['arguments'][0]['value']['action'] == 'click':
                     self.traversed = True
-                    self.event('Page.frameNavigated', {'frame': {'id': FRAME, 'loaderId': 'loader-2'}})
+                    self.event('Page.frameNavigated', {'frame': {'id': FRAME, 'loaderId': 'loader-2', 'url': 'https://example.com/next'}})
         elif method == 'Page.captureScreenshot':
             result = {'data': base64.b64encode(b'\x89PNG\r\n\x1a\n' + b'\0' * 8 + struct.pack('>II', 640, 480)).decode()}
         if self.before_response:
@@ -178,6 +179,7 @@ class PipeProducerTests(unittest.IsolatedAsyncioTestCase):
         action = self.channel.requests[-1]
         self.assertEqual(action['method'], 'Runtime.callFunctionOn')
         self.assertEqual(action['params']['objectId'], 'captured-object-7')
+        self.assertEqual(action['params']['uniqueContextId'], 'fixture-context-7')
         self.assertNotIn('executionContextId', action['params'])
         self.assertEqual(action['params']['arguments'][0]['value']['text'], 'private@example.test')
         self.assertIsNone(self.record.current)
@@ -293,6 +295,43 @@ class PipeProducerTests(unittest.IsolatedAsyncioTestCase):
         with self.assertRaisesRegex(pipe.BrowserPipeError, 'browser_screenshot_stale'):
             await self.record.screenshot()
 
+    async def test_new_origin_grant_cannot_read_an_existing_human_page(self):
+        self.record.task_grant = replace(self.grant, allowed_origins=frozenset({'https://other.example'}), navigation_urls=frozenset())
+        args = {'action': 'snapshot', 'page': 't1'}
+        _authority, bound = await self.bind(args)
+        before = len(self.channel.requests)
+        with self.assertRaisesRegex(pipe.BrowserPipeError, 'browser_origin_denied'):
+            await self.record.execute_bound(bound, args)
+        self.assertEqual(len(self.channel.requests), before)
+
+    async def test_concurrent_enrolment_publishes_one_owned_channel_and_close_waits(self):
+        from src import containment
+        entered, release = asyncio.Event(), asyncio.Event()
+        channels = []
+        async def factory(grant, command):
+            channel = FakeChannel()
+            channels.append(channel)
+            entered.set()
+            await release.wait()
+            return channel
+        with tempfile.TemporaryDirectory() as directory, patch.object(containment, 'acquire', return_value=object()):
+            first = asyncio.create_task(pipe.enrol('new-owner', 'new-thread', self.manifest, directory, channel_factory=factory))
+            await entered.wait()
+            second = asyncio.create_task(pipe.enrol('new-owner', 'new-thread', self.manifest, directory, channel_factory=factory))
+            closing = asyncio.create_task(pipe.close('new-owner', 'new-thread'))
+            await asyncio.sleep(0)
+            self.assertEqual(len(channels), 1)
+            self.assertFalse(closing.done())
+            release.set()
+            admitted = await first
+            with self.assertRaisesRegex(pipe.BrowserPipeError, 'browser_enrolment_denied'):
+                await second
+            outcome = await closing
+            self.assertTrue(outcome.dead)
+            self.assertTrue(channels[0].closed)
+            self.assertIsNone(pipe.get('new-owner', 'new-thread'))
+            self.assertEqual(len(channels), 1)
+
     async def test_human_input_revokes_old_document_capability(self):
         observed = await self.record.observe()
         old = self.record.pages[0]
@@ -304,6 +343,17 @@ class PipeProducerTests(unittest.IsolatedAsyncioTestCase):
 
 
 class GrantTests(unittest.TestCase):
+    def test_completion_checks_are_bounded_immutable_and_origin_scoped(self):
+        checks = [{'kind': 'text_contains', 'value': 'Saved'}]
+        grant = pipe.BrowserTaskGrant('alice', 'thread', 'run', frozenset({'https://example.com'}),
+            expires_at=time.time() + 60, completion_checks=checks)
+        checks[0]['value'] = 'changed'
+        self.assertEqual(grant.completion_checks[0]['value'], 'Saved')
+        with self.assertRaises(TypeError):
+            grant.completion_checks[0]['value'] = 'changed'
+        with self.assertRaises(ValueError):
+            replace(grant, completion_checks=({'kind': 'url_equals', 'value': 'https://evil.example'},))
+
     def test_prepared_values_are_immutable_and_owner_expiry_are_enforced(self):
         values = {'Email': 'secret'}
         grant = pipe.BrowserTaskGrant('alice', 'thread', 'run', frozenset({'https://example.com'}),

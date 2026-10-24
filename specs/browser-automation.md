@@ -21,6 +21,8 @@ text describe only supported opaque operations.
   root-owned immutable manifest containing exact installed Chromium and observer
   hashes, architecture and sandbox qualification receipt digest. Discovery and
   model arguments cannot select an executable, endpoint, script or manifest.
+  Enrol/close operations serialize on the exact owner/chat key before any
+  awaited startup; one live registration cannot overwrite another channel.
 - Chromium uses private inherited pipe descriptors inside the canonical
   containment grant/startup/teardown lifecycle. Browser sandbox is enabled;
   unavailable required containment fails before registration. No cache search,
@@ -73,10 +75,17 @@ human card retains only its existing expiring task scope for exact continuation.
 
 Every terminal result names actor, stop reason, counts, decision attempt usage
 (including unknown usage), untrusted completion-check provenance and required
-handoff. A model's DONE is not verified completion. Screenshots are actual PNG
-bytes from the captured target and are stored through an owner-bound artifact
-callback; the result reports a URL only after storage succeeds. Target/epoch
-consistency is checked, while atomic document pixel capture is explicitly false.
+handoff. The human-admitted task may include at most eight immutable completion
+checks (`text_contains`, `url_equals`, `element_label`); the real automation
+entrypoint forwards them from its server grant, never model arguments. Passing
+checks remain labelled page/observed-URL evidence, not verified business effects.
+A model's DONE is not verified completion. The terminal screenshot is itself a
+canonical exact child read within the remaining deadline and last admitted
+document nonce. Pending approval, takeover or revocation never triggers a direct
+tail capture or reads a newer human page. Actual PNG pixels cross the existing
+bounded `result.images` model-input path separately from safe owner artifact
+metadata; the JSON handoff contains no image bytes. Target/epoch consistency is
+checked, while atomic document pixel capture is explicitly false.
 
 ## Validation and current gaps
 
@@ -92,6 +101,8 @@ qualification or model safety/calibration/speed evidence.
 network-none qualification candidate for the installed image. It uses fixed
 local intercepted HTTPS fixture bytes and the actual containment/private pipe,
 isolated observer, click/fill, same-URL invalidation and screenshot paths. It
+also tests harmless nonexistent-unique-context negative controls before effects;
+an ignored/unsupported binding does not fall back to the default world. It
 prints a candidate manifest only on success; deployment installation remains an
 explicit operator action. It must run through the secretless review runner.
 
@@ -100,9 +111,13 @@ sandbox/namespace restrictions. No qualified deployment manifest has been
 installed. Runtime browser acceptance remains incomplete until that precise
 prerequisite passes; source contracts do not establish usability on this host.
 URL admission rejects private IP literals, localhost and credentials; CDP origin
-checks do not claim DNS/socket pinning. Semantic effects of arbitrary site
+checks do not claim DNS/socket pinning. WebSocket, WebTransport and WebRTC
+traffic are not qualified by fake HTTP/CDP event tests or this local fixture;
+the interception contract is limited to captured navigation and intercepted
+HTTP requests. Semantic effects of arbitrary site
 handlers cannot be proved from labels: every DOM click, including an anchor,
 requires explicit click permission and may invoke page-owned handlers within
 the admitted network scope. Fill may also invoke handlers; submit additionally
-permits form/non-GET requests. All resource requests are separately origin/method
-filtered, without claiming these switches prove a business effect safe.
+permits form/non-GET requests. Intercepted HTTP requests are separately
+origin/method filtered, without claiming these switches prove a business effect
+safe or all browser network protocols isolated.
