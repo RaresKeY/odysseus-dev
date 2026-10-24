@@ -21344,7 +21344,7 @@ async def stream_agent_loop(
         yield 'data: [DONE]\n\n'
         return
 
-    if is_compact_preview_contract(turn_contract):
+    if is_compact_preview_contract(turn_contract) and exact_approval is None:
         from src.clean_agent_preview import stream_preview
         async for chunk in stream_preview(
             endpoint_url=endpoint_url, model=model, messages=messages, headers=headers,

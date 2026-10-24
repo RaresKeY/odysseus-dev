@@ -66,6 +66,10 @@ class ProviderStreamError(Exception):
     """A provider reported failure inside an otherwise successful SSE response."""
 
 
+class _PreviewApprovalPause(Exception):
+    """End this turn at a canonical approval card, then emit final metrics."""
+
+
 # Only these audited, fixed domain messages may cross the exception boundary.
 # Return the canonical constants rather than arbitrary exception text.
 _PUBLIC_PREVIEW_TOOL_ERRORS = {message: message for message in (
@@ -5872,6 +5876,38 @@ async def stream_preview(*, endpoint_url, model, messages, headers, turn_contrac
     )
     security.observe_messages(messages)
     executions, policy_decisions, calls, first_token = [], [], 0, None
+    def approval_pause_events(block, arguments, description, result, round_number):
+        card = result.get('ask_user')
+        question = (str(card.get('question') or '').strip()
+                    if isinstance(card, dict) else '') or 'This action needs your approval.'
+        tool_event = {
+            'type': 'tool_output', 'tool': block.tool_type, 'command': arguments,
+            'output': str(result.get('output') or 'Waiting for your decision.'),
+            'exit_code': None, 'error': False, 'executed': False,
+            'approval_required': True, 'desc': description, 'round': round_number,
+        }
+        if isinstance(card, dict):
+            tool_event['ask_user'] = card
+        record_tool_execution(executions, tool_event)
+        # Complete every outstanding provider protocol call with an explicit
+        # non-execution result, including later calls from the same batch.
+        # None may run or be represented as successful while a card is open.
+        for index in range(len(history) - 1, -1, -1):
+            item = history[index]
+            if item.get('role') != 'assistant' or not item.get('tool_calls'):
+                continue
+            answered = {entry.get('tool_call_id') for entry in history[index + 1:]
+                        if entry.get('role') == 'tool'}
+            for call in item['tool_calls']:
+                if call.get('id') and call['id'] not in answered:
+                    history.append({'role': 'tool', 'tool_call_id': call['id'],
+                                    'content': 'Not executed. Waiting for human approval.'})
+            break
+        history.append({'role': 'assistant', 'content': question})
+        result_events = [tool_event, {'type': 'final_response', 'content': question}]
+        if isinstance(card, dict):
+            result_events.append({'type': 'ask_user', 'data': card})
+        return result_events
     successful_call_signatures = set()
     successful_call_counts = {}
     attempted_required_tools = set()
@@ -7195,6 +7231,11 @@ async def stream_preview(*, endpoint_url, model, messages, headers, turn_contrac
                                     workspace=workspace,
                                     client_runtime_context=client_runtime_context,
                                 )
+                                if result.get('approval_required'):
+                                    for paused_event in approval_pause_events(
+                                            block, arguments, desc, result, round_number):
+                                        yield event(paused_event)
+                                    raise _PreviewApprovalPause
                                 failed = bool(
                                     result.get('error')
                                     or result.get('exit_code') not in (None, 0)
@@ -7899,6 +7940,11 @@ async def stream_preview(*, endpoint_url, model, messages, headers, turn_contrac
                                     active_document_id=getattr(active_document, 'id', None),
                                     workspace=workspace,
                                     client_runtime_context=client_runtime_context)
+                                if result.get('approval_required'):
+                                    for paused_event in approval_pause_events(
+                                            block, arguments, desc, result, round_number):
+                                        yield event(paused_event)
+                                    raise _PreviewApprovalPause
                                 if (
                                     canonical(block.tool_type) == 'ui_control'
                                     and str(args.get('action') or '').casefold() == 'get_toggles'
@@ -7912,6 +7958,7 @@ async def stream_preview(*, endpoint_url, model, messages, headers, turn_contrac
                                 note_fixture_scope.reset(fixture_token)
                                 if (tool_type == 'private_browser'
                                         and not (result or {}).get('blocked')
+                                        and not (result or {}).get('approval_required')
                                         and (result or {}).get('failure_kind') != 'turn_contract_denied'):
                                     # Even a failed interaction can refresh the DOM.
                                     # Validation/policy rejections never reach here.
@@ -8994,6 +9041,10 @@ async def stream_preview(*, endpoint_url, model, messages, headers, turn_contrac
                         'for review. Please continue the editing request to finish.')})
                 else:
                     yield event({'delta': '\nThe preview reached its round limit. Please narrow the request.'})
+    except _PreviewApprovalPause:
+        # The card is a turn boundary. Keep shared usage/tool metadata below,
+        # but never ask the provider to synthesize or retry the pending action.
+        pass
     except ProviderStreamError as exc:
         detail = 'The selected model provider failed while generating. Retry or choose another model.'
         logging.getLogger(__name__).warning('Clean v3 provider stream failed: %s', exc, exc_info=True)
