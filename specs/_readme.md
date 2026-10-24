@@ -1,5 +1,8 @@
 # Specs DocumentMap
 
+Chat approval modes, owner-scoped defaults/elevation, approach routing and the
+private browser producer: [chat-automation.md](chat-automation.md).
+
 Last updated: dev@c74f475 | 2026-10-15
 
 This folder is the compact implementation-truth map for humans and coding agents working on Odysseus. Read this file first, then open only the subsystem specs that match the work.

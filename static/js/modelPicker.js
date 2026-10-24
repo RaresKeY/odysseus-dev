@@ -736,6 +736,7 @@ async function _pick(m) {
           return;
         }
         // Header stays as session name — model info shown in picker only
+        window.dispatchEvent(new CustomEvent('odysseus:automation-changed'));
       } catch (e) {
         uiModule.showError('Failed to set model: ' + e);
         finishSwitch();
