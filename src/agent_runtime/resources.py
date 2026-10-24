@@ -500,6 +500,7 @@ class ProcessLaunchScope:
     runtime_roots: tuple[PathObservation, ...] = ()
     network: str = "inherit"
     max_runtime_s: int = 3600
+    writable_roots: tuple[PathObservation, ...] = ()
 
     def __post_init__(self):
         if (not isinstance(self.backend, NativeBackendResource) or not isinstance(self.root, FilesystemRoot)
@@ -509,28 +510,31 @@ class ProcessLaunchScope:
         if self.backend.tool_id not in {"bash", "python"}:
             raise ValueError("Unsupported native launch producer")
         if (not isinstance(self.runtime_roots, tuple) or any(not isinstance(r, PathObservation) for r in self.runtime_roots)
+                or not isinstance(self.writable_roots, tuple) or any(not isinstance(r, PathObservation) for r in self.writable_roots)
                 or self.network not in {"inherit", "none"}
                 or type(self.max_runtime_s) is not int or self.max_runtime_s <= 0):
             raise ValueError("Malformed launch boundary selectors")
 
     def validate(self):
         self.root.validate()
-        for runtime in self.runtime_roots:
+        for runtime in (*self.runtime_roots, *self.writable_roots):
             if canonical_root(runtime.path) != runtime.path or FileObjectIdentity.observe(runtime.path) != runtime.identity:
                 raise ResourceIdentityError("Launch runtime root changed")
 
     def to_dict(self):
         return {"backend": self.backend.to_dict(), "root": self.root.to_dict(), "required": sorted(self.required),
                 "runtime_roots": [{"path": r.path, "identity": asdict(r.identity)} for r in self.runtime_roots],
-                "network": self.network, "max_runtime_s": self.max_runtime_s}
+                "network": self.network, "max_runtime_s": self.max_runtime_s,
+                "writable_roots": [{"path": r.path, "identity": asdict(r.identity)} for r in self.writable_roots]}
 
     @classmethod
     def from_dict(cls, value):
-        if not isinstance(value, dict) or set(value) != {"backend", "root", "required", "runtime_roots", "network", "max_runtime_s"} or not isinstance(value["required"], list) or not isinstance(value["runtime_roots"], list):
+        if not isinstance(value, dict) or set(value) not in ({"backend", "root", "required", "runtime_roots", "network", "max_runtime_s"}, {"backend", "root", "required", "runtime_roots", "network", "max_runtime_s", "writable_roots"}) or not isinstance(value["required"], list) or not isinstance(value["runtime_roots"], list):
             raise ValueError("Malformed launch scope snapshot")
         return cls(backend_from_dict(value["backend"]), FilesystemRoot.from_dict(value["root"]), frozenset(value["required"]),
                    tuple(PathObservation(r["path"], FileObjectIdentity(**r["identity"])) for r in value["runtime_roots"]),
-                   value["network"], value["max_runtime_s"])
+                   value["network"], value["max_runtime_s"],
+                   tuple(PathObservation(r["path"], FileObjectIdentity(**r["identity"])) for r in value.get("writable_roots", [])))
 
 
 @dataclass(frozen=True)

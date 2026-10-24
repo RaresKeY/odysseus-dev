@@ -1,0 +1,65 @@
+"""Owner settings API exercises real SQL transactions, not a second prefs store."""
+from types import SimpleNamespace
+import httpx
+import pytest
+from fastapi import FastAPI
+from core import database as d
+from routes.chat_automation_routes import setup_chat_automation_routes
+from tests.test_chat_automation_state import store
+
+
+@pytest.fixture
+def api(store, monkeypatch):
+    monkeypatch.setattr(d, 'SessionLocal', store.session_factory)
+    app = FastAPI()
+    app.state.auth_manager = SimpleNamespace(is_configured=True)
+    @app.middleware('http')
+    async def identity(request, call_next):
+        request.state.current_user = request.headers.get('test-owner')
+        if request.headers.get('test-token'):
+            request.state.api_token = True
+            request.state.api_token_owner = 'alice'
+        return await call_next(request)
+    app.include_router(setup_chat_automation_routes(None))
+    return app
+
+
+@pytest.mark.asyncio
+async def test_owner_cas_roundtrip_and_no_cross_owner_state(api):
+    async with httpx.AsyncClient(transport=httpx.ASGITransport(app=api), base_url='http://test', headers={'test-owner':'alice'}) as c:
+        first = await c.get('/api/session/a/automation')
+        assert first.status_code == 200 and first.json()['approval_mode'] == 'always_ask'
+        put = await c.put('/api/session/a/automation', json={'policy_revision':0,'changes':{'approval_mode':'yolo'}})
+        assert put.status_code == 200 and put.json()['approval_mode'] == 'yolo'
+        assert (await c.get('/api/chat-settings')).json()['last_explicit_mode'] == 'yolo'
+        assert (await c.get('/api/session/b/automation')).json()['approval_mode'] == 'always_ask'
+        assert (await c.put('/api/session/a/automation', json={'policy_revision':0,'changes':{'approval_mode':'auto_approve'}})).status_code == 409
+        assert (await c.get('/api/session/c/automation')).status_code == 404
+        assert (await c.put('/api/session/a/automation', headers={'Origin':'https://attacker.invalid'}, json={'policy_revision':1,'changes':{'approval_mode':'auto_approve'}})).status_code == 403
+
+
+@pytest.mark.asyncio
+async def test_settings_cannot_be_changed_by_api_token_or_unknown_user(api):
+    async with httpx.AsyncClient(transport=httpx.ASGITransport(app=api), base_url='http://test') as c:
+        assert (await c.get('/api/chat-settings')).status_code == 401
+        assert (await c.get('/api/chat-settings', headers={'test-owner':'api','test-token':'yes'})).status_code == 403
+
+
+@pytest.mark.asyncio
+async def test_ceiling_not_a_deployment_override(api):
+    async with httpx.AsyncClient(transport=httpx.ASGITransport(app=api), base_url='http://test', headers={'test-owner':'alice'}) as c:
+        assert (await c.get('/api/chat-settings')).json()['elevation_ceiling'] is False
+        result=await c.put('/api/chat-settings', json={'revision':0,'changes':{'elevation_ceiling':True}})
+        assert result.status_code==200
+        chat=(await c.get('/api/session/a/automation')).json()
+        assert chat['effective_roots']==[] and chat['execution_scope']=='workspace'
+        assert (await c.put('/api/session/a/automation',json={'policy_revision':0,'changes':{'elevation_roots':[{'path':'/tmp','access':'write'}]}})).status_code==403
+
+
+@pytest.mark.asyncio
+async def test_invalid_configuration_never_commits(api):
+    async with httpx.AsyncClient(transport=httpx.ASGITransport(app=api), base_url='http://test', headers={'test-owner':'alice'}) as c:
+        bad={'endpoint_id':'ep','model':'model','protocol':'openai_json','timeout_seconds':'forever'}
+        result=await c.put('/api/chat-settings',json={'revision':0,'changes':{'decision_provider':bad}})
+        assert result.status_code==422
+        assert (await c.get('/api/chat-settings')).json()['revision']==0

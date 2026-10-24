@@ -5163,6 +5163,14 @@ async def preview_model_response(client, endpoint_url, headers, request, recover
         }
         response_started = False
         try:
+            from src.chat_automation import current_turn, validate_provider_binding
+            bound = current_turn()
+            if bound is not None:
+                effort = bound.descriptor["reasoning_effort"] or None
+                if effort is not None:
+                    provider_request["reasoning_effort"] = effort
+                validate_provider_binding(endpoint_url, provider_request["model"], headers,
+                    bound.session_id, effort)
             async with client.stream(
                 'POST', endpoint_url, headers=headers or {}, json=provider_request,
             ) as response:

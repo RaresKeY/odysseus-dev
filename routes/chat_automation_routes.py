@@ -21,6 +21,22 @@ def interactive_owner(request):
 def setup_chat_automation_routes(session_manager):
     router = APIRouter(tags=["chat settings"])
 
+    @router.get("/api/chat-settings/models")
+    async def model_choices(request: Request):
+        owner = interactive_owner(request)
+        from core.database import SessionLocal, ModelEndpoint
+        from src.auth_helpers import owner_filter
+        from src.owner_identity import DEFAULT_LOCAL_OWNER
+        from src.endpoint_resolver import _endpoint_enabled_models
+        db = SessionLocal()
+        try:
+            rows = owner_filter(db.query(ModelEndpoint).filter(ModelEndpoint.is_enabled.is_(True)),
+                ModelEndpoint, owner or DEFAULT_LOCAL_OWNER).all()
+            return {"endpoints": [{"id": r.id, "name": r.name, "models": _endpoint_enabled_models(r)}
+                for r in rows if (r.model_type or "llm") == "llm"]}
+        finally:
+            db.close()
+
     @router.get("/api/chat-settings")
     async def configuration(request: Request):
         owner = interactive_owner(request)
