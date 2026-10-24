@@ -510,9 +510,13 @@ def _owned_spec(cwd: str, env: Optional[dict], timeout: int, readonly_extra: tup
             readonly.append(prefix)
     from src.tool_execution import _agent_subprocess_env
     clean_env = _agent_subprocess_env() if env is None else dict(env)
+    from src.chat_automation import effective_elevation_roots
+    expanded = effective_elevation_roots()
+    readonly.extend(item["path"] for item in expanded if item["access"] == "read")
     return containment.agent_spec(
         cwd, clean_env, timeout,
         readonly_extra=tuple(dict.fromkeys([*readonly, *readonly_extra])),
+        writable_extra=tuple(item["path"] for item in expanded if item["access"] == "write"),
     )
 
 

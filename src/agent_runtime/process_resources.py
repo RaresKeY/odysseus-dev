@@ -61,14 +61,15 @@ def seal_launch_scope(backend, root, *, env=None):
     spec = _owned_spec(root.path, env, 3600, extra)
     return ProcessLaunchScope(backend, root, spec.required,
         tuple(PathObservation(str(Path(p).resolve()), FileObjectIdentity.observe(Path(p).resolve())) for p in spec.readonly_extra),
-        spec.network, spec.wall_clock_s)
+        spec.network, spec.wall_clock_s,
+        tuple(PathObservation(str(Path(p).resolve()), FileObjectIdentity.observe(Path(p).resolve())) for p in spec.writable_extra))
 
 
 def validate_launch_spec(launch, spec):
     scope = launch.scope
     scope.validate()
     if (spec.workspace != scope.root.path or spec.required != scope.required or spec.network != scope.network
-            or spec.wall_clock_s > scope.max_runtime_s or spec.writable_extra
+            or spec.wall_clock_s > scope.max_runtime_s or tuple(spec.writable_extra) != tuple(r.path for r in scope.writable_roots)
             or tuple(spec.readonly_extra) != tuple(r.path for r in scope.runtime_roots)):
         raise ResourceIdentityError("Producer launch boundary exceeds the sealed reservation")
 

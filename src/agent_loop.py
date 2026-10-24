@@ -28062,6 +28062,7 @@ async def stream_agent_loop(
                 from src.llm_core import llm_call_async
 
                 _malformed_raw_body = await llm_call_async(
+                    session_id=session_id, reasoning_effort=reasoning_effort,
                     url=endpoint_url,
                     model=model,
                     messages=_malformed_synthesis_messages,
@@ -30193,6 +30194,7 @@ async def stream_agent_loop(
                             ),
                         }]
                         _raw = await llm_call_async(
+                            session_id=session_id, reasoning_effort=reasoning_effort,
                             url=endpoint_url, model=model, messages=_synth_messages,
                             headers=headers,
                             temperature=0.3,
@@ -32293,6 +32295,7 @@ async def stream_agent_loop(
                             from src.llm_core import llm_call_async
 
                             _raw_artifact_body = await llm_call_async(
+                                session_id=session_id, reasoning_effort=reasoning_effort,
                                 url=endpoint_url,
                                 model=model,
                                 messages=_synthesis_messages,
@@ -37657,6 +37660,7 @@ async def stream_agent_loop(
                 "content": _exhaustion_content,
             }]
             _exhaustion_raw = await llm_call_async(
+                session_id=session_id, reasoning_effort=reasoning_effort,
                 url=endpoint_url,
                 model=model,
                 messages=_exhaustion_synthesis_messages,
@@ -37943,6 +37947,7 @@ async def stream_agent_loop(
                 ),
             }]
             _raw = await llm_call_async(
+                session_id=session_id, reasoning_effort=reasoning_effort,
                 url=endpoint_url,
                 model=model,
                 messages=_synth_messages,
@@ -38007,6 +38012,7 @@ async def stream_agent_loop(
                 from src.llm_core import llm_call_async
 
                 _email_synth_raw = await llm_call_async(
+                    session_id=session_id, reasoning_effort=reasoning_effort,
                     url=endpoint_url,
                     model=model,
                     messages=[

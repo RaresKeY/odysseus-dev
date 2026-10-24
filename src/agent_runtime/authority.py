@@ -407,8 +407,15 @@ def create_request_authority(request_text, *, owner=None, session_id=None, works
         if operation is not None and name == canonical_tool(operation.tool):
             inputs = frozenset({ExactOperation.normalize(name, _json(dict(operation.args))).input})
         grants.append(OperationGrant(name, actions, inputs))
+    from src.chat_automation import current_turn, effective_elevation_roots
+    bound = current_turn()
+    roots = None
+    if bound is not None and (bound.owner or "").casefold() == _owner(owner) and bound.session_id == str(session_id or ""):
+        roots = tuple(FilesystemRoot.from_dict(item["identity"]) for item in effective_elevation_roots())
+        if workspace:
+            roots = (FilesystemRoot.seal(workspace, owner=_owner(owner)), *roots)
     authority = RequestAuthority(uuid4().hex, _owner(owner), str(session_id or ""),
-                                 str(workspace or ""), tuple(grants))
+                                 str(workspace or ""), tuple(grants), resource_roots=roots)
     if client_runtime_context is not None:
         from src.agent_runtime.remote_resources import seal_backends
         authority = replace(authority, backend_resources=seal_backends(

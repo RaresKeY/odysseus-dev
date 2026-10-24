@@ -458,6 +458,7 @@ async def prepare_chat_turn(store, owner, session, raw_ask, *, entrypoint="inter
             "route_mode": bound.policy["route_mode"], "submission_id": bound.submission_id}
         if not bound.current():
             raise HTTPException(409, "Chat settings changed before submission")
+        bind_prepared_browser_scope(bound)
         store.record(bound, "bound", bound.descriptor)
         return bound
     except BaseException:
@@ -509,9 +510,29 @@ def validate_elevation_operation(operation, resource_operation):
     readonly = {r["path"] for r in roots if r["access"] == "read"}
     # Explicit read operations only. Unknown operation classes cannot write
     # through a read-only root merely because a reviewer accepted the action.
-    if operation.tool not in {"read_file", "list_files", "list_directory", "search_files", "glob", "grep", "file_info"}:
+    if operation.tool not in {"read_file", "ls", "glob", "grep"}:
         if any(binding.resource.root.path in readonly for binding in resource_operation.bindings):
             raise ValueError("This additional folder is read-only")
+
+
+def bind_prepared_browser_scope(bound):
+    """Consume a human scope for exactly the next admitted submission."""
+    try:
+        from src.browser_pipe import get
+    except ModuleNotFoundError:
+        return
+    record = get(str(bound.owner or "").strip().casefold(), bound.session_id)
+    prepared = getattr(record, "pending_task_grant", None)
+    if record is None or prepared is None:
+        return
+    record.pending_task_grant = None
+    grant, revision, epoch = prepared
+    if (bound.policy["entrypoint"] != "interactive" or revision != bound.policy["policy_revision"]
+            or epoch != bound.policy["authority_epoch"] or grant.expires_at <= time.time()):
+        record.task_grant = None
+        return
+    from dataclasses import replace
+    record.task_grant = replace(grant, run_id=bound.run_id)
 
 
 def automation_ingress(session_manager):

@@ -1822,6 +1822,21 @@ async def execute_tool_block(
         )
 
     # Credential denial precedes authority, exact approval claim and bridges.
+    if _bound_chat_turn() is None and session_id and getattr(block, "tool_type", None) not in {"ask_user", "update_plan"}:
+        # Saved chat/task grants predate this contract. They cannot invent a
+        # fresh user turn or inherit its mode/elevation across an unattended
+        # entry point. Such callers must supply a server-bound original ask.
+        from core.database import SessionLocal, Session as DbSession
+        db = SessionLocal()
+        try:
+            persisted_chat = db.query(DbSession.id).filter(DbSession.id == str(session_id)).first()
+        finally:
+            db.close()
+        if persisted_chat is not None:
+            return f"{getattr(block, 'tool_type', '')}: APPROVAL REQUIRED", {
+                "error": "This action has no current chat submission. Open the chat and request the action again.",
+                "exit_code": 1, "blocked": True, "executed": False,
+                "failure_kind": "chat_submission_required"}
     if (isinstance(security_context, ToolRunSecurityContext)
             and security_context.delegated_credential):
         from src.tool_capabilities import delegated_tool_is_blocked

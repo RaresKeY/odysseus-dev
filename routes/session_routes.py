@@ -757,6 +757,12 @@ def setup_session_routes(
                     db_session.headers = session.headers or {}
                     db_session.thinking_mode = getattr(session, "thinking_mode", "off") or "off"
                     db_session.updated_at = utcnow_naive()
+                    from src.chat_automation import AutomationStore
+                    _, automation = AutomationStore().state(db, user, sid)
+                    if automation.route_mode != "manual":
+                        automation.route_mode = "manual"
+                        automation.policy_revision += 1
+                        automation.elevation_grant = None
                     db.commit()
             finally:
                 db.close()

@@ -779,6 +779,8 @@ app.include_router(setup_skills_routes(skills_manager))
 # Chat
 from routes.chat_automation_routes import setup_chat_automation_routes
 app.include_router(setup_chat_automation_routes(session_manager))
+from routes.browser_control_routes import setup_browser_control_routes
+app.include_router(setup_browser_control_routes())
 from routes.chat_routes import setup_chat_routes
 app.include_router(setup_chat_routes(
     session_manager, chat_handler, chat_processor,
