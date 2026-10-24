@@ -1412,7 +1412,10 @@ async def _startup_event():
     # deployment where an external worker drives task firing. Mirrors
     # `ODYSSEUS_INPROCESS_POLLERS` from the email pollers.
     _tasks_inprocess = os.environ.get("ODYSSEUS_INPROCESS_TASKS", "1").strip().lower()
-    if _tasks_inprocess not in ("0", "false", "no", "off", ""):
+    from src.task_automation import task_automation_enabled
+    if not task_automation_enabled():
+        logger.info("Automatic task scheduler and event execution disabled by deployment")
+    elif _tasks_inprocess not in ("0", "false", "no", "off", ""):
         await task_scheduler.start()
     else:
         logger.info(

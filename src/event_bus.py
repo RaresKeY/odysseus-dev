@@ -13,6 +13,7 @@ from datetime import datetime
 from typing import Optional
 
 from src.constants import AUTH_FILE
+from src.task_automation import task_automation_enabled
 
 logger = logging.getLogger(__name__)
 
@@ -40,6 +41,8 @@ def fire_event(event_name: str, owner: Optional[str] = None):
 
     Safe to call from both sync and async contexts.
     """
+    if not task_automation_enabled():
+        return
     try:
         loop = asyncio.get_running_loop()
         # Let the request that emitted the event finish before automation can
@@ -81,6 +84,9 @@ def _resolve_event_owner(owner: Optional[str]) -> Optional[str]:
 
 async def _handle_event(event_name: str, owner: Optional[str] = None):
     """Process an event: increment counters, fire tasks that hit their threshold."""
+    # Recheck delayed callbacks before owner lookup, counters or scheduler work.
+    if not task_automation_enabled():
+        return
     from core.database import SessionLocal, ScheduledTask
 
     resolved_owner = _resolve_event_owner(owner)
@@ -103,6 +109,8 @@ async def _handle_event(event_name: str, owner: Optional[str] = None):
             return
 
         for task in tasks:
+            if not task_automation_enabled():
+                return
             threshold = task.trigger_count or 1
             task.trigger_counter = (task.trigger_counter or 0) + 1
 
@@ -118,7 +126,7 @@ async def _handle_event(event_name: str, owner: Optional[str] = None):
                 # Fire the task
                 if _task_scheduler:
                     logger.info(f"Event '{event_name}' triggered task '{task.name}' (every {threshold})")
-                    await _task_scheduler.run_task_now(task.id)
+                    await _task_scheduler.run_automatic_task(task.id)
                 else:
                     logger.warning(f"Event triggered task '{task.name}' but no scheduler available")
             else:
