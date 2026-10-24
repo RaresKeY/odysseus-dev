@@ -17,6 +17,7 @@
         state.setAttribute('role', 'status');
         const list = document.createElement('ol');
         const handoffList = document.createElement('ul');
+        const taskState = document.createElement('p');
         const captureButton = document.createElement('button');
         captureButton.type = 'button';
         captureButton.textContent = 'Capture next turn (redacted)';
@@ -24,7 +25,7 @@
         const deleteButton = document.createElement('button');
         deleteButton.type = 'button';
         deleteButton.textContent = 'Delete captures';
-        disclosure.append(summary, explanation, captureButton, deleteButton, state, list, handoffList);
+        disclosure.append(summary, explanation, captureButton, deleteButton, state, taskState, list, handoffList);
         container.append(disclosure);
 
         async function request(path, options = {}) {
@@ -86,13 +87,22 @@
             if (destroyed || !disclosure.open || document.hidden) return;
             controller = new AbortController();
             try {
-                const [data, handoffs] = await Promise.all([
+                const [data, handoffs, automation] = await Promise.all([
                     request('/decisions/live', {signal: controller.signal}),
-                    request('/decision-handoffs', {signal: controller.signal})
+                    request('/decision-handoffs', {signal: controller.signal}),
+                    request('/automation', {signal: controller.signal})
                 ]);
                 if (!destroyed) {
                     render(data.items || []);
                     renderHandoffs(handoffs.items || []);
+                    const task=automation.task||{}, prep=task.preparation, route=task.routing||{};
+                    const parts=[`Task: ${task.previous_status||'no recorded task'}`];
+                    if(prep)parts.push(`Context: ${prep.returned_bytes||0} bytes returned · ${prep.coverage||'unknown'} coverage`);
+                    if(route.followup)parts.push(`Follow-up: ${route.followup.relation} (meaning only)`);
+                    if(route.approach?.readiness)parts.push(`Readiness: ${route.approach.readiness.choice}`);
+                    if(route.effort?.status)parts.push(`Effort: ${route.effort.choice||route.effort.status}${route.effort.reason?' · '+route.effort.reason.replaceAll('_',' '):''}`);
+                    for(const [name,value] of Object.entries(route.diagnostics||{}))parts.push(`${name.replaceAll('_',' ')}: ${value.choice} (advice)`);
+                    taskState.textContent=parts.join(' · ');
                 }
             } catch (error) {
                 if (!destroyed && error.name !== 'AbortError') state.textContent = 'Decision activity unavailable.';

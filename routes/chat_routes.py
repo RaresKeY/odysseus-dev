@@ -2528,7 +2528,7 @@ def setup_chat_routes(
                 raise HTTPException(400, "temperature must be a number between 0 and 2")
         incognito = str(form_data.get("incognito", "")).lower() == "true"
         plan_mode = str(form_data.get("plan_mode") or (body or {}).get("plan_mode") or "").lower() == "true"
-        chat_mode = str(form_data.get("mode", "")).lower()  # 'chat' or 'agent'
+        chat_mode = str(form_data.get("mode") or (body or {}).get("mode") or "").lower()  # 'chat' or 'agent'
         client_runtime_context = None
         raw_client_runtime_context = (
             form_data.get("client_runtime_context")
@@ -4999,12 +4999,20 @@ def setup_chat_routes(
         async def _safe_stream() -> AsyncGenerator[str, None]:
             """Wrapper that guarantees _active_streams cleanup even if stream_with_save
             raises before reaching a mode-specific finally block."""
+            from src.chat_automation import current_turn, TurnEventObserver
+            producer_bound = current_turn()
+            producer_observer = TurnEventObserver(producer_bound) if producer_bound is not None else None
             try:
                 async for chunk in stream_with_save():
-                    yield chunk
+                    observed = producer_observer.feed(chunk) if producer_observer else chunk
+                    if observed:
+                        yield observed
+                if producer_observer:
+                    tail = producer_observer.finish()
+                    if tail:
+                        yield tail
             finally:
                 _active_streams.pop(session, None)
-                from src.chat_automation import current_turn
                 bound = current_turn()
                 if bound is not None:
                     bound.store.record(bound, "awaiting_input" if bound.pending_input_id else

@@ -643,6 +643,8 @@ class SessionManager:
             # Delete session
             db_session = db.query(DbSession).filter(DbSession.id == session_id).first()
             if db_session:
+                from src.decisions.observability import delete_observability_session
+                delete_observability_session(db, session_id)
                 db.delete(db_session)
 
             # Drop the in-memory copy even when there is no DB row. A "ghost"
@@ -795,6 +797,8 @@ class SessionManager:
                             continue  # Too young to delete
                     if db_session.id in self.sessions:
                         del self.sessions[db_session.id]
+                    from src.decisions.observability import delete_observability_session
+                    delete_observability_session(db, db_session.id)
                     db.delete(db_session)
                     stats['deleted_empty'] += 1
 

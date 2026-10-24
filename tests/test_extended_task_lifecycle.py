@@ -9,6 +9,25 @@ from src.decision_routing import prepare_tool_routing
 
 
 @pytest.mark.asyncio
+async def test_stale_structured_reply_cannot_supersede_current_question_or_spend(store):
+    first=await prepare_chat_turn(store,'alice',session(),'first task')
+    old=store.record_input(first,{'question':'First question?'})
+    second=await prepare_chat_turn(store,'alice',session(),'new task')
+    current=store.record_input(second,{'question':'Current question?'})
+    with pytest.raises(HTTPException):
+        await prepare_chat_turn(store,'alice',session(),'late answer',input_card_id=old)
+    assert second.current() and store.task_state('alice','a')['pending_question']['card_id']==current
+    with store.transaction() as db:
+        assert db.query(d.ChatAutomationSubmission).count()==2
+        assert db.query(d.ChatAutomationInputCard).filter_by(card_id=current).one().status=='pending'
+    accepted=await prepare_chat_turn(store,'alice',session(),'  current answer  ',input_card_id=current)
+    with store.transaction() as db:
+        card=db.query(d.ChatAutomationInputCard).filter_by(card_id=current).one()
+        assert card.status=='resolved' and card.answer=='  current answer  '
+        assert card.resolved_by_submission_id==accepted.run_id
+
+
+@pytest.mark.asyncio
 async def test_snapshot_precedes_superseding_and_completed_prose_is_historical(store):
     first = await prepare_chat_turn(store, 'alice', session(), '  Original task  ')
     store.record_answer(first, 'Would you like more?')

@@ -1228,6 +1228,11 @@ async def build_chat_context(
     # Build messages. In Nobody/incognito mode, never read saved session
     # history: the session id may be a temporary wrapper or, in buggy clients, a
     # stale normal session id. Only the ephemeral incognito transcript is safe.
+    from src.chat_automation import current_turn
+    from src.decision_routing import followup_context
+    relation = followup_context(current_turn()) if not incognito else None
+    if relation is not None:
+        preface.append(untrusted_context_message('task relationship (intent only)', json.dumps(relation, ensure_ascii=False)))
     messages = preface + (_incognito_messages(session_id) if incognito else sess.get_context_messages())
 
     # Current date/time — injected as a standalone *user*-role context message
@@ -1564,6 +1569,16 @@ def save_assistant_response(
     private enough.
     """
     md = dict(last_metrics) if last_metrics else {}
+    from src.chat_automation import current_turn
+    semantic_turn = current_turn()
+    if semantic_turn is not None and semantic_turn.session_id == session_id and not incognito:
+        # Persist the canonical card ID with real tool events, so history
+        # reload renders the same structured clarification as live SSE.
+        for event in (md.get('tool_events') or tool_events or []):
+            payload = event.get('ask_user') if isinstance(event, dict) else None
+            identifier = semantic_turn.store.record_input(semantic_turn, payload)
+            if identifier:
+                payload.update(input_card_id=identifier, session_id=session_id)
     def _model_value(value) -> str:
         if value is None:
             return ""

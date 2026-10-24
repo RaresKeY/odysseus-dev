@@ -226,7 +226,7 @@ class AutomationStore:
                     "last_explicit_mode": p.last_explicit_mode,
                     "elevation_ceiling": p.elevation_ceiling, **copy.deepcopy(config)}
 
-    def acquire(self, owner, session_id, raw_ask, entrypoint, submission_id=None, *, ephemeral_semantics=False):
+    def acquire(self, owner, session_id, raw_ask, entrypoint, submission_id=None, *, ephemeral_semantics=False, input_card_id=None):
         from src.owner_identity import effective_storage_owner
         owner = effective_storage_owner(owner)
         if owner is None:
@@ -249,8 +249,20 @@ class AutomationStore:
             previous = db.query(d.ChatAutomationSubmission).filter_by(
                 session_id=sid, owner_key=owner_key(owner)).order_by(
                     d.ChatAutomationSubmission.created_at.desc(), d.ChatAutomationSubmission.submission_id.desc()).first()
+            reply_card = None
+            if input_card_id is not None:
+                if not isinstance(input_card_id, str) or not 1 <= len(input_card_id) <= 128:
+                    raise HTTPException(422, "Invalid clarification card")
+                reply_card = db.query(d.ChatAutomationInputCard).filter_by(card_id=input_card_id,
+                    owner_key=owner_key(owner), session_id=sid).with_for_update().first()
+                if (reply_card is None or previous is None or previous.status != 'awaiting_input'
+                        or reply_card.submission_id != previous.submission_id
+                        or reply_card.status != 'pending' or reply_card.expires_at <= self.clock()):
+                    raise HTTPException(409, "Clarification expired; send a new message")
             chat_name = db.query(d.Session.name).filter_by(id=sid).scalar()
             ephemeral_semantics = ephemeral_semantics or str(chat_name or '').strip().casefold() in {'nobody', 'incognito'}
+            if reply_card is not None and ephemeral_semantics:
+                raise HTTPException(409, "Reply to this question outside private mode, or send a new message")
             prior_task = self._task_projection(db, previous) if previous and not ephemeral_semantics else {}
             # A new accepted ask supersedes old pending control cards as well as
             # an expired preparation. Late finally blocks may not revive them.
@@ -261,6 +273,8 @@ class AutomationStore:
             ).update({"status": "cancelled"}, synchronize_session=False)
             db.query(d.ChatAutomationInputCard).filter_by(session_id=sid, owner_key=owner_key(owner),
                 status='pending').update({'status': 'superseded'}, synchronize_session=False)
+            if reply_card is not None:
+                reply_card.status, reply_card.answer, reply_card.resolved_by_submission_id = 'resolved', raw_ask, identifier
             if lease is None:
                 lease = d.ChatAutomationLease(session_id=sid)
                 db.add(lease)
@@ -274,7 +288,8 @@ class AutomationStore:
                 session_id=sid, policy_revision=s.policy_revision, authority_epoch=p.authority_epoch,
                 intent_digest=digest(raw_ask), descriptor={}, status="preparing", created_at=self.clock(),
                 current_ask=None if ephemeral_semantics else raw_ask,
-                task_lineage_id=identifier, original_submission_id=identifier,
+                task_lineage_id=previous.task_lineage_id if reply_card is not None else identifier,
+                original_submission_id=previous.original_submission_id if reply_card is not None else identifier,
                 previous_submission_id=previous.submission_id if previous and not ephemeral_semantics else None,
                 prior_task=None if ephemeral_semantics else prior_task))
             return BoundChatTurn(self, owner, sid, identifier, token, raw_ask, policy,
@@ -711,11 +726,12 @@ def bound_session_view(session):
 
 async def prepare_chat_turn(store, owner, session, raw_ask, *, entrypoint="interactive", submission_id=None,
                             reasoning_effort=None, allow_empty=False, tool_inventory=None,
-                            preparation=None, decision_provider=None, supported_efforts=None, ephemeral_semantics=False):
+                            preparation=None, decision_provider=None, supported_efforts=None, ephemeral_semantics=False, input_card_id=None):
     if not isinstance(raw_ask, str) or (not raw_ask.strip() and not allow_empty) or len(raw_ask) > 50000:
         raise HTTPException(422, "Enter a nonblank message of at most 50000 characters")
     bound = store.acquire(owner, session.id, raw_ask, entrypoint, submission_id,
-        ephemeral_semantics=ephemeral_semantics or str(getattr(session, 'name', '') or '').strip().casefold() in {'nobody', 'incognito'})
+        ephemeral_semantics=ephemeral_semantics or str(getattr(session, 'name', '') or '').strip().casefold() in {'nobody', 'incognito'},
+        input_card_id=input_card_id)
     owner = bound.owner
     try:
         from src.decision_routing import preparation_receipt
@@ -734,8 +750,8 @@ async def prepare_chat_turn(store, owner, session, raw_ask, *, entrypoint="inter
                 raise
             # The optional module is absent in this pre-integration source.
         else:
-            observer = DecisionObservability(store.session_factory) if store.session_factory else default_observability()
-            observer.bind_turn(owner, session.id, bound.run_id)
+            observer = default_observability(store.session_factory)
+            observer.bind_turn(owner, session.id, bound.run_id, ephemeral=bound.ephemeral_semantics)
 
         effort = ""
         mode = str(getattr(session, "thinking_mode", "") or "")
@@ -795,8 +811,7 @@ async def prepare_chat_turn(store, owner, session, raw_ask, *, entrypoint="inter
             bound.descriptor['effort_support_source'] = 'owner_configured'
         if not bound.current():
             raise HTTPException(409, "Chat settings changed before submission")
-        if (tool_inventory is not None or bound.policy.get('tool_routing') == 'existing'
-                and (bound.policy.get('followup_enabled') or bound.policy.get('preparation_enabled'))):
+        if (tool_inventory is not None or bound.policy.get('followup_enabled') or bound.policy.get('preparation_enabled')):
             from src.decision_routing import prepare_tool_routing
             await prepare_tool_routing(bound, tool_inventory if tool_inventory is not None else [],
                                        provider=decision_provider, semantic_only=tool_inventory is None)
@@ -1011,7 +1026,7 @@ class TurnEventObserver:
 
     def finish(self):
         tail, self.buffer = self.buffer + self.decoder.decode(b'', final=True), ''
-        if self.answer:
+        if self.answer and not getattr(self.bound, '_canonical_answer_saved', False):
             self.bound.store.record_answer(self.bound, self.answer)
         return tail
 
@@ -1054,6 +1069,8 @@ def automation_ingress(session_manager):
                 data = dict(await request.form())
             if not isinstance(data, dict):
                 raise HTTPException(400, "A chat request must be an object")
+            if data.get('input_card_id') and (data.get('tool_approval_id') or not str(data.get('message') or '').strip()):
+                raise HTTPException(422, "A clarification needs a nonblank reply and cannot also approve an action")
             sid = data.get("session")
             if not sid:
                 return await func(request, *args, **kwargs)
@@ -1095,11 +1112,9 @@ def automation_ingress(session_manager):
                 bound = await prepare_chat_submission(store, owner, session, data["message"],
                     entrypoint="delegated" if is_delegated_credential(request) else "interactive",
                     submission_id=request.headers.get("X-Chat-Submission-Id"),
-                    reasoning_effort=data.get("reasoning_effort"), preparation=preparation, ephemeral_semantics=ephemeral_semantics)
+                    reasoning_effort=data.get("reasoning_effort"), preparation=preparation, ephemeral_semantics=ephemeral_semantics,
+                    input_card_id=data.get('input_card_id'))
             try:
-                if data.get('input_card_id'):
-                    store.resolve_input(owner, sid, data['input_card_id'], bound.raw_ask,
-                                        submission_id=bound.submission_id)
                 with bound.activate():
                     response = await func(request, *args, **kwargs)
                 if hasattr(response, "body_iterator"):

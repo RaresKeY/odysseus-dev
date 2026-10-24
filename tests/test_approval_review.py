@@ -83,6 +83,16 @@ def claim(grant, pending, **changes):
 
 @pytest.mark.asyncio
 async def test_real_mocked_http_call_grants_one_exact_action_and_dispatches_once(proposal, monkeypatch):
+    # This standalone MemoryAttemptStore exercise has no chat submission.
+    # Initialize its canonical SQL lookup boundary explicitly rather than
+    # relying on another test to create a process-global in-memory schema.
+    from core import database as database
+    from sqlalchemy import create_engine
+    from sqlalchemy.orm import sessionmaker
+    from sqlalchemy.pool import StaticPool
+    engine = create_engine('sqlite://', poolclass=StaticPool, connect_args={'check_same_thread': False})
+    database.Base.metadata.create_all(engine)
+    monkeypatch.setattr(database, 'SessionLocal', sessionmaker(bind=engine))
     store, pending, policy, _ = proposal
     attempts, requests = MemoryAttemptStore(), []
     def transport(request):
