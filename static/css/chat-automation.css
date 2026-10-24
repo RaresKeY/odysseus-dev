@@ -1,0 +1,18 @@
+.chat-automation-controls{display:flex;align-items:center;gap:10px;flex-wrap:wrap;margin:6px 12px;color:var(--fg);font-size:12px}
+.chat-automation-controls label{display:flex;align-items:center;gap:5px}
+.chat-automation-controls select,.chat-automation-controls button{font:inherit;color:inherit;background:var(--bg);border:1px solid color-mix(in srgb,var(--fg) 20%,transparent);border-radius:7px;padding:5px 7px}
+.chat-automation-controls [role=status]{opacity:.7;font-size:11px}
+#chat-automation-dialog{color:var(--fg);background:var(--bg);border:1px solid color-mix(in srgb,var(--fg) 25%,transparent);border-radius:14px;width:min(620px,calc(100vw - 28px));max-height:85vh;padding:20px;box-sizing:border-box}
+#chat-automation-dialog::backdrop{background:#0008}
+#chat-automation-dialog form{display:grid;gap:14px}
+#chat-automation-dialog p{margin:3px 0;font-size:12px;opacity:.75;line-height:1.5}
+#chat-automation-dialog h2{font-size:18px;margin:0}
+.chat-automation-heading{display:flex;align-items:center;justify-content:space-between;gap:12px}
+#chat-automation-dialog fieldset{border:1px solid color-mix(in srgb,var(--fg) 20%,transparent);border-radius:8px;display:grid;gap:10px;min-width:0}
+#chat-automation-dialog select,#chat-automation-dialog input:not([type=checkbox]),#chat-automation-dialog button{font:inherit;color:inherit;background:var(--bg);border:1px solid color-mix(in srgb,var(--fg) 25%,transparent);border-radius:6px;padding:7px;min-width:0}
+.chat-automation-route{display:grid;grid-template-columns:1fr 1fr 100px;gap:8px;margin:8px 0}
+.chat-automation-route label{display:grid;gap:5px;font-size:12px}
+.chat-automation-route strong{grid-column:1/-1;font-size:13px;font-weight:500}
+#chat-browser-screenshot{max-width:100%;border-radius:6px}
+.chat-automation-controls :focus-visible,#chat-automation-dialog :focus-visible{outline:2px solid var(--accent,#69a9ed);outline-offset:2px}
+@media(max-width:540px){.chat-automation-controls{gap:7px;margin:5px 8px}.chat-automation-route{grid-template-columns:1fr}.chat-automation-controls [role=status]{flex-basis:100%}#chat-automation-dialog{padding:14px}}

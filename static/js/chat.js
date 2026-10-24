@@ -1535,8 +1535,8 @@ import { invalidateSettings } from './appConfig.js';
     const saved = _readPersistedQueuedRequests()[sid];
     if (!Array.isArray(saved) || !saved.length) return;
     for (const raw of saved) {
-      const message = String(raw?.message || '').trim();
-      if (!message) continue;
+      const message = String(raw?.message || '');
+      if (!message.trim()) continue;
       const item = {
         id: String(raw?.id || `q${++_queuedRequestSeq}`),
         message,
@@ -1718,7 +1718,7 @@ import { invalidateSettings } from './appConfig.js';
     _persistQueuedRequests();
     return {
       id: items.map(item => item.id).join(','),
-      message: items.map(item => String(item.message || '').trim()).filter(Boolean).join('\n\n'),
+      message: items.map(item => String(item.message || '')).filter(text => text.trim()).join('\n\n'),
       createdAt: items[0]?.createdAt || Date.now(),
     };
   }
@@ -1772,8 +1772,8 @@ import { invalidateSettings } from './appConfig.js';
   }
 
   function _queueAgentRequest(message) {
-    const msg = String(message || '').trim();
-    if (!msg) return false;
+    const msg = String(message || '');
+    if (!msg.trim()) return false;
     const item = { id: `q${++_queuedRequestSeq}`, message: msg, createdAt: Date.now(), sessionId: _queuedSessionId(), el: null };
     item.el = _createQueuedBubble(item);
     _queuedAgentRequests.push(item);
@@ -1785,8 +1785,8 @@ import { invalidateSettings } from './appConfig.js';
   export function queueStreamingComposerRequest() {
     if (!isStreaming) return false;
     const queuedInput = uiModule.el('message');
-    const queuedText = (queuedInput && queuedInput.value || '').trim();
-    if (!queuedText) return false;
+    const queuedText = (queuedInput && queuedInput.value || '');
+    if (!queuedText.trim()) return false;
     if (fileHandlerModule.getPendingCount && fileHandlerModule.getPendingCount()) {
       try { uiModule.showError && uiModule.showError('Finish the current response before queueing messages with attachments.'); } catch (_) {}
       return true;
