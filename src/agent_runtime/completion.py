@@ -2,7 +2,8 @@
 
 Tool, progress and interaction events stay live. Answer deltas are held until
 the generator unwinds so a later replacement cannot conceal an earlier false
-claim. This consumes no provider calls. Cancellation closes the inner generator
+claim. Optional semantic advice may veto an evidence-backed completion claim.
+Cancellation closes the inner generator
 under the same journal/turn authority; it never emits a successful terminal event.
 """
 from __future__ import annotations
@@ -334,6 +335,13 @@ def with_completion_gate(func):
             if provider_error:
                 decision = replace(decision, status=CompletionStatus.FAILED,
                                    can_complete=False, reason='Model request failed')
+            from src.chat_automation import current_turn
+            from src.decision_advice import completion_advice
+            automation_turn = current_turn()
+            decision, semantic_advice = await completion_advice(
+                automation_turn if parent is None else None, decision, ledger, journal, answer)
+            if semantic_advice['status'] != 'disabled':
+                yield _event({'type': 'completion_advice', 'data': semantic_advice})
             # Exhaustion limits execution; factual source synthesis can remain
             # useful and must not be replaced merely because the budget ended.
             presentation_decision = ledger.evaluate(awaiting_user=awaiting) if exhausted and not provider_error else decision
@@ -351,6 +359,15 @@ def with_completion_gate(func):
             if reason and _execution_obligation(requirements) and decision.can_complete and decision.status == CompletionStatus.UNVERIFIED:
                 decision = CompletionDecision(CompletionStatus.UNVERIFIED, False, reason,
                                               decision.evidence_ids, decision.missing_artifacts)
+            if automation_turn is not None and parent is None:
+                try:
+                    from src.decision_handoff import completion_checkpoint
+                    checkpoint = completion_checkpoint(automation_turn, decision, ledger, journal)
+                    yield _event({'type': 'task_checkpoint', 'data': checkpoint})
+                except Exception:
+                    # Persistence failure is a truthful missing observation;
+                    # it never resends a tool or changes execution accounting.
+                    yield _event({'type': 'task_checkpoint', 'data': {'status': 'unavailable', 'executable': False}})
             released_at = perf_counter()
             if not provider_error:
                 yield _event({'type': 'completion_decision', 'data': decision.to_dict()})
@@ -388,7 +405,8 @@ def with_completion_gate(func):
                 metadata['completion_gate'] = {
                     'buffer_seconds': released_at - first_answer_at if first_answer_at is not None else 0,
                     'first_visible_answer_seconds': released_at - started,
-                    'additional_provider_calls': 0,
+                    'additional_provider_calls': semantic_advice['additional_provider_calls'],
+                    'semantic_advice': semantic_advice,
                     'answer_replaced': replaced_answer,
                 }
                 if replaced_answer:

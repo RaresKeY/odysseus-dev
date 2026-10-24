@@ -3076,6 +3076,23 @@ def setup_chat_routes(
             last_user_message=message,
         )
         allow_tool_preprocessing = not pre_context_tool_policy.block_all_tool_calls
+        # Freeze general decision routing before context can fetch/search/read.
+        # Context preprocessing has only a coarse boolean admission surface;
+        # explicit selections therefore leave tool work to the guarded loop.
+        from src.chat_tool_routing import prepare_http_selection
+        from src.decisions import DecisionError
+        try:
+            _general_selection = await prepare_http_selection(
+                request, sess, message, agent_mode=(chat_mode == "agent"),
+                policy=pre_context_tool_policy, allow_bash=allow_bash,
+                web_enabled=_search_enabled, plan_mode=plan_mode, incognito=incognito,
+                compare_mode=compare_mode, workspace=workspace,
+                active_email=bool(active_email_ctx and active_email_ctx.get("uid")))
+        except DecisionError:
+            raise HTTPException(409, "Tool choice could not be verified. Choose existing routing or adjust the request; no automatic retry was made.") from None
+        if _general_selection is not None:
+            allow_tool_preprocessing = False
+            do_research = False
         foreground_policy = resolve_foreground_model_policy(
             owner=owner,
             allowed_models=_allowed_models_for_request(request),
@@ -3788,6 +3805,10 @@ def setup_chat_routes(
                 warm_tools=_warm_tools,
                 message=message, history=getattr(sess, "history", []) or [],
             )
+            from src.chat_automation import current_turn
+            from src.chat_tool_routing import selected_contract, selected_policy
+            _contract_policy = selected_policy(_contract_policy, current_turn())
+            _turn_contract = selected_contract(_turn_contract, current_turn(), _contract_policy)
             _request_authority = _request_authority.restrict(_contract_policy)
             # Resolution already applies user, owner, and global policy. An
             # admitted tool must not later be rejected by the stale
@@ -3874,6 +3895,8 @@ def setup_chat_routes(
                         user_text=message,
                         browser_requested=_explicit_browser_intent,
                     )
+            # Compact/full experiments cannot expand the frozen chat selection.
+            _turn_contract = selected_contract(_turn_contract, current_turn(), _contract_policy)
             # Every recovery path receives the same scope denial. The central
             # dispatcher also checks the immutable contract after rewrites.
             disabled_tools.update(
@@ -5069,7 +5092,8 @@ def setup_chat_routes(
                 from src.chat_automation import current_turn
                 bound = current_turn()
                 if bound is not None:
-                    bound.store.record(bound, "awaiting_approval" if bound.pending else "completed")
+                    bound.store.record(bound, "awaiting_input" if bound.pending_input_id else
+                                       "awaiting_approval" if bound.pending else "completed")
 
         # Compare panes and explicitly unattended native clients are
         # short-lived, single-shot generations with nobody to resume them.

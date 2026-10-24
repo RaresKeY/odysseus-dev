@@ -1842,6 +1842,17 @@ async def execute_tool_block(
     # Credential denial precedes authority, exact approval claim and bridges.
     from src.owner_identity import effective_storage_owner
     owner = effective_storage_owner(owner) or owner
+    from src.chat_tool_routing import selection_for
+    selection = selection_for(_bound_chat_turn())
+    if selection is not None:
+        selection.validate(_bound_chat_turn())
+        from src.turn_contract import canonical_tool
+        if canonical_tool(getattr(block, "tool_type", "")) not in {
+                canonical_tool(n) for n in selection.selected_names}:
+            return f"{getattr(block, 'tool_type', '')}: not selected", {
+                "error": "This tool is outside the current message's selected tools.",
+                "exit_code": 1, "blocked": True, "executed": False,
+                "failure_kind": "tool_selection_denied"}
     if _bound_chat_turn() is None and session_id and getattr(block, "tool_type", None) not in {"ask_user", "update_plan"}:
         # Saved chat/task grants predate this contract. They cannot invent a
         # fresh user turn or inherit its mode/elevation across an unattended

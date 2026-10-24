@@ -781,6 +781,9 @@ app.include_router(setup_skills_routes(skills_manager))
 # Chat
 from routes.chat_automation_routes import setup_chat_automation_routes
 app.include_router(setup_chat_automation_routes(session_manager))
+from routes.decision_activity import setup_decision_activity_routes
+_decision_activity_router = setup_decision_activity_routes(session_manager)
+app.include_router(_decision_activity_router)
 from routes.browser_control_routes import setup_browser_control_routes
 app.include_router(setup_browser_control_routes())
 from routes.chat_routes import setup_chat_routes
@@ -1192,7 +1195,11 @@ async def _lifespan(app):
     """Modern lifespan context manager replacing deprecated @app.on_event."""
     # ── STARTUP ──
     await _startup_event()
-    yield
+    # This application assigns its lifespan after include_router, so explicitly
+    # enter the decision router's retention owner instead of losing its merged
+    # lifespan during that assignment.
+    async with _decision_activity_router.lifespan_context(app):
+        yield
     # ── SHUTDOWN ──
     await _shutdown_event()
 

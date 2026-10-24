@@ -94,7 +94,7 @@ from src.text_scanning import (
     iter_markdown_links,
     replace_markdown_links_with_labels,
 )
-from src.turn_contract import selected_tools_for_request, with_turn_contract
+from src.turn_contract import selected_tools_for_request, with_turn_contract, canonical_tool
 from src.agent_runtime.journal import propose_action, execute_action
 from src.agent_runtime.completion import with_completion_gate
 from src.agent_runtime.runtime_selection import is_compact_preview_contract
@@ -21294,6 +21294,20 @@ async def stream_agent_loop(
       - data: [DONE]                                        (end)
     """
 
+    # Decision routing is explicit even when its selected set is empty. Apply
+    # it before compact delegation, shortcuts, RAG and any recovery machinery.
+    from src.chat_automation import current_turn
+    from src.chat_tool_routing import selection_for, selected_policy, selected_contract
+    _decision_bound = current_turn()
+    _decision_selection = selection_for(_decision_bound)
+    if _decision_selection is not None:
+        tool_policy = selected_policy(tool_policy or build_effective_tool_policy(), _decision_bound)
+        disabled_tools = set(disabled_tools or ()) | tool_policy.all_disabled_names()
+        relevant_tools = set(_decision_selection.selected_names)
+        turn_contract = selected_contract(turn_contract, _decision_bound, tool_policy)
+        if forced_tools is not None:
+            forced_tools = set(forced_tools) & relevant_tools
+
     # Caller and credential denials remain absolute across contract routing.
     disabled_tools = set(disabled_tools or ())
     if delegated_credential:
@@ -25340,7 +25354,10 @@ async def stream_agent_loop(
         # visibility is not authority: both the loop and dispatcher still gate
         # execution, and only a one-use server record can cross that boundary.
         return [schema for schema in schemas or ()
-                if schema.get("function", {}).get("name", schema.get("name")) not in _caller_hard_denials
+                if (_decision_selection is None or canonical_tool(
+                    schema.get("function", {}).get("name", schema.get("name")))
+                    in {canonical_tool(n) for n in _decision_selection.selected_names})
+                and schema.get("function", {}).get("name", schema.get("name")) not in _caller_hard_denials
                 and not (tool_policy and tool_policy.block_all_tool_calls)
                 and not (delegated_credential and delegated_tool_is_blocked(
                     schema.get("function", {}).get("name", schema.get("name"))))]

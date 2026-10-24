@@ -1,10 +1,13 @@
 import sessions from './sessions.js';
+import './decision-activity.js';
 
 const $ = id => document.getElementById(id);
 const categories = [['established_procedure','Established procedure'],['bounded_domain','Bounded domain'],['approach_discovery','Approach discovery']];
 let policy, configuration, endpoints = [], sequence = 0;
 let settingsWrite = Promise.resolve(true);
 let navigationGeneration = 0;
+let settingsChatId = null, settingsNavigation = 0;
+let activity = null, activitySessionId = null;
 export async function whenAutomationSettingsReady() {
   const ready = await settingsWrite;
   if (!ready) settingsWrite = Promise.resolve(true);
@@ -45,8 +48,9 @@ async function currentChat() {
 function render() {
   $('chat-approval-mode').value = policy?.approval_mode || configuration?.last_explicit_mode || 'always_ask';
   $('chat-route-mode').value = policy?.route_mode || 'manual';
+  $('chat-tool-routing').value = policy?.tool_routing || 'existing';
   const roots = policy?.effective_roots || [];
-  $('chat-automation-state').textContent = roots.length ? `${roots.length} extra folder(s) requested · sandbox checked at execution` : 'Workspace scope requested · sandbox checked at execution';
+  $('chat-automation-state').textContent = policy?.restriction || (roots.length ? `${roots.length} extra folder(s) allowed` : 'Workspace only');
   $('chat-automation-state').title = 'Actual execution requires a working sandbox. YOLO skips discretionary approval within the current permissions.';
 }
 async function refresh() {
@@ -56,12 +60,14 @@ async function refresh() {
     const chat = id ? await api(`/api/session/${encodeURIComponent(id)}/automation`) : null;
     if (ticket !== sequence || id !== sid()) return;
     configuration = config; policy = chat; render();
+    if(activitySessionId!==id){activity?.destroy();activity=null;activitySessionId=id;if(id)activity=window.DecisionActivity?.mount($('chat-decision-activity'),id);}
   } catch(e) { if(ticket===sequence) $('chat-automation-state').textContent=e.message; }
 }
 function changeChat(changes) {
   const requestedId=sid(), requestedNavigation=navigationGeneration;
   return writeSettings(async()=>{
     $('chat-approval-mode').disabled=$('chat-route-mode').disabled=true;
+    $('chat-tool-routing').disabled=true;
     $('chat-automation-default').disabled=true;
     $('chat-automation-state').textContent='Saving chat settings…';
     try {
@@ -70,7 +76,7 @@ function changeChat(changes) {
       const previous=policy?.session_id===id ? policy : await api(`/api/session/${encodeURIComponent(id)}/automation`);
       const saved=await api(`/api/session/${encodeURIComponent(id)}/automation`,'PUT',{policy_revision:previous.policy_revision,changes});
       if(id===sid() && ticket===sequence){++sequence;policy=saved;render();}else await refresh();
-    } finally {$('chat-approval-mode').disabled=$('chat-route-mode').disabled=false;$('chat-automation-default').disabled=false;}
+    } finally {$('chat-approval-mode').disabled=$('chat-route-mode').disabled=false;$('chat-tool-routing').disabled=false;$('chat-automation-default').disabled=false;}
   });
 }
 function routeFields(key, title, value={}) {
@@ -83,13 +89,23 @@ function routeFields(key, title, value={}) {
   const model=document.createElement('input');model.dataset.field='model';model.value=value.model||'';model.autocomplete='off';model.setAttribute('list',`chat-models-${key}`);label('Model',model);
   const list=document.createElement('datalist');list.id=`chat-models-${key}`;row.append(list);
   const options=()=>{list.replaceChildren();(endpoints.find(e=>e.id===endpoint.value)?.models||[]).forEach(m=>list.append(new Option(m)));};endpoint.addEventListener('change',options);options();
-  if(key!=='decision') {const effort=document.createElement('select');effort.dataset.field='reasoning_effort';[['','Default'],...['none','minimal','low','medium','high','xhigh','max'].map(v=>[v,v])].forEach(([v,t])=>effort.append(new Option(t,v)));effort.value=value.reasoning_effort||'';label('Effort',effort);}
+  if(key!=='decision') {
+    const effort=document.createElement('select');effort.dataset.field='reasoning_effort';
+    [['','Default'],...['none','minimal','low','medium','high','xhigh','max'].map(v=>[v,v])].forEach(([v,t])=>effort.append(new Option(t,v)));
+    effort.value=value.reasoning_effort||'';label('Effort',effort);
+    const supported=document.createElement('input');supported.dataset.field='supported_efforts';
+    supported.value=(value.supported_efforts||[]).join(', ');supported.placeholder='low, medium, high';
+    supported.title='Optional choices you have configured for this endpoint and model. These are not automatically verified provider capabilities.';
+    label('Supported effort choices (optional)',supported);supported.parentElement.className='chat-automation-supported';
+  }
   return row;
 }
 function readRoute(key) {
   const row=document.querySelector(`[data-route="${key}"]`), result={};
   row.querySelectorAll('[data-field]').forEach(e=>result[e.dataset.field]=e.value);
   if('reasoning_effort' in result && !result.reasoning_effort) result.reasoning_effort=null;
+  if(result.supported_efforts?.trim()) result.supported_efforts=result.supported_efforts.split(',').map(v=>v.trim());
+  else delete result.supported_efforts;
   return result;
 }
 async function openSettings() {
@@ -103,12 +119,15 @@ async function openSettings() {
     $('chat-decision-route').replaceChildren(routeFields('decision','Review and approach decisions',configuration.decision_provider));
     $('chat-decision-protocol').value=configuration.decision_provider?.protocol||'openai_json';
     $('chat-approach-routes').replaceChildren(...categories.map(([key,title])=>routeFields(key,title,configuration.approaches?.[key])));
+    $('chat-effort-mode').value=policy?.effort_mode||'mapped';
+    for(const name of ['followup','preparation','completion-advice']) $( `chat-${name}-enabled`).checked=!!policy?.[name.replaceAll('-','_')+'_enabled'];
+    settingsChatId=sid();settingsNavigation=navigationGeneration;
     message('');$('chat-automation-dialog').showModal();
   } catch(e){$('chat-automation-state').textContent=e.message;}
 }
 async function initialize(){
   if(!$('chat-approval-mode'))return;
-  for(const [id,key] of [['chat-approval-mode','approval_mode'],['chat-route-mode','route_mode']]) $(id).addEventListener('change',async e=>{const value=e.target.value;e.target.disabled=true;try{await changeChat({[key]:value});}catch(error){$('chat-automation-state').textContent=error.message;await refresh();}finally{e.target.disabled=false;}});
+  for(const [id,key] of [['chat-approval-mode','approval_mode'],['chat-route-mode','route_mode'],['chat-tool-routing','tool_routing']]) $(id).addEventListener('change',async e=>{const value=e.target.value;e.target.disabled=true;try{await changeChat({[key]:value});}catch(error){$('chat-automation-state').textContent=error.message;await refresh();}finally{e.target.disabled=false;}});
   $('chat-automation-settings').addEventListener('click',openSettings);
   $('chat-automation-default').addEventListener('click',async()=>{try{await changeChat({approval_mode:$('chat-approval-mode').value});await refresh();$('chat-automation-state').textContent='New chats will use this approval mode.';}catch(e){$('chat-automation-state').textContent=e.message;await refresh();}});
   $('chat-automation-close').addEventListener('click',()=>$('chat-automation-dialog').close());
@@ -117,7 +136,23 @@ async function initialize(){
   async function viewBrowser(){const result=await api((await browserPath())+'/view');$('chat-browser-screenshot').src=result.screenshot.url;$('chat-browser-screenshot').hidden=false;$('chat-browser-status').textContent='You have control. This is a current browser image; automation’s previous targets have been invalidated.';const obs=result.observation;$('chat-browser-targets').replaceChildren();(obs.elements||[]).filter(n=>!n.disabled).forEach(node=>{const button=document.createElement('button');button.type='button';button.textContent=(node.editable?'Fill: ':'Click: ')+(node.label||node.role||'Unnamed target');button.addEventListener('click',async()=>{try{await api((await browserPath())+'/action','POST',{action:node.editable?'fill':'click',page:'t1',observation:obs.observation,ref:node.ref,...(node.editable?{value_id:node.label}:{})});await viewBrowser();}catch(e){$('chat-browser-status').textContent=e.message;}});$('chat-browser-targets').append(button);});}
   for(const [id,handler] of [['chat-browser-open',async()=>{await api(await browserPath(),'POST');$('chat-browser-status').textContent='Browser opened. Choose a page and allowed actions before using it.';}],['chat-browser-close',async()=>{const result=await api(await browserPath(),'DELETE');$('chat-browser-status').textContent=result.status==='closed'?'Browser closed.':'Browser cleanup is incomplete.';$('chat-browser-screenshot').hidden=true;$('chat-browser-targets').replaceChildren();}],['chat-browser-scope',async()=>{await api((await browserPath())+'/scope','POST',browserScope());$('chat-browser-status').textContent='Allowed for your next message for two minutes. Only the selected site and actions are permitted.';}],['chat-browser-navigate',async()=>{await api((await browserPath())+'/scope','POST',browserScope());await api((await browserPath())+'/action','POST',{action:'navigate',page:'t1',url:$('chat-browser-url').value});await viewBrowser();}],['chat-browser-view',viewBrowser]]) $(id).addEventListener('click',async()=>{try{await handler();}catch(e){$('chat-browser-status').textContent=e.message;}});
   $('chat-elevation-save').addEventListener('click',async()=>{try{const roots=[...$('chat-elevation-folders').querySelectorAll('label')].filter(l=>l.querySelector('input').checked).map(l=>({path:l.querySelector('input').value,access:l.querySelector('select').value}));await changeChat({elevation_roots:roots});$('chat-elevation-status').textContent='Folder grant saved for this chat for one hour.';}catch(e){$('chat-elevation-status').textContent=e.message;}});
-  $('chat-automation-form').addEventListener('submit',async e=>{e.preventDefault();const button=e.submitter;button.disabled=true;try{const changes={elevation_ceiling:$('chat-elevation-ceiling').checked};const decision=readRoute('decision');if(decision.endpoint_id||decision.model)changes.decision_provider={...decision,protocol:$('chat-decision-protocol').value,timeout_seconds:30,max_calls:32};const mappings=Object.fromEntries(categories.map(([key])=>[key,readRoute(key)]));if(Object.values(mappings).some(m=>m.endpoint_id||m.model))changes.approaches=mappings;configuration=await api('/api/chat-settings','PUT',{revision:configuration.revision,changes});await refresh();message('Settings saved. New messages use the committed selection.');}catch(error){message(error.message);}finally{button.disabled=false;}});
+  $('chat-automation-form').addEventListener('submit',async e=>{
+    e.preventDefault(); const button=e.submitter; if(button)button.disabled=true;
+    try {
+      if(settingsChatId!==sid() || settingsNavigation!==navigationGeneration) throw new Error('The chat changed. Close settings and open them again.');
+      const chatChanges={effort_mode:$('chat-effort-mode').value};
+      for(const name of ['followup','preparation','completion-advice']) chatChanges[name.replaceAll('-','_')+'_enabled']=$(`chat-${name}-enabled`).checked;
+      const changes={elevation_ceiling:$('chat-elevation-ceiling').checked};
+      const decision=readRoute('decision');
+      if(decision.endpoint_id||decision.model) changes.decision_provider={...decision,protocol:$('chat-decision-protocol').value,timeout_seconds:30,max_calls:32};
+      const mappings=Object.fromEntries(categories.map(([key])=>[key,readRoute(key)]));
+      if(Object.values(mappings).some(m=>m.endpoint_id||m.model)) changes.approaches=mappings;
+      const revision=configuration.revision;
+      await changeChat(chatChanges);
+      configuration=await writeSettings(()=>api('/api/chat-settings','PUT',{revision,changes}));
+      await refresh(); message('Settings saved. New messages use the committed choices.');
+    } catch(error) { message(error.message); } finally {if(button)button.disabled=false;}
+  });
   window.addEventListener('odysseus:session-changed',()=>{++navigationGeneration;policy=null;refresh();});
   window.addEventListener('odysseus:automation-changed',refresh);
   document.addEventListener('visibilitychange',()=>{if(!document.hidden)refresh();});
