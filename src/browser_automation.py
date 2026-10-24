@@ -7,9 +7,13 @@ Only trusted server code supplies BrowserTaskGrant and prepared values.
 from __future__ import annotations
 
 import asyncio
+import copy
 import hashlib
 import json
+import re
 import time
+from collections.abc import Mapping
+from urllib.parse import quote, quote_plus
 
 from src.browser_pipe import BrowserPipeError, BrowserTaskGrant, digest
 
@@ -17,12 +21,30 @@ MAX_REQUEST_BYTES = 12_000
 SHORTLIST = 12
 
 
-def redact(value, grant):
-    text = str(value)
+def redact_prepared_evidence(value, grant):
+    """Project review/decision evidence without locally prepared field values.
+
+    This never changes the host's captured target table or dispatched input.
+    A page may echo a value in text, labels, or an encoded URL after a fill.
+    """
+    if isinstance(value, Mapping):
+        return {key: redact_prepared_evidence(item, grant) for key, item in value.items()}
+    if isinstance(value, (list, tuple)):
+        return [redact_prepared_evidence(item, grant) for item in value]
+    if not isinstance(value, str):
+        return value
+    text = value
     for prepared in grant.prepared_values.values():
         if prepared:
-            text = text.replace(prepared, '[prepared value]')
+            variants = {prepared, quote(prepared, safe=''), quote_plus(prepared, safe=''), quote(prepared), quote_plus(prepared)}
+            variants |= {re.sub(r'%[A-Fa-f0-9]{2}', lambda match: match[0].lower(), item) for item in variants}
+            for item in sorted(variants, key=len, reverse=True):
+                text = text.replace(item, '[prepared value]')
     return text
+
+
+def redact(value, grant):
+    return redact_prepared_evidence(str(value), grant)
 
 
 def candidates(record, grant):
@@ -80,11 +102,14 @@ def decision_packet(record, grant, goal, history, offset=0):
                               'allowed_effects': sorted(grant.allowed_effects)},
              'untrusted_page': {k: redact(observation[k], grant) for k in ('url', 'title', 'text', 'ready')},
              'recent_outcomes': history[-3:], 'omitted_targets': max(0, len(available) - len(shortlist))}
+    state, descriptions = redact_prepared_evidence(state, grant), redact_prepared_evidence(descriptions, grant)
     # No prepared text, form data, cookies, raw CDP identities or node handles.
-    encoded = json.dumps({'state': state, 'choices': descriptions}, ensure_ascii=False).encode()
-    if len(encoded) > MAX_REQUEST_BYTES:
-        raise BrowserPipeError('browser_decision_packet_oversized')
-    return state, descriptions, offered
+    from src.automation_catalog import CatalogError, compact_catalog
+    try:
+        return compact_catalog(state, descriptions, offered,
+            max_request_bytes=MAX_REQUEST_BYTES, max_candidates=SHORTLIST + 5)
+    except CatalogError as error:
+        raise BrowserPipeError(error.code) from None
 
 
 def completion_checks(record, checks):
@@ -93,7 +118,7 @@ def completion_checks(record, checks):
     packet = record.current.packet
     results = []
     for check in checks:
-        if not isinstance(check, dict) or set(check) != {'kind', 'value'} or not isinstance(check['value'], str) or len(check['value']) > 1000:
+        if not isinstance(check, Mapping) or set(check) != {'kind', 'value'} or not isinstance(check['value'], str) or len(check['value']) > 1000:
             raise ValueError('Invalid browser completion check')
         kind, value = check['kind'], check['value']
         if kind == 'text_contains':
@@ -108,7 +133,7 @@ def completion_checks(record, checks):
     return results
 
 
-async def run(record, goal, grant, provider, provider_config, decision_context, dispatch, *, initial_url=None, checks=(), max_steps=20, screenshot_store=None, wall_seconds=120, clock=time.monotonic):
+async def run(record, goal, grant, provider, provider_config, decision_context, dispatch, *, initial_url=None, checks=(), max_steps=20, wall_seconds=120, clock=time.monotonic):
     """One bounded task; each chosen operation crosses the supplied dispatcher.
 
     ``dispatch(args, grant)`` returns the real canonical tool result. It may
@@ -130,8 +155,19 @@ async def run(record, goal, grant, provider, provider_config, decision_context, 
     screenshot = {'available': False, 'reason': 'not_captured'}
     attempts = []
     pending_card = None
+    last_page, last_document, images = None, None, []
+    def document_key():
+        current = record.current
+        return (current.target, current.loader, current.context_unique_id, current.epoch, current.nonce) if current is not None else None
     async def bounded(awaitable):
-        async with asyncio.timeout(max(.001, wall_seconds - (clock() - started))):
+        remaining = wall_seconds - (clock() - started)
+        if remaining <= 0:
+            # Do not begin a new child after the budget is spent. Closing a
+            # not-yet-started coroutine avoids an unawaited-coroutine leak.
+            if hasattr(awaitable, 'close'):
+                awaitable.close()
+            raise TimeoutError()
+        async with asyncio.timeout(remaining):
             return await awaitable
     try:
         from src.decisions import DecisionRequest
@@ -159,6 +195,10 @@ async def run(record, goal, grant, provider, provider_config, decision_context, 
                 stop = 'human_approval_required'; break
             if observation.get('exit_code') not in (None, 0) or observation.get('executed') is not True:
                 stop = observation.get('failure_kind', 'observation_failed'); break
+            last_document = document_key()
+            if last_document is None or record.task_grant is not grant:
+                raise BrowserPipeError('browser_observation_stale')
+            last_page = copy.deepcopy(record.public_observation())
             latest_checks = completion_checks(record, checks)
             if latest_checks and all(item['passed'] for item in latest_checks):
                 stop = 'conditions_met'; break
@@ -175,6 +215,13 @@ async def run(record, goal, grant, provider, provider_config, decision_context, 
             decisions += 1
             attempts.append({'attempt_id': result.attempt_id, 'usage': result.usage,
                              'provider_identity': result.provider_identity})
+            if clock() - started >= wall_seconds:
+                stop = 'time_limit'; break
+            grant.check(record.owner, record.thread_id)
+            if record.task_grant is not grant:
+                raise BrowserPipeError('browser_task_revoked')
+            if document_key() != last_document:
+                raise BrowserPipeError('stale_observation')
             if result.choice not in offered:
                 stop = 'decision_invalid'; break
             if result.choice in {'HANDOFF', 'DONE', 'BLOCKED'}:
@@ -202,6 +249,8 @@ async def run(record, goal, grant, provider, provider_config, decision_context, 
     except asyncio.CancelledError:
         stop = 'cancelled'
         record.invalidate_document()
+        if record.task_grant is grant:
+            record.task_grant = None
         raise
     except BrowserPipeError as error:
         stop = 'effect_indeterminate' if error.indeterminate else error.code
@@ -209,26 +258,44 @@ async def run(record, goal, grant, provider, provider_config, decision_context, 
         stop = 'time_limit'
     except Exception:
         stop = 'decision_unresolved'
+    # The final read has the same exact action approval, run deadline and
+    # observed-document binding as every other child. Never inspect a newer
+    # human document or take unapproved pixels after an initial pending card.
+    try:
+        if (record.live and record.task_grant is grant and last_document is not None
+                and document_key() == last_document
+                and stop in {'done', 'handoff', 'blocked', 'conditions_met', 'uncertain', 'repeated_packet', 'step_limit'}
+                and clock() - started < wall_seconds):
+            captured = await bounded(dispatch({'action': 'screenshot', 'page': 't1',
+                'observation': last_document[-1]}, grant))
+            if captured.get('approval_required'):
+                pending_card, stop = captured.get('ask_user'), 'human_approval_required'
+                screenshot = {'available': False, 'reason': 'human_approval_required'}
+            elif captured.get('executed') is True and captured.get('exit_code') == 0 and record.task_grant is grant and document_key() == last_document:
+                screenshot = {'available': True, **captured.get('screenshot', {})}
+                images = captured.get('images', [])
+            else:
+                screenshot = {'available': False, 'reason': captured.get('failure_kind', 'capture_unavailable')}
+        else:
+            screenshot = {'available': False, 'reason': stop if stop == 'human_approval_required' else 'no_current_admitted_observation'}
+    except (Exception, asyncio.CancelledError) as error:
+        screenshot = {'available': False, 'reason': getattr(error, 'code', 'capture_unavailable')}
+        if isinstance(error, asyncio.CancelledError):
+            if record.task_grant is grant:
+                record.task_grant = None
+            raise
     finally:
         # An old run cannot remove a newer run's task capability.
         if record.task_grant is grant and stop != 'human_approval_required':
             record.task_grant = None
-    if record.live:
-        try:
-            captured = (await record.screenshot())['screenshot']
-            writer = screenshot_store or record.artifact_writer
-            if writer is not None:
-                screenshot = {'available': True, **await writer(captured)}
-            else:
-                screenshot = {'available': False, 'reason': 'artifact_store_unavailable'}
-        except Exception as error:
-            screenshot = {'available': False, 'reason': getattr(error, 'code', 'capture_unavailable')}
     result = {'status': 'awaiting_approval' if stop == 'human_approval_required' else 'awaiting_review', 'stop_reason': stop, 'executor': 'decision_provider', 'run_id': grant.run_id,
             'decisions_completed': decisions, 'actions_executed': actions, 'recent_outcomes': history[-3:],
             'decision_attempts': attempts, 'usage_scope': 'browser_choices_only; canonical_ledger_accounts_for_action_reviews',
             'checks': latest_checks, 'screenshot': screenshot, 'handoff_required': True,
             'producer_namespace': 'native:odysseus-cdp-pipe', 'producer_version': '1',
-            'completion_verified': False, 'page': record.public_observation() if record.current and record.live else None}
+            'completion_verified': False, 'page': last_page}
+    if images:
+        result['images'] = images
     if stop == 'human_approval_required':
         # Preserve the canonical public card at the tool boundary. A reason
         # string alone cannot drive the chat approval UI or exact continuation.
@@ -256,10 +323,17 @@ async def execute_automation(record, bound, args, ctx):
     context = runtime['decision_context']
     if (context.owner, context.session_id, context.run_id) != (bound.owner, bound.thread_id, grant.run_id):
         raise BrowserPipeError('browser_decision_binding_changed')
+    initial_url = args.get('url')
+    if initial_url is None and not grant.permits_navigation(record.document_url) and len(grant.navigation_urls) == 1:
+        initial_url = next(iter(grant.navigation_urls))
     result = await run(record, args.get('goal'), grant, runtime['provider'], runtime['config'], context,
-                       runtime['dispatch'], initial_url=args.get('url'), max_steps=args.get('max_steps', 20))
+                       runtime['dispatch'], initial_url=initial_url, checks=grant.completion_checks,
+                       max_steps=args.get('max_steps', 20))
+    images = result.pop('images', [])
     output = {'output': json.dumps(result, allow_nan=False), 'exit_code': 0,
               'executed': True, 'actor': 'decision_provider', 'browser_handoff': result}
+    if images:
+        output['images'] = images
     if result.get('approval_required'):
         output.update(approval_required=True, ask_user=result['ask_user'], exit_code=None,
                       executed=False, status='awaiting_approval')

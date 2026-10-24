@@ -19,8 +19,9 @@ import re
 import stat
 import struct
 import time
+import weakref
 from dataclasses import asdict, dataclass, field
-from typing import Any, Callable
+from typing import Any, Callable, Mapping
 from types import MappingProxyType
 from urllib.parse import urlsplit
 from uuid import uuid4
@@ -34,6 +35,7 @@ MAX_FRAME = 4_000_000
 MAX_SCREENSHOT = 2_000_000
 OBSERVER = Path(__file__).with_name('browser_pipe_observer.js')
 REGISTRY: dict[tuple[str, str], 'PipeBrowserRecord'] = {}
+_REGISTRY_LOCKS = weakref.WeakValueDictionary()
 _BINARY_RECEIPTS = {}
 PAGE_ACTIONS = frozenset({'open', 'navigate', 'snapshot', 'read', 'click', 'fill', 'scroll', 'screenshot', 'wait', 'close', 'automate'})
 _ALLOWED_CDP = frozenset({'Browser.getVersion', 'Browser.setDownloadBehavior', 'Target.createTarget', 'Target.setAutoAttach', 'Target.closeTarget', 'Page.enable', 'Page.setLifecycleEventsEnabled', 'Page.getFrameTree', 'Page.createIsolatedWorld', 'Page.navigate', 'Page.captureScreenshot', 'Runtime.enable', 'Runtime.runIfWaitingForDebugger', 'Runtime.evaluate', 'Runtime.callFunctionOn', 'Runtime.releaseObject', 'Fetch.enable', 'Fetch.continueRequest', 'Fetch.failRequest', 'Page.handleJavaScriptDialog', 'Browser.close'})
@@ -232,6 +234,7 @@ class BrowserTaskGrant:
     expires_at: float = 0
     # This value is constructed by server admission, never accepted from tools.
     navigation_urls: frozenset[str] = frozenset()
+    completion_checks: tuple = ()
 
     def __post_init__(self):
         if (not all(isinstance(value, str) and value for value in (self.owner, self.thread_id, self.run_id))
@@ -244,12 +247,23 @@ class BrowserTaskGrant:
             raise ValueError('Invalid browser effects')
         if any(not self.permits_navigation(url) for url in self.navigation_urls):
             raise ValueError('Invalid browser navigation scope')
+        if not isinstance(self.completion_checks, (tuple, list)) or len(self.completion_checks) > 8:
+            raise ValueError('Invalid browser completion checks')
+        checks = []
+        for check in self.completion_checks:
+            if (not isinstance(check, Mapping) or set(check) != {'kind', 'value'}
+                    or check['kind'] not in {'text_contains', 'url_equals', 'element_label'}
+                    or not isinstance(check['value'], str) or not check['value'] or len(check['value']) > 1000
+                    or check['kind'] == 'url_equals' and not self.permits_navigation(check['value'])):
+                raise ValueError('Invalid browser completion check')
+            checks.append(MappingProxyType(dict(check)))
         # Frozen capability includes immutable contents, not a mutable mapping
         # that could change after approval/classification.
         object.__setattr__(self, 'prepared_values', MappingProxyType(dict(self.prepared_values)))
         object.__setattr__(self, 'allowed_origins', frozenset(self.allowed_origins))
         object.__setattr__(self, 'allowed_effects', frozenset(self.allowed_effects))
         object.__setattr__(self, 'navigation_urls', frozenset(self.navigation_urls))
+        object.__setattr__(self, 'completion_checks', tuple(checks))
 
     def check(self, owner, thread_id):
         if (owner, thread_id) != (self.owner, self.thread_id) or time.time() >= self.expires_at:
@@ -282,6 +296,7 @@ class PipeBrowserRecord:
         self.key = 'ody-' + digest([owner, thread_id, self.channel_nonce])[:24]
         self.lock = asyncio.Lock()
         self.target = self.cdp_session = self.frame = self.loader = ''
+        self.document_url = ''
         self.attachments = {}
         self.creating_target = False
         self.started = False
@@ -354,10 +369,12 @@ class PipeBrowserRecord:
         elif relevant and method == 'Page.frameNavigated' and not params.get('frame', {}).get('parentId'):
             frame = params.get('frame', {})
             self.frame, self.loader = str(frame.get('id') or ''), str(frame.get('loaderId') or '')
+            self.document_url = str(frame.get('url') or '')
             self.contexts.clear()
             self.world = None
             self.invalidate_document()
         elif relevant and method == 'Page.navigatedWithinDocument' and params.get('frameId') == self.frame:
+            self.document_url = str(params.get('url') or '')
             self.invalidate_document()
         elif relevant and method in {'Runtime.executionContextDestroyed', 'Runtime.executionContextsCleared', 'Page.frameDetached'}:
             self.contexts.clear()
@@ -434,6 +451,7 @@ class PipeBrowserRecord:
         await self.cdp.call('Runtime.runIfWaitingForDebugger', session=self.cdp_session)
         frame = (await self.cdp.call('Page.getFrameTree', session=self.cdp_session)).get('frameTree', {}).get('frame', {})
         self.frame, self.loader = str(frame.get('id') or ''), str(frame.get('loaderId') or '')
+        self.document_url = str(frame.get('url') or '')
         if not self.frame or not self.loader:
             raise BrowserPipeError('browser_document_unavailable')
         from src.agent_runtime.resources import BrowserSessionResource, PipeBrowserSessionObservation
@@ -479,7 +497,7 @@ class PipeBrowserRecord:
         async with self.lock:
             unique, object_id, epoch = await self._world(before_send)
             nonce = uuid4().hex
-            result = await self.cdp.call('Runtime.callFunctionOn', {'objectId': object_id, 'functionDeclaration': _CALL_SNAPSHOT,
+            result = await self.cdp.call('Runtime.callFunctionOn', {'objectId': object_id, 'uniqueContextId': unique, 'functionDeclaration': _CALL_SNAPSHOT,
                 'arguments': [{'value': nonce}], 'returnByValue': True, 'awaitPromise': False}, session=self.cdp_session, before_send=before_send)
             packet = result.get('result', {}).get('value')
             if result.get('exceptionDetails') or not isinstance(packet, dict) or packet.get('error') or self.epoch != epoch or not self.live:
@@ -566,15 +584,31 @@ class PipeBrowserRecord:
         if bound.owner != self.owner or bound.thread_id != self.thread_id or bound.session != self.session:
             raise BrowserPipeError('browser_application_binding_changed')
         bound.validate()
-        guard = lambda: (bound.validate(), self._dispatch_guard(grant, human=_human))
+        def guard():
+            bound.validate()
+            self._dispatch_guard(grant, human=_human)
+            if (action in {'snapshot', 'read', 'screenshot'}
+                    and (self.pending_loader is None or self.loader == self.pending_loader)
+                    and not grant.permits_navigation(self.document_url)):
+                raise BrowserPipeError('browser_origin_denied')
         if action in {'snapshot', 'read'}:
-            return {'output': json.dumps(await self.observe(before_send=guard)), 'exit_code': 0, 'executed': True}
+            observed = await self.observe(before_send=guard)
+            guard()
+            if self.current is None or not grant.permits_navigation(self.current.packet.get('url')):
+                self.invalidate_document()
+                raise BrowserPipeError('browser_origin_denied')
+            return {'output': json.dumps(observed), 'exit_code': 0, 'executed': True}
         if action == 'screenshot':
             if self.artifact_writer is None:
                 raise BrowserPipeError('browser_screenshot_store_unavailable')
-            result = await self.screenshot(before_send=guard)
-            artifact = await self.artifact_writer(result.pop('screenshot'))
-            return {**result, 'screenshot': artifact}
+            nonce = args.get('observation')
+            capture_guard = lambda: (guard(), self._check_observation(nonce)) if nonce is not None else guard()
+            result = await self.screenshot(before_send=capture_guard)
+            captured = result.pop('screenshot')
+            artifact = await self.artifact_writer(captured)
+            capture_guard()
+            return {**result, 'screenshot': artifact,
+                    'images': [{'mimeType': 'image/png', 'data': base64.b64encode(captured['data']).decode('ascii')}]}
         async with self.lock:
             grant.check(self.owner, self.thread_id)
             self.validate_config()
@@ -624,7 +658,7 @@ class PipeBrowserRecord:
             # captured object in the isolated world, never the active context.
             self._check_observation(observed.nonce)
             action_guard = lambda: (bound.validate(), self._dispatch_guard(grant, human=_human, nonce=observed.nonce))
-            result = await self.cdp.call('Runtime.callFunctionOn', {'objectId': observed.object_id, 'functionDeclaration': _CALL_ACTION,
+            result = await self.cdp.call('Runtime.callFunctionOn', {'objectId': observed.object_id, 'uniqueContextId': observed.context_unique_id, 'functionDeclaration': _CALL_ACTION,
                 'arguments': [{'value': command}], 'returnByValue': True, 'awaitPromise': False}, session=self.cdp_session, effect=True, before_send=action_guard)
             self.current = None
             self._resources()
@@ -707,6 +741,22 @@ def supports(owner, thread_id, action):
 
 async def enrol(owner, thread_id, manifest, profile_root, *, channel_factory=None):
     """Trusted interactive-owner seam; never called from model discovery."""
+    if not isinstance(owner, str) or not owner or not isinstance(thread_id, str) or not thread_id:
+        raise BrowserPipeError('browser_enrolment_denied')
+    async with _registry_lock(owner, thread_id):
+        return await _enrol_locked(owner, thread_id, manifest, profile_root, channel_factory=channel_factory)
+
+
+def _registry_lock(owner, thread_id):
+    key = (owner, thread_id)
+    lock = _REGISTRY_LOCKS.get(key)
+    if lock is None:
+        lock = asyncio.Lock()
+        _REGISTRY_LOCKS[key] = lock
+    return lock
+
+
+async def _enrol_locked(owner, thread_id, manifest, profile_root, *, channel_factory=None):
     from src.browser_identity import _REGISTRY as legacy_registry
     if not owner or not thread_id or (owner, thread_id) in REGISTRY or (owner, thread_id) in legacy_registry or not isinstance(manifest, ProducerManifest):
         raise BrowserPipeError('browser_enrolment_denied')
@@ -747,5 +797,6 @@ async def enrol(owner, thread_id, manifest, profile_root, *, channel_factory=Non
 
 
 async def close(owner, thread_id):
-    record = REGISTRY.pop((owner, thread_id), None)
-    return await record.close() if record else None
+    async with _registry_lock(owner, thread_id):
+        record = REGISTRY.pop((owner, thread_id), None)
+        return await record.close() if record else None

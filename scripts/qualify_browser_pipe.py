@@ -123,6 +123,22 @@ async def main():
                 if time.monotonic() >= deadline: raise browser.BrowserPipeError('fixture_document_unavailable')
                 await asyncio.sleep(.05)
             report['checks']['isolated_world_observation'] = True
+            stage = 'unique_context_negative_controls'
+            invalid_context = record.current.context_unique_id + '-does-not-exist'
+            for command, params in (
+                ('Runtime.evaluate', {'expression': '1', 'uniqueContextId': invalid_context, 'returnByValue': True}),
+                ('Runtime.callFunctionOn', {'objectId': record.current.object_id, 'uniqueContextId': invalid_context,
+                    'functionDeclaration': 'function(){ return 1; }', 'returnByValue': True}),
+            ):
+                try:
+                    await record.cdp.call(command, params, session=record.cdp_session)
+                except browser.BrowserPipeError:
+                    pass
+                else:
+                    raise browser.BrowserPipeError('fixture_unique_context_not_enforced')
+            # An unsupported parameter must never be dropped/retried in the
+            # default world. Both negative controls are harmless literal reads.
+            report['checks']['unique_context_negative_controls'] = True
             stage = 'captured_fill'
             field = next(item for item in observation['elements'] if item['label'] == 'Name')
             await record.human_control({'action': 'fill', 'page': 't1', 'observation': observation['observation'], 'ref': field['ref'], 'value_id': 'Name'}, grant=grant)
