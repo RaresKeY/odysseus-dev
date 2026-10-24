@@ -3,6 +3,17 @@ import sessions from './sessions.js';
 const $ = id => document.getElementById(id);
 const categories = [['established_procedure','Established procedure'],['bounded_domain','Bounded domain'],['approach_discovery','Approach discovery']];
 let policy, configuration, endpoints = [], sequence = 0;
+let settingsWrite = Promise.resolve(true);
+export async function whenAutomationSettingsReady() {
+  const ready = await settingsWrite;
+  if (!ready) settingsWrite = Promise.resolve(true);
+  return ready;
+}
+function writeSettings(operation) {
+  const pending = settingsWrite.then(operation);
+  settingsWrite = pending.then(()=>true,()=>false);
+  return pending;
+}
 const sid = () => sessions.getCurrentSessionId();
 async function api(path, method='GET', body) {
   const response = await fetch(path,{method,credentials:'same-origin',headers:body ? {'Content-Type':'application/json'} : {},body:body ? JSON.stringify(body) : undefined});
@@ -39,11 +50,17 @@ async function refresh() {
     configuration = config; policy = chat; render();
   } catch(e) { if(ticket===sequence) $('chat-automation-state').textContent=e.message; }
 }
-async function changeChat(changes) {
-  const id = await currentChat();
-  if (!policy || policy.session_id !== id) policy = await api(`/api/session/${encodeURIComponent(id)}/automation`);
-  policy = await api(`/api/session/${encodeURIComponent(id)}/automation`,'PUT',{policy_revision:policy.policy_revision,changes});
-  render();
+function changeChat(changes) {
+  return writeSettings(async()=>{
+    $('chat-approval-mode').disabled=$('chat-route-mode').disabled=true;
+    $('chat-automation-state').textContent='Saving chat settings…';
+    try {
+      const id = await currentChat(), ticket=++sequence;
+      const previous=policy?.session_id===id ? policy : await api(`/api/session/${encodeURIComponent(id)}/automation`);
+      const saved=await api(`/api/session/${encodeURIComponent(id)}/automation`,'PUT',{policy_revision:previous.policy_revision,changes});
+      if(id===sid() && ticket===sequence){++sequence;policy=saved;render();}else await refresh();
+    } finally {$('chat-approval-mode').disabled=$('chat-route-mode').disabled=false;}
+  });
 }
 function routeFields(key, title, value={}) {
   const row = document.createElement('div'); row.className='chat-automation-route'; row.dataset.route=key;

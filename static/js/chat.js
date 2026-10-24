@@ -6,6 +6,7 @@
 // ES6 module — IIFE removed
 
 import Storage from './storage.js';
+import { whenAutomationSettingsReady } from './chatAutomation.js';
 import uiModule from './ui.js?v=20260916largetoolscroll1';
 import sessionModule from './sessions.js';
 import chatRenderer, { renderToolIcon } from './chatRenderer.js?v=20260914metricssummary1';
@@ -233,7 +234,7 @@ import { invalidateSettings } from './appConfig.js';
   document.addEventListener('odysseus:tool-approval', (event) => {
     const detail = event && event.detail ? event.detail : {};
     const decision = String(detail.decision || '').toLowerCase();
-    if (!detail.approval_id || !['approve', 'approve_task', 'deny'].includes(decision)) return;
+    if (!detail.approval_id || !['approve', 'approve_task', 'approve_once', 'deny'].includes(decision)) return;
     _pendingToolApproval = {
       approval_id: String(detail.approval_id),
       decision,
@@ -1819,6 +1820,11 @@ import { invalidateSettings } from './appConfig.js';
    * Handle chat form submission
    */
   export async function handleChatSubmit(e) {
+    if (e) e.preventDefault();
+    if (!await whenAutomationSettingsReady()) {
+      uiModule.showError('Chat settings were not saved. Check the displayed choice before sending again.');
+      return;
+    }
     e.preventDefault();
     // Cancel research clarification timeout if active
     if (window._researchTimeoutTimer) {
