@@ -213,15 +213,60 @@ class BrowserSessionObservation:
 
 
 @dataclass(frozen=True)
+class PipeBrowserSessionObservation:
+    """Direct-pipe identity; its nonce is not an agent-browser/browser GUID."""
+    producer_namespace: str
+    producer_version: str
+    platform: str
+    binary_sha256: str
+    configuration_digest: str
+    session_key: str
+    process: "ProcessIdentity"
+    channel_nonce: str
+    session_incarnation: str
+
+    def __post_init__(self):
+        import re
+        from src.process_lifecycle import ProcessIdentity
+        from src.browser_pipe import NAMESPACE, VERSION, digest
+        if (self.producer_namespace != NAMESPACE or self.producer_version != VERSION
+                or self.platform not in {'x86_64', 'aarch64'} or not isinstance(self.process, ProcessIdentity)
+                or type(self.process.pid) is not int or self.process.pid <= 0 or not self.process.start_token
+                or not re.fullmatch(r'ody-[a-f0-9]{24}', self.session_key)
+                or not re.fullmatch(r'[a-f0-9]{32}', self.channel_nonce)):
+            raise ValueError('Unsupported pipe browser identity')
+        for item in (self.binary_sha256, self.configuration_digest, self.session_incarnation):
+            if not re.fullmatch(r'[a-f0-9]{64}', item):
+                raise ValueError('Malformed pipe browser digest')
+        values = self.to_dict()
+        values.pop('session_incarnation')
+        if digest(values) != self.session_incarnation:
+            raise ValueError('Pipe browser incarnation changed')
+
+    def to_dict(self):
+        return {**asdict(self), 'process': self.process.to_record()}
+
+    @classmethod
+    def from_dict(cls, value):
+        from src.process_lifecycle import ProcessIdentity
+        if not isinstance(value, dict) or set(value) != set(cls.__dataclass_fields__):
+            raise ValueError('Malformed pipe browser snapshot')
+        process = value['process']
+        if not isinstance(process, dict) or set(process) != {'pid', 'start_token', 'pgid'}:
+            raise ValueError('Malformed pipe process observation')
+        return cls(**{**value, 'process': ProcessIdentity(**process)})
+
+
+@dataclass(frozen=True)
 class BrowserSessionResource:
     owner: str
     thread_id: str
-    observation: BrowserSessionObservation
+    observation: BrowserSessionObservation | PipeBrowserSessionObservation
 
     def __post_init__(self):
         _text(self.owner, "browser owner")
         _text(self.thread_id, "browser thread")
-        if not isinstance(self.observation, BrowserSessionObservation):
+        if not isinstance(self.observation, (BrowserSessionObservation, PipeBrowserSessionObservation)):
             raise ValueError("Missing browser session observation")
 
     def validate(self):
@@ -235,7 +280,9 @@ class BrowserSessionResource:
     def from_dict(cls, value):
         if not isinstance(value, dict) or set(value) != {"owner", "thread_id", "observation"}:
             raise ValueError("Malformed browser resource snapshot")
-        return cls(value["owner"], value["thread_id"], BrowserSessionObservation.from_dict(value["observation"]))
+        raw = value['observation']
+        kind = PipeBrowserSessionObservation if isinstance(raw, dict) and raw.get('producer_namespace') == 'native:odysseus-cdp-pipe' else BrowserSessionObservation
+        return cls(value["owner"], value["thread_id"], kind.from_dict(raw))
 
 
 @dataclass(frozen=True)
@@ -270,9 +317,34 @@ class BrowserPageResource:
 
     @classmethod
     def from_dict(cls, value):
+        if isinstance(value, dict) and 'context_unique_id' in value:
+            return PipeBrowserPageResource.from_dict(value)
         if not isinstance(value, dict) or set(value) != set(cls.__dataclass_fields__):
             raise ValueError("Malformed browser page snapshot")
         return cls(**{**value, "session": BrowserSessionResource.from_dict(value["session"])})
+
+
+@dataclass(frozen=True)
+class PipeBrowserPageResource(BrowserPageResource):
+    context_unique_id: str = ''
+    epoch: int = 0
+
+    def __post_init__(self):
+        super().__post_init__()
+        if (not isinstance(self.session.observation, PipeBrowserSessionObservation)
+                or type(self.epoch) is not int or self.epoch < 0
+                or (self.scope == 'document' and not self.context_unique_id)):
+            raise ValueError('Malformed pipe document identity')
+
+    def authority_key(self):
+        return (*super().authority_key(), self.context_unique_id if self.scope == 'document' else None,
+                self.epoch if self.scope == 'document' else None)
+
+    @classmethod
+    def from_dict(cls, value):
+        if not isinstance(value, dict) or set(value) != set(cls.__dataclass_fields__):
+            raise ValueError('Malformed pipe page snapshot')
+        return cls(**{**value, 'session': BrowserSessionResource.from_dict(value['session'])})
 
 
 @dataclass(frozen=True)

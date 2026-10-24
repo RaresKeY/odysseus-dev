@@ -137,7 +137,7 @@ When an email reader is active, browser chat passes active email metadata and th
 - Agent mode can degrade from native function schemas to prompted fenced-block parsing based on provider/tool-support heuristics. Legacy local Ollama `/v1` and native `/api` endpoints normally use text tools unless explicitly supported. Compact native surfaces force native schemas unless a text-recovery path is selected; configured compact/full modes and the external request contract participate in surface selection, so the legacy default is not universal.
 - MCP startup failure is non-critical; route/status surfaces expose per-server errors.
 - `ODYSSEUS_DISABLE_MCP`, missing `mcp`, uncached browser MCP packages, and per-server disabled tools can remove tools without blocking the app.
-- Native browser page execution is unavailable at the common boundary; browser registration and schemas do not override that denial.
+- Native agent-browser page execution remains denied. The separately qualified private-pipe producer uses captured isolated-world resources and independent per-action admission; registration and schemas alone confer no authority. See [browser-automation.md](browser-automation.md).
 
 ## Request Authority, Resource Identity, And Completion
 
