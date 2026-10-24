@@ -11,6 +11,7 @@ This spec covers calendar, reminders, tasks, assistant runs, and notes in:
 - `routes/calendar_routes.py`, `src/caldav_sync.py`, and `src/caldav_writeback.py`;
 - canonical `routes/task/task_routes.py`, compatibility shim `routes/task_routes.py`, `src/task_scheduler.py`, `src/task_endpoint.py`, `src/event_bus.py`, and `src/interactive_gate.py`;
 - shared privileged task-action policy in `src/task_action_policy.py`;
+- deployment automatic-task admission in `src/task_automation.py`;
 - `routes/assistant_routes.py`;
 - canonical `routes/note/note_routes.py`, compatibility shim
   `routes/note_routes.py`, `src/builtin_actions.py`, and `src/action_intents.py`;

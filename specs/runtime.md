@@ -10,6 +10,7 @@ This spec covers current app runtime wiring in:
 - `src/app_initializer.py`;
 - `src/runtime_paths.py`;
 - `src/config.py`;
+- automatic-task deployment admission in `src/task_automation.py`;
 - `core/constants.py`;
 - `src/constants.py`;
 - `src/interactive_gate.py`;

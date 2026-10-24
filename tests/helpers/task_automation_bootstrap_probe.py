@@ -29,16 +29,35 @@ async def finish_startup():
     app.app.state._startup_tasks = []
 
 
+async def checked_startup():
+    # Observe both complete startup calls, not only the later event window.
+    provider = AsyncMock(side_effect=AssertionError('No startup inference'))
+    reserve = Mock(side_effect=AssertionError('No startup decision reservation'))
+    action = AsyncMock(side_effect=AssertionError('No startup task handler'))
+    llm = AsyncMock(side_effect=AssertionError('No startup task inference'))
+    research = AsyncMock(side_effect=AssertionError('No startup task research'))
+    with patch.object(DecisionProvider, 'evaluate', provider), \
+         patch.object(SqlAttemptStore, 'reserve', reserve), \
+         patch.object(type(app.task_scheduler), '_execute_action', action), \
+         patch.object(type(app.task_scheduler), '_execute_llm_task', llm), \
+         patch.object(type(app.task_scheduler), '_execute_research_task', research):
+        await app._startup_event()
+        await asyncio.sleep(0)
+        for spy in (provider, reserve, action, llm, research):
+            spy.assert_not_called()
+
+
 async def run():
-    await app._startup_event()
+    await checked_startup()
     await finish_startup()
     with d.SessionLocal() as db:
         assert db.query(d.ScheduledTask).count() == 0
     # A named account appears after first boot, matching the deployment trigger.
     (state / 'auth.json').write_text(json.dumps({'users': {'guarduser': {
         'password_hash': 'synthetic-no-login', 'is_admin': True}}}))
-    await app._startup_event()
-    assert app.task_scheduler._running is False  # both modes use loop-only0
+    await checked_startup()
+    # Full-OFF wins even with loop1; normal-ON uses the external-worker loop0.
+    assert app.task_scheduler._running is False
     enabled = os.environ['ODYSSEUS_TASK_AUTOMATION_ENABLED'] == '1'
     calls = []
     async def effect(**kwargs):
@@ -81,7 +100,8 @@ async def run():
     print('TASK_AUTOMATION_BOOTSTRAP_PROBE=' + json.dumps({
         'loop_running': False, 'automatic_enabled': enabled, 'seeded_tasks': 11,
         'task_runs': int(enabled), 'final_mock_effects': len(calls),
-        'provider_calls': 0, 'authority_restores': restored.call_count,
+        'provider_calls': 0, 'startup_provider_and_task_handlers': 0,
+        'loop_setting': os.environ['ODYSSEUS_INPROCESS_TASKS'], 'authority_restores': restored.call_count,
         'stored_authorities_preserved': True}))
 
 
