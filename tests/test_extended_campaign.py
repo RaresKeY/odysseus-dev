@@ -414,6 +414,8 @@ def test_projected_operational_stop_counts_held_reservation(tmp_path):
         ledger.reserve(attempt_id="new", case_key="new", version=version, stage="development", binding={}, contract=planning_profile())
     assert len(ledger.report()["attempts"]) == 9
     assert ledger.report()["charged_or_held"] == 900000
+    assert ledger.report()["halt_reason"] == "operational_reservation_unavailable"
+    assert CampaignLedger(ledger.path, authorization=AUTH).report()["halted"]
 
 
 @pytest.mark.parametrize("mutation", ["model", "url", "header", "state", "free_text", "option_count", "question_count"])
@@ -430,3 +432,22 @@ def test_guarded_profile_rejects_unsupported_wire_before_reservation(tmp_path, m
     if mutation == "question_count": payload["questions"]["another"] = payload["questions"]["decision"]
     with pytest.raises(DecisionError, match="profile_refused"):
         planning_profile().check_wire(endpoint, encode(payload), smoke=True)
+
+
+def test_lower_stop_migration_preserves_old_campaign_identity_and_charges(tmp_path):
+    ledger, version = setup(tmp_path)
+    reserve(ledger, version)
+    ledger.dispatch("one", {"wire": "one"})
+    ledger.response("one", {"input_tokens": 10, "output_tokens": 5}, "2" * 64)
+    ledger.finish("one", status="settled", dispatched=True)
+    with sqlite3.connect(ledger.path) as db:
+        identity = db.execute("SELECT identity FROM campaign").fetchone()[0]
+        db.execute("DROP TRIGGER operational_policy_no_update")
+        db.execute("DROP TRIGGER operational_policy_no_delete")
+        db.execute("DROP TABLE operational_policy")
+    # Simulate the prior reviewed schema: its immutable campaign row is untouched.
+    reopened = CampaignLedger(ledger.path, authorization=AUTH)
+    assert reopened.report()["charged_or_held"] == 15
+    assert reopened.report()["operational_stop"] == 1000000
+    with sqlite3.connect(ledger.path) as db:
+        assert db.execute("SELECT identity FROM campaign").fetchone()[0] == identity

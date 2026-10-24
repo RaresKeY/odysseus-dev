@@ -183,6 +183,8 @@ class CampaignLedger:
                 db.execute("INSERT INTO campaign(id,identity) VALUES (1,?)", (identity,))
             elif previous[0] != identity:
                 raise DecisionError("campaign_identity_mismatch")
+            if sum(int(row[0]) for row in db.execute("SELECT charge FROM attempts")) >= OPERATIONAL_STOP:
+                db.execute("UPDATE campaign SET halted=1,halt_reason=coalesce(halt_reason,'operational_stop_reached') WHERE id=1")
             if (self.path.parent / "HALT_REQUESTED.json").exists():
                 db.execute("UPDATE campaign SET halted=1,halt_reason='root_stop_requested' WHERE id=1")
         self._fsync_directory()
@@ -249,6 +251,7 @@ class CampaignLedger:
         if stage not in STAGES or not isinstance(case_key, str) or not case_key or len(case_key) > 256:
             raise DecisionError("campaign_invalid_attempt")
         charge = contract.input_tokens + contract.output_tokens
+        operational_refused = False
         with self._transaction() as db:
             self._available(db)
             if db.execute("SELECT 1 FROM gates WHERE stage=?", (stage,)).fetchone() is None:
@@ -259,13 +262,19 @@ class CampaignLedger:
             calls = sum(x["stage"] == stage for x in charges)
             used = sum(int(x["charge"]) for x in charges if x["stage"] == stage)
             total = sum(int(x["charge"]) for x in charges)
-            if calls >= STAGES[stage][0] or used + charge > STAGES[stage][1] or total + charge > HARD_LIMIT or total + charge > OPERATIONAL_STOP:
-                raise DecisionError("campaign_budget_unavailable")
-            if db.execute("SELECT 1 FROM attempts WHERE id=? OR case_key=?", (attempt_id, case_key)).fetchone():
-                raise DecisionError("campaign_attempt_already_exists")
-            db.execute("""INSERT INTO attempts(id,case_key,version,stage,binding,status,input_bound,output_bound,charge,created)
-                VALUES (?,?,?,?,?,'reserved',?,?,?,?)""", (attempt_id, case_key, version, stage,
-                encode(binding).decode(), contract.input_tokens, contract.output_tokens, str(charge), time.time()))
+            if total + charge > OPERATIONAL_STOP:
+                db.execute("UPDATE campaign SET halted=1,halt_reason='operational_reservation_unavailable' WHERE id=1")
+                operational_refused = True
+            else:
+                if calls >= STAGES[stage][0] or used + charge > STAGES[stage][1] or total + charge > HARD_LIMIT:
+                    raise DecisionError("campaign_budget_unavailable")
+                if db.execute("SELECT 1 FROM attempts WHERE id=? OR case_key=?", (attempt_id, case_key)).fetchone():
+                    raise DecisionError("campaign_attempt_already_exists")
+                db.execute("""INSERT INTO attempts(id,case_key,version,stage,binding,status,input_bound,output_bound,charge,created)
+                    VALUES (?,?,?,?,?,'reserved',?,?,?,?)""", (attempt_id, case_key, version, stage,
+                    encode(binding).decode(), contract.input_tokens, contract.output_tokens, str(charge), time.time()))
+        if operational_refused:
+            raise DecisionError("campaign_operational_budget_unavailable")
 
     def dispatch(self, attempt_id, binding):
         if (self.path.parent / "HALT_REQUESTED.json").exists():

@@ -157,3 +157,134 @@ async def test_cached_false_complete_is_scored_without_retry_or_material_halt(tm
     assert resumed["totals"]["cached"] == len(runner.load_suite()["cases"])
     assert len(calls) == previous_calls
     assert (tmp_path / "budget/campaign.sqlite3").read_bytes() == ledger_bytes
+
+
+def approved_config():
+    from dataclasses import asdict
+    from src.decisions.campaign import RootApprovedChoiceProfile
+    return {"schema": "odysseus-jev-live-config/v1", "source_sha256": runner.source_identity(),
+            "suite_sha256": digest(runner.load_suite()), "model": runner.MODEL, "url": runner.URL,
+            "campaign_id": runner.CAMPAIGN_ID, "limit": 5000000, "operational_stop": 1000000,
+            "admitted_stages": {"smoke": "synthetic-root-review"},
+            "planning_profile": asdict(RootApprovedChoiceProfile("3" * 64, root_approved=True))}
+
+
+@pytest.mark.asyncio
+async def test_approved_profile_uses_native_transport_and_config_change_replays_without_new_calls(tmp_path, monkeypatch):
+    import httpx
+    from src.decisions import DecisionProvider
+    from src.decisions.campaign import digest as wire_digest
+    calls, key_reads = [], []
+    suite = runner.load_suite()
+    expected = {wire_digest({"model": runner.MODEL, "state": runner.request_for(case).state,
+                             "questions": runner.request_for(case).questions()}): case
+                for case in suite["cases"] if case["split"] == "smoke"}
+    def transport(request):
+        calls.append(request)
+        case = expected[wire_digest(request.content)]
+        questions = runner.decode(request.content)["questions"]
+        return httpx.Response(200, json={"model": runner.MODEL, "answers": {name: {
+            "type": "choice", "choice": runner.answer_gold(case, name), "confidence": .99,
+            "probabilities": {choice: float(choice == runner.answer_gold(case, name))
+                              for choice in question["criteria"]}} for name, question in questions.items()},
+            "usage": {"input_tokens": 20, "output_tokens": 10}})
+    monkeypatch.setattr(runner, "DecisionProvider", lambda store, **kw: DecisionProvider(store,
+        client_factory=lambda **client_kw: httpx.AsyncClient(transport=httpx.MockTransport(transport), **client_kw), **kw))
+    monkeypatch.setattr(runner, "live_process_boundary", lambda: None)
+    monkeypatch.setattr(runner, "read_test_key", lambda: (key_reads.append("mock-only"), "synthetic-key")[1])
+    monkeypatch.setenv("ODYSSEUS_JEV_HOST_LAUNCHER", "reviewed-v1")
+    config = approved_config()
+    first = await runner.run(tmp_path, live=True, config=config)
+    assert len(calls) == 2 and first["accounting"]["charged_or_held"] == 60
+    assert first["admission"]["kind"] == "root-reviewed-typed-choice/v1"
+    assert "not a published vendor maximum" in first["admission"]["basis"]
+    changed = {**config, "review_note": "same frozen source and suite; no repeat"}
+    cached = await runner.run(tmp_path, live=True, config=changed)
+    assert len(calls) == 2 and cached["totals"]["cached"] == 2
+    assert cached["quality_denominators"]["evaluated_cases_including_cached"] == 2
+    assert len(cached["accounting"]["versions"]) == 2
+    assert cached["accounting"]["charged_or_held"] == 60
+
+
+@pytest.mark.asyncio
+async def test_oversized_frozen_case_is_refused_before_live_key_reader(tmp_path, monkeypatch):
+    from copy import deepcopy
+    suite = deepcopy(runner.load_suite())
+    suite["cases"][-1]["state"]["untrusted_text"] = "x" * 9000
+    monkeypatch.setattr(runner, "load_suite", lambda: suite)
+    monkeypatch.setattr(runner, "read_test_key", lambda: pytest.fail("profile failure reached key reader"))
+    monkeypatch.setenv("ODYSSEUS_JEV_HOST_LAUNCHER", "reviewed-v1")
+    with pytest.raises(DecisionError, match="profile_refused"):
+        await runner.run(tmp_path, live=True, config=approved_config())
+
+
+def test_suite_has_progressive_coverage_and_real_production_request_factories():
+    suite = runner.load_suite()
+    assert {split: sum(case["split"] == split for case in suite["cases"])
+            for split in ("smoke", "small", "development")} == {"smoke": 2, "small": 24, "development": 80}
+    assert 80 <= sum(case["split"] == "heldout" for case in suite["cases"]) <= 192
+    for case in suite["cases"]:
+        request = runner.request_for(case)
+        questions = request.questions()
+        for name, question in questions.items():
+            assert runner.answer_gold(case, name) in question["criteria"]
+        if case["split"] == "smoke":
+            assert len(questions) == 1
+        if case["feature"] == "approach":
+            assert set(questions) == {"approach", "readiness"}
+        if case["feature"] == "diagnostics":
+            assert set(questions) == {"online_search", "fresh_information", "project_context"}
+        if case["feature"] == "safety":
+            assert set(request.choices) == {"allow", "deny", "review"}
+
+
+@pytest.mark.asyncio
+async def test_material_protocol_failure_charges_usage_and_durably_halts(tmp_path, monkeypatch):
+    import httpx
+    original_transport = httpx.MockTransport
+    def malformed(handler):
+        def transport(request):
+            raw = handler(request).json()
+            raw["model"] = "wrong-model"
+            return httpx.Response(200, json=raw)
+        return original_transport(transport)
+    monkeypatch.setattr(httpx, "MockTransport", malformed)
+    report = await runner.run(tmp_path, wall_seconds=30)
+    assert report["totals"]["actual_dispatches"] == 1
+    assert report["accounting"]["charged_or_held"] == 30
+    assert report["accounting"]["halted"]
+    assert report["cases"][0]["stop_classification"] == "material_protocol_identity_lifecycle_or_capture_failure"
+    ledger_bytes = (tmp_path / "budget/campaign.sqlite3").read_bytes()
+    with pytest.raises(DecisionError):
+        await runner.run(tmp_path, wall_seconds=30)
+    assert (tmp_path / "budget/campaign.sqlite3").read_bytes() == ledger_bytes
+
+
+@pytest.mark.parametrize("mutation", ["question", "choice", "primary", "not_mapping"])
+def test_expected_answers_rejects_unknown_question_choice_or_inconsistent_primary(tmp_path, mutation):
+    from copy import deepcopy
+    suite = deepcopy(runner.load_suite())
+    case = next(case for case in suite["cases"] if case["feature"] == "diagnostics")
+    case["expected_answers"] = {"online_search": case["gold"], "fresh_information": case["gold"], "project_context": "yes"}
+    if mutation == "question": case["expected_answers"]["invented"] = "yes"
+    if mutation == "choice": case["expected_answers"]["project_context"] = "invented"
+    if mutation == "primary": case["expected_answers"]["online_search"] = "unclear" if case["gold"] != "unclear" else "yes"
+    if mutation == "not_mapping": case["expected_answers"] = []
+    path = tmp_path / "suite.json"
+    path.write_bytes(runner.encode(suite))
+    with pytest.raises(DecisionError, match="invalid_expected_answers"):
+        runner.load_suite(path)
+
+
+def test_expected_answers_independent_fields_remain_outside_inference(tmp_path):
+    from copy import deepcopy
+    suite = deepcopy(runner.load_suite())
+    case = next(case for case in suite["cases"] if case["feature"] == "diagnostics")
+    before = runner.encode({"state": runner.request_for(case).state, "questions": runner.request_for(case).questions()})
+    case["expected_answers"] = {"online_search": case["gold"], "fresh_information": "unclear", "project_context": "yes"}
+    path = tmp_path / "suite.json"
+    path.write_bytes(runner.encode(suite))
+    checked = next(item for item in runner.load_suite(path)["cases"] if item["id"] == case["id"])
+    assert runner.answer_gold(checked, "fresh_information") == "unclear"
+    assert runner.answer_gold(checked, "project_context") == "yes"
+    assert runner.encode({"state": runner.request_for(checked).state, "questions": runner.request_for(checked).questions()}) == before
