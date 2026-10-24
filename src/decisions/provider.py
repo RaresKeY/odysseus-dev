@@ -84,6 +84,37 @@ class DecisionProvider:
             raise DecisionError("decision_attempt_store_unavailable")
         self.store, self.resolver, self.clock = store, resolver, clock
         self.client_factory = client_factory or httpx.AsyncClient
+        # Strong ownership survives request cancellation. SQL operations use a
+        # fresh session in their worker thread and are never retried here.
+        self._store_tasks = set()
+
+    def _own_store_task(self, awaitable):
+        task = asyncio.create_task(awaitable)
+        self._store_tasks.add(task)
+        def done(completed):
+            self._store_tasks.discard(completed)
+            if not completed.cancelled():
+                completed.exception()  # Observe failures; a pending reservation stays fail-closed.
+        task.add_done_callback(done)
+        return task
+
+    async def _reserve(self, record, max_calls, state):
+        task = self._own_store_task(asyncio.to_thread(self.store.reserve, record, max_calls=max_calls))
+        try:
+            await asyncio.shield(task)
+        except asyncio.CancelledError:
+            # The thread may still commit. Retain one cleanup owner and never
+            # dispatch on a late reservation, even after this caller returns.
+            async def cancel_late_reservation():
+                try:
+                    await asyncio.shield(task)
+                except Exception:
+                    return  # No successful reservation to settle.
+                expired = state.get("scope") is not None and state["scope"].expired()
+                await asyncio.to_thread(self.store.settle, record["attempt_id"], status="cancelled",
+                    usage=None, failure_kind="decision_deadline_exceeded" if expired else "decision_cancelled")
+            self._own_store_task(cancel_late_reservation())
+            raise
 
     async def _invoke(self, callback, *args):
         # The canonical resolver reads local registration/SQL, never performs
@@ -164,18 +195,23 @@ class DecisionProvider:
                   "provider_identity": identity, "status": "reserved", "usage": None,
                   "reservation": {"input_tokens": 65536, "output_tokens": 65536}}
         try:
-            self.store.reserve(record, max_calls=min(context.max_calls, endpoint.max_calls))
+            await self._reserve(record, min(context.max_calls, endpoint.max_calls), state)
         except DecisionError:
             raise
         except Exception:
             raise DecisionError("decision_attempt_store_unavailable") from None
         dispatched, settled, measured = False, False, None
 
-        def settle(status, failure=None):
+        async def settle(status, failure=None, *, wait=True):
             nonlocal settled
+            # Mark ownership before yielding: cancellation must not schedule a
+            # second settlement while the first durable operation is in flight.
+            settled = True
+            task = self._own_store_task(asyncio.to_thread(self.store.settle, attempt_id,
+                status=status, usage=measured, failure_kind=failure))
             try:
-                self.store.settle(attempt_id, status=status, usage=measured, failure_kind=failure)
-                settled = True
+                if wait:
+                    await asyncio.shield(task)
             except Exception:
                 # An unsettled durable reservation prevents replay after this failure.
                 raise DecisionError("decision_attempt_store_unavailable", attempt_id=attempt_id) from None
@@ -228,23 +264,23 @@ class DecisionProvider:
                 current = await self._invoke(self.resolver, checked_config, context.owner)
                 if current != endpoint:
                     raise DecisionError("decision_endpoint_changed")
-            settle("settled")
+            await settle("settled")
             primary = answers[request.question_id]
             return DecisionResult(primary["choice"], float(primary["confidence"]),
                                   dict(primary["probabilities"]), measured, attempt_id, identity, answers)
         except asyncio.CancelledError:
             if not settled:
                 expired = state.get("scope") is not None and state["scope"].expired()
-                settle("unresolved" if dispatched else "cancelled",
-                       "decision_deadline_exceeded" if expired else "decision_cancelled")
+                await settle("rejected" if measured is not None else "unresolved" if dispatched else "cancelled",
+                       "decision_deadline_exceeded" if expired else "decision_cancelled", wait=False)
             raise
         except DecisionError as error:
             if not settled:
-                settle("rejected" if measured is not None else "unresolved" if dispatched else "cancelled", error.code)
+                await settle("rejected" if measured is not None else "unresolved" if dispatched else "cancelled", error.code)
             raise DecisionError(error.code, attempt_id=attempt_id) from None
         except Exception:
             if not settled:
-                settle("unresolved" if dispatched else "cancelled", "decision_transport_failed")
+                await settle("rejected" if measured is not None else "unresolved" if dispatched else "cancelled", "decision_transport_failed")
             raise DecisionError("decision_transport_failed", attempt_id=attempt_id) from None
 
 

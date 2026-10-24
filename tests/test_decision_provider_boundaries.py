@@ -116,6 +116,7 @@ async def test_expiry_after_reservation_before_http_is_not_ambiguous_spend():
     client, store=provider(lambda r:calls.append(r))
     with pytest.raises(DecisionError, match='decision_deadline_exceeded'):
         await client.evaluate(REQUEST, replace(CONTEXT, cancelled=cancelled, deadline=time.monotonic()+.04), config=CONFIG)
+    await _drain_store_tasks(client)
     record=next(iter(store.records.values()))
     assert record['status']=='cancelled' and record['usage'] is None and not calls
     assert record['failure_kind']=='decision_deadline_exceeded'
@@ -175,3 +176,86 @@ async def test_donor_strict_json_mechanics_reject_coercion_before_spending(state
     with pytest.raises(DecisionError,match='decision_invalid_request'):
         await client.evaluate(replace(REQUEST,state=state),CONTEXT,config=CONFIG)
     assert not calls and not store.records
+
+
+async def _drain_store_tasks(client):
+    # A retained cleanup may create one follow-on durable operation.
+    while client._store_tasks:
+        await asyncio.wait_for(asyncio.gather(*tuple(client._store_tasks)), 3)
+
+
+@pytest.mark.asyncio
+@pytest.mark.parametrize('cancel', [False, True])
+async def test_real_sql_locked_reservation_returns_by_deadline_and_cleans_late_commit(tmp_path, cancel):
+    from core import database
+    from src.chat_automation import AutomationStore, SqlAttemptStore
+    engine = create_engine('sqlite:///' + str(tmp_path / 'locked.db'), connect_args={'timeout': 2})
+    database.Base.metadata.create_all(engine)
+    store = SqlAttemptStore(AutomationStore(sessionmaker(bind=engine)))
+    store.store.configuration('alice')
+    blocker = engine.raw_connection()
+    blocker.execute('BEGIN IMMEDIATE')
+    calls = []
+    client, _ = provider(lambda r: calls.append(r), store=store)
+    task = asyncio.create_task(client.evaluate(REQUEST,
+        replace(CONTEXT, deadline=time.monotonic() + (.8 if cancel else .06)), config=CONFIG))
+    started = time.monotonic()
+    try:
+        if cancel:
+            await asyncio.sleep(.03)
+            task.cancel()
+            with pytest.raises(asyncio.CancelledError):
+                await task
+        else:
+            with pytest.raises(DecisionError, match='decision_deadline_exceeded'):
+                await task
+        assert time.monotonic() - started < .5
+        assert not calls
+    finally:
+        blocker.rollback()
+        blocker.close()
+    await _drain_store_tasks(client)
+    records = store.records_for_run('alice', 'chat', 'run')
+    assert len(records) == 1 and records[0]['status'] == 'cancelled'
+    assert records[0]['usage'] is None and not calls
+    assert records[0]['failure_kind'] == ('decision_cancelled' if cancel else 'decision_deadline_exceeded')
+    engine.dispose()
+
+
+@pytest.mark.asyncio
+@pytest.mark.parametrize('ambiguous', [False, True])
+async def test_real_sql_locked_settlement_is_retained_without_delaying_caller(tmp_path, ambiguous):
+    from core import database
+    from src.chat_automation import AutomationStore, SqlAttemptStore
+    engine = create_engine('sqlite:///' + str(tmp_path / 'settle.db'), connect_args={'timeout': 2})
+    database.Base.metadata.create_all(engine)
+    store = SqlAttemptStore(AutomationStore(sessionmaker(bind=engine)))
+    blocker = None
+    calls = []
+    async def transport(request):
+        nonlocal blocker
+        calls.append(request)
+        blocker = engine.raw_connection()
+        blocker.execute('BEGIN IMMEDIATE')
+        if ambiguous:
+            await asyncio.Event().wait()
+        return httpx.Response(200, json=reply())
+    client, _ = provider(transport, store=store)
+    started = time.monotonic()
+    try:
+        with pytest.raises(DecisionError, match='decision_transport_failed'):
+            await client.evaluate(REQUEST, replace(CONTEXT, deadline=time.monotonic() + .08), config=CONFIG)
+        assert time.monotonic() - started < .5
+        assert len(calls) == 1
+        # Until the original settlement commits, a durable reservation remains.
+        assert client._store_tasks
+    finally:
+        if blocker is not None:
+            blocker.rollback()
+            blocker.close()
+    await _drain_store_tasks(client)
+    record = store.records_for_run('alice', 'chat', 'run')[0]
+    assert record['status'] == ('unresolved' if ambiguous else 'settled')
+    assert record['usage'] == (None if ambiguous else reply()['usage'])
+    assert len(calls) == 1
+    engine.dispose()
