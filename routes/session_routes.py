@@ -466,7 +466,10 @@ def setup_session_routes(
             from src.endpoint_resolver import build_chat_url, normalize_base
             endpoint_routes = {}
             endpoint_query = owner_filter(db.query(ModelEndpoint).filter(ModelEndpoint.is_enabled == True), ModelEndpoint, user)
+            from src.model_admission import endpoint_supports_execution
             for endpoint in endpoint_query.all():
+                if not endpoint_supports_execution(endpoint):
+                    continue
                 route_url = build_chat_url(normalize_base(endpoint.base_url or '')).rstrip('/')
                 endpoint_routes.setdefault(route_url, []).append(endpoint)
             sessions = []
@@ -541,6 +544,13 @@ def setup_session_routes(
         endpoint_api_key = ""
         endpoint_base_url = ""
         _reject_raw_endpoint_url_for_non_admin(request, user, endpoint_id, endpoint_url)
+        if endpoint_url and not endpoint_id:
+            from src.endpoint_resolver import reject_decision_only_endpoint_url
+            with SessionLocal() as purpose_db:
+                try:
+                    reject_decision_only_endpoint_url(purpose_db, endpoint_url, user)
+                except ValueError as exc:
+                    raise HTTPException(400, str(exc)) from None
         if endpoint_id and endpoint_id.strip():
             from core.database import ModelEndpoint
             from src.auth_helpers import owner_filter
@@ -556,6 +566,9 @@ def setup_session_routes(
                 endpoint_row = q.first()
                 if not endpoint_row:
                     raise HTTPException(400, "Model endpoint no longer exists")
+                from src.model_admission import endpoint_supports_execution
+                if not endpoint_supports_execution(endpoint_row):
+                    raise HTTPException(400, "Selected endpoint does not support chat execution")
                 endpoint_base_url = endpoint_row.base_url or ""
                 endpoint_api_key = endpoint_row.api_key or ""
                 endpoint_url = build_chat_url(normalize_base(endpoint_base_url))
@@ -706,6 +719,13 @@ def setup_session_routes(
         if model is not None and endpoint_url is not None:
             user = effective_user(request)
             _reject_raw_endpoint_url_for_non_admin(request, user, endpoint_id, endpoint_url)
+            if endpoint_url and not endpoint_id:
+                from src.endpoint_resolver import reject_decision_only_endpoint_url
+                with SessionLocal() as purpose_db:
+                    try:
+                        reject_decision_only_endpoint_url(purpose_db, endpoint_url, user)
+                    except ValueError as exc:
+                        raise HTTPException(400, str(exc)) from None
             endpoint_api_key = ""
             endpoint_base_url = ""
             if endpoint_id:
@@ -723,6 +743,9 @@ def setup_session_routes(
                     ep = q.first()
                     if not ep:
                         raise HTTPException(400, "Model endpoint no longer exists")
+                    from src.model_admission import endpoint_supports_execution
+                    if not endpoint_supports_execution(ep):
+                        raise HTTPException(400, "Selected endpoint does not support chat execution")
                     endpoint_base_url = ep.base_url or ""
                     endpoint_api_key = ep.api_key or ""
                     endpoint_url = build_chat_url(normalize_base(endpoint_base_url))

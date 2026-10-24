@@ -930,7 +930,9 @@ def _select_session_endpoint(sess, target_url: str, endpoints) -> tuple:
     Returns ``(endpoint, bound_by_fallback)``; ``bound_by_fallback`` is True
     when the choice came from URL matching and may be persisted as a binding.
     """
-    matching = [ep for ep in endpoints if _session_url_matches_endpoint(target_url, getattr(ep, "base_url", "") or "")]
+    from src.model_admission import endpoint_supports_execution
+    matching = [ep for ep in endpoints if endpoint_supports_execution(ep)
+                and _session_url_matches_endpoint(target_url, getattr(ep, "base_url", "") or "")]
     if not matching:
         return None, False
     bound_id = getattr(sess, "endpoint_id", None) or None

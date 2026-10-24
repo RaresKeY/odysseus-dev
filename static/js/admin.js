@@ -504,6 +504,7 @@ async function _refreshAfterEndpointChange(deletedEndpointId) {
 }
 
 async function _selectAddedModelInChat(endpoint) {
+  if (endpoint?.model_type === 'decision') return;
   const modelId = endpoint && Array.isArray(endpoint.models) ? endpoint.models[0] : '';
   if (!modelId) return;
   try {
@@ -659,6 +660,45 @@ function endpointDetailHtml(ep, category) {
   }
   if (!parts.length) return '';
   return `<div class="admin-ep-detail">${parts.join('')}</div>`;
+}
+
+async function renderDecisionModelsPanel(panel, ep) {
+  panel.innerHTML = '<div class="mcp-tools-header">Decision model IDs</div><span>Loading saved models…</span>';
+  try {
+    const response = await fetch(`/api/model-endpoints/${ep.id}/models`, { credentials: 'same-origin' });
+    if (!response.ok) throw new Error('Could not load saved models');
+    const models = await response.json();
+    const enabled = models.filter(model => !model.is_hidden).map(model => model.id);
+    panel.innerHTML = `<div class="mcp-tools-header">Decision model IDs</div>
+      <label style="display:block;">One model ID per line
+        <textarea class="mcp-tools-search" rows="4" style="display:block;width:100%;box-sizing:border-box;"></textarea>
+      </label>
+      <button type="button" class="admin-btn-sm" data-save-decision-models>Save models</button>
+      <span role="status" data-decision-models-status></span>`;
+    const input = panel.querySelector('textarea');
+    input.value = enabled.join('\n');
+    const button = panel.querySelector('[data-save-decision-models]');
+    const status = panel.querySelector('[data-decision-models-status]');
+    button.addEventListener('click', async () => {
+      button.disabled = true;
+      try {
+        const ids = [...new Set(input.value.split(/[\n,]+/).map(value => value.trim()).filter(Boolean))];
+        const saved = await fetch(`/api/model-endpoints/${ep.id}/models`, {
+          method: 'PATCH', credentials: 'same-origin', headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ pinned_models: ids, hidden: models.map(model => model.id).filter(id => !ids.includes(id)) }),
+        });
+        if (!saved.ok) throw new Error('Could not save model IDs');
+        status.textContent = 'Saved';
+        _refreshAfterEndpointChange();
+      } catch (error) {
+        status.textContent = error.message;
+      } finally {
+        button.disabled = false;
+      }
+    });
+  } catch (error) {
+    panel.textContent = error.message;
+  }
 }
 
 function renderFeatherlessPanel(panel, ep, row) {
@@ -1049,7 +1089,7 @@ async function loadEndpoints() {
       // un-hide them. Gate on the total instead.
       const isChatgptAccount = isChatgptSubscriptionEndpoint(ep);
       const isFeatherless = isFeatherlessEndpoint(ep);
-      const hasModels = ep.online && (totalCount > 0 || isFeatherless);
+      const hasModels = ep.model_type === 'decision' || (ep.online && (totalCount > 0 || isFeatherless));
       const countText = (isChatgptAccount || isFeatherless)
         ? `${visibleCount} models enabled`
         : `${visibleCount}/${totalCount} models enabled`;
@@ -1075,6 +1115,7 @@ async function loadEndpoints() {
               </label>` : ''}
               <span class="adm-ep-row-logo" style="display:inline-flex;align-items:center;justify-content:center;width:16px;height:16px;flex-shrink:0;opacity:0.9;">${providerLogoFromUrl(ep.base_url) || ''}</span>
               <span class="admin-user-name">${esc(epTitle)}</span>
+              ${ep.model_type === 'decision' ? '<span class="admin-badge">Decision only</span>' : ''}
               ${ep.model_type === 'image' ? '<span class="admin-badge" style="background:color-mix(in srgb, var(--accent) 20%, transparent);color:var(--accent);">Image</span>' : ''}
               ${kindLabel ? `<span class="admin-badge">${esc(kindLabel)}</span>` : ''}
               ${statusBadge}
@@ -1280,7 +1321,7 @@ async function loadEndpoints() {
         // Don't let interactions inside the expanded panel re-fire the
         // expand/collapse handler — the search box was getting closed
         // because clicking it bubbled up to here.
-        if (e.target.closest('.admin-btn-sm, .admin-btn-delete, .mcp-tools-list, .mcp-tools-header, .mcp-tools-search, input, select, label, button, .featherless-panel, .featherless-search-bar, [data-ep-model-row]')) return;
+        if (e.target.closest('.admin-btn-sm, .admin-btn-delete, .mcp-tools-list, .mcp-tools-header, .mcp-tools-search, input, textarea, select, label, button, .featherless-panel, .featherless-search-bar, [data-ep-model-row]')) return;
         const epId = header.dataset.admEpHeader;
         const panel = row.querySelector(`[data-adm-ep-models-panel="${epId}"]`);
         if (!panel) return;
@@ -1294,6 +1335,10 @@ async function loadEndpoints() {
         if (!_modelsLoaded && isOpen) {
           _modelsLoaded = true;
           const ep = data.find(x => String(x.id) === String(epId));
+          if (ep?.model_type === 'decision') {
+            await renderDecisionModelsPanel(panel, ep);
+            return;
+          }
           if (ep && isFeatherlessEndpoint(ep)) {
             renderFeatherlessPanel(panel, ep, row);
             return;
@@ -1947,7 +1992,8 @@ function initEndpointForm() {
       }
       const epType = el('adm-epType');
       if (epType) fd.append('model_type', epType.value);
-      if (provider.value && /openrouter\.ai|ollama\.com/i.test(provider.value)) fd.append('require_models', 'true');
+      if (epType?.value === 'decision') fd.append('skip_probe', 'true');
+      else if (provider.value && /openrouter\.ai|ollama\.com/i.test(provider.value)) fd.append('require_models', 'true');
       else fd.append('skip_probe', 'false');
       const res = await fetch('/api/model-endpoints', { method: 'POST', body: fd, credentials: 'same-origin' });
       const d = await res.json();
@@ -1962,7 +2008,10 @@ function initEndpointForm() {
         await _selectAddedModelInChat(d);
         const goLink = ' <a href="#" data-go-added-models style="margin-left:6px;text-decoration:underline;color:inherit;font-weight:600;">Added Models →</a>';
         const isFeatherless = d && d.base_url && /featherless\.ai/i.test(d.base_url);
-        if (!d.online) {
+        if (d.model_type === 'decision') {
+          msg.innerHTML = 'Added decision endpoint — enter model IDs in Added Models' + goLink;
+          msg.className = 'admin-success';
+        } else if (!d.online) {
           msg.innerHTML = 'Added (endpoint offline — will retry on next load)' + goLink;
           msg.className = 'admin-error';
         } else if (isFeatherless) {
