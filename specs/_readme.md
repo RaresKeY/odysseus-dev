@@ -56,6 +56,7 @@ project documentation.
 - [model-quirks.md](model-quirks.md): model-specific behavior observations, evidence, and promotion gates.
 - [model-providers/_readme.md](model-providers/_readme.md): provider-by-provider API/catalog shape index and compatibility status.
 - [agent-tools.md](agent-tools.md): agent loop, tool schemas, tool execution, tool retrieval, tool security, MCP tool exposure.
+- [browser-automation.md](browser-automation.md): private-pipe producer, captured isolated-world browser authority, finite decisions and runtime qualification.
 - [context-building.md](context-building.md): URL/search/RAG/memory/skills/YouTube/email/tool-output context, untrusted wrapping, unavailable context, intent boundaries.
 - [search.md](search.md): web search providers, ranking, cache/analytics, URL fetch/content extraction, `src.search`/`services.search` split.
 - [documents-rag-uploads.md](documents-rag-uploads.md): uploads, documents, PDF/form handling, personal docs, RAG/vector stores.

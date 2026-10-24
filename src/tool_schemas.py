@@ -403,25 +403,20 @@ FUNCTION_TOOL_SCHEMAS = [
         "type": "function",
         "function": {
             "name": "private_browser",
-            "description": "Trusted browser session metadata only. Page/document operations are unavailable because the local producer cannot atomically bind a captured target. No batch or raw CLI flags. Use web_search/web_fetch for supported web access.",
+            "description": "Interact with an owner-enrolled private browser. Obtain snapshot on page t1, then use only its observation nonce and opaque nN ref. fill accepts a user-prepared value_id, never arbitrary text. automate runs a bounded decision loop with independent per-action admission and visible handoff. Requires an explicitly qualified pipe producer; legacy agent-browser remains metadata-only. No batch, selectors, JavaScript, coordinates or raw CDP.",
             "parameters": {
                 "type": "object",
                 "properties": {
-                    "action": {"type": "string", "enum": ["session_info", "tabs", "open", "read", "snapshot", "find", "evaluate", "click", "fill", "press", "scroll", "wait", "screenshot", "close", "navigate", "reload", "back", "forward", "select_page", "close_page", "network", "console", "new_page"]},
-                    "page": {"type": "string", "pattern": "^t[1-9][0-9]*$", "description": "Observed alias only; page commands remain disabled for the current producer."},
+                    "action": {"type": "string", "enum": ["session_info", "open", "read", "snapshot", "click", "fill", "scroll", "wait", "screenshot", "close", "navigate", "automate"]},
+                    "page": {"type": "string", "enum": ["t1"], "description": "Captured page alias; it cannot select another target."},
                     "url": {"type": "string"},
-                    "selector": {"type": "string"},
-                    "target": {"type": "string"},
-                    "ref": {"type": "string"},
-                    "key": {"type": "string"},
-                    "direction": {"type": "string"},
-                    "text": {"type": "string"},
-                    "value": {"type": "string"},
-                    "script": {"type": "string"},
-                    "path": {"type": "string"},
-                    "find": {"type": "string"},
-                    "amount": {"type": "integer"},
-                    "timeout_ms": {"type": "integer", "minimum": 0, "maximum": 20000}
+                    "observation": {"type": "string", "description": "Exact nonce returned by the latest snapshot; never reuse after an effect/navigation/human input."},
+                    "ref": {"type": "string", "pattern": "^n[0-9]+$"},
+                    "value_id": {"type": "string", "description": "Exact observed field label for text explicitly prepared by the user."},
+                    "goal": {"type": "string", "description": "Bounded automation task within the existing owner origin/effect grant."},
+                    "max_steps": {"type": "integer", "minimum": 1, "maximum": 100},
+                    "amount": {"type": "integer", "minimum": -800, "maximum": 800},
+                    "timeout_ms": {"type": "integer", "minimum": 0, "maximum": 1000}
                 },
                 "required": ["action"],
                 "additionalProperties": False
