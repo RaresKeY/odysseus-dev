@@ -226,7 +226,7 @@ class AutomationStore:
                     "last_explicit_mode": p.last_explicit_mode,
                     "elevation_ceiling": p.elevation_ceiling, **copy.deepcopy(config)}
 
-    def acquire(self, owner, session_id, raw_ask, entrypoint, submission_id=None):
+    def acquire(self, owner, session_id, raw_ask, entrypoint, submission_id=None, *, ephemeral_semantics=False):
         from src.owner_identity import effective_storage_owner
         owner = effective_storage_owner(owner)
         if owner is None:
@@ -249,7 +249,9 @@ class AutomationStore:
             previous = db.query(d.ChatAutomationSubmission).filter_by(
                 session_id=sid, owner_key=owner_key(owner)).order_by(
                     d.ChatAutomationSubmission.created_at.desc(), d.ChatAutomationSubmission.submission_id.desc()).first()
-            prior_task = self._task_projection(db, previous) if previous else {}
+            chat_name = db.query(d.Session.name).filter_by(id=sid).scalar()
+            ephemeral_semantics = ephemeral_semantics or str(chat_name or '').strip().casefold() in {'nobody', 'incognito'}
+            prior_task = self._task_projection(db, previous) if previous and not ephemeral_semantics else {}
             # A new accepted ask supersedes old pending control cards as well as
             # an expired preparation. Late finally blocks may not revive them.
             db.query(d.ChatAutomationSubmission).filter(
@@ -271,11 +273,13 @@ class AutomationStore:
             db.add(d.ChatAutomationSubmission(submission_id=identifier, owner_key=owner_key(owner),
                 session_id=sid, policy_revision=s.policy_revision, authority_epoch=p.authority_epoch,
                 intent_digest=digest(raw_ask), descriptor={}, status="preparing", created_at=self.clock(),
-                current_ask=raw_ask, task_lineage_id=identifier, original_submission_id=identifier,
-                previous_submission_id=previous.submission_id if previous else None, prior_task=prior_task))
+                current_ask=None if ephemeral_semantics else raw_ask,
+                task_lineage_id=identifier, original_submission_id=identifier,
+                previous_submission_id=previous.submission_id if previous and not ephemeral_semantics else None,
+                prior_task=None if ephemeral_semantics else prior_task))
             return BoundChatTurn(self, owner, sid, identifier, token, raw_ask, policy,
                                  {**copy.deepcopy(p.configuration or {}), **{key: policy[key] for key in FEATURE_DEFAULTS}},
-                                 prior_task=prior_task)
+                                 prior_task=prior_task, ephemeral_semantics=bool(ephemeral_semantics))
 
     def current(self, bound):
         d = _models()
@@ -306,6 +310,11 @@ class AutomationStore:
             row = db.query(d.ChatAutomationSubmission).filter_by(submission_id=bound.submission_id).first()
             if row is None or row.owner_key != owner_key(bound.owner):
                 raise HTTPException(409, "Turn binding is unavailable")
+            if status == 'completed' and row.status == 'awaiting_input':
+                pending = db.query(d.ChatAutomationInputCard).filter_by(submission_id=bound.submission_id,
+                    owner_key=owner_key(bound.owner), session_id=bound.session_id, status='pending').first()
+                if pending is not None and pending.expires_at > self.clock():
+                    status = 'awaiting_input'
             next_status = transition_status(row.status, status)
             if row.status in {"completed", "failed", "cancelled", "detached"}:
                 return
@@ -314,6 +323,8 @@ class AutomationStore:
                 db.query(d.ChatAutomationInputCard).filter_by(submission_id=bound.submission_id,
                     owner_key=owner_key(bound.owner), status='pending').update(
                         {'status': 'cancelled' if next_status != 'completed' else 'superseded'}, synchronize_session=False)
+            if status == 'awaiting_approval' and bound.pending_approval_id:
+                row.routing = {**(row.routing or {}), 'pending_action_card_id': bound.pending_approval_id}
             if descriptor is not None:
                 row.descriptor = copy.deepcopy(descriptor)
             lease = db.query(d.ChatAutomationLease).filter_by(session_id=bound.session_id, token=bound.token).first()
@@ -334,20 +345,34 @@ class AutomationStore:
         card = db.query(d.ChatAutomationInputCard).filter_by(submission_id=row.submission_id,
             owner_key=row.owner_key, session_id=row.session_id, status='pending').first()
         pending = ({**copy.deepcopy(card.payload or {}), 'card_id': card.card_id, 'question': card.question,
-                    'kind': 'clarification', 'expires_at': card.expires_at, 'resolved': False} if card else None)
+                    'kind': 'clarification', 'session_id': row.session_id, 'input_card_id': card.card_id,
+                    'expires_at': card.expires_at, 'resolved': False} if card else None)
         status = row.status
-        if status in {'awaiting_input', 'awaiting_approval'} and card is None:
+        pending_expiry = card.expires_at if card else None
+        if status == 'awaiting_approval':
+            reference = (row.routing or {}).get('pending_action_card_id')
+            if reference:
+                from src.tool_approvals import tool_approval_store
+                action_card = tool_approval_store.peek(reference)
+                if (action_card is not None and owner_key(action_card.owner) == row.owner_key
+                        and action_card.session_id == row.session_id and action_card.submission_id == row.submission_id
+                        and action_card.expires_at > self.clock()):
+                    pending = {'card_id': action_card.approval_id, 'question': 'Exact action awaiting structured approval',
+                        'kind': 'tool_approval', 'resolved': False, 'reference_only': True}
+                    pending_expiry = action_card.expires_at
+        if status in {'awaiting_input', 'awaiting_approval'} and pending is None:
             result = {'previous_request': row.current_ask, 'previous_answer': row.previous_answer,
                       'previous_status': status, 'active_task': row.current_ask, 'pending_question': None}
         else:
             result = pending_task_projection(row.current_ask, status, previous_answer=row.previous_answer,
-                pending_question=pending, pending_expires_at=card.expires_at if card else None, now=self.clock())
+                pending_question=pending, pending_expires_at=pending_expiry, now=self.clock())
         original = db.query(d.ChatAutomationSubmission).filter_by(submission_id=row.original_submission_id,
             owner_key=row.owner_key, session_id=row.session_id).first() if row.original_submission_id else None
         return {**result, 'submission_id': row.submission_id, 'task_lineage_id': row.task_lineage_id,
                 'original_submission_id': row.original_submission_id,
                 'original_task': original.current_ask if original else row.current_ask,
-                'answer_message_id': row.answer_message_id}
+                'answer_message_id': row.answer_message_id, 'preparation': copy.deepcopy(row.preparation),
+                'routing': copy.deepcopy(row.routing)}
 
     def task_state(self, owner, session_id):
         """Reloadable owner-scoped semantic facts, with no inferred permissions."""
@@ -378,6 +403,8 @@ class AutomationStore:
 
     def record_input(self, bound, payload, *, ttl=3600):
         """Persist actual ordinary ask_user events; approvals retain their owner."""
+        if bound.ephemeral_semantics:
+            return None
         if (not isinstance(payload, dict) or payload.get('kind') == 'tool_approval'
                 or payload.get('approval_id')):
             return None
@@ -425,6 +452,8 @@ class AutomationStore:
             return {'card_id': card.card_id, 'kind': 'clarification', 'resolved': True}
 
     def record_answer(self, bound, answer, *, message_id=None):
+        if bound.ephemeral_semantics:
+            return
         if not isinstance(answer, str) or len(answer.encode('utf-8')) > 256 * 1024:
             return
         d = _models()
@@ -459,11 +488,12 @@ def validate_configuration(changes):
     if mappings is not None:
         if not isinstance(mappings, dict) or set(mappings) != APPROACHES:
             raise HTTPException(422, "Configure all three approaches")
-        for item in mappings.values():
-            if (not isinstance(item, dict) or set(item) != {"endpoint_id", "model", "reasoning_effort"}
-                    or not all(isinstance(item[k], str) and item[k] for k in ("endpoint_id", "model"))
-                    or item["reasoning_effort"] not in EFFORTS):
-                raise HTTPException(422, "Invalid approach model selection")
+        from src.approach_routing import validate_approaches
+        from src.decisions.contracts import DecisionError
+        try:
+            validate_approaches(mappings)
+        except DecisionError:
+            raise HTTPException(422, "Invalid approach model selection or supported efforts") from None
 
 
 def validate_elevation_roots(owner, roots):
@@ -530,9 +560,24 @@ def retire_automation_owner(db, owner):
     db.query(d.ChatAutomationLease).filter_by(owner_key=key).delete(synchronize_session=False)
     retired = 'retired:' + uuid.uuid4().hex
     db.query(d.ChatAutomationSubmission).filter_by(owner_key=key).update(
-        {'owner_key': retired, 'status': 'cancelled'}, synchronize_session=False)
+        {'owner_key': retired, 'status': 'cancelled', 'current_ask': None, 'prior_task': None,
+         'previous_answer': None, 'answer_message_id': None, 'preparation': None, 'routing': None},
+        synchronize_session=False)
     db.query(d.ChatAutomationInputCard).filter_by(owner_key=key).delete(synchronize_session=False)
     db.query(d.DecisionAttempt).filter_by(owner_key=key).update({'owner_key': retired}, synchronize_session=False)
+
+
+def retire_automation_session(db, owner, session_id):
+    """Delete private task/card content with its owned chat, in the same transaction."""
+    d = _models()
+    sid, key = str(session_id), owner_key(owner)
+    session = db.query(d.Session).filter_by(id=sid).first()
+    if session is None or owner_key(session.owner) != key:
+        return False
+    for model in (d.ChatAutomationInputCard, d.ChatAutomationSubmission, d.ChatAutomationLease,
+                  d.ChatAutomationState):
+        db.query(model).filter_by(owner_key=key, session_id=sid).delete(synchronize_session=False)
+    return True
 
 
 class SqlAttemptStore:
@@ -589,6 +634,7 @@ class BoundChatTurn:
     pending_approval_id: str | None = None
     pending_input_id: str | None = None
     prior_task: dict = field(default_factory=dict)
+    ephemeral_semantics: bool = False
     preparation: Any = None
     tool_selection: Any = None
     followup: Any = None
@@ -665,14 +711,17 @@ def bound_session_view(session):
 
 async def prepare_chat_turn(store, owner, session, raw_ask, *, entrypoint="interactive", submission_id=None,
                             reasoning_effort=None, allow_empty=False, tool_inventory=None,
-                            preparation=None, decision_provider=None, supported_efforts=None):
+                            preparation=None, decision_provider=None, supported_efforts=None, ephemeral_semantics=False):
     if not isinstance(raw_ask, str) or (not raw_ask.strip() and not allow_empty) or len(raw_ask) > 50000:
         raise HTTPException(422, "Enter a nonblank message of at most 50000 characters")
-    bound = store.acquire(owner, session.id, raw_ask, entrypoint, submission_id)
+    bound = store.acquire(owner, session.id, raw_ask, entrypoint, submission_id,
+        ephemeral_semantics=ephemeral_semantics or str(getattr(session, 'name', '') or '').strip().casefold() in {'nobody', 'incognito'})
     owner = bound.owner
     try:
         from src.decision_routing import preparation_receipt
-        if isinstance(preparation, dict):
+        if bound.ephemeral_semantics:
+            bound.preparation = preparation_receipt(bound, unknowns=['ephemeral_context_unavailable'])
+        elif isinstance(preparation, dict):
             bound.preparation = preparation_receipt(bound, preparation.get('sources', ()),
                 unknowns=preparation.get('unknowns', ()))
         else:
@@ -680,8 +729,10 @@ async def prepare_chat_turn(store, owner, session, raw_ask, *, entrypoint="inter
         bound.preparation.validate(bound)
         try:
             from src.decisions.observability import default_observability, DecisionObservability
-        except ImportError:
-            pass  # Optional module is absent in older installations.
+        except ModuleNotFoundError as error:
+            if error.name != 'src.decisions.observability':
+                raise
+            # The optional module is absent in this pre-integration source.
         else:
             observer = DecisionObservability(store.session_factory) if store.session_factory else default_observability()
             observer.bind_turn(owner, session.id, bound.run_id)
@@ -739,11 +790,16 @@ async def prepare_chat_turn(store, owner, session, raw_ask, *, entrypoint="inter
             bound.headers = dict(session.headers or {})
         bound.descriptor = {"endpoint_id": endpoint_id, "model": model, "reasoning_effort": effort,
             "route_mode": bound.policy["route_mode"], "submission_id": bound.submission_id}
+        if bound.policy['route_mode'] == 'auto' and selected.get('descriptor', {}).get('supported_efforts'):
+            bound.descriptor['supported_efforts'] = list(selected['descriptor']['supported_efforts'])
+            bound.descriptor['effort_support_source'] = 'owner_configured'
         if not bound.current():
             raise HTTPException(409, "Chat settings changed before submission")
-        if tool_inventory is not None:
+        if (tool_inventory is not None or bound.policy.get('tool_routing') == 'existing'
+                and (bound.policy.get('followup_enabled') or bound.policy.get('preparation_enabled'))):
             from src.decision_routing import prepare_tool_routing
-            await prepare_tool_routing(bound, tool_inventory, provider=decision_provider)
+            await prepare_tool_routing(bound, tool_inventory if tool_inventory is not None else [],
+                                       provider=decision_provider, semantic_only=tool_inventory is None)
         store.record_preparation(bound)
         bind_prepared_browser_scope(bound)
         store.record(bound, "bound", bound.descriptor)
@@ -774,6 +830,9 @@ def validate_provider_binding(url, model, headers, session_id, reasoning_effort=
             or model != bound.descriptor["model"] or dict(headers or {}) != bound.headers
             or (reasoning_effort or "") != bound.descriptor["reasoning_effort"]):
         raise RuntimeError("Execution provider does not match the acknowledged turn binding")
+    supported = bound.descriptor.get('supported_efforts')
+    if supported is not None and (reasoning_effort or None) not in supported:
+        raise RuntimeError("Execution effort is outside the committed supported set")
 
 
 async def prepare_chat_submission(*args, **kwargs):
@@ -783,7 +842,7 @@ async def prepare_chat_submission(*args, **kwargs):
         return await prepare_chat_turn(*args, **kwargs)
     except DecisionError as error:
         raise HTTPException(409,
-            "Automatic model selection could not be completed. Choose a model manually or check chat settings.",
+            "Automatic preparation could not be completed. Choose a model manually or check chat settings.",
             headers={'X-Decision-Failure': error.code}) from None
 
 
@@ -896,41 +955,65 @@ def _clarification_payload(payload):
 
 
 class TurnEventObserver:
-    """Observe actual SSE events; prose never creates a pending card."""
+    """Observe and annotate complete SSE frames, including arbitrary splits."""
     def __init__(self, bound):
+        import codecs
         self.bound, self.buffer, self.answer = bound, '', ''
+        self.decoder = codecs.getincrementaldecoder('utf-8')(errors='replace')
 
     def feed(self, chunk):
+        import re
         if isinstance(chunk, bytes):
-            chunk = chunk.decode('utf-8', errors='replace')
+            chunk = self.decoder.decode(chunk)
         if not isinstance(chunk, str):
-            return
+            return ''
         self.buffer += chunk
-        if len(self.buffer) > 512 * 1024:
-            self.buffer = ''
-            return
-        while '\n\n' in self.buffer:
-            frame, self.buffer = self.buffer.split('\n\n', 1)
-            for line in frame.splitlines():
-                if not line.startswith('data:'):
-                    continue
-                try:
-                    event = json.loads(line[5:].strip())
-                except (ValueError, TypeError):
-                    continue
-                if not isinstance(event, dict):
-                    continue
-                if event.get('type') == 'ask_user':
-                    self.bound.store.record_input(self.bound, event.get('data'))
+        output = []
+        while True:
+            delimiter = re.search(r'\r?\n\r?\n', self.buffer)
+            if delimiter is None:
+                break
+            frame, separator = self.buffer[:delimiter.start()], self.buffer[delimiter.start():delimiter.end()]
+            self.buffer = self.buffer[delimiter.end():]
+            lines = frame.splitlines()
+            data_lines = [line[5:].lstrip(' ') for line in lines if line.startswith('data:')]
+            try:
+                event = json.loads('\n'.join(data_lines))
+            except (ValueError, TypeError):
+                event = None
+            if isinstance(event, dict):
+                if event.get('type') == 'ask_user' and isinstance(event.get('data'), dict):
+                    identifier = self.bound.store.record_input(self.bound, event['data'])
+                    if identifier:
+                        event['data'].update(input_card_id=identifier, session_id=self.bound.session_id)
+                        replacement = 'data: ' + json.dumps(event, ensure_ascii=False)
+                        replaced, updated = False, []
+                        for line in lines:
+                            if line.startswith('data:'):
+                                if not replaced:
+                                    updated.append(replacement)
+                                    replaced = True
+                            else:
+                                updated.append(line)
+                        frame = '\n'.join(updated)
                 if event.get('type') == 'final_response' and isinstance(event.get('content'), str):
                     self.answer = event['content']
                 elif isinstance(event.get('delta'), str) and not event.get('thinking'):
                     if len((self.answer + event['delta']).encode('utf-8')) <= 256 * 1024:
                         self.answer += event['delta']
+            output.append(frame + separator)
+        # Oversize observational frames remain byte-for-byte visible, without
+        # accumulating unbounded parser state or inferring a partial card.
+        if len(self.buffer) > 512 * 1024:
+            output.append(self.buffer)
+            self.buffer = ''
+        return ''.join(output)
 
     def finish(self):
+        tail, self.buffer = self.buffer + self.decoder.decode(b'', final=True), ''
         if self.answer:
             self.bound.store.record_answer(self.bound, self.answer)
+        return tail
 
 
 def observe_json_response(bound, response):
@@ -983,7 +1066,9 @@ def automation_ingress(session_manager):
             owner = effective_storage_owner(effective_user(request))
             if owner is None:
                 raise HTTPException(401, "A chat owner is required")
-            preparation = session_preparation_sources(session, data.get('message') or '')
+            ephemeral_semantics = (str(data.get('incognito', '')).casefold() == 'true'
+                or str(getattr(session, 'name', '') or '').strip().casefold() in {'nobody', 'incognito'})
+            preparation = None if ephemeral_semantics else session_preparation_sources(session, data.get('message') or '')
             if data.get("tool_approval_id"):
                 from src.agent_runtime.authority import require_user_approval_request
                 require_user_approval_request(request)
@@ -1005,12 +1090,12 @@ def automation_ingress(session_manager):
                 bound = await prepare_chat_submission(store, owner, session, data.get("message") or "",
                     entrypoint="delegated" if is_delegated_credential(request) else "interactive",
                     submission_id=request.headers.get("X-Chat-Submission-Id"),
-                    reasoning_effort=data.get("reasoning_effort"), allow_empty=True, preparation=preparation)
+                    reasoning_effort=data.get("reasoning_effort"), allow_empty=True, preparation=preparation, ephemeral_semantics=ephemeral_semantics)
             else:
                 bound = await prepare_chat_submission(store, owner, session, data["message"],
                     entrypoint="delegated" if is_delegated_credential(request) else "interactive",
                     submission_id=request.headers.get("X-Chat-Submission-Id"),
-                    reasoning_effort=data.get("reasoning_effort"), preparation=preparation)
+                    reasoning_effort=data.get("reasoning_effort"), preparation=preparation, ephemeral_semantics=ephemeral_semantics)
             try:
                 if data.get('input_card_id'):
                     store.resolve_input(owner, sid, data['input_card_id'], bound.raw_ask,
@@ -1025,11 +1110,16 @@ def automation_ingress(session_manager):
                         try:
                             with bound.activate():
                                 async for item in original:
-                                    observer.feed(item)
-                                    yield item
+                                    observed = observer.feed(item)
+                                    if observed:
+                                        yield observed
+                            tail = observer.finish()
+                            if tail:
+                                yield tail
                             ended = True
                         finally:
-                            observer.finish()
+                            if not ended:
+                                observer.finish()
                             if not response.headers.get("X-Odysseus-Run-Id"):
                                 store.record(bound, 'awaiting_input' if bound.pending_input_id else
                                     'awaiting_approval' if bound.pending else 'completed' if ended else 'detached')

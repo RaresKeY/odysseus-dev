@@ -48,8 +48,9 @@ async def test_confirmation_is_intent_only_and_cannot_create_pending_from_prose(
     first = await prepare_chat_turn(store, 'alice', session(), 'old')
     store.record_answer(first, 'Approve?')
     store.record(first, 'completed')
-    second = await prepare_chat_turn(store, 'alice', session(), 'yes')
-    await prepare_tool_routing(second, schemas(), provider=Provider({'followup': 'confirmation'}))
+    provider = Provider({'followup': 'confirmation'})
+    second = await prepare_chat_turn(store, 'alice', session(), 'yes', decision_provider=provider)
+    await prepare_tool_routing(second, schemas(), provider=provider)
     assert second.followup.relation == 'unknown' and second.followup.linked_card_id is None
     assert second.followup.public()['intent_only'] and second.pending_approval_id is None
 
@@ -99,8 +100,10 @@ async def test_followup_continuation_persists_original_lineage_without_replacing
     store.update_chat('alice', 'a', {'followup_enabled': True}, 0)
     first = await prepare_chat_turn(store, 'alice', session(), '  Original exact task  ')
     store.record(first, 'completed')
-    second = await prepare_chat_turn(store, 'alice', session(), '  Adapt the second part  ')
-    await prepare_tool_routing(second, schemas(), provider=Provider({'followup': 'continuation'}))
+    provider = Provider({'followup': 'continuation'})
+    second = await prepare_chat_turn(store, 'alice', session(), '  Adapt the second part  ', decision_provider=provider)
+    await prepare_tool_routing(second, schemas(), provider=provider)
+    assert len(provider.requests) == 1
     with store.transaction() as db:
         row = db.query(d.ChatAutomationSubmission).filter_by(submission_id=second.run_id).one()
         assert row.task_lineage_id == first.run_id and row.original_submission_id == first.run_id
@@ -146,7 +149,10 @@ async def test_real_ingress_sse_records_card_and_json_answer_without_history_aut
         state = store.task_state('alice', 'a')
         assert state['previous_status'] == 'awaiting_input'
         assert state['pending_question']['options'][0]['label'] == 'Workspace'
-        card = state['pending_question']['card_id']
+        frame = next(line[6:] for line in result.text.splitlines() if line.startswith('data: '))
+        emitted = json.loads(frame)['data']
+        card = emitted['input_card_id']
+        assert emitted['session_id'] == 'a' and card == state['pending_question']['card_id']
         result = await client.post('/json', json={'session': 'a', 'message': 'Workspace', 'input_card_id': card})
         assert result.status_code == 200
     state = store.task_state('alice', 'a')
@@ -156,3 +162,75 @@ async def test_real_ingress_sse_records_card_and_json_answer_without_history_aut
         latest = db.query(d.ChatAutomationSubmission).filter_by(submission_id=state['submission_id']).one()
         assert latest.preparation['sources'][0]['trust'] == 'untrusted_history'
         assert db.query(d.ChatAutomationInputCard).one().status == 'resolved'
+
+
+@pytest.mark.asyncio
+async def test_sealed_action_reference_confirmation_never_consumes_or_revives(store, monkeypatch):
+    from types import SimpleNamespace
+    from src.tool_approvals import tool_approval_store
+    store.update_chat('alice', 'a', {'followup_enabled': True}, 0)
+    first = await prepare_chat_turn(store, 'alice', session(), 'Do exact action')
+    first.pending, first.pending_approval_id = True, 'sealed-action'
+    store.record(first, 'awaiting_approval')
+    card = SimpleNamespace(owner='alice', session_id='a', submission_id=first.run_id,
+                           expires_at=store.clock() + 60, approval_id='sealed-action')
+    monkeypatch.setattr(tool_approval_store, 'peek', lambda identifier: card if identifier == 'sealed-action' else None)
+    def forbidden(*args, **kwargs):
+        raise AssertionError('Intent cannot consume an approval')
+    monkeypatch.setattr(tool_approval_store, 'consume', forbidden)
+    provider = Provider({'followup': 'confirmation'})
+    second = await prepare_chat_turn(store, 'alice', session(), 'yes', decision_provider=provider)
+    assert second.followup.linked_card_id == 'sealed-action' and second.followup.relation == 'confirmation'
+    assert not second.pending and second.pending_approval_id is None and not first.current()
+    assert len(provider.requests) == 1
+
+
+@pytest.mark.asyncio
+async def test_completed_lifecycle_cannot_close_actual_pending_clarification(store):
+    bound = await prepare_chat_turn(store, 'alice', session(), 'Task')
+    identifier = store.record_input(bound, {'question': 'Which folder?'})
+    store.record(bound, 'completed')
+    state = store.task_state('alice', 'a')
+    assert state['previous_status'] == 'awaiting_input'
+    assert state['pending_question']['input_card_id'] == identifier
+    store.record(bound, 'cancelled')
+    assert store.task_state('alice', 'a')['pending_question'] is None
+
+
+@pytest.mark.asyncio
+async def test_retire_clears_private_task_text_and_session_delete_is_owner_scoped(store):
+    from src.chat_automation import retire_automation_owner, retire_automation_session
+    bound = await prepare_chat_turn(store, 'alice', session(), 'PRIVATE ASK')
+    store.record_answer(bound, 'PRIVATE ANSWER')
+    store.record_input(bound, {'question': 'PRIVATE QUESTION'})
+    with store.transaction() as db:
+        assert not retire_automation_session(db, 'bob', 'a')
+        retire_automation_owner(db, 'alice')
+    with store.transaction() as db:
+        row = db.query(d.ChatAutomationSubmission).one()
+        assert row.current_ask is None and row.previous_answer is None and row.prior_task is None
+        assert db.query(d.ChatAutomationInputCard).count() == 0
+    bound = await prepare_chat_turn(store, 'alice', session(), 'new owner session facts')
+    with store.transaction() as db:
+        assert retire_automation_session(db, 'alice', 'a')
+    with store.transaction() as db:
+        assert db.query(d.ChatAutomationSubmission).filter_by(submission_id=bound.run_id).count() == 0
+
+
+@pytest.mark.asyncio
+@pytest.mark.parametrize('private_mode', ['flag', 'Nobody', 'Incognito'])
+async def test_private_semantics_sentinels_never_persist(store, private_mode):
+    sess = session()
+    sess.name = private_mode
+    bound = await prepare_chat_turn(store, 'alice', sess, 'PRIVATE-ASK-SENTINEL',
+        ephemeral_semantics=private_mode == 'flag', preparation={'sources': [
+            {'source_id': 'history', 'version': '1', 'excerpt': 'PRIVATE-HISTORY-SENTINEL'}]})
+    assert bound.raw_ask == 'PRIVATE-ASK-SENTINEL' and bound.ephemeral_semantics
+    store.record_answer(bound, 'PRIVATE-ANSWER-SENTINEL')
+    assert store.record_input(bound, {'question': 'PRIVATE-QUESTION-SENTINEL'}) is None
+    with store.transaction() as db:
+        row = db.query(d.ChatAutomationSubmission).one()
+        assert row.current_ask is None and row.previous_answer is None and row.prior_task is None
+        assert 'SENTINEL' not in json.dumps(row.preparation)
+        assert db.query(d.ChatAutomationInputCard).count() == 0
+    assert store.task_state('alice', 'a')['previous_status'] == 'unknown'

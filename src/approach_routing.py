@@ -20,13 +20,21 @@ EFFORTS = frozenset({"none", "minimal", "low", "medium", "high", "xhigh", "max"}
 
 def validate_mapping(mapping: dict) -> dict:
     if (not isinstance(mapping, dict)
-            or set(mapping) != {"endpoint_id", "model", "reasoning_effort"}
+            or set(mapping) - {"endpoint_id", "model", "reasoning_effort", "supported_efforts"}
+            or not {"endpoint_id", "model", "reasoning_effort"} <= set(mapping)
             or any(not isinstance(mapping.get(k), str) or not mapping[k].strip()
                    or len(mapping[k]) > 512 for k in ("endpoint_id", "model"))
             or mapping["reasoning_effort"] is not None and (
                 not isinstance(mapping["reasoning_effort"], str)
                 or mapping["reasoning_effort"] not in EFFORTS)):
         raise DecisionError("approach_mapping_invalid")
+    if 'supported_efforts' in mapping:
+        supported = mapping['supported_efforts']
+        if (not isinstance(supported, list) or not 1 <= len(supported) <= len(EFFORTS)
+                or any(not isinstance(value, str) or value not in EFFORTS for value in supported)
+                or len(set(supported)) != len(supported)
+                or mapping['reasoning_effort'] not in supported):
+            raise DecisionError('approach_supported_efforts_invalid')
     return dict(mapping)
 
 
@@ -135,6 +143,10 @@ def resolve_execution_route(mapping: dict, owner: str | None, *, allowed_models:
     candidate, descriptor = route
     if candidate[1] != mapping["model"] or descriptor.get("endpoint_id") != mapping["endpoint_id"]:
         raise DecisionError("execution_route_mismatch")
+    descriptor = dict(descriptor)
+    if 'supported_efforts' in mapping:
+        descriptor['supported_efforts'] = list(mapping['supported_efforts'])
+        descriptor['effort_support_source'] = 'owner_configured'
     return BoundExecutionRoute(owner, mapping["endpoint_id"], mapping["model"], mapping["reasoning_effort"],
                                candidate[0], dict(candidate[2] or {}), dict(descriptor), source,
                                approach_id, attempt_id, selection or {})
