@@ -126,7 +126,7 @@ async def test_resume_missing_or_changed_capture_fails_closed_without_new_spend(
 
 
 @pytest.mark.asyncio
-async def test_cached_valid_but_false_complete_still_blocks_same_source_expansion(tmp_path, monkeypatch):
+async def test_cached_false_complete_is_scored_without_retry_or_material_halt(tmp_path, monkeypatch):
     import httpx
     from core import database as d
     monkeypatch.setattr(d, "SessionLocal", d.SessionLocal)
@@ -147,11 +147,13 @@ async def test_cached_valid_but_false_complete_still_blocks_same_source_expansio
         return original_transport(unsafe)
     monkeypatch.setattr(httpx, "MockTransport", make_transport)
     first = await runner.run(tmp_path, wall_seconds=30)
-    assert first["totals"]["false_complete"] == 1
-    assert len(first["accounting"]["attempts"]) < len(runner.load_suite()["cases"])
+    assert first["totals"]["false_complete"] >= 1
+    assert len(first["accounting"]["attempts"]) == len(runner.load_suite()["cases"])
+    assert not first["accounting"]["halted"]
+    assert any(row["stop_classification"] == "scored_advisory_label_error" for row in first["cases"])
     previous_calls = len(calls)
     ledger_bytes = (tmp_path / "budget/campaign.sqlite3").read_bytes()
-    with pytest.raises(DecisionError, match="cached_material_failure"):
-        await runner.run(tmp_path, wall_seconds=30)
+    resumed = await runner.run(tmp_path, wall_seconds=30)
+    assert resumed["totals"]["cached"] == len(runner.load_suite()["cases"])
     assert len(calls) == previous_calls
     assert (tmp_path / "budget/campaign.sqlite3").read_bytes() == ledger_bytes

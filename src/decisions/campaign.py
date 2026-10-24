@@ -11,6 +11,7 @@ from dataclasses import dataclass
 import hashlib
 import json
 import os
+import re
 from pathlib import Path
 import sqlite3
 import stat
@@ -20,6 +21,9 @@ from .contracts import DecisionError, decode, encode
 
 CAMPAIGN_ID = "odysseus-jev-extended-20261024-v1"
 HARD_LIMIT = 5_000_000
+OPERATIONAL_STOP = 1_000_000
+PLANNING_BASIS = "root-reviewed conservative typed-Choice planning allowance; not a published vendor maximum"
+SERVICE_ASSUMPTION = "Trusted service reports actual input and output usage; no mathematical guarantee against provider misreporting."
 MODEL = "jev-1.14.0"
 URL = "https://api.typesafe.ai/v1/systemone"
 STAGES = {"smoke": (2, 150_000), "small": (24, 350_000),
@@ -36,9 +40,9 @@ class BillingContract:
     """Numerical service bounds require independently reviewed evidence.
 
     A finite JSON shape or HTTP read limit does not establish generated-token
-    or branch-billing limits. The supplied public reference currently leaves
-    that numerical output/branch bound unproved; live admission stays closed.
-    Offline tests can inject a synthetic service contract.
+    or branch-billing limits. This type represents independently verified
+    numerical service bounds. RootApprovedChoiceProfile is separate operational
+    admission with explicit assumptions, never a fabricated vendor bound.
     """
     input_tokens: int
     output_tokens: int
@@ -54,6 +58,61 @@ class BillingContract:
                 or any(c not in "0123456789abcdef" for c in self.evidence_sha256)):
             raise DecisionError("campaign_invalid_billing_contract")
         return self
+
+
+@dataclass(frozen=True)
+class RootApprovedChoiceProfile:
+    """Narrow operational admission; these reservations are planning allowances."""
+    evidence_sha256: str
+    root_approved: bool = False
+    kind: str = "root-reviewed-typed-choice/v1"
+    input_tokens: int = 65_536
+    output_tokens: int = 65_536
+    basis: str = PLANNING_BASIS
+    service_assumption: str = SERVICE_ASSUMPTION
+
+    def checked(self):
+        if (type(self.root_approved) is not bool or self.kind != "root-reviewed-typed-choice/v1"
+                or type(self.input_tokens) is not int or self.input_tokens != 65_536
+                or type(self.output_tokens) is not int or self.output_tokens != 65_536
+                or self.basis != PLANNING_BASIS or self.service_assumption != SERVICE_ASSUMPTION
+                or not isinstance(self.evidence_sha256, str)
+                or not re.fullmatch("[a-f0-9]{64}", self.evidence_sha256)
+                or self.evidence_sha256 == "0" * 64):
+            raise DecisionError("campaign_invalid_planning_profile")
+        return self
+
+    def check_wire(self, endpoint, wire, *, smoke=False):
+        payload = decode(wire)
+        questions = payload.get("questions")
+        if (endpoint.url != URL or endpoint.model != MODEL or endpoint.protocol != "systemone"
+                or any(k.lower() != "authorization" for k in endpoint.headers)
+                or len(wire) > 8192 or set(payload) != {"model", "state", "questions"}
+                or payload["model"] != MODEL or not isinstance(payload["state"], dict)
+                or len(encode(payload["state"])) > 4096 or not isinstance(questions, dict)
+                or not 1 <= len(questions) <= (1 if smoke else 8)):
+            raise DecisionError("campaign_guarded_choice_profile_refused")
+        for name, question in questions.items():
+            if (not re.fullmatch("[A-Za-z0-9_]{1,48}", name)
+                    or not isinstance(question, dict) or set(question) != {"type", "instructions", "criteria"}
+                    or question["type"] != "choice" or not isinstance(question["instructions"], str)
+                    or len(question["instructions"].encode()) > 1024
+                    or not isinstance(question["criteria"], dict) or not 2 <= len(question["criteria"]) <= 16
+                    or any(not re.fullmatch("[A-Za-z0-9_]{1,48}", key)
+                           or not isinstance(label, str) or not 1 <= len(label.encode()) <= 256
+                           for key, label in question["criteria"].items())):
+                raise DecisionError("campaign_guarded_choice_profile_refused")
+
+
+def checked_admission(contract):
+    if type(contract) not in {BillingContract, RootApprovedChoiceProfile}:
+        raise DecisionError("campaign_invalid_admission_type")
+    contract.checked()
+    if isinstance(contract, BillingContract) and not contract.verified:
+        raise DecisionError("campaign_billing_bound_unverified")
+    if isinstance(contract, RootApprovedChoiceProfile) and not contract.root_approved:
+        raise DecisionError("campaign_planning_profile_not_approved")
+    return contract
 
 
 class CampaignLedger:
@@ -86,6 +145,11 @@ class CampaignLedger:
             db.executescript("""
                 CREATE TABLE IF NOT EXISTS campaign (id INTEGER PRIMARY KEY CHECK(id=1), identity TEXT NOT NULL,
                     halted INTEGER NOT NULL DEFAULT 0, halt_reason TEXT);
+                CREATE TABLE IF NOT EXISTS operational_policy (id INTEGER PRIMARY KEY CHECK(id=1), stop INTEGER NOT NULL);
+                CREATE TRIGGER IF NOT EXISTS operational_policy_no_update BEFORE UPDATE ON operational_policy
+                    BEGIN SELECT RAISE(ABORT, 'immutable operational stop'); END;
+                CREATE TRIGGER IF NOT EXISTS operational_policy_no_delete BEFORE DELETE ON operational_policy
+                    BEGIN SELECT RAISE(ABORT, 'immutable operational stop'); END;
                 CREATE TABLE IF NOT EXISTS versions (id TEXT PRIMARY KEY, identity TEXT NOT NULL);
                 CREATE TABLE IF NOT EXISTS gates (stage TEXT PRIMARY KEY, evidence TEXT NOT NULL);
                 CREATE TABLE IF NOT EXISTS attempts (id TEXT PRIMARY KEY, case_key TEXT UNIQUE NOT NULL,
@@ -110,6 +174,9 @@ class CampaignLedger:
             """)
             # executescript commits its preamble; acquire again for identity admission.
             db.execute("BEGIN IMMEDIATE")
+            db.execute("INSERT OR IGNORE INTO operational_policy VALUES (1,?)", (OPERATIONAL_STOP,))
+            if db.execute("SELECT stop FROM operational_policy WHERE id=1").fetchone()[0] != OPERATIONAL_STOP:
+                raise DecisionError("campaign_operational_stop_mismatch")
             identity = encode(self.authorization).decode()
             previous = db.execute("SELECT identity FROM campaign WHERE id=1").fetchone()
             if previous is None:
@@ -175,12 +242,10 @@ class CampaignLedger:
             raise DecisionError("campaign_unresolved_attempt")
 
     def reserve(self, *, attempt_id, case_key, version, stage, binding, contract):
-        contract.checked()
+        checked_admission(contract)
         if (self.path.parent / "HALT_REQUESTED.json").exists():
             self.halt("root_stop_requested")
             raise DecisionError("campaign_halted")
-        if not contract.verified:
-            raise DecisionError("campaign_billing_bound_unverified")
         if stage not in STAGES or not isinstance(case_key, str) or not case_key or len(case_key) > 256:
             raise DecisionError("campaign_invalid_attempt")
         charge = contract.input_tokens + contract.output_tokens
@@ -194,7 +259,7 @@ class CampaignLedger:
             calls = sum(x["stage"] == stage for x in charges)
             used = sum(int(x["charge"]) for x in charges if x["stage"] == stage)
             total = sum(int(x["charge"]) for x in charges)
-            if calls >= STAGES[stage][0] or used + charge > STAGES[stage][1] or total + charge > HARD_LIMIT:
+            if calls >= STAGES[stage][0] or used + charge > STAGES[stage][1] or total + charge > HARD_LIMIT or total + charge > OPERATIONAL_STOP:
                 raise DecisionError("campaign_budget_unavailable")
             if db.execute("SELECT 1 FROM attempts WHERE id=? OR case_key=?", (attempt_id, case_key)).fetchone():
                 raise DecisionError("campaign_attempt_already_exists")
@@ -244,9 +309,11 @@ class CampaignLedger:
                 str(known["input_tokens"]) if known["input_tokens"] is not None else None,
                 str(known["output_tokens"]) if known["output_tokens"] is not None else None,
                 str(charge), response_sha256, response_payload_sha256, attempt_id))
-            if not complete or overrun:
+            aggregate = sum(int(item[0]) for item in db.execute("SELECT charge FROM attempts"))
+            stop_reached = aggregate >= OPERATIONAL_STOP
+            if not complete or overrun or stop_reached:
                 db.execute("UPDATE campaign SET halted=1,halt_reason=? WHERE id=1",
-                           ("usage_contract_breach" if overrun else "usage_incomplete",))
+                           ("usage_reservation_overrun" if overrun else "usage_incomplete" if not complete else "operational_stop_reached",))
         if overrun:
             raise DecisionError("decision_usage_exceeded_reservation")
 
@@ -285,6 +352,7 @@ class CampaignLedger:
         charged = sum(x["charge"] for x in attempts)
         return {"campaign_id": CAMPAIGN_ID, "limit": HARD_LIMIT, "halted": bool(campaign["halted"]),
                 "halt_reason": campaign["halt_reason"], "charged_or_held": charged,
+                "operational_stop": OPERATIONAL_STOP, "operational_remaining": max(0, OPERATIONAL_STOP - charged),
                 "remaining": max(0, HARD_LIMIT - charged), "known_input_tokens": sum(x["input_tokens"] or 0 for x in attempts),
                 "known_output_tokens": sum(x["output_tokens"] or 0 for x in attempts),
                 "held": sum(x["charge"] for x in attempts if x["status"] in {"reserved", "dispatching", "unresolved"}),
@@ -304,9 +372,12 @@ class CampaignGovernor:
                 "provider": endpoint.public_identity()}
 
     def reserve(self, record, endpoint, wire):
+        if isinstance(self.contract, RootApprovedChoiceProfile):
+            self.contract.check_wire(endpoint, wire, smoke=self.stage == "smoke")
         payload = decode(wire)
         if (endpoint.protocol != "systemone" or not self.allow_synthetic and (endpoint.url != URL or endpoint.model != MODEL)
-                or set(payload) != {"model", "state", "questions"} or len(payload["questions"]) != 1
+                or set(payload) != {"model", "state", "questions"}
+                or not 1 <= len(payload["questions"]) <= 8
                 or any(q.get("type") != "choice" for q in payload["questions"].values())
                 or any(k.lower().startswith("typesafe-danger-zone") for k in endpoint.headers)):
             raise DecisionError("campaign_provider_not_admitted")

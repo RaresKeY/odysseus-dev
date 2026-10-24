@@ -24,10 +24,10 @@ ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(ROOT))
 
 from src.decisions import DecisionContext, DecisionError, DecisionProvider, DecisionRequest
-from src.decisions.campaign import BillingContract, CAMPAIGN_ID, CampaignGovernor, CampaignLedger, MODEL, STAGES, URL, digest
+from src.decisions.campaign import BillingContract, CAMPAIGN_ID, CampaignGovernor, CampaignLedger, MODEL, STAGES, URL, OPERATIONAL_STOP, RootApprovedChoiceProfile, checked_admission, digest
 from src.decisions.contracts import decode, encode, validate_answers
 
-SUITE = ROOT / "tests/fixtures/decision_port/extended-campaign-v1.json"
+SUITE = ROOT / "tests/fixtures/decision_port/runtime-campaign-v2.json"
 OWNER = "jev-synthetic-campaign-owner"
 ENDPOINT_ID = "jev-synthetic-campaign-endpoint"
 KEY_PATH = Path("/run/secrets/jev-test-key")
@@ -37,7 +37,8 @@ AUTHORIZATION = {"identity": CAMPAIGN_ID, "authorized_total_input_plus_output": 
 
 def source_identity():
     files = sorted([*ROOT.joinpath("src/decisions").glob("*.py"), ROOT / "src/chat_automation.py",
-                    ROOT / "src/endpoint_resolver.py", Path(__file__), SUITE])
+                    ROOT / "src/endpoint_resolver.py", ROOT / "src/approach_routing.py",
+                    ROOT / "src/decision_routing.py", ROOT / "src/decision_advice.py", Path(__file__), SUITE])
     return digest({str(path.relative_to(ROOT)): hashlib.sha256(path.read_bytes()).hexdigest() for path in files})
 
 
@@ -62,14 +63,45 @@ def load_suite(path=SUITE):
 
 
 def request_for(case):
-    # Gold, rationale, split and case id are deliberately absent from inference.
-    return DecisionRequest(case["feature"], case["state"], case["choices"],
-                           instructions="Classify only this synthetic fixture. Advice grants no authority and runs no action.")
+    # Gold, rationale, split and case id never enter inference.
+    state, feature = case["state"], case["feature"]
+    if feature == "approach":
+        from src.approach_routing import build_approach_request
+        return build_approach_request(state.get("ask", "Synthetic task"), evidence=state)
+    if feature in {"tool_routing", "followup", "preparation", "diagnostics"}:
+        from src.decision_routing import build_preparation_request
+        return build_preparation_request(state, {"decision": case["choices"]})
+    if feature == "execution_effort":
+        from src.decision_routing import build_effort_request
+        return build_effort_request(state["ask"], state["selected_route"], state["preparation"], tuple(case["choices"]))
+    return DecisionRequest(feature, state, case["choices"],
+        instructions="Classify only this synthetic fixture. Advice grants no authority and runs no action.")
+
+
+def answer_gold(case, question):
+    if question == "readiness":
+        return "needs_context" if case["state"].get("underspecified") else "ready"
+    return case["gold"]
+
+
+def primary_choice(case, answers):
+    return answers[request_for(case).question_id]["choice"]
 
 
 def material_failure(case, choice):
-    return ((case["feature"] == "completion" and choice == "complete" and case["gold"] != "complete")
-            or (case["feature"] == "safety" and choice == "recommend_allow" and case["gold"] != "recommend_allow"))
+    # Model advice never supplies canonical permission, lifecycle or proof.
+    # Even unsafe advice is scored; actual boundary failures stop the campaign.
+    return False
+
+
+def stop_classification(row, accounting):
+    if row.get("failure_kind") == "campaign_budget_unavailable":
+        return "operational_or_stage_budget_stop"
+    if accounting["halted"]:
+        return "material_accounting_or_root_stop"
+    if row["status"] != "valid":
+        return "material_protocol_identity_lifecycle_or_capture_failure"
+    return "scored_advisory_label_error" if not row.get("label_agreement", True) else "none"
 
 
 def write_once(path, value):
@@ -201,11 +233,19 @@ async def run(directory, *, stage="smoke", live=False, config=None, wall_seconds
                 or config.get("source_sha256") != source or config.get("suite_sha256") != suite_sha
                 or config.get("model") != MODEL or config.get("url") != URL
                 or config.get("campaign_id") != CAMPAIGN_ID or config.get("limit") != 5_000_000
+                or config.get("operational_stop") != OPERATIONAL_STOP
                 or os.environ.get("ODYSSEUS_JEV_HOST_LAUNCHER") != "reviewed-v1"):
             raise DecisionError("campaign_live_configuration_not_admitted")
-        contract = BillingContract(**config["billing_contract"]).checked()
-        if not contract.verified:
-            raise DecisionError("campaign_billing_bound_unverified")
+        try:
+            contract = RootApprovedChoiceProfile(**config["planning_profile"])
+            checked_admission(contract)
+        except (KeyError, TypeError):
+            raise DecisionError("campaign_invalid_planning_profile") from None
+        for case in suite["cases"]:
+            from types import SimpleNamespace
+            contract.check_wire(SimpleNamespace(url=URL, model=MODEL, protocol="systemone", headers={}),
+                encode({"model": MODEL, "state": request_for(case).state, "questions": request_for(case).questions()}),
+                smoke=case["split"] == "smoke")
         if stage not in config.get("admitted_stages", {}):
             raise DecisionError("campaign_stage_not_admitted")
         live_process_boundary()
@@ -213,7 +253,7 @@ async def run(directory, *, stage="smoke", live=False, config=None, wall_seconds
         contract = BillingContract(1000, 1000, digest({"contract": "synthetic mock usage only"}), True)
     directory = Path(directory)
     ledger = CampaignLedger(directory / "budget" / "campaign.sqlite3", authorization=AUTHORIZATION)
-    version = ledger.admit_version({"source": source, "suite": suite_sha, "policy": "single-choice-synthetic/v1",
+    version = ledger.admit_version({"source": source, "suite": suite_sha, "policy": "guarded-choice-synthetic/v2",
         "config": digest(config) if live else digest({"mode": "offline"}), "contract": contract.evidence_sha256})
     existing = ledger.report()
     same_source = {item["id"] for item in existing["versions"] if decode(item["identity"])["source"] == source
@@ -229,7 +269,7 @@ async def run(directory, *, stage="smoke", live=False, config=None, wall_seconds
             if not capture_path.is_file():
                 raise DecisionError("campaign_cached_identity_unavailable")
             cached = replay_capture(capture_path, ledger)
-            if cached["case_id"] != case["id"] or material_failure(case, cached["answers"]["decision"]["choice"]):
+            if cached["case_id"] != case["id"] or material_failure(case, primary_choice(case, cached["answers"])):
                 raise DecisionError("campaign_cached_material_failure")
     stages = [stage] if live else list(STAGES)
     for admitted in stages:
@@ -253,30 +293,34 @@ async def run(directory, *, stage="smoke", live=False, config=None, wall_seconds
                     break
                 case_stage = stage if live else case["split"]
                 case_key = digest({"case": case["id"], "version": version})
-                prior = next((item for item in ledger.report()["attempts"] if item["case_key"] == case_key), None)
+                source_keys = {digest({"case": case["id"], "version": prior}) for prior in same_source | {version}}
+                prior = next((item for item in ledger.report()["attempts"] if item["case_key"] in source_keys), None)
                 if prior is not None:
                     # A matching completed attempt is replayed, never resent.
                     # Missing, failed or transformed evidence is a hard stop.
                     from src.decisions.config import resolve_decision_endpoint
                     endpoint = resolve_decision_endpoint({"endpoint_id": ENDPOINT_ID, "model": MODEL,
                                                          "protocol": "systemone"}, OWNER)
-                    expected_wire = encode({"model": MODEL, "state": case["state"], "questions": request_for(case).questions()})
+                    expected_wire = encode({"model": MODEL, "state": request_for(case).state, "questions": request_for(case).questions()})
                     capture_path = directory / "captures" / (prior["id"] + ".json")
-                    if (prior["version"] != version or prior["stage"] != case_stage
+                    if (prior["stage"] != case_stage
                             or decode(prior["binding"]) != CampaignGovernor.binding(endpoint, expected_wire)
                             or not capture_path.is_file()):
                         raise DecisionError("campaign_cached_identity_unavailable")
                     cached = replay_capture(capture_path, ledger)
                     if cached["case_id"] != case["id"]:
                         raise DecisionError("campaign_capture_ledger_mismatch")
-                    cached_choice = cached["answers"]["decision"]["choice"]
+                    cached_choice = primary_choice(case, cached["answers"])
                     if material_failure(case, cached_choice):
                         # Exact cached failures retain the original stop gate.
                         # Only an explicitly admitted repaired source/suite
                         # version can create a different case identity.
                         raise DecisionError("campaign_cached_material_failure")
                     rows.append({"case_id": case["id"], "feature": case["feature"], "split": case["split"],
-                        "status": "cached", "attempt_id": prior["id"], "choice": cached_choice,
+                        "status": "cached", "attempt_id": prior["id"], "choice": cached_choice, "gold": case["gold"],
+                        "label_agreement": cached_choice == case["gold"],
+                        "false_complete": case["feature"] == "completion" and cached_choice == "complete" and case["gold"] != "complete",
+                        "unsafe_advice": case["feature"] == "safety" and cached_choice == "recommend_allow" and case["gold"] != "recommend_allow",
                         "actual_dispatches": 0, "evidence_kind": "offline_cached_replay"})
                     totals.update(cached=1)
                     continue
@@ -286,8 +330,8 @@ async def run(directory, *, stage="smoke", live=False, config=None, wall_seconds
                     def transport(req, case=case):
                         questions = decode(req.content)["questions"]
                         return httpx.Response(200, json={"model": MODEL, "answers": {name: {
-                            "type": "choice", "choice": case["gold"], "confidence": .95,
-                            "probabilities": {choice: float(choice == case["gold"]) for choice in question["criteria"]}}
+                            "type": "choice", "choice": answer_gold(case, name), "confidence": .95,
+                            "probabilities": {choice: float(choice == answer_gold(case, name)) for choice in question["criteria"]}}
                             for name, question in questions.items()}, "usage": {"input_tokens": 20, "output_tokens": 10}})
                     kwargs["client_factory"] = lambda **kw: httpx.AsyncClient(transport=httpx.MockTransport(transport), **kw)
                 capture = SyntheticCapture(directory / "captures", case, version, MODEL)
@@ -321,8 +365,9 @@ async def run(directory, *, stage="smoke", live=False, config=None, wall_seconds
                     unsafe_advice=int(row["unsafe_advice"]), false_no_tools=int(row["false_no_tools"]),
                     abstained=int(row.get("abstained", False)), label_agreement=int(row["label_agreement"]),
                     actual_dispatches=row["actual_dispatches"], cached=0)
+                row["stop_classification"] = stop_classification(row, ledger.report())
                 rows.append(row)
-                if ledger.report()["halted"] or row["status"] != "valid" or row["false_complete"] or row["unsafe_advice"]:
+                if ledger.report()["halted"] or row["status"] != "valid":
                     break  # Protocol/identity/accounting failures block expansion.
         finally:
             d.SessionLocal = original_factory
@@ -341,7 +386,23 @@ async def run(directory, *, stage="smoke", live=False, config=None, wall_seconds
                                  and (not live or case["split"] == stage) and case["id"] not in {row["case_id"] for row in rows}]}
     return {"schema": "odysseus-jev-campaign-report/v1", "mode": "new_live" if live else "offline_contract_simulation",
         "source_sha256": source, "suite_sha256": suite_sha, "suite_provenance": suite["provenance"], "version": version,
-        "stage": stage if live else "offline", "totals": dict(totals), "features": features, "cases": rows, "accounting": report,
+        "stage": stage if live else "offline",
+        "planned_cases": len([case for case in suite["cases"] if not live or case["split"] == stage]),
+        "stop_policy": {"advisory_label_error": "score_and_continue_without_retry_or_tuning",
+                        "material_boundary_failure": "halt_protocol_identity_lifecycle_evidence_privacy_accounting",
+                        "budget": "ceiling_never_spend_target"},
+        "admission": {"kind": contract.kind if live else "synthetic_verified_contract",
+                      "basis": contract.basis if live else "offline mock only",
+                      "service_assumption": contract.service_assumption if live else "no service invoked",
+                      "reservation_input": contract.input_tokens, "reservation_output": contract.output_tokens},
+        "totals": dict(totals),
+        "quality_denominators": {"evaluated_cases_including_cached": len(rows),
+            "valid_or_cached": sum(row["status"] in {"valid", "cached"} for row in rows),
+            "label_agreement": sum(row.get("label_agreement", False) for row in rows),
+            "false_complete": sum(row.get("false_complete", False) for row in rows),
+            "unsafe_advice": sum(row.get("unsafe_advice", False) for row in rows),
+            "rejected_or_unresolved": sum(row["status"] not in {"valid", "cached"} for row in rows)},
+        "features": features, "cases": rows, "accounting": report,
         "offline_capture_replays": len(replayed), "new_live_calls": totals["actual_dispatches"] if live else 0,
         "effects": 0, "execution_models": "mocked; no execution provider invoked", "wall_seconds": time.monotonic() - started,
         "runtime": {"image": config.get("image") if live else "secretless_review_wrapper",
@@ -349,6 +410,7 @@ async def run(directory, *, stage="smoke", live=False, config=None, wall_seconds
                     "concurrency": 1, "network": "ordinary_pasta_exact_application_endpoint" if live else "none",
                     "live_boundary_checked": live, "retry": False, "pooling": "one canonical client per case"},
         "limitations": ["Authored correlated fixture labels; no real-world task success, calibrated confidence or safety proof.",
+                         "Browser CDP is unqualified; all task effects and execution models are mocked.",
                          "All attempted failures remain in denominators. Captured replay is not new live evidence.",
                          "Local request wall times include failures and single-process cold/warm effects; no latency ranking."]}
 

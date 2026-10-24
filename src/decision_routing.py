@@ -273,15 +273,8 @@ async def prepare_tool_routing(bound, inventory, *, preparation=None, provider=N
                                 for choice, description in YES_NO.items()} for key in DIAGNOSTICS})
     answer, decision = None, None
     if questions:
-        first, primary = next(iter(questions.items()))
-        request = DecisionRequest('turn_preparation', {'ask': bound.raw_ask,
-            'previous': bound.prior_task, 'preparation': receipt.evidence(), **catalog.public()},
-            primary, question_id=first,
-            additional_questions={k: v for k, v in questions.items() if k != first},
-            instructions=('Select each question independently. Returned source membership is exhaustive only '
-                          'for sources actually returned. Future research TODOs do not require searching now. '
-                          'Image pixels are unavailable unless explicitly returned. Follow-up is intent only; '
-                          'confirmation cannot approve, revive, consume, or extend any card.'))
+        request = build_preparation_request({'ask': bound.raw_ask,
+            'previous': bound.prior_task, 'preparation': receipt.evidence(), **catalog.public()}, questions)
         provider = provider or DecisionProvider(store=SqlAttemptStore(bound.store))
         try:
             decision = await provider.evaluate(request, decision_context(bound),
@@ -346,6 +339,30 @@ def followup_context(bound):
         'authority': 'none; a relationship or yes never approves a tool or revives a pending action'}
 
 
+def build_preparation_request(state, questions):
+    """Shared production preparation schema; evidence is projected by its owner."""
+    first, primary = next(iter(questions.items()))
+    return DecisionRequest('turn_preparation', state, primary, question_id=first,
+        additional_questions={k: v for k, v in questions.items() if k != first},
+        instructions=('Select each question independently. Returned source membership is exhaustive only '
+                      'for sources actually returned. Future research TODOs do not require searching now. '
+                      'Image pixels are unavailable unless explicitly returned. Follow-up is intent only; '
+                      'confirmation cannot approve, revive, consume, or extend any card.'))
+
+
+def build_effort_request(raw_ask, selected_route, preparation, allowed):
+    """Shared finite effort question for the admitted route."""
+    return DecisionRequest('execution_effort', {'ask': raw_ask,
+        'selected_route': {key: selected_route.get(key) for key in ('endpoint_id', 'model', 'approach_id')},
+        'preparation': preparation},
+        {key: {'none': 'No additional reasoning.', 'minimal': 'Minimal reconsideration.',
+               'low': 'Known approach with little reconsideration, even if work is long or complex.',
+               'medium': 'Some exploration or reconciliation.', 'high': 'Uncertain approach or competing hypotheses.',
+               'xhigh': 'Deeply interacting uncertain constraints.', 'max': 'Exceptional unresolved novel reasoning.'}[key]
+         for key in allowed}, question_id='effort',
+        instructions='Choose effort independently of task length and approach category, for this selected route only.')
+
+
 async def select_effort(bound, selected_route, supported_efforts, *, provider=None):
     """Condition the effort decision on the admitted selected execution route."""
     from src.chat_automation import SqlAttemptStore
@@ -358,15 +375,7 @@ async def select_effort(bound, selected_route, supported_efforts, *, provider=No
     if len(allowed) == 1:
         bound.effort_selection = {'status': 'bound', 'source': 'only_supported_effort', 'choice': allowed[0]}
         return allowed[0]
-    request = DecisionRequest('execution_effort', {'ask': bound.raw_ask,
-        'selected_route': {key: selected_route.get(key) for key in ('endpoint_id', 'model', 'approach_id')},
-        'preparation': bound.preparation.evidence()},
-        {key: {'none': 'No additional reasoning.', 'minimal': 'Minimal reconsideration.',
-               'low': 'Known approach with little reconsideration, even if work is long or complex.',
-               'medium': 'Some exploration or reconciliation.', 'high': 'Uncertain approach or competing hypotheses.',
-               'xhigh': 'Deeply interacting uncertain constraints.', 'max': 'Exceptional unresolved novel reasoning.'}[key]
-         for key in allowed}, question_id='effort',
-        instructions='Choose effort independently of task length and approach category, for this selected route only.')
+    request = build_effort_request(bound.raw_ask, selected_route, bound.preparation.evidence(), allowed)
     decision = await (provider or DecisionProvider(store=SqlAttemptStore(bound.store))).evaluate(
         request, decision_context(bound), config=bound.configuration.get('decision_provider', {}))
     answer = decision.answers.get('effort', {})
