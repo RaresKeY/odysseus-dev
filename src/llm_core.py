@@ -2322,6 +2322,66 @@ def _apply_explicit_nonstream_reasoning_effort(
         payload["reasoning_effort"] = effort
 
 
+def _validate_chat_execution_binding(url, model, headers, session_id,
+                                     reasoning_effort=None, *, prompt_type=None,
+                                     workload="foreground", payload=None) -> bool:
+    """Revalidate admitted chat identity immediately before execution transport.
+
+    Utility calls have their own routing policy. A foreground preset name is
+    never sufficient to exempt a call. Returning true pins an automatic route
+    to one transport attempt and prevents fallback to another provider.
+    """
+    if not session_id or (workload != "foreground" and prompt_type == "utility"):
+        return False
+    from src.chat_automation import current_turn, validate_provider_binding
+    bound = current_turn()
+    if bound is None or session_id != bound.session_id:
+        return False
+    try:
+        validate_provider_binding(url, model, headers, session_id, reasoning_effort)
+    except Exception:
+        raise _FallbackIneligibleHTTPException(
+            409, "Chat settings or the selected execution provider changed; submit again"
+        ) from None
+    if payload is not None and reasoning_effort:
+        effective = payload.get("reasoning_effort")
+        if effective is None and isinstance(payload.get("reasoning"), dict):
+            effective = payload["reasoning"].get("effort")
+        if effective != reasoning_effort:
+            raise _FallbackIneligibleHTTPException(
+                422, "Selected reasoning effort is unavailable for this provider request"
+            )
+    return bound.policy.get("route_mode") == "auto"
+
+
+def _automatic_chat_route(kwargs) -> bool:
+    """Only an active server-bound automatic chat may suppress fallback."""
+    if not kwargs.get("session_id"):
+        return False
+    if kwargs.get("workload", "foreground") != "foreground" and kwargs.get("prompt_type") == "utility":
+        return False
+    from src.chat_automation import current_turn
+    bound = current_turn()
+    return bool(bound is not None and kwargs["session_id"] == bound.session_id
+                and bound.policy.get("route_mode") == "auto")
+
+
+def _bind_explicit_manual_fallback(candidate, status, kwargs):
+    if not kwargs.get("session_id"):
+        return
+    from src.chat_automation import current_turn
+    bound = current_turn()
+    if bound is None or kwargs["session_id"] != bound.session_id:
+        return
+    try:
+        bound.rebind_manual(candidate, status=status,
+                            reasoning_effort=kwargs.get("reasoning_effort"))
+    except Exception:
+        raise _FallbackIneligibleHTTPException(
+            409, "The requested fallback is no longer authorized; submit again"
+        ) from None
+
+
 def llm_call(url: str, model: str, messages: List[Dict], temperature: float = LLMConfig.DEFAULT_TEMPERATURE,
              max_tokens: int = LLMConfig.DEFAULT_MAX_TOKENS, headers: Optional[Dict] = None,
              timeout: int = LLMConfig.DEFAULT_TIMEOUT, prompt_type: Optional[str] = None,
@@ -2529,6 +2589,8 @@ async def llm_call_async_with_fallback(candidates, messages, **kwargs) -> str:
     """
     candidate_request_factory = kwargs.pop("candidate_request_factory", None)
     cands = dedupe_model_candidates(candidates)
+    if _automatic_chat_route(kwargs):
+        cands = cands[:1]
     if not cands:
         raise HTTPException(503, "No model endpoint configured")
     last_err = None
@@ -2546,6 +2608,8 @@ async def llm_call_async_with_fallback(candidates, messages, **kwargs) -> str:
                 url, model, candidate_messages, headers=headers, **candidate_kwargs
             )
         except Exception as e:
+            if getattr(e, "fallback_eligible", None) is False:
+                raise
             last_err = e
             tag = "primary" if i == 0 else "candidate"
             logger.warning(f"[fallback] {tag} {model} failed ({type(e).__name__}); trying next")
@@ -2587,9 +2651,12 @@ async def llm_call_async_with_route_fallback(
         raise _FallbackIneligibleHTTPException(400, "Selected model endpoint is not configured")
     candidate_request_factory = kwargs.pop("candidate_request_factory", None)
     cands = dedupe_model_candidates(raw_candidates)
+    if _automatic_chat_route(kwargs):
+        cands = cands[:1]
     if not cands:
         raise HTTPException(503, "No model endpoint configured")
     eligible_statuses = frozenset(fallback_statuses or ())
+    preceding_failure_status = None
     for index, candidate in enumerate(cands):
         url, model, headers = candidate
         try:
@@ -2605,6 +2672,8 @@ async def llm_call_async_with_route_fallback(
                 **candidate_kwargs,
                 "availability_only_transport": True,
             }
+            if index:
+                _bind_explicit_manual_fallback(candidate, preceding_failure_status, candidate_kwargs)
             response = await llm_call_async(
                 url,
                 model,
@@ -2629,6 +2698,7 @@ async def llm_call_async_with_route_fallback(
             status = _nonstream_error_status(error)
             if index >= len(cands) - 1 or status not in eligible_statuses:
                 raise
+            preceding_failure_status = status
             tag = "primary" if index == 0 else "candidate"
             logger.warning(
                 "[fallback] %s %s failed with eligible status %s; trying next",
@@ -2658,6 +2728,12 @@ async def llm_call_async(
     reasoning_effort: Optional[str] = None,
 ) -> str | tuple[str, str]:
     """Asynchronous LLM call using httpx with connection pooling, timeout, retry logic, and performance logging."""
+    automatic_route = _validate_chat_execution_binding(
+        url, model, headers, session_id, reasoning_effort,
+        prompt_type=prompt_type, workload=workload,
+    )
+    if automatic_route:
+        max_retries = 1
     provider = _detect_provider(url)
     messages_copy = _sanitize_llm_messages(messages)
 
@@ -2717,6 +2793,8 @@ async def llm_call_async(
             max_tokens=max_tokens,
             headers=headers,
             timeout=timeout,
+            session_id=session_id,
+            prompt_type=prompt_type,
             workload=workload,
             thinking_mode=thinking_mode,
             reasoning_effort=reasoning_effort,
@@ -2824,9 +2902,16 @@ async def llm_call_async(
         start = time.time()
         try:
             async with _local_model_slot(target_url, model, workload):
-                note_model_activity(target_url, model)
                 client = _get_http_client()
-                r = await httpx_post_kimi_aware_async(client, target_url, h, json=payload, timeout=call_timeout)
+                _validate_chat_execution_binding(
+                    url, model, headers, session_id, reasoning_effort,
+                    prompt_type=prompt_type, workload=workload, payload=payload,
+                )
+                note_model_activity(target_url, model)
+                if automatic_route:
+                    r = await client.post(target_url, headers=h, json=payload, timeout=call_timeout)
+                else:
+                    r = await httpx_post_kimi_aware_async(client, target_url, h, json=payload, timeout=call_timeout)
             duration = time.time() - start
             if not r.is_success:
                 friendly = _format_upstream_error(r.status_code, r.text, target_url)
@@ -2976,6 +3061,8 @@ async def stream_llm(url: str, model: str, messages: List[Dict], temperature: fl
                      tools: Optional[List[Dict]] = None, session_id: Optional[str] = None,
                      tool_choice_none: bool = False, workload: str = "foreground",
                      thinking_mode: Optional[str] = None, reasoning_effort: Optional[str] = None):
+    _validate_chat_execution_binding(url, model, headers, session_id, reasoning_effort,
+                                    prompt_type=prompt_type, workload=workload)
     target_url = _stream_target_url(url)
     async with _local_model_slot(target_url, model, workload):
         async for chunk in _stream_llm_inner(
@@ -2992,6 +3079,7 @@ async def stream_llm(url: str, model: str, messages: List[Dict], temperature: fl
             tool_choice_none=tool_choice_none,
             thinking_mode=thinking_mode,
             reasoning_effort=reasoning_effort,
+            workload=workload,
         ):
             yield chunk
 
@@ -3002,7 +3090,8 @@ async def _stream_llm_inner(url: str, model: str, messages: List[Dict], temperat
                             tools: Optional[List[Dict]] = None, session_id: Optional[str] = None,
                             tool_choice_none: bool = False, thinking_mode: Optional[str] = None,
                             reasoning_effort: Optional[str] = None,
-                            _retry_silent_local: bool = True):
+                            _retry_silent_local: bool = True,
+                            workload: str = "foreground"):
     """Stream LLM responses with improved error handling.
 
     Yields SSE chunks:
@@ -3011,6 +3100,13 @@ async def _stream_llm_inner(url: str, model: str, messages: List[Dict], temperat
       - event: error                       — errors
       - data: [DONE]                       — end of stream
     """
+    automatic_route = _validate_chat_execution_binding(
+        url, model, headers, session_id, reasoning_effort, prompt_type=prompt_type,
+        workload=workload,
+    )
+    def validate_dispatch():
+        _validate_chat_execution_binding(url, model, headers, session_id, reasoning_effort,
+                                        prompt_type=prompt_type, workload=workload, payload=payload)
     provider = _detect_provider(url)
     messages_copy = _sanitize_llm_messages(messages)
 
@@ -3089,6 +3185,7 @@ async def _stream_llm_inner(url: str, model: str, messages: List[Dict], temperat
         _apply_deepseek_v4_reasoning_defaults(
             payload, target_url, model, thinking_mode
         )
+        _apply_explicit_nonstream_reasoning_effort(payload, reasoning_effort)
         _scrub_openai_chat_tool_reasoning(payload, target_url, model)
         h = _provider_headers(provider, headers)
         if provider == "copilot":
@@ -3118,6 +3215,7 @@ async def _stream_llm_inner(url: str, model: str, messages: List[Dict], temperat
         _responses_model_announced = False
         try:
             client = _get_http_client()
+            validate_dispatch()
             async with client.stream('POST', target_url, json=payload, headers=h, timeout=stream_timeout) as r:
                 _clear_host_dead(target_url)
                 if r.status_code != 200:
@@ -3240,6 +3338,7 @@ async def _stream_llm_inner(url: str, model: str, messages: List[Dict], temperat
         _ollama_model_announced = False
         try:
             client = _get_http_client()
+            validate_dispatch()
             async with client.stream('POST', target_url, json=payload, headers=h, timeout=stream_timeout) as r:
                 _clear_host_dead(target_url)
                 if r.status_code != 200:
@@ -3338,6 +3437,7 @@ async def _stream_llm_inner(url: str, model: str, messages: List[Dict], temperat
         _anth_block_type = ""
         try:
             client = _get_http_client()
+            validate_dispatch()
             async with client.stream('POST', target_url, json=payload, headers=h, timeout=stream_timeout) as r:
                 _clear_host_dead(target_url)
                 if r.status_code != 200:
@@ -3512,7 +3612,9 @@ async def _stream_llm_inner(url: str, model: str, messages: List[Dict], temperat
 
     try:
         client = _get_http_client()
-        h = await apply_kimi_code_headers_async(client, h, target_url)
+        if not automatic_route:
+            h = await apply_kimi_code_headers_async(client, h, target_url)
+        validate_dispatch()
         async with client.stream('POST', target_url, json=payload, headers=h, timeout=stream_timeout) as r:
             _clear_host_dead(target_url)
             if r.status_code != 200:
@@ -3899,7 +4001,7 @@ async def _stream_llm_inner(url: str, model: str, messages: List[Dict], temperat
         # to a silent first-event timeout; never replay a stream after output
         # has already reached the caller.
         if (
-            _retry_silent_local
+            _retry_silent_local and not automatic_route
             and not locals().get("stream_received_event", True)
             and locals().get("first_token_budget", 0) > 0
             and _is_managed_stream_endpoint(target_url)
@@ -3921,6 +4023,8 @@ async def _stream_llm_inner(url: str, model: str, messages: List[Dict], temperat
                 session_id=None,
                 tool_choice_none=tool_choice_none,
                 thinking_mode=thinking_mode,
+                reasoning_effort=reasoning_effort,
+                workload=workload,
                 _retry_silent_local=False,
             ):
                 yield retry_chunk
@@ -4502,11 +4606,16 @@ async def stream_llm_with_fallback(candidates, messages, **kwargs):
         raw_candidates,
         candidate_route_descriptors,
     )
+    automatic_route = _automatic_chat_route(kwargs)
+    if automatic_route:
+        cands, route_descriptors = cands[:1], route_descriptors[:1]
+        retry_degenerate_stream_once = False
 
     primary_model = cands[0][1]
     primary_route = route_descriptors[0]
     last_error = None
     failures = []
+    preceding_failure_status = None
     for i, (url, model, headers) in enumerate(cands):
         is_last = (i == len(cands) - 1)
         emitted = False
@@ -4577,7 +4686,14 @@ async def stream_llm_with_fallback(candidates, messages, **kwargs):
                     "max_tokens": bounded_max_tokens,
                 }
 
-        candidate_stream = _stream_candidate_with_context_recovery(
+        if i:
+            try:
+                _bind_explicit_manual_fallback((url, model, headers), preceding_failure_status, candidate_kwargs)
+            except _FallbackIneligibleHTTPException as error:
+                yield f'event: error\ndata: {json.dumps({"error": error.detail, "status": error.status_code, "fallback_eligible": False})}\n\n'
+                return
+        candidate_stream = (stream_llm(url, model, candidate_messages, headers=headers, **candidate_kwargs)
+                            if automatic_route else _stream_candidate_with_context_recovery(
             url,
             model,
             candidate_messages,
@@ -4599,7 +4715,7 @@ async def stream_llm_with_fallback(candidates, messages, **kwargs):
             ),
             retry_degenerate_stream_once=retry_degenerate_stream_once,
             retry_transient_precontent=len(cands) == 1,
-        )
+        ))
         try:
             async for chunk in candidate_stream:
                 if chunk.startswith("event: error"):
@@ -4618,6 +4734,7 @@ async def stream_llm_with_fallback(candidates, messages, **kwargs):
                         # Pre-content failure with fallbacks left — swallow and
                         # move to the next candidate.
                         last_error = chunk
+                        preceding_failure_status = status
                         failures.append({
                             "candidate_index": i,
                             "model": model,

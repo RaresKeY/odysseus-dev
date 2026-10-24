@@ -55,6 +55,9 @@ def test_cli_replay_writes_portable_report_and_has_no_live_mode(tmp_path):
     assert experiments.main(["--output", str(output)]) == 0
     value = json.loads(output.read_text())
     assert value["schema"] == "odysseus-decision-experiment/v1"
+    schema = json.loads((ROOT / "docs/decision-experiment-v1.schema.json").read_text())
+    assert set(schema["required"]) == set(value)
+    assert set(schema["properties"]["cases"]["items"]["required"]) == set(value["cases"][0])
     assert all(not Path(path).is_absolute() for path in value["source_hashes"])
     assert "secret" not in output.read_text().lower()
     with pytest.raises(SystemExit):
