@@ -117,3 +117,5 @@ serve both openai_json decisions and chat. The decision settings picker sees
 both supported purposes; the three execution approach slots see only `llm`.
 The service-worker revision refreshes changed control modules without deleting
 accounts, cookies, IndexedDB or other user storage.
+The floating composer Options menu overrides generic foldout clipping so its
+buttons remain visible and reachable by both pointer and keyboard.
