@@ -851,6 +851,8 @@ def setup_history_routes(session_manager, upload_handler=None) -> APIRouter:
             )
 
             # Copy messages up to keep_count
+            from src.chat_automation import AutomationStore
+            AutomationStore().fork(getattr(source, "owner", None), session_id, new_id)
             msgs_to_copy = source.history[:keep_count]
             for msg in msgs_to_copy:
                 # Copy the metadata dict. Sharing it would let the fork's

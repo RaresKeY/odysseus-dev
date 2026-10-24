@@ -465,7 +465,8 @@ class SessionManager:
         # Update last_accessed
         self._touch_session(session_id)
 
-        return self.sessions[session_id]
+        from src.chat_automation import bound_session_view
+        return bound_session_view(self.sessions[session_id])
 
     def sync_session_metadata(self, session_id: str) -> bool:
         """Refresh non-message session fields from the DB into the cached object.
@@ -588,6 +589,9 @@ class SessionManager:
                 updated_at=datetime.now(timezone.utc)
             )
             db.add(db_session)
+            db.flush()
+            from src.chat_automation import AutomationStore
+            AutomationStore().state(db, owner, session_id, new=True)
             db.commit()
 
             session = Session(

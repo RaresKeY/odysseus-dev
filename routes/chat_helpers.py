@@ -965,6 +965,10 @@ def _has_auth_keys(headers) -> bool:
 
 def resolve_session_auth(sess, session_id: str, owner: Optional[str] = None):
     """Ensure session has auth headers — resolve from endpoint DB if missing."""
+    if getattr(sess, "_automation_bound", False):
+        # The admission barrier resolved this exact registered credential and
+        # descriptor. Do not persist an automatic route as the manual default.
+        return
     owner = owner or getattr(sess, "owner", None)
     try:
         from src.chatgpt_subscription import is_chatgpt_subscription_base
