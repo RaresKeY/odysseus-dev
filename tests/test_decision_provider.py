@@ -3,6 +3,7 @@ import asyncio
 from dataclasses import replace
 import json
 import threading
+import ssl
 
 import httpx
 import pytest
@@ -16,6 +17,23 @@ CONFIG = {"endpoint_id": "reviewer", "model": "decision-model", "protocol": "sys
 CONTEXT = DecisionContext("alice", "chat", "run", policy_revision=2, authority_epoch=3)
 REQUEST = DecisionRequest("approval", {"action": "synthetic read", "secret": "DO-NOT-LOG"},
                           {"allow": "Consistent with supplied authority", "review": "Human needed", "deny": "Not permitted"})
+
+
+@pytest.mark.asyncio
+async def test_decision_transport_disables_ambient_proxies_and_keeps_verified_ca_context(monkeypatch):
+    from src import tls_overrides
+    context=ssl.create_default_context()
+    context.check_hostname=True
+    monkeypatch.setenv('HTTPS_PROXY','http://proxy.invalid:1')
+    monkeypatch.setattr(tls_overrides,'llm_verify',lambda:context)
+    options=[]
+    def factory(**kwargs):
+        options.append(kwargs)
+        return httpx.AsyncClient(transport=httpx.MockTransport(lambda _:httpx.Response(200,json=reply())),**kwargs)
+    client=DecisionProvider(MemoryAttemptStore(),resolver=lambda *_:endpoint(),client_factory=factory,observer=False)
+    await client.evaluate(REQUEST,CONTEXT,config=CONFIG)
+    assert options[0]['trust_env'] is False and options[0]['follow_redirects'] is False
+    assert options[0]['verify'] is context and context.check_hostname and context.verify_mode==ssl.CERT_REQUIRED
 
 
 def endpoint(protocol="systemone"):

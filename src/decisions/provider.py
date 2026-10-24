@@ -5,6 +5,7 @@ import asyncio
 import hashlib
 import inspect
 import math
+import ssl
 import time
 import uuid
 from dataclasses import replace
@@ -292,8 +293,15 @@ class DecisionProvider:
                 except Exception:
                     pass  # Optional observation never blocks a decision call.
             from src.tls_overrides import llm_verify
+            verification = llm_verify()
+            if verification is True:
+                # Honor SSL_CERT_FILE/SSL_CERT_DIR while disabling ambient
+                # HTTP proxy configuration for credentialed decisions.
+                verification = ssl.create_default_context()
+            if not isinstance(verification, ssl.SSLContext):
+                raise DecisionError('decision_tls_configuration_invalid')
             async with asyncio.timeout(timeout):
-                async with self.client_factory(verify=llm_verify(), follow_redirects=False,
+                async with self.client_factory(verify=verification, follow_redirects=False, trust_env=False,
                                                timeout=httpx.Timeout(timeout)) as client:
                     headers = {**endpoint.headers, "Content-Type": "application/json",
                                "Accept": "application/json", "Accept-Encoding": "identity"}
