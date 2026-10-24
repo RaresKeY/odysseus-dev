@@ -225,4 +225,3 @@ class ApprovalReviewService:
             return ReviewOutcome("stale", pending, reason="This action no longer has a current approval.",
                                  decision=projection)
         return ReviewOutcome("approved", pending, approval=grant, decision=projection)
-
