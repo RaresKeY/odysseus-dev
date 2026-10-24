@@ -104,6 +104,9 @@ def resolve_decision_endpoint(config: dict, owner: str | None) -> ResolvedDecisi
         row = owner_filter(query, ModelEndpoint, owner).first()
         if row is None:
             raise DecisionError("decision_endpoint_unavailable")
+        from src.model_admission import endpoint_supports_decisions
+        if not endpoint_supports_decisions(row):
+            raise DecisionError("decision_endpoint_protocol_unavailable")
         if getattr(row, "provider_auth_id", None):
             raise DecisionError("decision_endpoint_protocol_unavailable")
         model = config["model"]

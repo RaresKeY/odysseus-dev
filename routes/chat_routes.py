@@ -1775,7 +1775,8 @@ def _clear_orphaned_session_endpoint(sess, owner: str | None = None) -> bool:
         if owner:
             from src.auth_helpers import owner_filter
             q = owner_filter(q, ModelEndpoint, owner)
-        endpoints = q.all()
+        from src.model_admission import endpoint_supports_execution
+        endpoints = [row for row in q.all() if endpoint_supports_execution(row)]
         bound_id = getattr(sess, "endpoint_id", None)
         for ep in endpoints:
             if bound_id and ep.id != bound_id:
@@ -1928,7 +1929,8 @@ def _recover_empty_session_model(sess, session_id: str, owner: str | None = None
             if owner:
                 from src.auth_helpers import owner_filter
                 q = owner_filter(q, ModelEndpoint, owner)
-            endpoints = q.all()
+            from src.model_admission import endpoint_supports_execution
+            endpoints = [row for row in q.all() if endpoint_supports_execution(row)]
             # Honour the session's exact endpoint binding first: two endpoints
             # can share a provider URL (e.g. two ChatGPT Subscription accounts).
             bound_id = getattr(sess, "endpoint_id", None) or None
@@ -2033,12 +2035,21 @@ def _reconcile_selected_route_from_request(
     stream request includes the route that was selected at click/send time.
     Trust only registered endpoint ids, or the session's existing endpoint URL.
     """
+    selected_endpoint_id = str(form_data.get("selected_endpoint_id") or "").strip()
     if getattr(sess, "_automation_bound", False):
-        # The ingress barrier already resolved the committed selection. A
-        # stale browser model picker is display metadata, not a second route.
+        # A bound turn ignores stale route metadata, but must still refuse an
+        # explicit decision-only selection instead of dispatching the old route.
+        if selected_endpoint_id:
+            from src.auth_helpers import owner_filter
+            from src.model_admission import endpoint_supports_execution
+            with SessionLocal() as purpose_db:
+                query = purpose_db.query(ModelEndpoint).filter(
+                    ModelEndpoint.id == selected_endpoint_id, ModelEndpoint.is_enabled == True)
+                selected = owner_filter(query, ModelEndpoint, owner).first()
+                if selected is not None and not endpoint_supports_execution(selected):
+                    raise HTTPException(400, "Selected endpoint does not support chat execution")
         return False
     selected_model = str(form_data.get("selected_model") or "").strip()
-    selected_endpoint_id = str(form_data.get("selected_endpoint_id") or "").strip()
     selected_endpoint_url = str(form_data.get("selected_endpoint_url") or "").strip()
     if not selected_model:
         return False
@@ -2073,6 +2084,9 @@ def _reconcile_selected_route_from_request(
                     if selected_endpoint_id or _session_url_matches_endpoint(selected_endpoint_url, cand.base_url or ""):
                         ep = cand
                         break
+                from src.model_admission import endpoint_supports_execution
+                if ep is not None and not endpoint_supports_execution(ep):
+                    raise HTTPException(400, "Selected endpoint does not support chat execution")
                 if not ep:
                     return False
                 endpoint_url = build_chat_url(normalize_base(ep.base_url or ""))
@@ -2080,6 +2094,8 @@ def _reconcile_selected_route_from_request(
                 resolved_endpoint_id = ep.id
             finally:
                 db.close()
+        except HTTPException:
+            raise
         except Exception as e:
             logger.warning("Failed to resolve selected endpoint %s/%s for %s: %s", selected_endpoint_id, selected_endpoint_url, session_id, e)
             return False
@@ -2915,7 +2931,8 @@ def setup_chat_routes(
                 external_untrusted_context_seen = (
                     external_untrusted_context_seen or retired_tool_approval_taint
                 )
-            _reconcile_selected_route_from_request(request, sess, session, form_data, owner=owner)
+            _reconcile_selected_route_from_request(request, sess, session,
+                {**form_data, "selected_endpoint_id": selected_endpoint_id}, owner=owner)
             if _clear_orphaned_session_endpoint(sess, owner=owner):
                 raise HTTPException(400, "Selected model endpoint was removed. Pick another model in Settings.")
             # Issue #587: picker shows a model from the endpoint cache but

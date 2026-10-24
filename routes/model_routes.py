@@ -35,6 +35,8 @@ except ModuleNotFoundError:
             return urlunparse((parsed.scheme, host, parsed.path, "", "", ""))
         except Exception:
             return "<endpoint>"
+from src.model_admission import (normalize_endpoint_model_type, endpoint_model_type,
+    endpoint_supports_chat, endpoint_supports_execution)
 from core.middleware import require_admin
 from src.constants import COOKBOOK_STATE_FILE
 from src.llm_core import _detect_provider, _host_match, ANTHROPIC_MODELS
@@ -1531,6 +1533,8 @@ def setup_model_routes(model_discovery):
         return min(_REFRESH_FAILURE_BASE * (2 ** max(0, fails - 1)), _REFRESH_FAILURE_MAX)
 
     def _should_refresh_endpoint(ep: Any, now: float, force: bool = False) -> tuple[bool, Dict[str, Any]]:
+        if not endpoint_supports_execution(ep):
+            return False, {}
         base = _normalize_base(getattr(ep, "base_url", "") or "")
         kind = _effective_endpoint_kind(ep, base)
         category = _classify_endpoint(base, kind)
@@ -1683,6 +1687,8 @@ def setup_model_routes(model_discovery):
             db.close()
 
         for ep in endpoints:
+            if not endpoint_supports_execution(ep):
+                continue
             from src.chatgpt_subscription import is_chatgpt_subscription_base
             if is_chatgpt_subscription_base(ep.base_url or "") and (ep.owner or None) != (owner or None):
                 continue
@@ -1837,6 +1843,8 @@ def setup_model_routes(model_discovery):
                 endpoints = db.query(ModelEndpoint).filter(ModelEndpoint.is_enabled == True).all()
                 local_eps = []
                 for ep in endpoints:
+                    if not endpoint_supports_execution(ep):
+                        continue
                     base = _normalize_base(ep.base_url)
                     kind = _effective_endpoint_kind(ep, base)
                     if _classify_endpoint(base, kind) == "local":
@@ -1903,6 +1911,8 @@ def setup_model_routes(model_discovery):
 
         results = []
         for ep in endpoints:
+            if not endpoint_supports_execution(ep):
+                continue
             base = _normalize_base(ep.base_url)
             provider = _safe_detect_provider(base)
             kind = _effective_endpoint_kind(ep, base)
@@ -1953,6 +1963,9 @@ def setup_model_routes(model_discovery):
                 # Cache endpoint lookups
                 if ep_id and ep_id not in endpoints_cache:
                     ep = db.query(ModelEndpoint).filter(ModelEndpoint.id == ep_id).first()
+                    if ep and not endpoint_supports_chat(ep):
+                        results.append({"model": model_id, "status": "fail", "error": "Endpoint does not support chat probes"})
+                        continue
                     if ep and _chatgpt_endpoint_visible(ep, request):
                         endpoints_cache[ep_id] = {"base_url": ep.base_url, "api_key": _resolve_probe_key(ep)}
                 ep_data = endpoints_cache.get(ep_id)
@@ -1960,6 +1973,12 @@ def setup_model_routes(model_discovery):
                     # Try to find by base_url from the model's endpoint field
                     endpoint_url = item.get("endpoint", "")
                     if endpoint_url:
+                        from src.endpoint_resolver import reject_decision_only_endpoint_url
+                        try:
+                            reject_decision_only_endpoint_url(db, endpoint_url, effective_user(request))
+                        except ValueError:
+                            results.append({"model": model_id, "status": "fail", "error": "Endpoint does not support chat probes"})
+                            continue
                         ep_data = {"base_url": endpoint_url, "api_key": item.get("api_key", "")}
                     else:
                         results.append({"model": model_id, "status": "fail", "error": "Endpoint not found"})
@@ -1989,7 +2008,7 @@ def setup_model_routes(model_discovery):
             # Detach from session
             ep_data = []
             for ep in endpoints:
-                if not _chatgpt_endpoint_visible(ep, request):
+                if not endpoint_supports_chat(ep) or not _chatgpt_endpoint_visible(ep, request):
                     continue
                 ep_data.append({
                     "id": ep.id,
@@ -2153,6 +2172,13 @@ def setup_model_routes(model_discovery):
         shared: str = Form("true"),
     ):
         require_admin(request)
+        try:
+            model_type = normalize_endpoint_model_type(model_type)
+        except ValueError as exc:
+            raise HTTPException(400, str(exc)) from None
+        decision_only = model_type == "decision"
+        if decision_only and _truthy(require_models):
+            raise HTTPException(400, "Decision-only endpoints use saved model IDs; model probes are unavailable")
         base_url = _normalize_base(base_url)
         if not base_url:
             raise HTTPException(400, "Base URL is required")
@@ -2190,11 +2216,11 @@ def setup_model_routes(model_discovery):
             requested_kind = "api"
         if is_featherless and not pinned_models.strip():
             pinned_models = "[]"
-        refresh_mode = _normalize_endpoint_refresh_mode(model_refresh_mode, requested_kind, base_url)
+        refresh_mode = "manual" if decision_only else _normalize_endpoint_refresh_mode(model_refresh_mode, requested_kind, base_url)
         refresh_interval = _parse_positive_int(model_refresh_interval, minimum=30, maximum=86400)
         refresh_timeout = _parse_positive_int(model_refresh_timeout, minimum=1, maximum=60)
         require_model_list = _truthy(require_models)
-        should_probe = (
+        should_probe = not decision_only and (
             require_model_list or requested_kind in ("api", "proxy") or not _truthy(skip_probe)
         )
         explicit_timeout = _explicit_model_list_timeout(base_url, requested_kind, refresh_timeout)
@@ -2218,6 +2244,8 @@ def setup_model_routes(model_discovery):
             existing = None
             _empty_key_existing = None
             for _candidate in _same_url_rows:
+                if endpoint_model_type(_candidate) != model_type:
+                    continue
                 if getattr(_candidate, "provider_auth_id", None):
                     continue  # OAuth account mutations require its explicit identity.
                 _candidate_key = (getattr(_candidate, "api_key", None) or "").strip()
@@ -2244,7 +2272,7 @@ def setup_model_routes(model_discovery):
                 if requested_kind != "auto" and _endpoint_kind(existing) == "auto":
                     existing.endpoint_kind = requested_kind
                     changed = True
-                if model_refresh_mode or (requested_kind == "proxy" and _endpoint_refresh_mode(existing, requested_kind) != refresh_mode):
+                if decision_only or model_refresh_mode or (requested_kind == "proxy" and _endpoint_refresh_mode(existing, requested_kind) != refresh_mode):
                     existing.model_refresh_mode = refresh_mode
                     changed = True
                 if refresh_interval is not None:
@@ -2300,6 +2328,7 @@ def setup_model_routes(model_discovery):
                     "online": existing_status != "offline",
                     "status": existing_status,
                     "existing": True,
+                    "model_type": endpoint_model_type(existing),
                     "endpoint_kind": existing_kind,
                     "category": _classify_endpoint(existing.base_url, existing_kind),
                 }
@@ -2308,7 +2337,7 @@ def setup_model_routes(model_discovery):
 
         model_ids = _probe_endpoint(base_url, api_key.strip() or None, timeout=explicit_timeout) if should_probe else []
         ping = {"reachable": False, "error": None}
-        if (should_probe or requested_kind in ("api", "proxy")) and not model_ids:
+        if not decision_only and (should_probe or requested_kind in ("api", "proxy")) and not model_ids:
             ping = _ping_endpoint(base_url, api_key.strip() or None, timeout=min(explicit_timeout, 10.0))
         if require_model_list and not model_ids and not is_featherless:
             raise HTTPException(400, _model_endpoint_error_message(base_url, ping))
@@ -2365,7 +2394,7 @@ def setup_model_routes(model_discovery):
                 current_default_ep = db.query(ModelEndpoint).filter(
                     ModelEndpoint.id == current_default_id
                 ).first()
-            if _default_endpoint_needs_assignment(
+            if endpoint_supports_chat(ep) and _default_endpoint_needs_assignment(
                 current_default_id,
                 enabled_ids,
                 current_default_endpoint=current_default_ep,
@@ -2385,6 +2414,7 @@ def setup_model_routes(model_discovery):
         is_status = "online" if (model_ids or _pinned or (is_featherless and ping.get("reachable"))) else ("loading" if ping.get("loading") else ("empty" if ping.get("reachable") else "offline"))
         return {
             "id": ep_id,
+            "model_type": model_type,
             "name": name.strip(),
             "base_url": base_url,
             "has_key": bool(api_key.strip()),
@@ -2453,6 +2483,8 @@ def setup_model_routes(model_discovery):
             ep = db.query(ModelEndpoint).filter(ModelEndpoint.id == ep_id).first()
             if not ep or not _chatgpt_endpoint_visible(ep, request):
                 raise HTTPException(404, "Endpoint not found")
+            if not endpoint_supports_chat(ep):
+                raise HTTPException(400, "Endpoint does not support chat probes")
             ep_data = {"id": ep.id, "name": ep.name, "base_url": ep.base_url, "api_key": _resolve_probe_key(ep)}
         finally:
             db.close()
@@ -2514,6 +2546,8 @@ def setup_model_routes(model_discovery):
             base = _normalize_base(ep.base_url)
             kind = _effective_endpoint_kind(ep, base)
             picker_requires_pinning = _picker_requires_pinning(base, kind)
+            if refresh and not endpoint_supports_execution(ep):
+                raise HTTPException(400, "Decision-only endpoints use saved model IDs")
             if refresh:
                 category = _classify_endpoint(base, kind)
                 timeout = _manual_refresh_timeout(ep, category, refresh_timeout)
@@ -2822,6 +2856,9 @@ def setup_model_routes(model_discovery):
                 if _user and not _is_admin:
                     ep_q = owner_filter(ep_q, ModelEndpoint, _user)
                 ep = ep_q.first()
+                if ep is not None and not endpoint_supports_execution(ep):
+                    ep = None
+                    model = ""
             # Last resort: first enabled endpoint owned by THIS user. Do not
             # include null-owner/shared endpoints here: a brand-new user with
             # no explicit default should not auto-open a pending chat using an
@@ -2831,7 +2868,7 @@ def setup_model_routes(model_discovery):
                 _last_q = db.query(ModelEndpoint).filter(ModelEndpoint.is_enabled == True)
                 if _user and not _is_admin:
                     _last_q = owner_filter(_last_q, ModelEndpoint, _user, include_shared=False)
-                ep = _last_q.first()
+                ep = next((row for row in _last_q.all() if endpoint_supports_execution(row)), None)
             if not ep:
                 return {"endpoint_id": "", "endpoint_url": "", "model": ""}
             base = _normalize_base(ep.base_url)
@@ -2873,8 +2910,13 @@ def setup_model_routes(model_discovery):
                     ep.is_enabled = v_ie.lower() in ('true', '1', 'yes') if isinstance(v_ie, str) else bool(v_ie)
                 if "name" in body and isinstance(body["name"], str):
                     ep.name = body["name"].strip() or ep.name
-                if "model_type" in body and isinstance(body["model_type"], str):
-                    ep.model_type = body["model_type"].strip() or ep.model_type
+                if "model_type" in body:
+                    if not isinstance(body["model_type"], str) or not body["model_type"].strip():
+                        raise HTTPException(400, "Unsupported endpoint model type")
+                    try:
+                        ep.model_type = normalize_endpoint_model_type(body["model_type"])
+                    except ValueError as exc:
+                        raise HTTPException(400, str(exc)) from None
                 if "pinned_models" in body:
                     _pinned = _normalize_model_ids(body["pinned_models"])
                     _base_for_pins = _normalize_base(ep.base_url)
@@ -2929,6 +2971,8 @@ def setup_model_routes(model_discovery):
             from src.chatgpt_subscription import is_chatgpt_subscription_base
             if is_chatgpt_subscription_base(ep.base_url or ""):
                 ep.supports_tools = False
+            if endpoint_model_type(ep) == "decision":
+                ep.model_refresh_mode = "manual"
             db.commit()
             _invalidate_models_cache()
             _local_probe_cache["data"] = None

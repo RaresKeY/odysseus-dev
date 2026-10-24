@@ -48,8 +48,12 @@ def setup_chat_automation_routes(session_manager):
         try:
             rows = owner_filter(db.query(ModelEndpoint).filter(ModelEndpoint.is_enabled.is_(True)),
                 ModelEndpoint, owner or DEFAULT_LOCAL_OWNER).all()
-            return {"endpoints": [{"id": r.id, "name": r.name, "models": _endpoint_enabled_models(r)}
-                for r in rows if (r.model_type or "llm") == "llm"]}
+            from src.model_admission import endpoint_supports_chat, endpoint_supports_decisions, endpoint_model_type
+            def choice(row):
+                return {"id": row.id, "name": row.name, "models": _endpoint_enabled_models(row),
+                        "model_type": endpoint_model_type(row)}
+            return {"endpoints": [choice(r) for r in rows if endpoint_supports_chat(r)],
+                    "decision_endpoints": [choice(r) for r in rows if endpoint_supports_decisions(r)]}
         finally:
             db.close()
 

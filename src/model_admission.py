@@ -65,3 +65,32 @@ def require_owner_model(owner, model):
     allowed = allowed_models_for_owner(owner)
     if allowed is not None and model not in allowed:
         raise ValueError('This model is not allowed for this owner')
+
+
+ENDPOINT_MODEL_TYPES = frozenset({"llm", "image", "decision"})
+
+
+def normalize_endpoint_model_type(value):
+    """Supported persisted endpoint purposes; legacy missing type means chat."""
+    if value is None or value == "":
+        return "llm"
+    if not isinstance(value, str) or value.strip().lower() not in ENDPOINT_MODEL_TYPES:
+        raise ValueError("Unsupported endpoint model type")
+    return value.strip().lower()
+
+
+def endpoint_model_type(endpoint):
+    return getattr(endpoint, "model_type", None) or "llm"
+
+
+def endpoint_supports_chat(endpoint):
+    return endpoint_model_type(endpoint) == "llm"
+
+
+def endpoint_supports_execution(endpoint):
+    """Chat and image routes may execute; decision-only routes may not."""
+    return endpoint_model_type(endpoint) in {"llm", "image"}
+
+
+def endpoint_supports_decisions(endpoint):
+    return endpoint_model_type(endpoint) in {"llm", "decision"}
