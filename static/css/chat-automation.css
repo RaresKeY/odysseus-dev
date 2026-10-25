@@ -51,6 +51,7 @@
 #model-picker-menu{width:350px;max-width:calc(100vw - 32px);max-height:min(620px,70dvh);display:flex;flex-direction:column;box-sizing:border-box}
 #model-picker-menu.hidden{display:none}
 #model-picker-list{min-height:0;overflow-y:auto;flex:1}
+#model-picker-list.is-empty{max-height:none;min-height:44px}
 .model-auto-controls{flex:none;padding:4px 2px 7px;border-bottom:1px solid var(--border);margin-bottom:4px}
 #model-auto-select{display:block;width:100%;border:0;border-radius:5px;background:transparent;color:var(--fg);font:inherit;padding:7px;text-align:left;cursor:pointer}
 .model-auto-actions{display:flex;align-items:center;justify-content:space-between;gap:6px;padding:4px 6px}

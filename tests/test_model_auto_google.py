@@ -40,6 +40,7 @@ def test_exact_canonical_google_capabilities(model,efforts):
     ('http://generativelanguage.googleapis.com/v1beta/openai','gemini-2.5-pro'),
     (BASE+'?key=synthetic','gemini-2.5-pro'),(BASE+'#fragment','gemini-2.5-pro'),
     ('https://userinfo@generativelanguage.googleapis.com/v1beta/openai','gemini-2.5-pro'),
+    ('https://@generativelanguage.googleapis.com/v1beta/openai','gemini-2.5-pro'),
     ('https://generativelanguage.googleapis.com:444/v1beta/openai','gemini-2.5-pro'),
     ('https://generativelanguage.googleapis.com.evil.invalid/v1beta/openai','gemini-2.5-pro')])
 def test_unknown_endpoint_model_or_noncanonical_alias_has_no_inferred_effort(url,model):

@@ -64,7 +64,7 @@ def execution_capabilities(url, model):
     try:
         parts = urlsplit(url)
         google = (parts.scheme == 'https' and parts.hostname == 'generativelanguage.googleapis.com'
-            and parts.port in (None, 443) and not parts.username and not parts.password
+            and parts.port in (None, 443) and parts.username is None and parts.password is None
             and not parts.query and not parts.fragment
             and parts.path.rstrip('/') in {'/v1beta/openai', '/v1beta/openai/chat/completions'})
     except (ValueError, TypeError):
