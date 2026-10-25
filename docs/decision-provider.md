@@ -61,8 +61,12 @@ Google OpenAI route. Unknown routes/models disclose default-only. Per-candidate
 optional roles preserve bounded user wording and supply distinct task-fit
 criteria; these hints are data, never classifier instructions or authority.
 Capability revision and role text are part of the immutable offer snapshot. Complete
-finite distributions, known usage, 0.80 confidence/selected probability and
-model/effort compatibility are required. No silent normalization or wider pool
+finite distributions, a maximum-consistent choice, bounded confidence, known
+usage and model/effort compatibility are required. As in the donor routers,
+`model_auto` has no absolute confidence or selected-probability floor: valid
+low-confidence winners bind, with raw scores retained as routing metadata.
+Explicit `unavailable` still stops. Routing grants no action authority; the
+separate action-approval 0.95 allow thresholds are unchanged. No silent normalization or wider pool
 is used. Registration and credentials are revalidated after inference; actual
 provider dispatch rechecks current pool, model, headers and effort. The exact
 original ask is sent only after a valid binding. Manual selection skips Jev.

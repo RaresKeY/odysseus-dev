@@ -24,6 +24,12 @@ Candidate-specific criteria use optional bounded verbatim owner role hints as
 data, not action authority. Pool revisions and dispatch snapshots bind roles
 and capability revisions. Manual
 model selection does not classify model or effort.
+For `model_auto` only, complete finite normalized distributions and a winning
+compatible choice bind regardless of absolute reported confidence/probability,
+matching the supplied donor parsers. Confidence stays bounded and raw scores
+are retained as observable routing metadata. Explicit decline, malformed data
+and stale/unauthorized offers still stop. This does not alter action approval's
+separate 0.95 allow thresholds or grant any resource authority.
 
 `prepare_http_selection` filters the complete current catalog by owner/admin,
 credential, request toggles and contextual restrictions before a decision. The

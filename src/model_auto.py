@@ -214,8 +214,9 @@ async def select_model_and_effort(raw_ask, candidates, *, owner, provider, confi
             or decision.probabilities != model_answer['probabilities']
             or not isinstance(decision.attempt_id, str) or not decision.attempt_id):
         raise DecisionError('auto_decision_invalid')
-    if any(a['choice'] == 'unavailable' or a['confidence'] < .8
-           or a['probabilities'][a['choice']] < .8 for a in (model_answer, effort_answer)):
+    # Donor routing accepts a valid winner at any reported confidence. These
+    # scores remain observable metadata; action approval has its own policy.
+    if any(a['choice'] == 'unavailable' for a in (model_answer, effort_answer)):
         raise DecisionError('auto_selection_uncertain', attempt_id=decision.attempt_id)
     selected = offered[model_answer['choice']]
     effort = effort_answer['choice']
