@@ -50,7 +50,7 @@ The exact ChatGPT subscription runtime catalogue and a versioned seven-ID
 Google compatibility table supply non-default effort. Google evidence applies
 only to the canonical verified HTTPS generativelanguage.googleapis.com
 /v1beta/openai route, without credentials/query/fragment/foreign ports in URL
-identity. Unknown IDs, models/ aliases and proxies retain default; no payload-only
+identity. A single native models/ prefix is recognized for capability lookup only, with exact stored/bound/payload identity retained. Unknown IDs and proxies retain default; no payload-only
 normalization occurs. Existing llm_core top-level reasoning_effort paths carry
 these values. Capability revision, roles and supported sets are rechecked.
 Optional per-selected-model user role descriptions stay verbatim and bounded;

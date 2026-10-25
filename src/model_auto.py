@@ -13,7 +13,7 @@ from src.decisions.contracts import MAX_TASK_BYTES, validate_answers
 
 POLICY = 'odysseus-model-auto/v1'
 MAX_CANDIDATES = 32
-GOOGLE_CAPABILITY_REVISION = 'google-openai-thinking/2026-10-25-v1'
+GOOGLE_CAPABILITY_REVISION = 'google-openai-thinking/2026-10-25-v2'
 # Exact canonical-provider contracts, not model-name family guesses or routing
 # rankings. Evidence: ai.google.dev/gemini-api/docs/openai#thinking and
 # /docs/thinking plus /docs/generate-content/gemini-3 (reviewed 2026-10-25).
@@ -69,8 +69,12 @@ def execution_capabilities(url, model):
             and parts.path.rstrip('/') in {'/v1beta/openai', '/v1beta/openai/chat/completions'})
     except (ValueError, TypeError):
         google = False
-    if google and model in GOOGLE_EFFORTS:
-        return {'supported_efforts': list(GOOGLE_EFFORTS[model]), 'capability_revision': GOOGLE_CAPABILITY_REVISION}
+    # Google's native catalogue uses one models/ prefix. Older registrations
+    # retain that exact identity. Normalize only this capability lookup on the
+    # canonical provider; keep pool, descriptor and actual payload unchanged.
+    google_id = model.removeprefix('models/') if isinstance(model, str) else model
+    if google and google_id in GOOGLE_EFFORTS:
+        return {'supported_efforts': list(GOOGLE_EFFORTS[google_id]), 'capability_revision': GOOGLE_CAPABILITY_REVISION}
     meta = CHATGPT_MODEL_CATALOG_CACHE.get(model) if is_chatgpt_subscription_base(url) else None
     levels = (meta or {}).get('supported_reasoning_levels') or []
     if not isinstance(levels, list) or len(levels) > len(EFFORT_COPY):

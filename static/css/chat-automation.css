@@ -54,12 +54,12 @@
 #model-picker-list{min-height:0;overflow-y:auto;flex:1}
 #model-picker-list.is-empty{max-height:none;min-height:44px}
 .model-auto-controls{flex:none;padding:4px 2px 7px;border-bottom:1px solid var(--border);margin-bottom:4px}
-#model-auto-select{display:block;width:100%;border:0;border-radius:5px;background:transparent;color:var(--fg);font:inherit;padding:7px;text-align:left;cursor:pointer}
+#model-auto-select{display:block;width:100%;height:auto;min-height:52px;box-sizing:border-box;border:0;border-radius:5px;background:transparent;color:var(--fg);font:inherit;padding:7px;text-align:left;cursor:pointer;white-space:normal}
 .model-auto-actions{display:flex;align-items:center;justify-content:space-between;gap:6px;padding:4px 6px}
 .model-auto-actions button{font-size:11px;padding:5px;background:transparent}
 #model-auto-count{font-size:11px;white-space:nowrap;opacity:.75}
-#model-auto-help,#model-auto-feedback{font-size:11px;line-height:1.5;margin:5px 6px;overflow-wrap:anywhere}
-#model-auto-feedback:empty,#chat-permissions-feedback:empty{display:none}
+#model-auto-help,#model-auto-feedback,#model-auto-eligibility{font-size:11px;line-height:1.5;margin:5px 6px;overflow-wrap:anywhere}
+#model-auto-feedback:empty,#model-auto-eligibility:empty,#chat-permissions-feedback:empty{display:none}
 .model-auto-selected{background:color-mix(in srgb,var(--fg) 9%,transparent)}
 .model-auto-check{flex:none;width:15px;text-align:center}
 .model-auto-capability{display:block;font-size:11px;line-height:1.5;font-weight:400;opacity:.75;white-space:normal}
