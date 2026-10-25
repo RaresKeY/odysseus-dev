@@ -13,12 +13,25 @@ function notice(text='') { const el=$('chat-automation-notice'); el.textContent=
 function permissionFeedback(text='') { $('chat-permissions-feedback').textContent=text; notice(text); }
 function closePermissions(restore=false) {
   $('chat-permissions-menu').hidden=true;
+  $('chat-permissions-control').append($('chat-permissions-menu'));
   $('chat-approval-mode').setAttribute('aria-expanded','false');
   if(restore)$('chat-approval-mode').focus();
 }
+function positionPermissions() {
+  const menu=$('chat-permissions-menu');if(menu.hidden)return;
+  const trigger=$('chat-permissions-control').getBoundingClientRect();
+  const left=Math.max(12,Math.min(trigger.left,window.innerWidth-menu.offsetWidth-12));
+  menu.style.left=`${left}px`;menu.style.right='auto';menu.style.bottom='auto';
+  menu.style.maxHeight=`${Math.max(80,Math.min(window.innerHeight*.65,trigger.top-20))}px`;
+  menu.style.top=`${Math.max(10,trigger.top-menu.offsetHeight-10)}px`;
+}
 function openPermissions() {
   if(saving)return;
+  // The native toolbar intentionally clips collapsed tools. Like More tools,
+  // portal this menu above that container while preserving its trigger owner.
+  document.body.append($('chat-permissions-menu'));
   $('chat-permissions-menu').hidden=false;
+  positionPermissions();
   $('chat-approval-mode').setAttribute('aria-expanded','true');
   ($('chat-permissions-menu').querySelector('[aria-checked="true"]') || $('chat-permissions-menu').querySelector('button')).focus();
 }
@@ -48,11 +61,16 @@ async function api(path, method='GET', body) {
   return value;
 }
 function message(text) { $('chat-automation-feedback').textContent = text; }
-async function currentChat() {
+async function currentChat(seed) {
   const existingId=sid(), navigation=navigationGeneration;
   if (!existingId) {
     if (!sessions.hasPendingChat()) {
-      const model = await api('/api/default-chat');
+      let model;
+      if(seed){
+        const item=(window.modelsModule?.getCachedItems?.() || []).find(item=>item.endpoint_id===seed.endpoint_id && (item.models || []).concat(item.models_extra || []).includes(seed.model));
+        if(!item || item.offline)throw new Error('The selected Auto model is unavailable. Refresh the model picker.');
+        model={endpoint_url:item.url,model:seed.model,endpoint_id:seed.endpoint_id};
+      }else model=await api('/api/default-chat');
       if(navigationGeneration!==navigation || sid()) throw new Error('The chat changed. Choose the setting again.');
       if (!model.endpoint_url || !model.model) throw new Error('Choose a model first');
       sessions.createDirectChat(model.endpoint_url,model.model,model.endpoint_id);
@@ -100,7 +118,7 @@ function changeChat(changes, context) {
     $('chat-automation-state').textContent='Saving chat settings…';
     try {
       if(requestedNavigation!==navigationGeneration || sid()!==requestedId) throw new Error('The chat changed. Choose the setting again in the current chat.');
-      const id = requestedId || await currentChat(), ticket=++sequence;
+      const id = requestedId || await currentChat(changes.auto_models?.[0]), ticket=++sequence;
       const previous=policy?.session_id===id ? policy : await api(`/api/session/${encodeURIComponent(id)}/automation`);
       if(context && (context.navigation!==requestedNavigation || context.session_id!==requestedId || (requestedId && context.policy_revision!==previous.policy_revision)))throw new Error('The chat settings changed. Reopen Auto models before saving.');
       const saved=await api(`/api/session/${encodeURIComponent(id)}/automation`,'PUT',{policy_revision:previous.policy_revision,changes});
@@ -171,8 +189,12 @@ async function initialize(){
     const i=buttons.indexOf(document.activeElement);
     buttons[e.key==='Home'?0:e.key==='End'?buttons.length-1:(i+(e.key==='ArrowUp'?-1:1)+buttons.length)%buttons.length].focus();
   });
-  document.addEventListener('pointerdown',e=>{if(!$('chat-permissions-control').contains(e.target))closePermissions();});
-  $('chat-permissions-control').addEventListener('focusout',e=>{if(e.relatedTarget && !e.currentTarget.contains(e.relatedTarget))closePermissions();});
+  const insidePermissions=target=>$('chat-permissions-control').contains(target) || $('chat-permissions-menu').contains(target);
+  document.addEventListener('pointerdown',e=>{if(!insidePermissions(e.target))closePermissions();});
+  window.addEventListener('resize',positionPermissions);
+  window.visualViewport?.addEventListener('resize',positionPermissions);
+  window.visualViewport?.addEventListener('scroll',positionPermissions);
+  for(const id of ['chat-permissions-control','chat-permissions-menu'])$(id).addEventListener('focusout',e=>{if(e.relatedTarget && !insidePermissions(e.relatedTarget))closePermissions();});
   $('chat-permissions-menu').querySelectorAll('[data-approval-mode]').forEach(button=>button.addEventListener('click',async()=>{
     const mode=button.dataset.approvalMode;
     if(saving)return;
@@ -185,7 +207,7 @@ async function initialize(){
     catch(error){permissionFeedback(error.message);render();}
   }));
   $('chat-auto-approve-cancel').addEventListener('click',()=>{$('chat-auto-approve-dialog').close();$('chat-approval-mode').focus();});
-  $('chat-auto-approve-dialog').addEventListener('cancel',()=>{$('chat-approval-mode').focus();});
+  $('chat-auto-approve-dialog').addEventListener('cancel',event=>{if(saving){event.preventDefault();return;}$('chat-approval-mode').focus();});
   $('chat-auto-approve-enable').addEventListener('click',async()=>{
     const button=$('chat-auto-approve-enable');button.disabled=true;$('chat-auto-approve-cancel').disabled=true;
     try{
