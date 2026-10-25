@@ -71,7 +71,7 @@
 #chat-permissions-menu[hidden],#model-auto-help[hidden],#model-auto-save-row[hidden]{display:none}
 @media(max-width:540px){
   .chat-automation-route{grid-template-columns:1fr}#chat-automation-dialog{padding:14px}
-  .chat-permissions-trigger{min-height:44px;min-width:44px;padding:0 2px;gap:2px}
+  .chat-permissions-trigger{min-height:44px;min-width:44px;padding:0;gap:2px}
   .chat-input-right .mode-toggle{height:44px}
   .chat-input-right .mode-toggle-btn{padding:0 6px;min-width:44px}
   #chat-permissions-label{display:none}
