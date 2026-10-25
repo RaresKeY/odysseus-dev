@@ -54,6 +54,13 @@ async def test_capture_routes_consent_download_delete_and_foreign_rejection(api,
 
 
 @pytest.mark.asyncio
+async def test_model_auto_capture_consent_is_supported_by_existing_owned_api(api):
+    async with httpx.AsyncClient(transport=httpx.ASGITransport(app=api),base_url='http://test',headers={'test-owner':'alice'}) as client:
+        assert (await client.put('/api/session/a/decision-capture',json={'purposes':['model_auto']})).status_code==200
+        assert (await client.put('/api/session/c/decision-capture',json={'purposes':['model_auto']})).status_code==404
+
+
+@pytest.mark.asyncio
 async def test_unauth_delegated_and_cross_origin_rejected(api):
     async with httpx.AsyncClient(transport=httpx.ASGITransport(app=api), base_url='http://test') as client:
         assert (await client.get('/api/session/a/decisions')).status_code == 401
