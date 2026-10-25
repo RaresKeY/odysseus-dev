@@ -12,15 +12,15 @@ Last updated: dev@f8e043e8 | 2026-10-24
 
 ## Routing and semantic lifecycle
 
-Canonical SQL chat settings independently select `tool_routing=existing|jev|all`,
-`effort_mode=mapped|auto`, and follow-up, preparation and completion-advice flags.
-Defaults retain existing routing, mapped effort and disabled new assistance.
-Owner decision-provider/three approach mappings remain separate from execution.
-Optional mapping `supported_efforts` is explicitly owner-configured metadata,
-not a claim of provider-advertised capability. Automatic effort conditions on
-the selected admitted endpoint/model and committed finite choices; actual
-execution transport checks the final endpoint/model/effort descriptor again.
-Manual model selection does not classify approach or effort.
+Canonical SQL chat settings independently select `tool_routing=existing|jev|all`
+and follow-up, preparation and completion-advice flags. Foreground Auto now uses
+`src/model_auto.py` and a per-chat `auto_models` pool from the existing model
+picker, choosing model and supported effort in one closed decision. Legacy
+`effort_mode` and three approach mappings remain compatibility/experiment data;
+they do not restrict or override the new foreground selection. The exact offer
+is validated before and after inference and at actual execution. Generic
+providers without wired reasoning metadata use their explicit default. Manual
+model selection does not classify model or effort.
 
 `prepare_http_selection` filters the complete current catalog by owner/admin,
 credential, request toggles and contextual restrictions before a decision. The
@@ -114,11 +114,10 @@ providers. Registration and manual model-ID editing send no provider probes.
 General model lists, aliases, first prompts, saved chats, comparison routes and
 actual execution transport reject these rows. Ordinary `llm` rows may still
 serve both openai_json decisions and chat. The decision settings picker sees
-both supported purposes; the three execution approach slots see only `llm`.
+both supported purposes; foreground Auto candidates admit only `llm` registrations.
 The service-worker revision refreshes changed control modules without deleting
 accounts, cookies, IndexedDB or other user storage.
-The floating composer Options menu overrides generic foldout clipping so its
-buttons remain visible and reachable by both pointer and keyboard.
+Tools/options are in the composer More tools menu and native Chat settings dialog; permissions have their own anchored composer menu.
 
 ## Restrictive task runtime
 

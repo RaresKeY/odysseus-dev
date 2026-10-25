@@ -7,7 +7,7 @@ Last updated: dev@f8e043e | 2026-10-24
 This spec covers model/provider behavior in:
 
 - `src/llm_core.py`;
-- `src/decisions/`, `src/approach_routing.py`, and the provider boundary in `src/chat_automation.py`;
+- `src/decisions/`, `src/model_auto.py`, `src/approach_routing.py`, and the provider boundary in `src/chat_automation.py`;
 - `src/endpoint_resolver.py`;
 - `src/foreground_model_routing.py`;
 - `src/model_discovery.py`;
@@ -44,16 +44,16 @@ explicit owner foreground consent and rebinds the committed descriptor after an
 eligible availability failure. Unsupported effective reasoning effort fails
 instead of reporting an effort the request cannot supply.
 
-`src/approach_routing.py` owns `established_procedure`, `bounded_domain` and
-`approach_discovery`; each owner maps these stable IDs to an admitted
-endpoint/model/effort. Manual selection makes no classification call. The exact
-original ask is preserved. `src/decisions/` owns independent, bounded one-call
-decisions through an explicitly registered Systemone or OpenAI-compatible JSON
-provider. It has strict response/distribution validation, durable attempt
-reservation, owner admission, no redirects/retries and secretless identity
-metadata. Decision results confer no execution authority. See
-[decision-provider.md](../docs/decision-provider.md) for the configuration,
-failure and offline report contracts.
+`src/model_auto.py` owns foreground Auto selection from an explicit per-chat
+registered endpoint/model pool, with supported effort chosen in the same decision.
+The exact ChatGPT subscription runtime catalogue is currently the only wired
+non-default effort source; other providers expose default, without inferring
+capability from the model name. Model/effort incompatibility, a changed pool or
+unavailable registration errors without fallback. Old category mappings migrate
+only their previously selected unique identities for already-Auto chats.
+`src/approach_routing.py` retains the neutral three-category mechanism for legacy
+experiments. Independent `src/decisions/` calls remain bounded and cannot grant
+action authority. See [decision-provider.md](../docs/decision-provider.md).
 
 Kimi Code User-Agent discovery has both sync and async implementations. Async post and stream paths probe `/models` through their existing async client and await each candidate, so header negotiation does not block the event loop; both paths share the accepted-value cache and 403 fallback policy.
 

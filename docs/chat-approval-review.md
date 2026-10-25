@@ -8,9 +8,9 @@ provider invocation. YOLO skips discretionary review only after deterministic
 admission. Saved interactive preferences do not grant unattended consent.
 
 `src/tool_execution.py` applies this policy after request/tool restrictions and
-resource binding. Missing semantic authority may produce a human card when
-the request is valid, non-inherited and not restricted. It cannot be approved
-automatically. A disabled tool, unavailable producer, changed resource, denied
+resource binding. Missing semantic authority may produce a human card in
+Always Ask or the existing manual/YOLO flow when the request is valid,
+non-inherited and not restricted. Auto-Approve stops with an error instead. A disabled tool, unavailable producer, changed resource, denied
 turn capability or read-only elevation root remains denied in every mode.
 The browser `automate` operation is an orchestration wrapper; every actual
 child operation re-enters the canonical dispatcher with its original authority.
@@ -23,8 +23,12 @@ selection. It must return a valid complete distribution for exactly `allow`,
 `review`, `deny`, with known usage. Automatic acceptance requires `allow`,
 confidence at least 0.95, and selected probability at least 0.95. These versioned
 operating thresholds are not a calibration or safety claim. Errors, uncertainty,
-missing usage, timeout and malformed responses leave a human card without an
-automatic retry. A deny executes nothing and visibly reports that recommendation.
+missing usage, timeout, unavailable review and malformed responses retire the
+proposal and return a clear blocked error without retry or a human approval card.
+A deny or review-needed answer also stops the operation. Selecting Auto-Approve
+in the composer first explains this behavior in an activation prompt; cancel or
+failed persistence keeps the previous mode. Users can explicitly change mode and
+make a new request; the failed proposal cannot be approved afterwards.
 
 New cards offer `approve_once` and `deny`. Their grants bind owner, chat, run,
 submission, exact arguments, effects, original-ask digest, resource/backend/

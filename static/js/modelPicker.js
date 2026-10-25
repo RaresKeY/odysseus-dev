@@ -82,6 +82,11 @@ function _handlePickerKeydown(e, listEl, itemSelector, closeFn) {
 
 // Dependencies injected via initModelPicker()
 let _deps = null;
+let _automationPolicy = null;
+window.addEventListener('odysseus:automation-policy',event=>{
+  _automationPolicy=event.detail;
+  updateModelPicker();
+});
 let _autoSelectingDefault = false;
 let _defaultChatPickInFlight = false;
 let _defaultPendingSeq = 0;
@@ -206,9 +211,72 @@ function _initModelPickerDropdown() {
   if (!wrap || !btn || !menu || !search || !listEl) return;
   if (wrap.dataset.modelPickerBound === '1') return;
   wrap.dataset.modelPickerBound = '1';
+  let poolDraft=null, poolContext=null, poolSaving=false;
+  const autoSelect=document.getElementById('model-auto-select');
+  const autoEdit=document.getElementById('model-auto-edit');
+  const autoFeedback=document.getElementById('model-auto-feedback');
+  const poolKey=m=>`${m.endpoint_id}::${m.model}`;
+  function renderAutoControls(){
+    const policy=window.ChatAutomation?.getPolicy();
+    const selected=poolDraft || policy?.auto_models || [];
+    autoSelect.setAttribute('aria-checked',String(policy?.route_mode==='auto'));
+    autoSelect.disabled=poolSaving || !window.ChatAutomation;
+    autoEdit.disabled=poolSaving || !window.ChatAutomation;
+    autoEdit.textContent=poolDraft?'Auto models':selected.length?'Edit Auto models':'Choose Auto models';
+    document.getElementById('model-auto-count').textContent=`${selected.length} selected`;
+    document.getElementById('model-auto-help').hidden=!poolDraft;
+    document.getElementById('model-auto-save-row').hidden=!poolDraft;
+    document.getElementById('model-auto-save').disabled=poolSaving || !selected.length;
+    document.getElementById('model-auto-cancel').disabled=poolSaving;
+  }
+  function editAutoModels(){
+    if(poolSaving || !window.ChatAutomation)return;
+    const policy=window.ChatAutomation.getPolicy();
+    poolDraft=(policy?.auto_models || []).map(m=>({...m}));
+    poolContext=window.ChatAutomation.selectionContext();
+    autoFeedback.textContent=policy?.auto_models_source==='legacy_approaches'
+      ?'Your previous approach models are retained. Review this pool before saving.'
+      :'Choose at least one available model to use Auto.';
+    _populate(search.value || '');
+  }
+  autoEdit.addEventListener('click',editAutoModels);
+  autoSelect.addEventListener('click',async()=>{
+    if(poolSaving)return;
+    const policy=window.ChatAutomation?.getPolicy();
+    if(!policy?.auto_models?.length){editAutoModels();return;}
+    poolSaving=true;renderAutoControls();autoFeedback.textContent='Applying Auto…';
+    try{await window.ChatAutomation.enableAuto();poolDraft=null;autoFeedback.textContent='Reasoning effort · chosen automatically';renderAutoControls();}
+    catch(error){autoFeedback.textContent=error.message;}
+    finally{poolSaving=false;renderAutoControls();}
+  });
+  document.getElementById('model-auto-cancel').addEventListener('click',()=>{
+    poolDraft=null;poolContext=null;autoFeedback.textContent='';_populate(search.value || '');autoEdit.focus();
+  });
+  document.getElementById('model-auto-save').addEventListener('click',async()=>{
+    if(!poolDraft || poolSaving)return;
+    poolSaving=true;renderAutoControls();_populate(search.value || '');autoFeedback.textContent='Saving Auto models…';
+    try{
+      await window.ChatAutomation.saveAutoModels(poolDraft.map(m=>({...m})),poolContext);
+      poolDraft=null;poolContext=null;autoFeedback.textContent='Reasoning effort · chosen automatically';
+    }catch(error){autoFeedback.textContent=error.message;}
+    finally{poolSaving=false;_populate(search.value || '');}
+  });
+  window.addEventListener('odysseus:automation-policy',()=>{
+    renderAutoControls();
+    if(!menu.classList.contains('hidden') && !poolDraft)_populate(search.value || '');
+  });
+  window.addEventListener('odysseus:session-changed',event=>{
+    if(event.detail?.materialized && poolSaving)return;
+    poolDraft=null;poolContext=null;autoFeedback.textContent='';_close();
+  });
+  menu.addEventListener('keydown',event=>{
+    if(event.key==='Escape'){event.preventDefault();_close();btn.focus();}
+  });
+  btn.setAttribute('aria-haspopup','menu');btn.setAttribute('aria-expanded','false');
 
   function _close() {
     if (menu.classList.contains('hidden')) return;
+    btn.setAttribute('aria-expanded','false');
     // Restore scroll button
     const _scrollBtn = document.getElementById('scroll-bottom-btn');
     if (_scrollBtn) _scrollBtn.style.display = '';
@@ -440,6 +508,7 @@ function _initModelPickerDropdown() {
   function _populate(filter) {
     listEl.innerHTML = '';
     listEl.classList.remove('is-loading');
+    renderAutoControls();
     const all = _getAllModels();
     const q = (filter || '').trim().toLowerCase();
     const hasAnyModel = all.length > 0;
@@ -452,7 +521,22 @@ function _initModelPickerDropdown() {
       searchRow.classList.toggle('searching', !!q);
     }
 
-    if (!hasAnyModel) return; // collapsed empty list — nothing to render
+    if(poolDraft){
+      const matching=all.filter(m=>[m.mid,m.display,m.epName,m.providerText].join(' ').toLowerCase().includes(q));
+      const chosen=new Set(poolDraft.map(poolKey));
+      const available=new Set(all.map(m=>poolKey({endpoint_id:m.endpointId,model:m.mid})));
+      poolDraft.filter(m=>!available.has(poolKey(m))).forEach(m=>{
+        const row=document.createElement('button');row.type='button';row.className='model-switch-item model-auto-missing';
+        row.disabled=poolSaving;row.textContent=`${m.model} · unavailable — remove`;
+        row.title=m.endpoint_id;
+        row.addEventListener('click',()=>{poolDraft=poolDraft.filter(item=>poolKey(item)!==poolKey(m));_populate(search.value || '');});
+        listEl.append(row);
+      });
+      matching.sort((a,b)=>Number(chosen.has(poolKey({endpoint_id:b.endpointId,model:b.mid})))-Number(chosen.has(poolKey({endpoint_id:a.endpointId,model:a.mid})))).forEach(m=>_addRow(m));
+      if(!matching.length){const empty=document.createElement('p');empty.className='model-switch-empty';empty.textContent=hasAnyModel?'No matching models':'No registered API models available. Add an endpoint or refresh.';listEl.append(empty);}
+      return;
+    }
+    if (!hasAnyModel) {const empty=document.createElement('p');empty.className='model-switch-empty';empty.textContent='No registered models available. Add an endpoint or refresh.';listEl.append(empty);return;}
 
     // Unique lookup so Recent/Favorites (stored as bare model IDs) can be
     // resolved back to full model objects; drops anything no longer offered.
@@ -513,6 +597,25 @@ function _initModelPickerDropdown() {
       epSpan.textContent = _epDisplay;
       row.appendChild(epSpan);
 
+      if(poolDraft){
+        const identity={endpoint_id:m.endpointId,model:m.mid};
+        const selected=poolDraft.some(item=>poolKey(item)===poolKey(identity));
+        row.setAttribute('role','menuitemcheckbox');row.setAttribute('aria-checked',String(selected));
+        row.setAttribute('aria-disabled',String(poolSaving || ((!m.endpointId || m.stale) && !selected)));
+        row.tabIndex=0;row.classList.toggle('model-auto-selected',selected);
+        const mark=document.createElement('span');mark.className='model-auto-check';mark.textContent=selected?'✓':'＋';row.append(mark);
+        epSpan.textContent=m.epName || 'Unregistered';
+        row.title=`${m.mid} · ${m.epName || 'Unregistered'}${m.stale?' · unavailable':''}`;
+        const toggle=()=>{
+          if(poolSaving || ((!m.endpointId || m.stale) && !selected))return;
+          poolDraft=selected?poolDraft.filter(item=>poolKey(item)!==poolKey(identity)):[...poolDraft,identity];
+          const scroll=listEl.scrollTop;_populate(search.value || '');listEl.scrollTop=scroll;
+          [...listEl.querySelectorAll('[role="menuitemcheckbox"]')].find(el=>el.dataset.poolKey===poolKey(identity))?.focus();
+        };
+        row.dataset.poolKey=poolKey(identity);row.addEventListener('click',toggle);
+        row.addEventListener('keydown',event=>{if(event.key===' ' || event.key==='Enter'){event.preventDefault();toggle();}});
+        listEl.appendChild(row);return;
+      }
       // Inline favorite button — toggles favorite, never picks the model.
       const favDot = document.createElement('button');
       favDot.type = 'button';
@@ -548,6 +651,8 @@ function _initModelPickerDropdown() {
       });
       row.appendChild(favDot);
 
+      row.tabIndex=0;row.setAttribute('role','menuitem');
+      row.addEventListener('keydown',event=>{if(event.key==='Enter' || event.key===' '){event.preventDefault();_pick(m);}});
       row.addEventListener('click', () => _pick(m));
       listEl.appendChild(row);
     }
@@ -722,8 +827,7 @@ async function _pick(m) {
       // Existing session with no model — PATCH it
       const sessions = _deps.getSessions();
       const s = sessions.find(x => x.id === currentSessionId);
-      if (s) { s.model = m.mid; s.endpoint_url = m.url; s.endpoint_id = m.endpointId || ''; s.endpoint_name = m.epName || ''; }
-      updateModelPicker();
+
       const fd = new FormData();
       fd.append('model', m.mid);
       fd.append('endpoint_url', m.url);
@@ -735,6 +839,8 @@ async function _pick(m) {
           finishSwitch();
           return;
         }
+        if (s) { s.model = m.mid; s.endpoint_url = m.url; s.endpoint_id = m.endpointId || ''; s.endpoint_name = m.epName || ''; }
+        _automationPolicy=null;
         // Header stays as session name — model info shown in picker only
         window.dispatchEvent(new CustomEvent('odysseus:automation-changed'));
       } catch (e) {
@@ -804,6 +910,7 @@ async function _pick(m) {
     if (menu.classList.contains('hidden') || menu.classList.contains('closing')) {
       // Force-clear any in-progress close animation
       menu.classList.remove('closing', 'hidden');
+      btn.setAttribute('aria-expanded','true');renderAutoControls();
       const hasCache = _hasModelCache();
       if (hasCache) {
         _populate('');
@@ -814,7 +921,7 @@ async function _pick(m) {
         _refreshPickerModels({ force: true, showLoading: !hasCache }).then(isLatest => {
           if (isLatest && !menu.classList.contains('hidden')) _populate(search.value || '');
           updateModelPicker();
-        }).catch(() => {});
+        }).catch(() => {autoFeedback.textContent='Models could not be loaded. Refresh to try again.';});
       }
       if (window.innerWidth >= 768) search.focus();
       // Hide scroll button so it doesn't overlap
@@ -962,6 +1069,13 @@ export function updateModelPicker() {
     _ensureDefaultPendingChat();
   }
 
+  if(_automationPolicy?.session_id===currentSessionId && _automationPolicy.route_mode==='auto'){
+    const count=_automationPolicy.auto_models?.length || 0;
+    label.textContent=`Auto · Jev · ${count}`;
+    label.title=`Choose model and effort for each message. ${count} selected API models. Reasoning effort · chosen automatically`;
+    const effortWrap=document.getElementById('reasoning-effort-wrap');if(effortWrap)effortWrap.style.display='none';
+    return;
+  }
   let displayName = modelId ? modelId.split('/').pop() : 'Select model';
   const routeItems = window.modelsModule?.getCachedItems?.() || [];
   const candidates = routeItems.filter(item => (item.models || []).concat(item.models_extra || []).includes(modelId));
@@ -999,6 +1113,7 @@ let _reasoningEffortBound = false;
 let _pendingReasoningEffort = null;
 
 export function getSelectedReasoningEffort() {
+  if(_automationPolicy?.route_mode==='auto' && _automationPolicy.session_id===_deps?.getCurrentSessionId())return null;
   if (!_deps) return _pendingReasoningEffort;
   const currentSessionId = _deps.getCurrentSessionId ? _deps.getCurrentSessionId() : null;
   if (!currentSessionId) return _pendingReasoningEffort;

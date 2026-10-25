@@ -121,12 +121,12 @@ def review_requirement(policy: ChatPolicy, *, tool_name: str,
     if hard_denied:
         return ReviewRequirement.DENY
     if not deterministically_admitted:
-        return ReviewRequirement.HUMAN
+        return ReviewRequirement.DENY if policy.approval_mode == 'auto_approve' else ReviewRequirement.HUMAN
     if tool_name in CONTROL_TOOLS:
         return ReviewRequirement.NONE
     # A saved interactive preference is not unattended/API-token consent.
     if policy.entrypoint not in {"interactive", "web", "webui"}:
-        return ReviewRequirement.HUMAN
+        return ReviewRequirement.DENY if policy.approval_mode == 'auto_approve' else ReviewRequirement.HUMAN
     if policy.approval_mode == "always_ask":
         return ReviewRequirement.HUMAN
     if policy.approval_mode == "auto_approve":

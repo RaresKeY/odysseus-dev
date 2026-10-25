@@ -137,33 +137,33 @@ async def test_real_mocked_http_call_grants_one_exact_action_and_dispatches_once
 
 @pytest.mark.asyncio
 @pytest.mark.parametrize("result,status", [
-    (decision("review"), "manual"), (decision("deny"), "denied"),
-    (decision(probability=.94), "manual"), (decision(confidence=.94), "manual"),
-    (TimeoutError("private diagnostic"), "manual"), (RuntimeError("private diagnostic"), "manual"),
-    ({"choice": "allow", "confidence": 1}, "manual"),
-    (replace(decision(), usage=None), "manual"),
-    (replace(decision(), probabilities={"allow": 1}), "manual"),
-    (replace(decision(), choice="deny"), "manual"),
+    (decision("review"), "uncertain"), (decision("deny"), "denied"),
+    (decision(probability=.94), "uncertain"), (decision(confidence=.94), "uncertain"),
+    (TimeoutError("private diagnostic"), "error"), (RuntimeError("private diagnostic"), "error"),
+    ({"choice": "allow", "confidence": 1}, "error"),
+    (replace(decision(), usage=None), "error"),
+    (replace(decision(), probabilities={"allow": 1}), "error"),
+    (replace(decision(), choice="deny"), "error"),
 ])
-async def test_uncertain_denied_invalid_and_unavailable_never_run_or_retry(proposal, result, status):
+async def test_auto_review_failure_stops_without_human_continuation_or_retry(proposal, result, status):
     store, pending, policy, _ = proposal
     call, calls = evaluator(result)
     service = ApprovalReviewService(store)
     outcome = await service.review(pending, policy, deterministically_admitted=True, evaluator=call)
     assert outcome.status == status and outcome.approval is None
-    assert outcome.tool_result()["executed"] is False
-    assert "private diagnostic" not in json.dumps(outcome.tool_result())
-    assert store.peek(pending.approval_id) is pending
+    stopped = outcome.tool_result()
+    assert stopped['executed'] is False and stopped['blocked'] and stopped['exit_code'] == 1 and stopped['error']
+    assert 'ask_user' not in stopped and 'approval_required' not in stopped
+    assert "private diagnostic" not in json.dumps(stopped)
+    assert store.peek(pending.approval_id) is None
     again = await service.review(pending, policy, deterministically_admitted=True, evaluator=call)
-    assert again.status == "manual" and len(calls) == 1
-    # Human review remains possible, always exact once.
-    human = store.consume(pending.approval_id, owner="alice", session_id="chat", decision="approve_once")
-    assert human and human.reviewer == "human" and not human.allow_remaining_actions
+    assert again.status == "stale" and len(calls) == 1
+    assert store.consume(pending.approval_id, owner="alice", session_id="chat", decision="approve_once") is None
 
 
 @pytest.mark.asyncio
 @pytest.mark.parametrize("mode,admitted,status", [("always_ask", True, "manual"),
-    ("auto_approve", False, "manual"), ("yolo", False, "manual"), ("yolo", True, "bypass")])
+    ("auto_approve", False, "blocked"), ("yolo", False, "manual"), ("yolo", True, "bypass")])
 async def test_mode_does_not_make_missing_authority_eligible(proposal, mode, admitted, status):
     store, old, policy, _ = proposal
     policy["approval_mode"] = mode
@@ -183,8 +183,8 @@ async def test_missing_server_authority_and_hard_denial_never_reach_provider(pro
     store._pending[pending.approval_id] = without
     call, calls = evaluator()
     service = ApprovalReviewService(store)
-    assert (await service.review(without, policy, deterministically_admitted=True, evaluator=call)).status == "manual"
-    assert (await service.review(without, policy, deterministically_admitted=True, evaluator=call, hard_denied=True)).status == "blocked"
+    assert (await service.review(without, policy, deterministically_admitted=True, evaluator=call)).status == "blocked"
+    assert (await service.review(without, policy, deterministically_admitted=True, evaluator=call, hard_denied=True)).status == "stale"
     assert not calls and store.peek(pending.approval_id) is None
 
 
@@ -217,7 +217,9 @@ async def test_duplicate_concurrent_review_has_single_provider_invocation(propos
     duplicate = await service.review(pending, policy, deterministically_admitted=True, evaluator=call)
     finish.set()
     winner = await first
-    assert duplicate.status == "manual" and winner.status == "approved" and len(calls) == 1
+    assert duplicate.status == "unavailable" and winner.status == "stale" and len(calls) == 1
+    assert store.peek(pending.approval_id) is None
+    assert 'ask_user' not in duplicate.tool_result()
 
 
 @pytest.mark.asyncio

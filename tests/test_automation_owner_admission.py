@@ -39,19 +39,22 @@ async def test_forbidden_decision_model_never_spends(store, admin):
 
 
 @pytest.mark.asyncio
-async def test_all_three_approach_models_admitted_before_classifier(store, admin, monkeypatch):
+async def test_all_selected_pool_models_admitted_before_classifier(store, admin, monkeypatch):
     mappings={key:{'endpoint_id':'registered','model':'cheap','reasoning_effort':None}
         for key in ('established_procedure','bounded_domain','approach_discovery')}
     mappings['approach_discovery']['model']='premium'
     store.update_configuration('alice', {'approaches':mappings,'decision_provider':{
         'endpoint_id':'registered','model':'cheap','protocol':'openai_json'}},0)
-    store.update_chat('alice','a',{'route_mode':'auto'},0)
+    # Retained legacy Auto state must revalidate every old selected identity,
+    # including the unchosen restricted candidate, before spending.
+    with store.transaction() as db:
+        _,row=store.state(db,'alice','a');row.route_mode='auto'
     calls=[]
     from src import decisions
     async def never(*args,**kwargs):calls.append(True);raise AssertionError('classifier ran before all mappings admitted')
     monkeypatch.setattr(decisions.DecisionProvider,'evaluate',never)
     session=SimpleNamespace(id='a',model='cheap',endpoint_id='registered',endpoint_url='unused',headers={})
-    with pytest.raises(DecisionError,match='execution_model_not_allowed'):
+    with pytest.raises(DecisionError,match='auto_model_not_allowed'):
         await prepare_chat_turn(store,'alice',session,'Choose an approach')
     assert calls==[]
 

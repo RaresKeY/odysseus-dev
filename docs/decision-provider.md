@@ -42,7 +42,7 @@ confidence and probabilities, normalized distributions, an argmax choice and
 valid usage. Duplicate JSON keys, booleans as numbers, extra answer keys and
 untrusted redirects fail closed. `openai_json` distributions are model-reported;
 this contract does not turn them into calibrated probabilities. The caller's
-deterministic admission and human fallback remain authoritative.
+deterministic admission remains authoritative. Auto-Approve errors stop without human fallback.
 
 The strict JSON-shaped request check adapts the earlier concern-series
 `decision_contracts._json` mechanics: tuple values and coerced/non-string keys
@@ -52,14 +52,18 @@ not carried into chat execution. A literal SystemOne wire pair lives in
 `tests/fixtures/decision_port/systemone-wire-v1.json`, independently of the
 request-generation helper.
 
-`src/approach_routing.py` uses the stable IDs `established_procedure`,
-`bounded_domain` and `approach_discovery`. The owner maps each to an admitted
-endpoint/model/effort. Classification sees the exact original ask and neutral
-approach descriptions, without vendor model IDs. A separate readiness answer
-and confidence threshold can require manual selection. Mapping admission occurs
-before spending. Manual selection makes no classification call. The resolved
-execution descriptor carries the actual URL/headers privately and safe identity
-publicly; a UI setting alone is not evidence of dispatch.
+`src/model_auto.py` selects model and compatible effort in one call from the
+chat's explicit registered endpoint/model pool. It preserves the donor's scope
+and effort instructions, with closed candidate IDs and no vendor-specific model
+rankings. Current server-owned effort metadata is limited to exact ChatGPT
+subscription catalogue entries; other providers offer only default. Complete
+finite distributions, known usage, 0.80 confidence/selected probability and
+model/effort compatibility are required. No silent normalization or wider pool
+is used. Registration and credentials are revalidated after inference; actual
+provider dispatch rechecks current pool, model, headers and effort. The exact
+original ask is sent only after a valid binding. Manual selection skips Jev.
+Legacy `src/approach_routing.py` remains for experiments; old Auto chats retain
+only their previous mapped identities as compatibility candidates.
 
 ## Offline evidence
 
