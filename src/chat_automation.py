@@ -102,7 +102,20 @@ class AutomationStore:
             db.flush()
         if row.owner_key != owner_key(owner):
             raise HTTPException(409, "Chat policy ownership changed")
+        self._materialize_auto_models(prefs, row)
         return prefs, row
+
+    def _materialize_auto_models(self, prefs, row):
+        if row.route_mode != 'auto' or 'auto_models' in (row.feature_settings or {}):
+            return
+        from src.model_auto import legacy_candidates
+        from src.decisions import DecisionError
+        try:
+            candidates, source = legacy_candidates(prefs.configuration or {}), 'legacy_approaches'
+        except DecisionError:
+            candidates, source = [], 'legacy_invalid'
+        row.feature_settings = {**(row.feature_settings or {}), 'auto_models': candidates,
+                                'auto_models_source': source}
 
     def configuration(self, owner):
         with self.transaction() as db:
@@ -129,10 +142,8 @@ class AutomationStore:
 
     def _policy(self, p, s, owner, entrypoint="interactive"):
         features = {**FEATURE_DEFAULTS, **copy.deepcopy(s.feature_settings or {})}
-        if 'auto_models' not in features:
-            from src.model_auto import legacy_candidates
-            features['auto_models'] = legacy_candidates(p.configuration or {}) if s.route_mode == 'auto' else []
-            features['auto_models_source'] = 'legacy_approaches' if features['auto_models'] else 'explicit'
+        features.setdefault('auto_models', [])
+        features.setdefault('auto_models_source', 'explicit')
         grant = copy.deepcopy(s.elevation_grant)
         requested_grant = copy.deepcopy(grant)
         restriction = None
@@ -161,7 +172,9 @@ class AutomationStore:
                 **features,
                 "route_mode": s.route_mode, "entrypoint": entrypoint,
                 "execution_scope": "expanded" if grant else "workspace",
-                "restriction": restriction or (None if grant or not p.elevation_ceiling else "No additional scope is granted")}
+                "restriction": restriction or ('Previous Auto selection is invalid. Choose Auto models again.'
+                    if features['auto_models_source'] == 'legacy_invalid' else
+                    None if grant or not p.elevation_ceiling else "No additional scope is granted")}
 
     def policy(self, owner, session_id, entrypoint="interactive"):
         with self.transaction() as db:
@@ -180,20 +193,23 @@ class AutomationStore:
             if mode not in MODES or route not in {"manual", "auto"}:
                 raise HTTPException(422, "Invalid chat mode")
             features = {**FEATURE_DEFAULTS, **copy.deepcopy(s.feature_settings or {})}
-            from src.model_auto import validate_candidates, candidate_snapshot, legacy_candidates
+            from src.model_auto import validate_candidates, validate_registered_candidates
             from src.decisions import DecisionError
             try:
                 if 'auto_models' in changes:
                     candidates = validate_candidates(changes['auto_models'])
                     if candidates:
-                        candidate_snapshot(owner, candidates)
+                        validate_registered_candidates(owner, candidates, db=db)
                     features['auto_models'] = candidates
-                elif s.route_mode == 'auto' and 'auto_models' not in features:
-                    features['auto_models'] = legacy_candidates(p.configuration or {})
-                if route == 'auto':
-                    candidate_snapshot(owner, features.get('auto_models', []))
+                    features['auto_models_source'] = 'explicit'
+                if route == 'auto' and ('auto_models' in changes or changes.get('route_mode') == 'auto'):
+                    validate_registered_candidates(owner, features.get('auto_models', []), db=db)
             except DecisionError as error:
-                raise HTTPException(422, 'Choose at least one available registered Auto model. Check the selected pool.',
+                messages = {'auto_models_empty': 'Choose at least one available model to use Auto.',
+                    'auto_models_invalid': 'Choose up to 32 exact registered endpoint/model identities.',
+                    'auto_models_duplicate': 'Each Auto model may be selected only once.',
+                    'auto_model_not_allowed': 'A selected Auto model is not allowed for your account.'}
+                raise HTTPException(422, messages.get(error.code, 'A selected Auto model is unavailable. Edit the selected pool.'),
                                     headers={'X-Decision-Failure': error.code}) from None
             for key in FEATURE_DEFAULTS:
                 if key in changes:
@@ -231,6 +247,12 @@ class AutomationStore:
             if type(expected_revision) is not int or expected_revision != p.revision:
                 raise HTTPException(409, "Settings changed; refresh and try again")
             config = copy.deepcopy(p.configuration or {})
+            if 'approaches' in changes:
+                # Freeze old chats against the old mapping before replacing
+                # owner configuration, even if those chats were never opened.
+                for state in db.query(_models().ChatAutomationState).filter_by(
+                        owner_key=p.owner_key, route_mode='auto').all():
+                    self._materialize_auto_models(p, state)
             for key in ("decision_provider", "approaches"):
                 if key in changes:
                     config[key] = changes[key]

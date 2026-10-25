@@ -89,6 +89,49 @@ def test_legacy_auto_retains_only_prior_exact_identities_then_persists_explicit_
     assert registered.policy('alice','a')['auto_models']==[POOL[1]]
 
 
+def test_unvisited_legacy_chat_and_fork_freeze_pool_before_owner_mapping_changes(registered):
+    mappings={key:{**POOL[0],'reasoning_effort':None} for key in
+        ('established_procedure','bounded_domain','approach_discovery')}
+    registered.update_configuration('alice',{'approaches':mappings},0)
+    with registered.transaction() as db:
+        _,row=registered.state(db,'alice','a');row.route_mode='auto'
+    changed={key:{**POOL[1],'reasoning_effort':None} for key in mappings}
+    registered.update_configuration('alice',{'approaches':changed},1)
+    assert registered.policy('alice','a')['auto_models']==[POOL[0]]
+    registered.fork('alice','a','b')
+    assert registered.policy('alice','b')['auto_models']==[POOL[0]]
+
+
+@pytest.mark.asyncio
+async def test_subscription_credential_refresh_commit_occurs_outside_chat_writer(registered,monkeypatch):
+    from src import chatgpt_subscription
+    with registered.transaction() as db:
+        db.query(d.ModelEndpoint).filter_by(id='one').one().provider_auth_id='oauth'
+        db.add(d.ProviderAuthSession(id='oauth',provider='synthetic',owner='alice',base_url='https://one.invalid/v1'))
+    calls=[]
+    def refresh(auth_id,owner):
+        calls.append(auth_id)
+        # Model the expiring-token resolver's separate SQL commit. This would
+        # lock/fail if saving the pool held BEGIN IMMEDIATE around refresh.
+        with registered.session_factory() as db:
+            row=db.query(d.ProviderAuthSession).filter_by(id=auth_id).one()
+            row.access_token='SYNTHETIC_REFRESHED';db.commit()
+        return {'base_url':'https://one.invalid/v1','api_key':'SYNTHETIC_REFRESHED'}
+    monkeypatch.setattr(chatgpt_subscription,'resolve_runtime_credentials',refresh)
+    registered.update_chat('alice','a',{'auto_models':[POOL[0]],'route_mode':'auto'},0)
+    assert calls==[]
+    session=SimpleNamespace(id='a',name='a',model='manual',endpoint_id=None,thinking_mode='off')
+    bound=await prepare_chat_submission(registered,'alice',session,ASK,decision_provider=Reviewer())
+    assert calls and bound.descriptor['endpoint_id']=='one'
+
+
+def test_unavailable_pool_does_not_prevent_explicit_permission_or_manual_recovery(registered):
+    registered.update_chat('alice','a',{'auto_models':[POOL[0]],'route_mode':'auto'},0)
+    with registered.transaction() as db:db.query(d.ModelEndpoint).filter_by(id='one').one().is_enabled=False
+    assert registered.update_chat('alice','a',{'approval_mode':'always_ask'},1)['approval_mode']=='always_ask'
+    assert registered.update_chat('alice','a',{'route_mode':'manual'},1)['route_mode']=='manual'
+
+
 @pytest.mark.asyncio
 async def test_actual_turn_ignores_stale_manual_fields_and_revalidates_whole_pool(registered):
     registered.update_chat('alice','a',{'auto_models':POOL,'route_mode':'auto'},0)
@@ -107,7 +150,7 @@ async def test_actual_turn_ignores_stale_manual_fields_and_revalidates_whole_poo
 
 
 @pytest.mark.asyncio
-@pytest.mark.parametrize('mutation', ['disabled','hidden','no_inventory','policy','credential'])
+@pytest.mark.parametrize('mutation', ['disabled','hidden','no_inventory','pins_empty','pins_exclude','policy','credential'])
 async def test_changed_candidates_or_chat_during_jev_stop_before_binding(registered,mutation):
     registered.update_chat('alice','a',{'auto_models':POOL,'route_mode':'auto'},0)
     def mutate():
@@ -117,6 +160,8 @@ async def test_changed_candidates_or_chat_during_jev_stop_before_binding(registe
             if mutation=='disabled':row.is_enabled=False
             if mutation=='hidden':row.hidden_models='["shared"]'
             if mutation=='no_inventory':row.cached_models='[]';row.pinned_models='[]'
+            if mutation=='pins_empty':row.pinned_models='[]';row.hidden_models=None
+            if mutation=='pins_exclude':row.pinned_models='["other"]';row.hidden_models=None
             if mutation=='credential':row.api_key='CHANGED_SYNTHETIC'
     session=SimpleNamespace(id='a',name='a',model='manual',endpoint_id=None,thinking_mode='off')
     with pytest.raises(HTTPException):
@@ -157,3 +202,35 @@ def test_same_model_name_on_generic_provider_does_not_inherit_subscription_effor
     from src import chatgpt_subscription
     monkeypatch.setattr(chatgpt_subscription,'get_chatgpt_model_metadata',lambda model:{'supported_reasoning_levels':['high']})
     assert model_auto.registered_candidate('alice',POOL[0])['supported_efforts']==['default']
+
+
+@pytest.mark.parametrize('pins',['[]','["other"]'])
+def test_api_pin_allowlist_excludes_cached_inventory_on_save(registered,pins):
+    with registered.transaction() as db:
+        row=db.query(d.ModelEndpoint).filter_by(id='one').one()
+        row.endpoint_kind='api';row.pinned_models=pins;row.hidden_models=None
+        assert row.cached_models=='["shared"]'
+    with pytest.raises(HTTPException):registered.update_chat('alice','a',{'auto_models':[POOL[0]],'route_mode':'auto'},0)
+
+
+@pytest.mark.asyncio
+async def test_api_unpin_after_binding_blocks_actual_dispatch(registered):
+    registered.update_chat('alice','a',{'auto_models':[POOL[0]],'route_mode':'auto'},0)
+    session=SimpleNamespace(id='a',name='a',model='manual',endpoint_id=None,thinking_mode='off')
+    bound=await prepare_chat_submission(registered,'alice',session,ASK,decision_provider=Reviewer())
+    with registered.transaction() as db:
+        row=db.query(d.ModelEndpoint).filter_by(id='one').one();row.pinned_models='[]';row.hidden_models=None
+    with bound.activate(),pytest.raises(DecisionError):
+        validate_provider_binding(bound.endpoint_url,'shared',bound.headers,'a')
+
+
+def test_effort_uses_exact_subscription_catalogue_without_name_inference(registered,monkeypatch):
+    from src import chatgpt_subscription
+    with registered.transaction() as db:
+        db.query(d.ModelEndpoint).filter_by(id='one').one().base_url='https://chatgpt.com/backend-api/codex'
+    # The old name-based fallback must not fabricate capabilities.
+    monkeypatch.setattr(chatgpt_subscription,'get_chatgpt_model_metadata',lambda model:{'supported_reasoning_levels':['high']})
+    monkeypatch.delitem(chatgpt_subscription.CHATGPT_MODEL_CATALOG_CACHE,'shared',raising=False)
+    assert model_auto.registered_candidate('alice',POOL[0])['supported_efforts']==['default']
+    monkeypatch.setitem(chatgpt_subscription.CHATGPT_MODEL_CATALOG_CACHE,'shared',{'supported_reasoning_levels':['low','high']})
+    assert model_auto.registered_candidate('alice',POOL[0])['supported_efforts']==['low','high']

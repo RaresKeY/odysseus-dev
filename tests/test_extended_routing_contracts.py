@@ -123,6 +123,7 @@ async def test_actual_auto_route_and_independent_effort_bind_selected_endpoint(s
         return {'identity':item,'route':('https://'+identifier+'.invalid/v1',model,{'X-Registered':identifier}),
             'supported_efforts':['low','high'],'label':identifier}
     monkeypatch.setattr(model_auto,'registered_candidate',registered)
+    monkeypatch.setattr(model_auto,'validate_registered_candidates',lambda *a,**kw:None)
     monkeypatch.setattr(endpoint_resolver,'resolve_endpoint_by_id',lambda identifier,model,**kw:registered('alice',{'endpoint_id':identifier,'model':model})['route'])
     store.update_configuration('alice', {'decision_provider': {
         'endpoint_id':'decision','model':'neutral-decider','protocol':'systemone'}},0)

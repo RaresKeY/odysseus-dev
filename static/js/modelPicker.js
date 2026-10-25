@@ -608,6 +608,7 @@ function _initModelPickerDropdown() {
         row.title=`${m.mid} · ${m.epName || 'Unregistered'}${m.stale?' · unavailable':''}`;
         const toggle=()=>{
           if(poolSaving || ((!m.endpointId || m.stale) && !selected))return;
+          if(!selected && poolDraft.length>=32){autoFeedback.textContent='Choose up to 32 Auto models.';return;}
           poolDraft=selected?poolDraft.filter(item=>poolKey(item)!==poolKey(identity)):[...poolDraft,identity];
           const scroll=listEl.scrollTop;_populate(search.value || '');listEl.scrollTop=scroll;
           [...listEl.querySelectorAll('[role="menuitemcheckbox"]')].find(el=>el.dataset.poolKey===poolKey(identity))?.focus();

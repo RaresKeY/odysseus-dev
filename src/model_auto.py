@@ -4,6 +4,7 @@ No discovery, inference probes, execution or fallback lives here. The existing
 decision provider owns the one bounded call; the chat owner binds its result.
 """
 from __future__ import annotations
+from contextlib import nullcontext
 
 from src.decisions import DecisionError, DecisionRequest, DecisionResult
 from src.decisions.contracts import MAX_TASK_BYTES, validate_answers
@@ -43,7 +44,10 @@ def validate_candidates(value):
 def legacy_candidates(configuration):
     """Retain only old explicit endpoint/model identities, never a new default."""
     result = []
-    for item in (configuration.get('approaches') or {}).values():
+    mappings = configuration.get('approaches') or {}
+    if not isinstance(mappings, dict):
+        raise DecisionError('auto_models_invalid')
+    for item in mappings.values():
         if not isinstance(item, dict):
             raise DecisionError('auto_models_invalid')
         candidate = {key: item.get(key) for key in ('endpoint_id', 'model')}
@@ -52,27 +56,46 @@ def legacy_candidates(configuration):
     return validate_candidates(result)
 
 
-def registered_candidate(owner, item):
-    """Require enabled inventory; use the existing owner/credential resolver."""
+def validate_registered_candidates(owner, candidates, *, db=None):
+    """Inventory-only save admission: never refresh OAuth under a SQL writer lock."""
     from core.database import SessionLocal, ModelEndpoint
     from src.auth_helpers import owner_filter
-    from src.endpoint_resolver import _endpoint_enabled_models, _resolve_endpoint_by_id_with_descriptor
+    from src.endpoint_resolver import normalize_base
+    # Reuse the same pure eligibility calculation as /api/models, including
+    # explicit API pin allow-lists. This does not fetch the catalogue.
+    from routes.model_routes import _picker_models_for_endpoint, _effective_endpoint_kind
     from src.model_admission import endpoint_supports_chat, require_owner_model
     from src.owner_identity import effective_storage_owner
-    from src.chatgpt_subscription import is_chatgpt_subscription_base, CHATGPT_MODEL_CATALOG_CACHE
+    from src.chatgpt_subscription import is_chatgpt_subscription_base
     owner = effective_storage_owner(owner)
     if owner is None:
         raise DecisionError('auto_models_owner_required')
-    try:
-        require_owner_model(owner, item['model'])
-    except ValueError:
-        raise DecisionError('auto_model_not_allowed') from None
-    with SessionLocal() as db:
-        row = owner_filter(db.query(ModelEndpoint).filter_by(id=item['endpoint_id'], is_enabled=True),
-                           ModelEndpoint, owner).first()
-        if (row is None or not endpoint_supports_chat(row)
-                or item['model'] not in _endpoint_enabled_models(row)):
-            raise DecisionError('auto_model_unavailable')
+    candidates = validate_candidates(candidates)
+    if not candidates:
+        raise DecisionError('auto_models_empty')
+    with (nullcontext(db) if db is not None else SessionLocal()) as inventory:
+        for item in candidates:
+            try:
+                require_owner_model(owner, item['model'])
+            except ValueError:
+                raise DecisionError('auto_model_not_allowed') from None
+            row = owner_filter(inventory.query(ModelEndpoint).filter_by(id=item['endpoint_id'], is_enabled=True),
+                               ModelEndpoint, owner).first()
+            if row is None or not endpoint_supports_chat(row):
+                raise DecisionError('auto_model_unavailable')
+            if is_chatgpt_subscription_base(row.base_url or '') and (row.owner or None) != owner:
+                raise DecisionError('auto_model_unavailable')
+            base = normalize_base(row.base_url)
+            models, _ = _picker_models_for_endpoint(row, base, _effective_endpoint_kind(row, base))
+            if item['model'] not in models:
+                raise DecisionError('auto_model_unavailable')
+
+
+def registered_candidate(owner, item):
+    """Require enabled inventory; use the existing owner/credential resolver."""
+    from src.endpoint_resolver import _resolve_endpoint_by_id_with_descriptor
+    from src.chatgpt_subscription import is_chatgpt_subscription_base, CHATGPT_MODEL_CATALOG_CACHE
+    validate_registered_candidates(owner, [item])
     resolved = _resolve_endpoint_by_id_with_descriptor(item['endpoint_id'], item['model'],
                                                      owner=owner, require_exact_model=True)
     if not resolved or resolved[0][1] != item['model']:
@@ -85,7 +108,9 @@ def registered_candidate(owner, item):
     # a familiar model name on another endpoint is not capability evidence.
     meta = CHATGPT_MODEL_CATALOG_CACHE.get(item['model']) if is_chatgpt_subscription_base(route[0]) else None
     levels = (meta or {}).get('supported_reasoning_levels') or []
-    efforts = [level if isinstance(level, str) else level.get('effort') for level in levels]
+    if not isinstance(levels, list) or len(levels) > len(EFFORT_COPY):
+        raise DecisionError('auto_model_effort_metadata_invalid')
+    efforts = [level if isinstance(level, str) else level.get('effort') if isinstance(level, dict) else None for level in levels]
     if any(level not in EFFORT_COPY or level == 'default' for level in efforts):
         raise DecisionError('auto_model_effort_metadata_invalid')
     return {'identity': dict(item), 'route': route, 'label': descriptor.get('endpoint_label', item['endpoint_id']),

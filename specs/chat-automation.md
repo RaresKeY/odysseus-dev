@@ -57,9 +57,12 @@ model/effort pair errors without normalization. Manual selection does not classi
 and selecting a concrete model returns the chat to Manual. The legacy approach
 classifier remains available to experiment callers; foreground Auto no longer
 routes through fixed category slots. Existing Auto chats without `auto_models`
-retain only their previous unique mapped endpoint/model identities until an
-explicit pool edit; stored empty pools remain empty. Forks preserve the pool.
-The full offer and current credentials/effort metadata are rechecked after Jev
+materialize only their previous unique mapped endpoint/model identities once
+under the SQL transaction, including before legacy owner mapping edits or forks; stored empty pools remain empty. Forks preserve the pool.
+Pool saves validate the same picker inventory/pin allow-list inside CAS without
+credential refresh under the writer lock. Independent permission/settings edits
+remain available when an unchanged pool becomes unavailable. The full offer and
+current credentials/effort metadata are rechecked after Jev
 and the current selected pool is checked again at actual provider dispatch.
 
 JSON/SSE chat ingress and `/v1/chat` bind committed settings, the exact original

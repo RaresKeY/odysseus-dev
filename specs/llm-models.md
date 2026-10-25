@@ -49,8 +49,9 @@ registered endpoint/model pool, with supported effort chosen in the same decisio
 The exact ChatGPT subscription runtime catalogue is currently the only wired
 non-default effort source; other providers expose default, without inferring
 capability from the model name. Model/effort incompatibility, a changed pool or
-unavailable registration errors without fallback. Old category mappings migrate
-only their previously selected unique identities for already-Auto chats.
+unavailable registration errors without fallback. Old category mappings materialize once into only their previously selected
+unique identities for already-Auto chats. Save admission uses the exact picker
+pin/visibility calculation without refreshing credentials under the writer lock.
 `src/approach_routing.py` retains the neutral three-category mechanism for legacy
 experiments. Independent `src/decisions/` calls remain bounded and cannot grant
 action authority. See [decision-provider.md](../docs/decision-provider.md).

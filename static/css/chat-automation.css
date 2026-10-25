@@ -31,7 +31,7 @@
 .chat-permissions-trigger>svg{flex-shrink:0}
 .chat-permissions-trigger:disabled{opacity:.55;cursor:default}
 .mode-yolo .chat-permissions-trigger{color:var(--color-warning)}
-.chat-permissions-menu{position:absolute;left:0;bottom:calc(100% + 10px);z-index:260;width:310px;max-width:calc(100vw - 32px);max-height:min(430px,65dvh);overflow-y:auto;box-sizing:border-box;padding:6px;background:var(--panel);border:1px solid var(--border);border-radius:8px;box-shadow:0 -4px 20px #0006}
+.chat-permissions-menu{position:fixed;z-index:260;width:310px;max-width:calc(100vw - 32px);max-height:min(430px,65dvh);overflow-y:auto;box-sizing:border-box;padding:6px;background:var(--panel);border:1px solid var(--border);border-radius:8px;box-shadow:0 -4px 20px #0006}
 .chat-menu-heading{padding:6px;font-size:11px;opacity:.7}
 .chat-permissions-menu>button{display:flex;align-items:center;justify-content:space-between;gap:8px;width:100%;min-height:62px;padding:8px;border:0;border-radius:5px;background:transparent;color:var(--fg);font:inherit;text-align:left;cursor:pointer}
 .chat-permissions-menu>button>span:first-child{min-width:0}
@@ -62,13 +62,12 @@
 .model-auto-check{flex:none;width:15px;text-align:center}
 #model-picker-list [aria-disabled=true]{opacity:.45;cursor:default}
 #model-picker-list .model-auto-missing{width:100%;color:var(--color-warning);font:inherit;font-size:11px;background:transparent;border:0;text-align:left;overflow-wrap:anywhere}
-.chat-permissions-control :focus-visible,#chat-auto-approve-dialog :focus-visible,.model-auto-controls :focus-visible,#model-picker-list .model-switch-item:focus-visible{outline:2px solid var(--fg);outline-offset:-2px}
+.chat-permissions-control :focus-visible,.chat-permissions-menu :focus-visible,#chat-auto-approve-dialog :focus-visible,.model-auto-controls :focus-visible,#model-picker-list .model-switch-item:focus-visible{outline:2px solid var(--fg);outline-offset:-2px}
 #chat-permissions-menu[hidden],#model-auto-help[hidden],#model-auto-save-row[hidden]{display:none}
 @media(max-width:540px){
   .chat-automation-route{grid-template-columns:1fr}#chat-automation-dialog{padding:14px}
   .chat-permissions-trigger{min-height:36px;padding:0 5px}
   .chat-permissions-trigger>span:last-child{display:none}
-  .chat-permissions-menu{left:auto;right:-100px;width:310px}
   .chat-permissions-menu>button{min-height:68px}
   #model-picker-list .model-switch-item{min-height:44px}
   .model-auto-actions button{min-height:36px}
