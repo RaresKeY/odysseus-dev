@@ -46,9 +46,15 @@ instead of reporting an effort the request cannot supply.
 
 `src/model_auto.py` owns foreground Auto selection from an explicit per-chat
 registered endpoint/model pool, with supported effort chosen in the same decision.
-The exact ChatGPT subscription runtime catalogue is currently the only wired
-non-default effort source; other providers expose default, without inferring
-capability from the model name. Model/effort incompatibility, a changed pool or
+The exact ChatGPT subscription runtime catalogue and a versioned seven-ID
+Google compatibility table supply non-default effort. Google evidence applies
+only to the canonical verified HTTPS generativelanguage.googleapis.com
+/v1beta/openai route, without credentials/query/fragment/foreign ports in URL
+identity. Unknown IDs, models/ aliases and proxies retain default; no payload-only
+normalization occurs. Existing llm_core top-level reasoning_effort paths carry
+these values. Capability revision, roles and supported sets are rechecked.
+Optional per-selected-model user role descriptions stay verbatim and bounded;
+candidate-specific criteria use them as data rather than inventing rankings. Model/effort incompatibility, a changed pool or
 unavailable registration errors without fallback. Old category mappings materialize once into only their previously selected
 unique identities for already-Auto chats. Save admission uses the exact picker
 pin/visibility calculation without refreshing credentials under the writer lock.
@@ -171,3 +177,5 @@ Exact registered endpoint authority rejects URL credentials, parameters, and any
 - Endpoint identity and fallback behavior need careful review when new OAuth/subscription providers are added.
 - Owner must continue to be threaded through new utility/research/default endpoint-resolution call sites so provider keys stay isolated.
 - `/api/models` owner-scoped listing/cache behavior, shared/private endpoint dedupe, endpoint-kind refresh policy, fallback-chain owner scope, and image endpoint create/list/update lifecycle need stronger route-level regression coverage.
+
+The existing `/api/models` catalogue now includes endpoint-specific `auto_model_capabilities` from the same pure runtime owner used at dispatch. This metadata is distinct from legacy name-derived `models_metadata`; Auto never promotes that heuristic across providers. The documented Google source contracts are [OpenAI compatibility](https://ai.google.dev/gemini-api/docs/openai#thinking), [thinking controls](https://ai.google.dev/gemini-api/docs/thinking) and [Gemini 3 controls](https://ai.google.dev/gemini-api/docs/generate-content/gemini-3). These establish allowed API controls, not live availability or personal quality assessments.

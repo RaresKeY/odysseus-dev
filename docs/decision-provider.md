@@ -55,8 +55,12 @@ request-generation helper.
 `src/model_auto.py` selects model and compatible effort in one call from the
 chat's explicit registered endpoint/model pool. It preserves the donor's scope
 and effort instructions, with closed candidate IDs and no vendor-specific model
-rankings. Current server-owned effort metadata is limited to exact ChatGPT
-subscription catalogue entries; other providers offer only default. Complete
+rankings. Server-owned effort metadata uses exact ChatGPT subscription catalogue entries
+and the documented seven-ID Google compatibility table on the canonical HTTPS
+Google OpenAI route. Unknown routes/models disclose default-only. Per-candidate
+optional roles preserve bounded user wording and supply distinct task-fit
+criteria; these hints are data, never classifier instructions or authority.
+Capability revision and role text are part of the immutable offer snapshot. Complete
 finite distributions, known usage, 0.80 confidence/selected probability and
 model/effort compatibility are required. No silent normalization or wider pool
 is used. Registration and credentials are revalidated after inference; actual

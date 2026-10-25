@@ -872,7 +872,8 @@ def validate_provider_binding(url, model, headers, session_id, reasoning_effort=
         from src.model_auto import candidate_snapshot, public_snapshot
         snapshot = candidate_snapshot(bound.owner, bound.policy.get('auto_models', []))
         if (public_snapshot(snapshot) != bound.descriptor.get('auto_candidate_snapshot')
-                or {'endpoint_id': bound.descriptor['endpoint_id'], 'model': model} not in bound.policy['auto_models']):
+                or not any(item['endpoint_id'] == bound.descriptor['endpoint_id'] and item['model'] == model
+                           for item in bound.policy['auto_models'])):
             raise RuntimeError('Auto model pool changed before provider dispatch')
     endpoint_id = bound.descriptor["endpoint_id"]
     if endpoint_id:
@@ -903,6 +904,7 @@ async def prepare_chat_submission(*args, **kwargs):
             'auto_model_not_allowed': 'A selected Auto model is no longer allowed for your account.',
             'auto_effort_unsupported': 'Jev selected unsupported reasoning effort. Your message was not sent.',
             'auto_models_changed': 'Auto models changed during selection. Your message was not sent.',
+            'auto_selection_uncertain': 'Jev could not choose a supported model and effort with enough confidence. Add model roles in Auto models or choose a model manually.',
         }
         raise HTTPException(409,
             model_errors.get(error.code, "Jev could not select a supported model and effort. Your message was not sent. Check Auto models and the decision provider."),

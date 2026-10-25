@@ -50,9 +50,10 @@ Each chat stores an explicit `auto_models` pool (up to 32 exact registered
 endpoint/model identities) in its existing SQL feature settings. Model Auto in
 the existing API picker chooses model and compatible effort together in one
 bounded Jev call. Empty, disabled, hidden, unregistered, foreign or stale pools
-stop visibly without widening the offer. ChatGPT subscription effort comes from
-its exact runtime catalogue entry, not name-pattern inference; other providers
-currently offer only the explicit default (no reasoning control). An unsupported
+stop visibly without widening the offer. Effort comes from the exact ChatGPT subscription runtime catalogue or the
+versioned exact-ID Google compatibility table on the canonical verified HTTPS
+Google endpoint. Unknown models/providers offer only the explicit default,
+disclosed in the picker; capability is not inferred from names. An unsupported
 model/effort pair errors without normalization. Manual selection does not classify
 and selecting a concrete model returns the chat to Manual. The legacy approach
 classifier remains available to experiment callers; foreground Auto no longer
@@ -61,8 +62,10 @@ materialize only their previous unique mapped endpoint/model identities once
 under the SQL transaction, including before legacy owner mapping edits or forks; stored empty pools remain empty. Forks preserve the pool.
 Pool saves validate the same picker inventory/pin allow-list inside CAS without
 credential refresh under the writer lock. Independent permission/settings edits
-remain available when an unchanged pool becomes unavailable. The full offer and
-current credentials/effort metadata are rechecked after Jev
+remain available when an unchanged pool becomes unavailable. Each candidate may carry up to800 characters of verbatim user role text. Roles
+are task-fit evidence in candidate-specific criteria, never instructions or
+authority; unassessed fit stays unknown. Roles bind to the pool revision and
+snapshot. The full offer and current credentials/effort metadata are rechecked after Jev
 and the current selected pool is checked again at actual provider dispatch.
 
 JSON/SSE chat ingress and `/v1/chat` bind committed settings, the exact original

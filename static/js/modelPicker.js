@@ -377,6 +377,8 @@ function _initModelPickerDropdown() {
           epName: item.endpoint_name || '',
           category: item.category || '',
           modelsMetadata: item.models_metadata || {},
+          modelType: item.model_type || 'llm',
+          autoCapabilities: item.auto_model_capabilities?.[mid] || {supported_efforts:['default'],capability_revision:'default-only/v1'},
           providerText: [
             item.endpoint_name || '',
             item.category || '',
@@ -506,6 +508,8 @@ function _initModelPickerDropdown() {
   let _justExpandedProvider = null;
 
   function _populate(filter) {
+    const roleFocus=document.activeElement?.dataset?.autoRoleModel;
+    const roleSelection=roleFocus?[document.activeElement.selectionStart,document.activeElement.selectionEnd]:null;
     listEl.innerHTML = '';
     listEl.classList.remove('is-loading');
     renderAutoControls();
@@ -533,6 +537,7 @@ function _initModelPickerDropdown() {
         listEl.append(row);
       });
       matching.sort((a,b)=>Number(chosen.has(poolKey({endpoint_id:b.endpointId,model:b.mid})))-Number(chosen.has(poolKey({endpoint_id:a.endpointId,model:a.mid})))).forEach(m=>_addRow(m));
+      if(roleFocus){const input=[...listEl.querySelectorAll('[data-auto-role-model]')].find(e=>e.dataset.autoRoleModel===roleFocus);if(input){input.focus({preventScroll:true});input.setSelectionRange(...roleSelection);}}
       if(!matching.length){const empty=document.createElement('p');empty.className='model-switch-empty';empty.textContent=hasAnyModel?'No matching models':'No registered API models available. Add an endpoint or refresh.';listEl.append(empty);}
       return;
     }
@@ -600,14 +605,20 @@ function _initModelPickerDropdown() {
       if(poolDraft){
         const identity={endpoint_id:m.endpointId,model:m.mid};
         const selected=poolDraft.some(item=>poolKey(item)===poolKey(identity));
+        const unavailable=!m.endpointId || m.stale || m.modelType!=='llm';
         row.setAttribute('role','menuitemcheckbox');row.setAttribute('aria-checked',String(selected));
-        row.setAttribute('aria-disabled',String(poolSaving || ((!m.endpointId || m.stale) && !selected)));
+        row.setAttribute('aria-disabled',String(poolSaving || (unavailable && !selected)));
         row.tabIndex=0;row.classList.toggle('model-auto-selected',selected);
         const mark=document.createElement('span');mark.className='model-auto-check';mark.textContent=selected?'✓':'＋';row.append(mark);
         epSpan.textContent=m.epName || 'Unregistered';
+        const capability=document.createElement('small');capability.className='model-auto-capability';
+        const efforts=m.autoCapabilities.supported_efforts || ['default'];
+        capability.textContent=unavailable?'Unavailable for Auto':efforts.length===1 && efforts[0]==='default'
+          ?'Model default · explicit effort unavailable':`Jev chooses effort: ${efforts.join(', ')}`;
+        nameSpan.append(capability);
         row.title=`${m.mid} · ${m.epName || 'Unregistered'}${m.stale?' · unavailable':''}`;
         const toggle=()=>{
-          if(poolSaving || ((!m.endpointId || m.stale) && !selected))return;
+          if(poolSaving || (unavailable && !selected))return;
           if(!selected && poolDraft.length>=32){autoFeedback.textContent='Choose up to 32 Auto models.';return;}
           poolDraft=selected?poolDraft.filter(item=>poolKey(item)!==poolKey(identity)):[...poolDraft,identity];
           const scroll=listEl.scrollTop;_populate(search.value || '');listEl.scrollTop=scroll;
@@ -615,7 +626,20 @@ function _initModelPickerDropdown() {
         };
         row.dataset.poolKey=poolKey(identity);row.addEventListener('click',event=>{event.stopPropagation();toggle();});
         row.addEventListener('keydown',event=>{if(event.key===' ' || event.key==='Enter'){event.preventDefault();toggle();}});
-        listEl.appendChild(row);return;
+        listEl.appendChild(row);
+        if(selected){
+          const label=document.createElement('label');label.className='model-auto-role';
+          const caption=document.createElement('span');caption.textContent='Role for Auto (optional)';
+          const input=document.createElement('textarea');input.rows=2;input.maxLength=800;
+          input.placeholder='Describe when Jev should choose this model';
+          input.setAttribute('aria-label',`Role for ${m.mid} on ${m.epName || m.endpointId}`);
+          input.dataset.autoRoleModel=m.mid;
+          input.value=poolDraft.find(item=>poolKey(item)===poolKey(identity))?.description || '';
+          input.disabled=poolSaving;
+          input.addEventListener('input',()=>{poolDraft=poolDraft.map(item=>poolKey(item)===poolKey(identity)?{...item,description:input.value}:item);});
+          label.append(caption,input);listEl.append(label);
+        }
+        return;
       }
       // Inline favorite button — toggles favorite, never picks the model.
       const favDot = document.createElement('button');

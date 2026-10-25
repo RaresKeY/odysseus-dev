@@ -1720,6 +1720,8 @@ def setup_model_routes(model_discovery):
                     if m not in curated:
                         curated.append(m)
                 models_metadata = {}
+                from src.model_auto import execution_capabilities
+                auto_capabilities = {mid: execution_capabilities(chat_url, mid) for mid in list(curated) + list(extra)}
                 from src.chatgpt_subscription import get_chatgpt_model_metadata
                 for mid in list(curated) + list(extra):
                     meta = get_chatgpt_model_metadata(mid)
@@ -1739,6 +1741,7 @@ def setup_model_routes(model_discovery):
                     "endpoint_kind": kind,
                     "model_type": ep_model_type,
                     "models_metadata": models_metadata,
+                    "auto_model_capabilities": auto_capabilities,
                 })
             else:
                 # Endpoint unreachable but still show it greyed out
