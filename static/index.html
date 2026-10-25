@@ -1123,7 +1123,8 @@
             <div class="model-auto-controls">
               <button type="button" id="model-auto-select" role="menuitemradio" aria-checked="false"><strong>Auto · Jev</strong><small>Choose model and effort for each message.</small></button>
               <div class="model-auto-actions"><button type="button" id="model-auto-edit">Choose Auto models</button><span id="model-auto-count"></span></div>
-              <p id="model-auto-help" hidden>Choose the API models Jev may use for this chat. Add a role to explain when to choose each model; unassessed task fit stays unknown. Jev chooses supported reasoning effort. Roles do not grant permissions.</p>
+              <p id="model-auto-help" hidden>Jev uses only the models you select and chooses supported reasoning effort. Add an optional role to explain when to use each model.</p>
+              <p id="model-auto-eligibility" role="status" aria-live="polite"></p>
               <p id="model-auto-feedback" role="status" aria-live="polite"></p>
               <div id="model-auto-save-row" class="model-auto-actions" hidden><button type="button" id="model-auto-cancel">Cancel</button><button type="button" id="model-auto-save">Save &amp; enable Auto</button></div>
             </div>

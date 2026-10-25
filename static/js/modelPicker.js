@@ -214,35 +214,50 @@ function _initModelPickerDropdown() {
   if (!wrap || !btn || !menu || !search || !listEl) return;
   if (wrap.dataset.modelPickerBound === '1') return;
   wrap.dataset.modelPickerBound = '1';
-  let poolDraft=null, poolContext=null, poolSaving=false;
+  let poolDraft=null, poolContext=null, poolSaving=false, editAutoWhenReady=false;
   const autoSelect=document.getElementById('model-auto-select');
   const autoEdit=document.getElementById('model-auto-edit');
   const autoFeedback=document.getElementById('model-auto-feedback');
   const poolKey=m=>JSON.stringify([m.endpoint_id,m.model]);
+  function eligiblePool(models){
+    const catalogue=new Map(_getAllModels().map(m=>[poolKey({endpoint_id:m.endpointId,model:m.mid}),m]));
+    return !!models.length && models.every(item=>{
+      const model=catalogue.get(poolKey(item));return model?.endpointId && !model.stale && model.modelType==='llm';
+    });
+  }
   function renderAutoControls(){
     const policy=window.ChatAutomation?.getPolicy();
     const selected=poolDraft || policy?.auto_models || [];
     autoSelect.setAttribute('aria-checked',String(policy?.route_mode==='auto'));
-    autoSelect.disabled=poolSaving || !window.ChatAutomation;
-    autoEdit.disabled=poolSaving || _pickerLoading || !window.ChatAutomation;
+    const valid=eligiblePool(selected);
+    autoSelect.disabled=poolSaving || _pickerLoading || !!poolDraft || !window.ChatAutomation
+      || (!!policy?.auto_models?.length && !eligiblePool(policy.auto_models));
+    autoEdit.disabled=poolSaving || _pickerLoading || !!poolDraft || !window.ChatAutomation;
     autoEdit.textContent=poolDraft?'Auto models':selected.length?'Edit Auto models':'Choose Auto models';
     document.getElementById('model-auto-count').textContent=`${selected.length} selected`;
     document.getElementById('model-auto-help').hidden=!poolDraft;
     document.getElementById('model-auto-save-row').hidden=!poolDraft;
-    document.getElementById('model-auto-save').disabled=poolSaving || !selected.length;
+    document.getElementById('model-auto-save').disabled=poolSaving || _pickerLoading || !valid;
     document.getElementById('model-auto-cancel').disabled=poolSaving;
+    document.getElementById('model-auto-eligibility').textContent=poolDraft
+      ?_pickerLoading?'Refreshing models…':!selected.length?'Choose at least one available model to use Auto.':!valid?'Remove unavailable models before enabling Auto.':''
+      :policy?.auto_models?.length && !valid && !_pickerLoading?'Some Auto models are unavailable. Edit Auto models to continue.':'';
   }
   function editAutoModels(){
     if(poolSaving || !window.ChatAutomation)return;
+    if(poolDraft){_populate(search.value || '');return;}
     const policy=window.ChatAutomation.getPolicy();
     poolDraft=(policy?.auto_models || []).map(m=>({...m}));
     poolContext=window.ChatAutomation.selectionContext();
     autoFeedback.textContent=policy?.auto_models_source==='legacy_approaches'
       ?'Your previous approach models are retained. Review this pool before saving.'
-      :'Choose at least one available model to use Auto.';
+      :'';
     _populate(search.value || '');
   }
   autoEdit.addEventListener('click',editAutoModels);
+  window.addEventListener('odysseus:edit-auto-models',()=>{
+    if(_pickerLoading)editAutoWhenReady=true;else editAutoModels();
+  });
   autoSelect.addEventListener('click',async()=>{
     if(poolSaving)return;
     const policy=window.ChatAutomation?.getPolicy();
@@ -278,6 +293,7 @@ function _initModelPickerDropdown() {
   btn.setAttribute('aria-haspopup','menu');btn.setAttribute('aria-expanded','false');
 
   function _close() {
+    editAutoWhenReady=false;
     if (menu.classList.contains('hidden')) return;
     btn.setAttribute('aria-expanded','false');
     // Restore scroll button
@@ -435,10 +451,14 @@ function _initModelPickerDropdown() {
     try {
       await window.modelsModule.refreshModels(force, { waitForRefresh: force });
       await _refreshLocalProbe();
+      if(autoFeedback.textContent.startsWith('Models could not be loaded'))autoFeedback.textContent='';
     } finally {
       if (seq === _pickerLoadSeq) {
         _pickerLoading = false;
         renderAutoControls();
+        if(editAutoWhenReady && !menu.classList.contains('hidden') && !menu.classList.contains('closing')){
+          editAutoWhenReady=false;editAutoModels();
+        }
         listEl.classList.remove('is-loading');
       }
     }
@@ -550,7 +570,7 @@ function _initModelPickerDropdown() {
         const row=document.createElement('button');row.type='button';row.className='model-switch-item model-auto-missing';
         row.disabled=poolSaving;row.textContent=`${m.model} · unavailable — remove`;
         row.title=m.endpoint_id;
-        row.addEventListener('click',event=>{event.stopPropagation();poolDraft=poolDraft.filter(item=>poolKey(item)!==poolKey(m));_populate(search.value || '');});
+        row.addEventListener('click',event=>{event.stopPropagation();poolDraft=poolDraft.filter(item=>poolKey(item)!==poolKey(m));autoFeedback.textContent='';_populate(search.value || '');});
         listEl.append(row);
       });
       matching.sort((a,b)=>Number(chosen.has(poolKey({endpoint_id:b.endpointId,model:b.mid})))-Number(chosen.has(poolKey({endpoint_id:a.endpointId,model:a.mid})))).forEach(m=>_addRow(m));
@@ -638,6 +658,7 @@ function _initModelPickerDropdown() {
           if(poolSaving || (unavailable && !selected))return;
           if(!selected && poolDraft.length>=32){autoFeedback.textContent='Choose up to 32 Auto models.';return;}
           poolDraft=selected?poolDraft.filter(item=>poolKey(item)!==poolKey(identity)):[...poolDraft,identity];
+          autoFeedback.textContent='';
           const scroll=listEl.scrollTop;_populate(search.value || '');listEl.scrollTop=scroll;
           [...listEl.querySelectorAll('[role="menuitemcheckbox"]')].find(el=>el.dataset.poolKey===poolKey(identity))?.focus();
         };
