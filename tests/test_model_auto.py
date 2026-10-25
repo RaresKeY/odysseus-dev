@@ -70,7 +70,7 @@ def test_pool_is_durable_exact_owner_scoped_and_forked_without_scope(registered)
 @pytest.mark.parametrize('pool', [[],[POOL[0],POOL[0]], [{'endpoint_id':'foreign','model':'shared'}],
     [{'endpoint_id':'disabled','model':'shared'}], [{'endpoint_id':'decision','model':'shared'}],
     [{'endpoint_id':'one','model':'unregistered'}], [{'endpoint_id':'one','model':'shared','supported_efforts':['high']}],
-    POOL*17])
+    POOL*17, [{**POOL[0],'description':42}], [{**POOL[0],'description':'x'*801}]])
 def test_invalid_empty_foreign_unregistered_pool_never_commits(registered,pool):
     with pytest.raises(HTTPException):registered.update_chat('alice','a',{'auto_models':pool,'route_mode':'auto'},0)
     policy=registered.policy('alice','a')

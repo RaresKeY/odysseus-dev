@@ -60,6 +60,9 @@
 #model-auto-feedback:empty,#chat-permissions-feedback:empty{display:none}
 .model-auto-selected{background:color-mix(in srgb,var(--fg) 9%,transparent)}
 .model-auto-check{flex:none;width:15px;text-align:center}
+.model-auto-capability{display:block;font-size:11px;line-height:1.5;font-weight:400;opacity:.75;white-space:normal}
+.model-auto-role{display:grid;gap:4px;padding:3px 10px 10px;font-size:11px;border-bottom:1px solid var(--border)}
+.model-auto-role textarea{width:100%;box-sizing:border-box;resize:vertical;max-height:120px;min-height:44px;font:inherit;line-height:1.5;color:var(--fg);background:var(--bg);border:1px solid var(--border);border-radius:5px;padding:6px}
 #model-picker-list [aria-disabled=true]{opacity:.45;cursor:default}
 #model-picker-list .model-auto-missing{width:100%;color:var(--color-warning);font:inherit;font-size:11px;background:transparent;border:0;text-align:left;overflow-wrap:anywhere}
 .chat-permissions-control :focus-visible,.chat-permissions-menu :focus-visible,#chat-auto-approve-dialog :focus-visible,.model-auto-controls :focus-visible,#model-picker-list .model-switch-item:focus-visible{outline:2px solid var(--fg);outline-offset:-2px}

@@ -18,8 +18,11 @@ and follow-up, preparation and completion-advice flags. Foreground Auto now uses
 picker, choosing model and supported effort in one closed decision. Legacy
 `effort_mode` and three approach mappings remain compatibility/experiment data;
 they do not restrict or override the new foreground selection. The exact offer
-is validated before and after inference and at actual execution. Generic
-providers without wired reasoning metadata use their explicit default. Manual
+is validated before and after inference and at actual execution. Exact documented Google compatibility IDs on the canonical endpoint and exact
+ChatGPT catalogue entries supply supported efforts; unknowns use default.
+Candidate-specific criteria use optional bounded verbatim owner role hints as
+data, not action authority. Pool revisions and dispatch snapshots bind roles
+and capability revisions. Manual
 model selection does not classify model or effort.
 
 `prepare_http_selection` filters the complete current catalog by owner/admin,
