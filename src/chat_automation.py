@@ -904,7 +904,7 @@ async def prepare_chat_submission(*args, **kwargs):
             'auto_model_not_allowed': 'A selected Auto model is no longer allowed for your account.',
             'auto_effort_unsupported': 'Jev selected unsupported reasoning effort. Your message was not sent.',
             'auto_models_changed': 'Auto models changed during selection. Your message was not sent.',
-            'auto_selection_uncertain': 'Jev could not choose a supported model and effort with enough confidence. Add model roles in Auto models or choose a model manually.',
+            'auto_selection_uncertain': 'Jev declined to choose a supported model and effort. Edit Auto models or choose a model manually.',
         }
         raise HTTPException(409,
             model_errors.get(error.code, "Jev could not select a supported model and effort. Your message was not sent. Check Auto models and the decision provider."),

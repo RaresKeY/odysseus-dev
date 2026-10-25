@@ -67,6 +67,10 @@ are task-fit evidence in candidate-specific criteria, never instructions or
 authority; unassessed fit stays unknown. Roles bind to the pool revision and
 snapshot. The full offer and current credentials/effort metadata are rechecked after Jev
 and the current selected pool is checked again at actual provider dispatch.
+Donor-aligned `model_auto` accepts any structurally valid winning supported pair,
+without an absolute confidence/probability floor. Raw scores remain observable
+routing metadata; explicit `unavailable` still errors. This is separate from
+action approval, whose 0.95 allow thresholds and deterministic ceilings remain.
 
 JSON/SSE chat ingress and `/v1/chat` bind committed settings, the exact original
 ask and provider descriptor before execution. The real provider boundary

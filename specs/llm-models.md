@@ -53,6 +53,10 @@ only to the canonical verified HTTPS generativelanguage.googleapis.com
 identity. A single native models/ prefix is recognized for capability lookup only, with exact stored/bound/payload identity retained. Unknown IDs and proxies retain default; no payload-only
 normalization occurs. Existing llm_core top-level reasoning_effort paths carry
 these values. Capability revision, roles and supported sets are rechecked.
+Donor-aligned `model_auto` requires complete finite normalized vectors and
+maximum-consistent choices, but no absolute routing confidence/probability
+floor. Raw scores remain metadata; explicit `unavailable`, invalid identities
+and incompatible/stale selections still fail. Action approval remains separate.
 Optional per-selected-model user role descriptions stay verbatim and bounded;
 candidate-specific criteria use them as data rather than inventing rankings. Model/effort incompatibility, a changed pool or
 unavailable registration errors without fallback. Old category mappings materialize once into only their previously selected
