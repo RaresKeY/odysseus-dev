@@ -219,7 +219,8 @@ async function initialize(){
     }catch(error){$('chat-auto-approve-feedback').textContent=error.message;render();}
     finally{button.disabled=false;$('chat-auto-approve-cancel').disabled=false;}
   });
-  $('chat-auto-models-settings').addEventListener('click',()=>{
+  $('chat-auto-models-settings').addEventListener('click',event=>{
+    event.stopPropagation();
     $('chat-automation-dialog').close();document.getElementById('model-picker-btn').click();window.dispatchEvent(new Event('odysseus:edit-auto-models'));
   });
   $('chat-automation-settings').addEventListener('click',openSettings);
