@@ -529,7 +529,7 @@ function _initModelPickerDropdown() {
         const row=document.createElement('button');row.type='button';row.className='model-switch-item model-auto-missing';
         row.disabled=poolSaving;row.textContent=`${m.model} · unavailable — remove`;
         row.title=m.endpoint_id;
-        row.addEventListener('click',()=>{poolDraft=poolDraft.filter(item=>poolKey(item)!==poolKey(m));_populate(search.value || '');});
+        row.addEventListener('click',event=>{event.stopPropagation();poolDraft=poolDraft.filter(item=>poolKey(item)!==poolKey(m));_populate(search.value || '');});
         listEl.append(row);
       });
       matching.sort((a,b)=>Number(chosen.has(poolKey({endpoint_id:b.endpointId,model:b.mid})))-Number(chosen.has(poolKey({endpoint_id:a.endpointId,model:a.mid})))).forEach(m=>_addRow(m));
@@ -612,7 +612,7 @@ function _initModelPickerDropdown() {
           const scroll=listEl.scrollTop;_populate(search.value || '');listEl.scrollTop=scroll;
           [...listEl.querySelectorAll('[role="menuitemcheckbox"]')].find(el=>el.dataset.poolKey===poolKey(identity))?.focus();
         };
-        row.dataset.poolKey=poolKey(identity);row.addEventListener('click',toggle);
+        row.dataset.poolKey=poolKey(identity);row.addEventListener('click',event=>{event.stopPropagation();toggle();});
         row.addEventListener('keydown',event=>{if(event.key===' ' || event.key==='Enter'){event.preventDefault();toggle();}});
         listEl.appendChild(row);return;
       }
