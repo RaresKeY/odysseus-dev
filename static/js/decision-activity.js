@@ -121,7 +121,7 @@
             captureButton.disabled = true;
             try {
                 await request('/decision-capture', {method: 'PUT', headers: {'Content-Type': 'application/json'}, body: JSON.stringify({
-                    purposes: ['approach', 'approach_routing', 'tools', 'tool_selection', 'followup', 'followup_routing',
+                    purposes: ['model_auto', 'approach', 'approach_routing', 'tools', 'tool_selection', 'followup', 'followup_routing',
                         'effort', 'execution_effort', 'completion_advice', 'safety_advice', 'approval', 'approval_review',
                         'browser', 'browser_action', 'readiness', 'diagnostics', 'turn_preparation'], required: false
                 })});

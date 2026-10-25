@@ -124,5 +124,6 @@ async def test_candidate_specific_roles_are_preserved_as_data_and_bound_to_revis
     choices=reviewer.calls[0].choices
     assert pool[0]['description'] in choices['candidate_0'] and pool[1]['description'] in choices['candidate_1']
     assert bound.descriptor['auto_candidate_snapshot'][1]['description']==pool[1]['description']
+    assert bound.effort_selection['status']=='bound' and bound.effort_selection['source']=='auto'
     registered.update_chat('alice','a',{'auto_models':[{**pool[0],'description':'Changed'},pool[1]]},1)
     assert not bound.current()

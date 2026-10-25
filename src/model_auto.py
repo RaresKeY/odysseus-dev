@@ -224,4 +224,5 @@ async def select_model_and_effort(raw_ask, candidates, *, owner, provider, confi
             'supported_efforts': [None if e == 'default' else e for e in selected['supported_efforts']],
             'candidate_snapshot': public_snapshot(snapshot),
             'selection': {'policy': POLICY, 'attempt_id': decision.attempt_id, **model_answer},
-            'effort_selection': {'policy': POLICY, 'attempt_id': decision.attempt_id, **effort_answer}}
+            'effort_selection': {'status': 'bound', 'source': 'auto', 'policy': POLICY,
+                                 'attempt_id': decision.attempt_id, **effort_answer}}

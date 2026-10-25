@@ -23,11 +23,11 @@ from src.decisions.contracts import DecisionError, SCHEMA_VERSION, decode, encod
 
 CAPTURE_SCHEMA = "odysseus-redacted-decision/v1"
 REDACTION_POLICY = "omit-all-content/v1"
-PURPOSES = frozenset({"approach", "approach_routing", "tools", "tool_selection", "followup",
+PURPOSES = frozenset({"model_auto", "approach", "approach_routing", "tools", "tool_selection", "followup",
     "followup_routing", "effort", "execution_effort", "completion_advice", "safety_advice",
     "approval", "approval_review", "browser", "browser_action", "readiness", "diagnostics", "turn_preparation"})
 QUESTION_IDS = frozenset({"tools", "followup", "online_search", "freshness", "fresh_information", "project_context",
-    "projectcontext", "readiness", "approach", "effort", "execution_effort", "completion", "safety", "permission"})
+    "projectcontext", "readiness", "approach", "effort", "execution_model", "reasoning_effort", "execution_effort", "completion", "safety", "permission"})
 STATUSES = frozenset({"reserved", "settled", "rejected", "unresolved", "cancelled"})
 FAILURES = frozenset({"decision_admission_failed", "decision_attempt_store_unavailable", "decision_cancelled",
     "decision_deadline_exceeded", "decision_encoding_refused", "decision_endpoint_changed", "decision_endpoint_unavailable",

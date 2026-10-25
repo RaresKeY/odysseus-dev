@@ -47,6 +47,35 @@ def test_default_observer_is_shared_per_factory_and_never_reuses_another_databas
     other_engine.dispose()
 
 
+def test_model_auto_capture_keeps_known_questions_but_omits_roles_models_and_labels(observations):
+    observations.consent('alice','a',{'purposes':['model_auto'],'required':True})
+    observations.bind_turn('alice','a','auto-run')
+    request=DecisionRequest('model_auto',{'ask':'PRIVATE_ASK','candidates':{
+        'candidate_0':{'model':'PRIVATE_EXECUTION_MODEL','user_role':'PRIVATE_ROLE_EVIDENCE'}}},
+        {'candidate_0':'PRIVATE_ROLE_EVIDENCE','unavailable':'Unknown'},question_id='execution_model',
+        additional_questions={'reasoning_effort':{'low':'Low','high':'High'}})
+    context=DecisionContext('alice','a','auto-run')
+    record={'attempt_id':'model-auto-one','owner':'alice','session_id':'a','run_id':'auto-run',
+        'purpose':'model_auto','request_sha256':'a'*64,'request_bytes':123,
+        'provider_identity':{'model':'PRIVATE_DECIDER','endpoint_id':'PRIVATE_ENDPOINT','protocol':'systemone'},
+        'policy_revision':0,'authority_epoch':0,'status':'reserved','usage':None}
+    ledger=SqlAttemptStore(AutomationStore(observations.session_factory));ledger.reserve(record,max_calls=32)
+    ticket=observations.before_dispatch(request,context,record)
+    answers={name:{'choice':next(iter(question['criteria'])),'confidence':.9,
+        'probabilities':{key:(.9 if i==0 else .1) for i,key in enumerate(question['criteria'])}}
+        for name,question in request.questions().items()}
+    main=answers['execution_model'];usage={'input_tokens':12,'output_tokens':3}
+    result=DecisionResult(main['choice'],main['confidence'],main['probabilities'],usage,
+        'model-auto-one',record['provider_identity'],answers)
+    ledger.settle('model-auto-one',status='settled',usage=usage)
+    observations.after_attempt(ticket,status='settled',usage=usage,result=result)
+    history=observations.history('alice','a')['items'][0]
+    assert history['purpose']=='model_auto' and set(history['questions'])=={'execution_model','reasoning_effort'}
+    capture=observations.capture('alice','a','auto-run');encoded=encode(capture)
+    assert len(capture['records'])==1 and b'PRIVATE_' not in encoded
+    assert b'PRIVATE_' not in encode(history)
+
+
 def test_private_turn_consumes_consent_without_creating_capture(observations):
     observations.consent('alice','a',{'purposes':['approach']})
     assert observations.bind_turn('alice','a','private-run',ephemeral=True) is None
