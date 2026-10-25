@@ -25,7 +25,8 @@
 .chat-automation-controls :focus-visible,#chat-automation-dialog :focus-visible{outline:2px solid var(--accent,#69a9ed);outline-offset:2px}
 /* Composer controls share the native input surface and icon family. */
 #chat-automation-notice{width:100%;max-width:800px;box-sizing:border-box;margin:4px auto;font-size:12px;color:var(--color-warning);overflow-wrap:anywhere}
-.chat-permissions-control{position:relative;min-width:0}
+.chat-permissions-control{position:relative;min-width:0;flex-shrink:0}
+.chat-permissions-short{display:none}
 .chat-permissions-trigger{display:inline-flex;align-items:center;gap:5px;min-height:32px;padding:0 6px;font:inherit;font-size:11px;color:var(--fg);background:transparent;border:1px solid transparent;border-radius:6px;cursor:pointer;white-space:nowrap}
 .chat-permissions-trigger:hover{background:color-mix(in srgb,var(--fg) 8%,transparent);border-color:var(--border)}
 .chat-permissions-trigger>svg{flex-shrink:0}
@@ -70,7 +71,9 @@
 #chat-permissions-menu[hidden],#model-auto-help[hidden],#model-auto-save-row[hidden]{display:none}
 @media(max-width:540px){
   .chat-automation-route{grid-template-columns:1fr}#chat-automation-dialog{padding:14px}
-  .chat-permissions-trigger{min-height:36px;padding:0 5px}
+  .chat-permissions-trigger{min-height:44px;padding:0 3px;gap:3px}
+  #chat-permissions-label{display:none}
+  .chat-permissions-short{display:inline}
   .chat-permissions-trigger>span:last-child{display:none}
   .chat-permissions-menu>button{min-height:68px}
   #model-picker-list .model-switch-item{min-height:44px}

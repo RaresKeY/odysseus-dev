@@ -196,6 +196,9 @@ async function _ensureDefaultPendingChat() {
  */
 export function initModelPicker(deps) {
   _deps = deps;
+  // Settings may finish loading before this module. Read the acknowledged
+  // snapshot as well as subscribing to future changes so reload shows Auto.
+  _automationPolicy=window.ChatAutomation?.getPolicy?.() || _automationPolicy;
   _initModelPickerDropdown();
 }
 
