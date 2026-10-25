@@ -88,6 +88,8 @@ async function currentChat(seed) {
 function render() {
   const mode=policy?.approval_mode || configuration?.last_explicit_mode || 'always_ask';
   $('chat-permissions-label').textContent=modeLabels[mode] || 'Permissions';
+  $('chat-permissions-short').textContent={always_ask:'Ask',auto_approve:'Auto',yolo:'YOLO'}[mode] || '…';
+  $('chat-approval-mode').title=`Permissions for this chat: ${modeLabels[mode] || 'Loading'}`;
   $('chat-approval-mode').value=mode;
   $('chat-approval-mode').setAttribute('aria-label',`Change permissions: ${modeLabels[mode] || 'Permissions'}`);
   $('chat-permissions-control').classList.toggle('mode-yolo',mode==='yolo');
