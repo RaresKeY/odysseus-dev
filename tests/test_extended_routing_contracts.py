@@ -39,11 +39,11 @@ class Provider:
         answers = {}
         for name, question in request.questions().items():
             choice = self.choices[name]
-            answers[name] = {'choice': choice, 'confidence': .99,
+            answers[name] = {'type':'choice', 'choice': choice, 'confidence': .99,
                             'probabilities': {key: float(key == choice) for key in question['criteria']}}
         main = answers[request.question_id]
         return DecisionResult(main['choice'], main['confidence'], main['probabilities'],
-                              {'input_tokens': 1, 'output_tokens': 1}, 'attempt', {}, answers)
+                              {'input_tokens': 1, 'output_tokens': 1}, 'attempt', {'model':'neutral-decider'}, answers)
 
 
 @pytest.mark.asyncio
@@ -116,31 +116,29 @@ async def test_complete_oversize_wire_refuses_before_http_or_reservation(store):
 
 @pytest.mark.asyncio
 async def test_actual_auto_route_and_independent_effort_bind_selected_endpoint(store, monkeypatch):
-    from src.approach_routing import APPROACHES
-    from src import endpoint_resolver
-    mappings = {key: {'endpoint_id': 'chosen-' + str(i), 'model': 'model-' + str(i), 'reasoning_effort': 'low', 'supported_efforts': ['low', 'high']}
-                for i, key in enumerate(APPROACHES)}
-    store.update_configuration('alice', {'approaches': mappings, 'decision_provider': {
-        'endpoint_id': 'decision', 'model': 'neutral-decider', 'protocol': 'systemone'}}, 0)
-    store.update_chat('alice', 'a', {'route_mode': 'auto', 'effort_mode': 'auto'}, 0)
-    def registered(identifier, model, **kwargs):
-        return (('https://' + identifier + '.invalid/v1', model, {'X-Registered': identifier}),
-                {'endpoint_id': identifier})
-    monkeypatch.setattr(endpoint_resolver, '_resolve_endpoint_by_id_with_descriptor', registered)
-    monkeypatch.setattr(endpoint_resolver, 'resolve_endpoint_by_id', lambda identifier, model, **kw: registered(identifier, model)[0])
-    provider = Provider({'approach': 'bounded_domain', 'readiness': 'ready', 'effort': 'high'})
-    bound = await prepare_chat_turn(store, 'alice', session(), 'A short novel correctness question',
-        decision_provider=provider)
-    assert len(provider.requests) == 2
-    assert provider.requests[1].state['selected_route']['endpoint_id'] == 'chosen-1'
-    assert bound.descriptor['reasoning_effort'] == 'high'
-    assert bound.descriptor['endpoint_id'] == 'chosen-1'
-    assert bound.endpoint_url == 'https://chosen-1.invalid/v1'
-    assert bound.headers == {'X-Registered': 'chosen-1'}
-    assert bound.approach_selection['readiness']['choice'] == 'ready'
-    assert bound.effort_selection['choice'] == 'high'
-    assert bound.descriptor['supported_efforts'] == ['low', 'high']
-    assert bound.descriptor['effort_support_source'] == 'owner_configured'
+    from src import endpoint_resolver, model_auto
+    candidates=[{'endpoint_id':'chosen-0','model':'model-0'}, {'endpoint_id':'chosen-1','model':'model-1'}]
+    def registered(owner,item):
+        identifier,model=item['endpoint_id'],item['model']
+        return {'identity':item,'route':('https://'+identifier+'.invalid/v1',model,{'X-Registered':identifier}),
+            'supported_efforts':['low','high'],'label':identifier}
+    monkeypatch.setattr(model_auto,'registered_candidate',registered)
+    monkeypatch.setattr(endpoint_resolver,'resolve_endpoint_by_id',lambda identifier,model,**kw:registered('alice',{'endpoint_id':identifier,'model':model})['route'])
+    store.update_configuration('alice', {'decision_provider': {
+        'endpoint_id':'decision','model':'neutral-decider','protocol':'systemone'}},0)
+    store.update_chat('alice','a',{'route_mode':'auto','auto_models':candidates},0)
+    provider=Provider({'execution_model':'candidate_1','reasoning_effort':'high'})
+    bound=await prepare_chat_turn(store,'alice',session(),'A short novel correctness question',decision_provider=provider)
+    assert len(provider.requests)==1
+    assert provider.requests[0].state['candidates']['candidate_1']['endpoint_id']=='chosen-1'
+    assert bound.descriptor['reasoning_effort']=='high'
+    assert bound.descriptor['endpoint_id']=='chosen-1'
+    assert bound.endpoint_url=='https://chosen-1.invalid/v1'
+    assert bound.headers=={'X-Registered':'chosen-1'}
+    assert bound.approach_selection['choice']=='candidate_1'
+    assert bound.effort_selection['choice']=='high'
+    assert bound.descriptor['supported_efforts']==['low','high']
+    assert bound.descriptor['effort_support_source']=='registered_runtime'
     import httpx
     import json
     from src import llm_core

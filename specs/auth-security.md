@@ -182,3 +182,7 @@ Upload routes distinguish disabled-auth operation from unavailable/unconfigured 
 - Codex/Claude scoped route enforcement still needs stronger regression coverage.
 - `THREAT_MODEL.md` still has stale token-scope and `/api/v1/chat` SSRF gap text that should be reconciled with current route validation.
 - The Default/Local owner contract is canonical but only incrementally adopted; route helper `""`, chat/agent `None`, SQL/JSON null-owner compatibility, and calendar fallback owner behavior still need domain-by-domain migration decisions.
+
+## Model Auto and automatic action review
+
+Chat pool writes use the existing browser-only owner/CAS gate and require exact enabled owner-visible registered chat models. The foreground selector freezes the selected endpoint identities and server-owned supported effort metadata, rechecks registration and credentials after the decision, and checks the pool again at dispatch. Labels remain decision data; neither selection nor activation disclosure grants tool/resource authority. Auto-Approve deny/review/uncertainty/unavailability/invalid responses and errors retire the pending proposal and return a blocked error without a human continuation. Missing deterministic or non-interactive admission is denied in Auto-Approve. Always Ask and existing manual/YOLO boundaries remain.

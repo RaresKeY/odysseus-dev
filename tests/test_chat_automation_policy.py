@@ -25,7 +25,7 @@ def test_mode_selects_reviewer_without_conferring_execution_authority(mode, expe
     policy = ChatPolicy.from_record(record(approval_mode=mode, elevation_ceiling=ceiling,
                                           elevation_grant=grant))
     assert review_requirement(policy, tool_name="write_file", deterministically_admitted=True) is expected
-    assert review_requirement(policy, tool_name="write_file", deterministically_admitted=False) is ReviewRequirement.HUMAN
+    assert review_requirement(policy, tool_name="write_file", deterministically_admitted=False) is (ReviewRequirement.DENY if mode == 'auto_approve' else ReviewRequirement.HUMAN)
     assert review_requirement(policy, tool_name="write_file", deterministically_admitted=True,
                               hard_denied=True) is ReviewRequirement.DENY
 

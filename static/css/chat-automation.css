@@ -1,15 +1,7 @@
-.chat-automation-controls{display:flex;align-items:center;gap:8px;flex-wrap:wrap;width:100%;max-width:800px;box-sizing:border-box;margin:6px auto;color:var(--fg);font-size:12px;min-width:0}
-.chat-automation-controls label{display:flex;align-items:center;gap:5px}
-.chat-automation-controls select,.chat-automation-controls button{font:inherit;color:inherit;background:var(--bg);border:1px solid color-mix(in srgb,var(--fg) 20%,transparent);border-radius:7px;padding:5px 7px}
-.chat-automation-controls [role=status]{color:var(--muted,var(--fg));font-size:12px;min-width:0}
-.chat-automation-controls select{max-width:160px;min-height:32px;min-width:0;text-overflow:ellipsis}
-/* This popup extends above its summary; the global research-details clipping
-   must not hide the menu while leaving its buttons keyboard-focusable. */
-.chat-automation-menu{position:relative;margin-left:auto;overflow:visible}
-.chat-automation-menu summary,.chat-decision-disclosure>summary{cursor:pointer;padding:6px;min-height:32px;box-sizing:border-box}
+.chat-decision-disclosure>summary{cursor:pointer;padding:6px;min-height:32px;box-sizing:border-box}
 .chat-automation-menu>div{position:absolute;right:0;bottom:100%;z-index:40;display:grid;gap:4px;min-width:210px;background:var(--panel,var(--bg));padding:6px;border:1px solid var(--border);border-radius:6px}
 .chat-decision-disclosure{width:100%;max-width:800px;box-sizing:border-box;margin:0 auto 6px;font-size:12px;min-width:0}
-.chat-automation-menu summary:focus-visible,.chat-decision-disclosure summary:focus-visible{outline:2px solid var(--accent,#69a9ed);outline-offset:2px}
+.chat-decision-disclosure summary:focus-visible{outline:2px solid var(--accent,#69a9ed);outline-offset:2px}
 #chat-automation-dialog{color:var(--fg);background:var(--bg);border:1px solid color-mix(in srgb,var(--fg) 25%,transparent);border-radius:14px;width:min(620px,calc(100vw - 28px));max-height:85vh;padding:20px;box-sizing:border-box}
 #chat-automation-dialog::backdrop{background:#0008}
 #chat-automation-dialog form{display:grid;gap:14px}
@@ -31,4 +23,53 @@
 .decision-activity :focus-visible{outline:2px solid var(--accent,#69a9ed);outline-offset:2px}
 #chat-browser-screenshot{max-width:100%;border-radius:6px}
 .chat-automation-controls :focus-visible,#chat-automation-dialog :focus-visible{outline:2px solid var(--accent,#69a9ed);outline-offset:2px}
-@media(max-width:540px){.chat-automation-controls{gap:6px;margin:5px auto}.chat-automation-controls select{max-width:135px;min-height:36px}.chat-automation-route{grid-template-columns:1fr}.chat-automation-controls [role=status]{flex-basis:100%}#chat-automation-dialog{padding:14px}}
+/* Composer controls share the native input surface and icon family. */
+#chat-automation-notice{width:100%;max-width:800px;box-sizing:border-box;margin:4px auto;font-size:12px;color:var(--color-warning);overflow-wrap:anywhere}
+.chat-permissions-control{position:relative;min-width:0}
+.chat-permissions-trigger{display:inline-flex;align-items:center;gap:5px;min-height:32px;padding:0 6px;font:inherit;font-size:11px;color:var(--fg);background:transparent;border:1px solid transparent;border-radius:6px;cursor:pointer;white-space:nowrap}
+.chat-permissions-trigger:hover{background:color-mix(in srgb,var(--fg) 8%,transparent);border-color:var(--border)}
+.chat-permissions-trigger>svg{flex-shrink:0}
+.chat-permissions-trigger:disabled{opacity:.55;cursor:default}
+.mode-yolo .chat-permissions-trigger{color:var(--color-warning)}
+.chat-permissions-menu{position:absolute;left:0;bottom:calc(100% + 10px);z-index:260;width:310px;max-width:calc(100vw - 32px);max-height:min(430px,65dvh);overflow-y:auto;box-sizing:border-box;padding:6px;background:var(--panel);border:1px solid var(--border);border-radius:8px;box-shadow:0 -4px 20px #0006}
+.chat-menu-heading{padding:6px;font-size:11px;opacity:.7}
+.chat-permissions-menu>button{display:flex;align-items:center;justify-content:space-between;gap:8px;width:100%;min-height:62px;padding:8px;border:0;border-radius:5px;background:transparent;color:var(--fg);font:inherit;text-align:left;cursor:pointer}
+.chat-permissions-menu>button>span:first-child{min-width:0}
+.chat-permissions-menu strong,.model-auto-controls strong{display:block;font-size:12px;font-weight:500}
+.chat-permissions-menu small,.model-auto-controls small{display:block;font-size:11px;line-height:1.5;margin-top:4px;opacity:.75}
+.chat-permissions-menu button:hover,.chat-permissions-menu [aria-checked=true],.model-auto-controls [aria-checked=true]{background:color-mix(in srgb,var(--fg) 9%,transparent)}
+.chat-permissions-menu [aria-checked=false] .chat-mode-check{visibility:hidden}
+.chat-permissions-menu>p{font-size:11px;margin:6px;color:var(--color-warning);line-height:1.5}
+#chat-auto-approve-dialog{color:var(--fg);background:var(--panel);border:1px solid var(--border);border-radius:12px;width:min(460px,calc(100vw - 28px));max-height:85dvh;box-sizing:border-box;padding:20px}
+#chat-auto-approve-dialog::backdrop{background:#0008}
+#chat-auto-approve-dialog h2{font-size:16px;font-weight:500;margin:0 0 14px}
+#chat-auto-approve-dialog p{font-size:12px;line-height:1.7;margin:10px 0}
+#chat-auto-approve-feedback{color:var(--color-warning)}
+.chat-confirm-actions{display:flex;justify-content:flex-end;gap:8px;margin-top:16px;flex-wrap:wrap}
+.chat-confirm-actions button,.model-auto-actions button{font:inherit;font-size:12px;color:var(--fg);background:var(--bg);border:1px solid var(--border);border-radius:6px;padding:7px;cursor:pointer}
+#chat-auto-approve-enable,#model-auto-save{border-color:var(--fg)}
+#model-picker-menu{width:350px;max-width:calc(100vw - 32px);max-height:min(620px,70dvh);display:flex;flex-direction:column;box-sizing:border-box}
+#model-picker-menu.hidden{display:none}
+#model-picker-list{min-height:0;overflow-y:auto;flex:1}
+.model-auto-controls{flex:none;padding:4px 2px 7px;border-bottom:1px solid var(--border);margin-bottom:4px}
+#model-auto-select{display:block;width:100%;border:0;border-radius:5px;background:transparent;color:var(--fg);font:inherit;padding:7px;text-align:left;cursor:pointer}
+.model-auto-actions{display:flex;align-items:center;justify-content:space-between;gap:6px;padding:4px 6px}
+.model-auto-actions button{font-size:11px;padding:5px;background:transparent}
+#model-auto-count{font-size:11px;white-space:nowrap;opacity:.75}
+#model-auto-help,#model-auto-feedback{font-size:11px;line-height:1.5;margin:5px 6px;overflow-wrap:anywhere}
+#model-auto-feedback:empty,#chat-permissions-feedback:empty{display:none}
+.model-auto-selected{background:color-mix(in srgb,var(--fg) 9%,transparent)}
+.model-auto-check{flex:none;width:15px;text-align:center}
+#model-picker-list [aria-disabled=true]{opacity:.45;cursor:default}
+#model-picker-list .model-auto-missing{width:100%;color:var(--color-warning);font:inherit;font-size:11px;background:transparent;border:0;text-align:left;overflow-wrap:anywhere}
+.chat-permissions-control :focus-visible,#chat-auto-approve-dialog :focus-visible,.model-auto-controls :focus-visible,#model-picker-list .model-switch-item:focus-visible{outline:2px solid var(--fg);outline-offset:-2px}
+#chat-permissions-menu[hidden],#model-auto-help[hidden],#model-auto-save-row[hidden]{display:none}
+@media(max-width:540px){
+  .chat-automation-route{grid-template-columns:1fr}#chat-automation-dialog{padding:14px}
+  .chat-permissions-trigger{min-height:36px;padding:0 5px}
+  .chat-permissions-trigger>span:last-child{display:none}
+  .chat-permissions-menu{left:auto;right:-100px;width:310px}
+  .chat-permissions-menu>button{min-height:68px}
+  #model-picker-list .model-switch-item{min-height:44px}
+  .model-auto-actions button{min-height:36px}
+}

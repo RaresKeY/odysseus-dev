@@ -21,7 +21,7 @@ from fastapi import HTTPException
 
 MODES = frozenset({"always_ask", "auto_approve", "yolo"})
 APPROACHES = frozenset({"established_procedure", "bounded_domain", "approach_discovery"})
-EFFORTS = frozenset({None, "", "none", "minimal", "low", "medium", "high", "xhigh", "max"})
+EFFORTS = frozenset({None, "", "none", "minimal", "low", "medium", "high", "xhigh", "max", "ultra"})
 FEATURE_DEFAULTS = {"tool_routing": "existing", "effort_mode": "mapped", "followup_enabled": False,
                     "preparation_enabled": False, "completion_advice_enabled": False}
 _BOUND = ContextVar("chat_automation_bound_turn", default=None)
@@ -128,6 +128,11 @@ class AutomationStore:
             prefs.revision += 1
 
     def _policy(self, p, s, owner, entrypoint="interactive"):
+        features = {**FEATURE_DEFAULTS, **copy.deepcopy(s.feature_settings or {})}
+        if 'auto_models' not in features:
+            from src.model_auto import legacy_candidates
+            features['auto_models'] = legacy_candidates(p.configuration or {}) if s.route_mode == 'auto' else []
+            features['auto_models_source'] = 'legacy_approaches' if features['auto_models'] else 'explicit'
         grant = copy.deepcopy(s.elevation_grant)
         requested_grant = copy.deepcopy(grant)
         restriction = None
@@ -153,7 +158,7 @@ class AutomationStore:
                 "elevation_ceiling": bool(p.elevation_ceiling), "elevation_grant": grant,
                 "requested_elevation_grant": requested_grant, "sandbox_state": "required_at_execution",
                 "effective_roots": (grant or {}).get("roots", []),
-                **FEATURE_DEFAULTS, **copy.deepcopy(s.feature_settings or {}),
+                **features,
                 "route_mode": s.route_mode, "entrypoint": entrypoint,
                 "execution_scope": "expanded" if grant else "workspace",
                 "restriction": restriction or (None if grant or not p.elevation_ceiling else "No additional scope is granted")}
@@ -164,7 +169,7 @@ class AutomationStore:
             return self._policy(p, s, owner, entrypoint)
 
     def update_chat(self, owner, session_id, changes, expected_revision):
-        if set(changes) - {"approval_mode", "route_mode", "elevation_roots", *FEATURE_DEFAULTS}:
+        if set(changes) - {"approval_mode", "route_mode", "auto_models", "elevation_roots", *FEATURE_DEFAULTS}:
             raise HTTPException(422, "Unsupported chat setting")
         with self.transaction() as db:
             p, s = self.state(db, owner, session_id)
@@ -175,6 +180,21 @@ class AutomationStore:
             if mode not in MODES or route not in {"manual", "auto"}:
                 raise HTTPException(422, "Invalid chat mode")
             features = {**FEATURE_DEFAULTS, **copy.deepcopy(s.feature_settings or {})}
+            from src.model_auto import validate_candidates, candidate_snapshot, legacy_candidates
+            from src.decisions import DecisionError
+            try:
+                if 'auto_models' in changes:
+                    candidates = validate_candidates(changes['auto_models'])
+                    if candidates:
+                        candidate_snapshot(owner, candidates)
+                    features['auto_models'] = candidates
+                elif s.route_mode == 'auto' and 'auto_models' not in features:
+                    features['auto_models'] = legacy_candidates(p.configuration or {})
+                if route == 'auto':
+                    candidate_snapshot(owner, features.get('auto_models', []))
+            except DecisionError as error:
+                raise HTTPException(422, 'Choose at least one available registered Auto model. Check the selected pool.',
+                                    headers={'X-Decision-Failure': error.code}) from None
             for key in FEATURE_DEFAULTS:
                 if key in changes:
                     value = changes[key]
@@ -758,27 +778,19 @@ async def prepare_chat_turn(store, owner, session, raw_ask, *, entrypoint="inter
         if mode.startswith("effort:"):
             effort = mode[7:]
         if bound.policy["route_mode"] == "auto":
-            from src.approach_routing import route_approach
+            from src.model_auto import select_model_and_effort
             from src.decisions import DecisionProvider
             from src.decisions.contracts import DecisionContext
-            selection = await route_approach(raw_ask, bound.configuration.get("approaches", {}),
+            selected = await select_model_and_effort(raw_ask, bound.policy.get('auto_models', []), owner=owner,
                 provider=decision_provider or DecisionProvider(store=SqlAttemptStore(store)),
                 config=bound.configuration.get("decision_provider", {}),
                 context=DecisionContext(owner, session.id, bound.run_id,
                     policy_revision=bound.policy["policy_revision"], authority_epoch=bound.policy["authority_epoch"],
                     cancelled=lambda: not bound.current()), evidence=bound.preparation.evidence())
-            selected = selection.to_dict() if hasattr(selection, "to_dict") else selection
             endpoint_id, model = selected["endpoint_id"], selected["model"]
             effort = selected.get("reasoning_effort") or ""
             bound.approach_selection = copy.deepcopy(selected.get('selection') or {})
-            if bound.policy.get('effort_mode') == 'auto':
-                from src.decision_routing import select_effort
-                efforts = supported_efforts
-                if isinstance(efforts, dict):
-                    efforts = efforts.get((endpoint_id, model)) or efforts.get(endpoint_id, {}).get(model)
-                if efforts is None:
-                    efforts = selected.get('descriptor', {}).get('supported_efforts')
-                effort = await select_effort(bound, selected, efforts, provider=decision_provider)
+            bound.effort_selection = copy.deepcopy(selected['effort_selection'])
         else:
             endpoint_id, model = getattr(session, "endpoint_id", None), session.model
             if reasoning_effort is not None:
@@ -801,14 +813,15 @@ async def prepare_chat_turn(store, owner, session, raw_ask, *, entrypoint="inter
             # Existing manual sessions retain their explicit registered/runtime
             # admission in the owning chat route. Auto never selects a raw URL.
             if bound.policy["route_mode"] == "auto":
-                raise HTTPException(409, "Choose a registered endpoint for every approach")
+                raise HTTPException(409, "Choose registered API models for Auto")
             bound.endpoint_url = session.endpoint_url
             bound.headers = dict(session.headers or {})
         bound.descriptor = {"endpoint_id": endpoint_id, "model": model, "reasoning_effort": effort,
             "route_mode": bound.policy["route_mode"], "submission_id": bound.submission_id}
-        if bound.policy['route_mode'] == 'auto' and selected.get('descriptor', {}).get('supported_efforts'):
-            bound.descriptor['supported_efforts'] = list(selected['descriptor']['supported_efforts'])
-            bound.descriptor['effort_support_source'] = 'owner_configured'
+        if bound.policy['route_mode'] == 'auto':
+            bound.descriptor['supported_efforts'] = selected['supported_efforts']
+            bound.descriptor['auto_candidate_snapshot'] = selected['candidate_snapshot']
+            bound.descriptor['effort_support_source'] = 'registered_runtime'
         if not bound.current():
             raise HTTPException(409, "Chat settings changed before submission")
         if (tool_inventory is not None or bound.policy.get('followup_enabled') or bound.policy.get('preparation_enabled')):
@@ -833,6 +846,12 @@ def validate_provider_binding(url, model, headers, session_id, reasoning_effort=
         raise RuntimeError("Chat policy changed before provider dispatch")
     from src.model_admission import require_owner_model
     require_owner_model(bound.owner, model)
+    if bound.policy.get('route_mode') == 'auto':
+        from src.model_auto import candidate_snapshot, public_snapshot
+        snapshot = candidate_snapshot(bound.owner, bound.policy.get('auto_models', []))
+        if (public_snapshot(snapshot) != bound.descriptor.get('auto_candidate_snapshot')
+                or {'endpoint_id': bound.descriptor['endpoint_id'], 'model': model} not in bound.policy['auto_models']):
+            raise RuntimeError('Auto model pool changed before provider dispatch')
     endpoint_id = bound.descriptor["endpoint_id"]
     if endpoint_id:
         from src.endpoint_resolver import resolve_endpoint_by_id
@@ -856,8 +875,15 @@ async def prepare_chat_submission(*args, **kwargs):
     try:
         return await prepare_chat_turn(*args, **kwargs)
     except DecisionError as error:
+        model_errors = {
+            'auto_models_empty': 'Choose at least one available model to use Auto.',
+            'auto_model_unavailable': 'A selected Auto model is unavailable. Edit Auto models before sending.',
+            'auto_model_not_allowed': 'A selected Auto model is no longer allowed for your account.',
+            'auto_effort_unsupported': 'Jev selected unsupported reasoning effort. Your message was not sent.',
+            'auto_models_changed': 'Auto models changed during selection. Your message was not sent.',
+        }
         raise HTTPException(409,
-            "Automatic preparation could not be completed. Choose a model manually or check chat settings.",
+            model_errors.get(error.code, "Jev could not select a supported model and effort. Your message was not sent. Check Auto models and the decision provider."),
             headers={'X-Decision-Failure': error.code}) from None
 
 

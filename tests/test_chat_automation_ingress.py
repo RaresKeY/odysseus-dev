@@ -71,7 +71,7 @@ async def test_manual_request_effort_and_original_ask_reach_actual_provider(runt
 
 
 @pytest.mark.asyncio
-async def test_auto_endpoint_id_and_mapped_effort_override_stale_manual_fields(runtime,monkeypatch):
+async def test_auto_pool_and_supported_default_override_stale_manual_fields(runtime,monkeypatch):
     from src import decisions
     from src.decisions import DecisionProvider,ResolvedDecisionEndpoint
     from src.chat_automation import SqlAttemptStore
@@ -82,13 +82,13 @@ async def test_auto_endpoint_id_and_mapped_effort_override_stale_manual_fields(r
         for key in ('established_procedure','bounded_domain','approach_discovery')}
     runtime.store.update_configuration('alice',{'approaches':mappings,'decision_provider':{
         'endpoint_id':'review','model':'decision','protocol':'systemone'}},0)
-    runtime.store.update_chat('alice','a',{'route_mode':'auto'},0)
+    runtime.store.update_chat('alice','a',{'route_mode':'auto','auto_models':[{'endpoint_id':'chosen','model':'same-model'}]},0)
     classifier=[];calls=[]
     def classify(request):
         classifier.append(json.loads(request.content))
         return httpx.Response(200,json={'model':'decision','answers':{
-            'approach':{'type':'choice','choice':'bounded_domain','confidence':.98,'probabilities':{'established_procedure':.01,'bounded_domain':.98,'approach_discovery':.01}},
-            'readiness':{'type':'choice','choice':'ready','confidence':.99,'probabilities':{'ready':.99,'needs_context':.01}}},'usage':{'input_tokens':10,'output_tokens':5}})
+            'execution_model':{'type':'choice','choice':'candidate_0','confidence':.99,'probabilities':{'candidate_0':.99,'unavailable':.01}},
+            'reasoning_effort':{'type':'choice','choice':'default','confidence':.99,'probabilities':{'default':.99,'unavailable':.01}}},'usage':{'input_tokens':10,'output_tokens':5}})
     decision_provider=DecisionProvider(SqlAttemptStore(runtime.store),resolver=lambda *a:ResolvedDecisionEndpoint(
         'review','decision','systemone','https://decision.invalid/v1/systemone',{}),
         client_factory=lambda **kw:httpx.AsyncClient(transport=httpx.MockTransport(classify),**kw))
@@ -103,23 +103,26 @@ async def test_auto_endpoint_id_and_mapped_effort_override_stale_manual_fields(r
             result=await client.post('/api/chat',json={'session':'a','message':raw,'reasoning_effort':'low','selected_endpoint_id':'same-model-other'})
     assert result.status_code==200,result.text
     assert len(classifier)==len(calls)==1
-    assert classifier[0]['state']['ask']==raw
+    assert classifier[0]['state']['task']==raw
     assert calls[0].url.host=='execution.invalid'
-    assert json.loads(calls[0].content)['reasoning_effort']=='high'
+    assert 'reasoning_effort' not in json.loads(calls[0].content)
     assert result.json()['endpoint_id']=='chosen'
     assert runtime.manager.sessions['a'].model=='manual'
 
 
 @pytest.mark.asyncio
 async def test_unconfigured_auto_choice_returns_visible_action_without_execution(runtime,monkeypatch):
-    runtime.store.update_chat('alice','a',{'route_mode':'auto'},0)
+    # Reproduce a retained legacy chat with no configured candidates. New
+    # invalid activation is rejected before commit; old state still errors.
+    with runtime.store.transaction() as db:
+        _, row=runtime.store.state(db,'alice','a');row.route_mode='auto'
     calls=[]
     async with httpx.AsyncClient(transport=httpx.MockTransport(lambda request:calls.append(request))) as provider:
         monkeypatch.setattr(llm_core,'_get_http_client',lambda:provider)
         async with httpx.AsyncClient(transport=httpx.ASGITransport(app=runtime.app),base_url='http://test') as client:
             response=await client.post('/api/chat',json={'session':'a','message':'Original ask remains intact'})
     assert response.status_code==409
-    assert 'manually' in response.json()['detail'] and calls==[]
+    assert 'at least one' in response.json()['detail'] and calls==[]
     with runtime.store.transaction() as db:
         assert db.query(d.ChatAutomationSubmission).one().status=='failed'
 

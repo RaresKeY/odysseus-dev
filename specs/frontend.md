@@ -182,3 +182,7 @@ The website has seven hover/focus/tap preview clips, ambient video, failure plac
 - `window.*` compatibility bridges remain widespread.
 - PWA/static-serving behavior may deserve a separate spec if service worker, manifests, route-specific icons, and cache policy keep growing.
 - Static regressions cover stylesheet references, selected script/module URL identities and maintained-output precache membership; complete legacy graph membership/evaluation and ongoing manifest icon drift still require checks.
+
+## Composer model and permission controls
+
+`chatAutomation.js` owns acknowledged SQL policy, serialized writes, permission-menu keyboard/outside/Escape handling and Auto-Approve activation disclosure. The composer places that compact control beside terminal. Auto-Approve failure is an error without an action card; Always Ask/YOLO retain their deterministic ceilings. More tools exposes Chat settings with Tools routing and existing options, replacing the detached control strip. `modelPicker.js` reuses its existing API catalogue, refresh, search, endpoint grouping and registration shortcut for Auto and explicit pool editing. It shows selected count and unavailable selections, keeps drafts until explicit save, rejects stale chat/revision writes, and changes the compact label only after acknowledgement. Concrete model selection returns to Manual; Auto hides the manual effort control without mutating it. Mobile focus handling exempts these deliberate controls. Native ES modules and product tokens remain; no dependencies/build system were added.

@@ -2,12 +2,34 @@ import sessions from './sessions.js';
 import './decision-activity.js';
 
 const $ = id => document.getElementById(id);
-const categories = [['established_procedure','Established procedure'],['bounded_domain','Bounded domain'],['approach_discovery','Approach discovery']];
 let policy, configuration, endpoints = [], decisionEndpoints = [], sequence = 0;
 let settingsWrite = Promise.resolve(true);
 let navigationGeneration = 0;
 let settingsChatId = null, settingsNavigation = 0;
 let activity = null, activitySessionId = null;
+let saving = false, activationChat = null, activationNavigation = null;
+const modeLabels = {always_ask:'Always Ask',auto_approve:'Auto-Approve',yolo:'YOLO'};
+function notice(text='') { const el=$('chat-automation-notice'); el.textContent=text; el.hidden=!text; }
+function permissionFeedback(text='') { $('chat-permissions-feedback').textContent=text; notice(text); }
+function closePermissions(restore=false) {
+  $('chat-permissions-menu').hidden=true;
+  $('chat-approval-mode').setAttribute('aria-expanded','false');
+  if(restore)$('chat-approval-mode').focus();
+}
+function openPermissions() {
+  if(saving)return;
+  $('chat-permissions-menu').hidden=false;
+  $('chat-approval-mode').setAttribute('aria-expanded','true');
+  ($('chat-permissions-menu').querySelector('[aria-checked="true"]') || $('chat-permissions-menu').querySelector('button')).focus();
+}
+function controlsBusy(busy) {
+  saving=busy;
+  $('chat-approval-mode').disabled=busy || !configuration;
+  $('chat-tool-routing').disabled=busy;
+  $('chat-automation-default').disabled=busy;
+  $('chat-permissions-menu').setAttribute('aria-busy',String(busy));
+  $('chat-permissions-menu').querySelectorAll('button').forEach(b=>b.disabled=busy);
+}
 export async function whenAutomationSettingsReady() {
   const ready = await settingsWrite;
   if (!ready) settingsWrite = Promise.resolve(true);
@@ -46,8 +68,15 @@ async function currentChat() {
   return existingId;
 }
 function render() {
-  $('chat-approval-mode').value = policy?.approval_mode || configuration?.last_explicit_mode || 'always_ask';
-  $('chat-route-mode').value = policy?.route_mode || 'manual';
+  const mode=policy?.approval_mode || configuration?.last_explicit_mode || 'always_ask';
+  $('chat-permissions-label').textContent=modeLabels[mode] || 'Permissions';
+  $('chat-approval-mode').value=mode;
+  $('chat-approval-mode').setAttribute('aria-label',`Change permissions: ${modeLabels[mode] || 'Permissions'}`);
+  $('chat-permissions-control').classList.toggle('mode-yolo',mode==='yolo');
+  $('chat-permissions-mark').setAttribute('d',mode==='yolo'?'m8 8 8 8M16 8l-8 8':'m9 12 2 2 4-4');
+  $('chat-permissions-menu').querySelectorAll('[data-approval-mode]').forEach(b=>b.setAttribute('aria-checked',String(b.dataset.approvalMode===mode)));
+  controlsBusy(saving);
+  window.dispatchEvent(new CustomEvent('odysseus:automation-policy',{detail:policy}));
   $('chat-tool-routing').value = policy?.tool_routing || 'existing';
   const roots = policy?.effective_roots || [];
   $('chat-automation-state').textContent = policy?.restriction || (roots.length ? `${roots.length} extra folder(s) allowed` : 'Workspace only');
@@ -62,22 +91,22 @@ async function refresh() {
     if (ticket !== sequence || id !== sid()) return;
     configuration = config; policy = chat; render();
     if(activitySessionId!==id){activity?.destroy();activity=null;activitySessionId=id;if(id)activity=window.DecisionActivity?.mount($('chat-decision-activity'),id);}
-  } catch(e) { if(ticket===sequence) $('chat-automation-state').textContent=e.message; }
+  } catch(e) { if(ticket===sequence){notice(e.message);$('chat-approval-mode').disabled=true;} }
 }
-function changeChat(changes) {
+function changeChat(changes, context) {
   const requestedId=sid(), requestedNavigation=navigationGeneration;
   return writeSettings(async()=>{
-    $('chat-approval-mode').disabled=$('chat-route-mode').disabled=true;
-    $('chat-tool-routing').disabled=true;
-    $('chat-automation-default').disabled=true;
+    controlsBusy(true);
     $('chat-automation-state').textContent='Saving chat settings…';
     try {
       if(requestedNavigation!==navigationGeneration || sid()!==requestedId) throw new Error('The chat changed. Choose the setting again in the current chat.');
       const id = requestedId || await currentChat(), ticket=++sequence;
       const previous=policy?.session_id===id ? policy : await api(`/api/session/${encodeURIComponent(id)}/automation`);
+      if(context && (context.navigation!==requestedNavigation || context.session_id!==requestedId || (requestedId && context.policy_revision!==previous.policy_revision)))throw new Error('The chat settings changed. Reopen Auto models before saving.');
       const saved=await api(`/api/session/${encodeURIComponent(id)}/automation`,'PUT',{policy_revision:previous.policy_revision,changes});
       if(id===sid() && ticket===sequence){++sequence;policy=saved;render();}else await refresh();
-    } finally {$('chat-approval-mode').disabled=$('chat-route-mode').disabled=false;$('chat-tool-routing').disabled=false;$('chat-automation-default').disabled=false;}
+      return saved;
+    } finally {controlsBusy(false);}
   });
 }
 function routeFields(key, title, value={}) {
@@ -91,15 +120,6 @@ function routeFields(key, title, value={}) {
   const model=document.createElement('input');model.dataset.field='model';model.value=value.model||'';model.autocomplete='off';model.setAttribute('list',`chat-models-${key}`);label('Model',model);
   const list=document.createElement('datalist');list.id=`chat-models-${key}`;row.append(list);
   const options=()=>{list.replaceChildren();(choices.find(e=>e.id===endpoint.value)?.models||[]).forEach(m=>list.append(new Option(m)));};endpoint.addEventListener('change',options);options();
-  if(key!=='decision') {
-    const effort=document.createElement('select');effort.dataset.field='reasoning_effort';
-    [['','Default'],...['none','minimal','low','medium','high','xhigh','max'].map(v=>[v,v])].forEach(([v,t])=>effort.append(new Option(t,v)));
-    effort.value=value.reasoning_effort||'';label('Effort',effort);
-    const supported=document.createElement('input');supported.dataset.field='supported_efforts';
-    supported.value=(value.supported_efforts||[]).join(', ');supported.placeholder='low, medium, high';
-    supported.title='Optional choices you have configured for this endpoint and model. These are not automatically verified provider capabilities.';
-    label('Supported effort choices (optional)',supported);supported.parentElement.className='chat-automation-supported';
-  }
   return row;
 }
 function readRoute(key) {
@@ -120,24 +140,72 @@ async function openSettings() {
     $('chat-elevation-save').disabled=!configuration.elevation_available;
     $('chat-decision-route').replaceChildren(routeFields('decision','Review and approach decisions',configuration.decision_provider));
     $('chat-decision-protocol').value=configuration.decision_provider?.protocol||'openai_json';
-    $('chat-approach-routes').replaceChildren(...categories.map(([key,title])=>routeFields(key,title,configuration.approaches?.[key])));
-    $('chat-effort-mode').value=policy?.effort_mode||'mapped';
     for(const name of ['followup','preparation','completion-advice']) $( `chat-${name}-enabled`).checked=!!policy?.[name.replaceAll('-','_')+'_enabled'];
     settingsChatId=sid();settingsNavigation=navigationGeneration;
     message('');$('chat-automation-dialog').showModal();
-  } catch(e){$('chat-automation-state').textContent=e.message;}
+  } catch(e){notice(e.message);}
 }
 async function initialize(){
   if(!$('chat-approval-mode'))return;
-  for(const [id,key] of [['chat-approval-mode','approval_mode'],['chat-route-mode','route_mode'],['chat-tool-routing','tool_routing']]) $(id).addEventListener('change',async e=>{const value=e.target.value;e.target.disabled=true;try{await changeChat({[key]:value});}catch(error){$('chat-automation-state').textContent=error.message;await refresh();}finally{e.target.disabled=false;}});
+  window.ChatAutomation={
+    getPolicy:()=>policy,
+    selectionContext:()=>({session_id:sid(),navigation:navigationGeneration,policy_revision:policy?.policy_revision}),
+    saveAutoModels:(models,context)=>changeChat({auto_models:models,route_mode:'auto'},context),
+    enableAuto:()=>changeChat({route_mode:'auto'}),
+  };
+  $('chat-tool-routing').addEventListener('change',async e=>{
+    try {await changeChat({tool_routing:e.target.value});message('Tool routing saved.');}
+    catch(error){message(error.message);render();}
+  });
+  $('chat-approval-mode').addEventListener('click',()=>{
+    if($('chat-permissions-menu').hidden)openPermissions();else closePermissions(true);
+  });
+  $('chat-approval-mode').addEventListener('keydown',e=>{
+    if(['ArrowDown','ArrowUp'].includes(e.key)){e.preventDefault();openPermissions();}
+  });
+  $('chat-permissions-menu').addEventListener('keydown',e=>{
+    if(e.key==='Escape'){e.preventDefault();closePermissions(true);return;}
+    if(!['ArrowDown','ArrowUp','Home','End'].includes(e.key))return;
+    e.preventDefault();const buttons=[...e.currentTarget.querySelectorAll('button:not(:disabled)')];
+    if(!buttons.length)return;
+    const i=buttons.indexOf(document.activeElement);
+    buttons[e.key==='Home'?0:e.key==='End'?buttons.length-1:(i+(e.key==='ArrowUp'?-1:1)+buttons.length)%buttons.length].focus();
+  });
+  document.addEventListener('pointerdown',e=>{if(!$('chat-permissions-control').contains(e.target))closePermissions();});
+  $('chat-permissions-control').addEventListener('focusout',e=>{if(e.relatedTarget && !e.currentTarget.contains(e.relatedTarget))closePermissions();});
+  $('chat-permissions-menu').querySelectorAll('[data-approval-mode]').forEach(button=>button.addEventListener('click',async()=>{
+    const mode=button.dataset.approvalMode;
+    if(saving)return;
+    permissionFeedback('');
+    if(mode==='auto_approve' && $('chat-approval-mode').value!=='auto_approve'){
+      activationChat=sid();activationNavigation=navigationGeneration;
+      closePermissions();$('chat-auto-approve-feedback').textContent='';$('chat-auto-approve-dialog').showModal();return;
+    }
+    try{await changeChat({approval_mode:mode});closePermissions(true);}
+    catch(error){permissionFeedback(error.message);render();}
+  }));
+  $('chat-auto-approve-cancel').addEventListener('click',()=>{$('chat-auto-approve-dialog').close();$('chat-approval-mode').focus();});
+  $('chat-auto-approve-dialog').addEventListener('cancel',()=>{$('chat-approval-mode').focus();});
+  $('chat-auto-approve-enable').addEventListener('click',async()=>{
+    const button=$('chat-auto-approve-enable');button.disabled=true;$('chat-auto-approve-cancel').disabled=true;
+    try{
+      if(activationChat!==sid() || activationNavigation!==navigationGeneration)throw new Error('The chat changed. Choose Auto-Approve again.');
+      await changeChat({approval_mode:'auto_approve'});
+      $('chat-auto-approve-dialog').close();$('chat-approval-mode').focus();
+    }catch(error){$('chat-auto-approve-feedback').textContent=error.message;render();}
+    finally{button.disabled=false;$('chat-auto-approve-cancel').disabled=false;}
+  });
+  $('chat-auto-models-settings').addEventListener('click',()=>{
+    $('chat-automation-dialog').close();document.getElementById('model-picker-btn').click();document.getElementById('model-auto-edit').click();
+  });
   $('chat-automation-settings').addEventListener('click',openSettings);
   $('chat-resume-input').addEventListener('click',async()=>{
     await refresh();const pending=policy?.task?.pending_question,id=sid(),ticket=sequence;
     if(pending?.kind!=='clarification' || !pending.input_card_id)return;
-    const renderer=await import('./chatRenderer.js');
+    const renderer=await import('./chatRenderer.js?v=20260914metricssummary1');
     if(id===sid() && ticket===sequence)renderer.renderAskUserCard(pending,{focus:true,scroll:true});
   });
-  $('chat-automation-default').addEventListener('click',async()=>{try{await changeChat({approval_mode:$('chat-approval-mode').value});await refresh();$('chat-automation-state').textContent='New chats will use this approval mode.';}catch(e){$('chat-automation-state').textContent=e.message;await refresh();}});
+  $('chat-automation-default').addEventListener('click',async()=>{try{await changeChat({approval_mode:$('chat-approval-mode').value});await refresh();message('New chats will use this approval mode.');}catch(e){$('chat-automation-state').textContent=e.message;await refresh();}});
   $('chat-automation-close').addEventListener('click',()=>$('chat-automation-dialog').close());
   const browserPath=async()=>{if(settingsChatId!==sid() || settingsNavigation!==navigationGeneration)throw new Error('The chat changed. Open settings again.');return `/api/session/${encodeURIComponent(await currentChat())}/browser`;};
   function browserScope(){const effects=[];if($('chat-browser-clicks').checked)effects.push('click');if($('chat-browser-fill').checked)effects.push('fill');if($('chat-browser-submit').checked)effects.push('submit');const label=$('chat-browser-field-label').value;return {url:$('chat-browser-url').value,effects,fields:label?[{label,value:$('chat-browser-field-value').value}]:[],checks:$('chat-browser-check').value?[{kind:'text_contains',value:$('chat-browser-check').value}]:[]};}
@@ -148,20 +216,18 @@ async function initialize(){
     e.preventDefault(); const button=e.submitter; if(button)button.disabled=true;
     try {
       if(settingsChatId!==sid() || settingsNavigation!==navigationGeneration) throw new Error('The chat changed. Close settings and open them again.');
-      const chatChanges={effort_mode:$('chat-effort-mode').value};
+      const chatChanges={};
       for(const name of ['followup','preparation','completion-advice']) chatChanges[name.replaceAll('-','_')+'_enabled']=$(`chat-${name}-enabled`).checked;
       const changes={elevation_ceiling:$('chat-elevation-ceiling').checked};
       const decision=readRoute('decision');
       if(decision.endpoint_id||decision.model) changes.decision_provider={...decision,protocol:$('chat-decision-protocol').value,timeout_seconds:30,max_calls:32};
-      const mappings=Object.fromEntries(categories.map(([key])=>[key,readRoute(key)]));
-      if(Object.values(mappings).some(m=>m.endpoint_id||m.model)) changes.approaches=mappings;
       const revision=configuration.revision;
       await changeChat(chatChanges);
       configuration=await writeSettings(()=>api('/api/chat-settings','PUT',{revision,changes}));
       await refresh(); message('Settings saved. New messages use the committed choices.');
     } catch(error) { message(error.message); } finally {if(button)button.disabled=false;}
   });
-  window.addEventListener('odysseus:session-changed',()=>{++navigationGeneration;policy=null;refresh();});
+  window.addEventListener('odysseus:session-changed',()=>{++navigationGeneration;policy=null;closePermissions();notice();refresh();});
   window.addEventListener('odysseus:automation-changed',refresh);
   document.addEventListener('visibilitychange',()=>{if(!document.hidden)refresh();});
   await refresh();

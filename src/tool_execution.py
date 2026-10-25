@@ -1794,7 +1794,7 @@ async def _review_bound_chat_action(bound, block, *, owner, session_id, workspac
         return outcome.approval, None
     if outcome.status == "bypass":
         return None, None
-    if outcome.status in {"manual", "denied"}:
+    if outcome.status == "manual":
         bound.pending = True
         bound.pending_approval_id = pending.approval_id
     return None, outcome.tool_result()
@@ -1931,7 +1931,8 @@ async def execute_tool_block(
             owner=owner, session_id=session_id, workspace=workspace, authority=authority,
             security_context=security_context, active_document_id=active_document_id,
             client_runtime_context=client_runtime_context, deterministically_admitted=False)
-        return f"{getattr(block, 'tool_type', '')}: APPROVAL REQUIRED", paused
+        label = 'APPROVAL REQUIRED' if paused.get('approval_required') else 'BLOCKED'
+        return f"{getattr(block, 'tool_type', '')}: {label}", paused
 
     transport = operation.transport_tool
     if operation.tool == "private_browser" and _legacy_private_browser_enabled():
@@ -2042,7 +2043,8 @@ async def execute_tool_block(
             security_context=security_context, active_document_id=active_document_id,
             client_runtime_context=client_runtime_context, deterministically_admitted=True)
         if paused is not None:
-            return f"{getattr(block, 'tool_type', '')}: APPROVAL REQUIRED", paused
+            label = 'APPROVAL REQUIRED' if paused.get('approval_required') else 'BLOCKED'
+            return f"{getattr(block, 'tool_type', '')}: {label}", paused
         if exact_approval is not None and any(
             actual != getattr(exact_approval.pending, field)
             for field, actual in (("backend_operation", backend_operation),

@@ -37,17 +37,18 @@ class ReviewOutcome:
     decision: dict[str, Any] | None = None
 
     def tool_result(self) -> dict[str, Any]:
-        """Return the existing human-card shape, without execution or a retry."""
+        """Always Ask pauses; unsuccessful Auto-Approve stops without a card."""
         if self.status in {"approved", "bypass"}:
             raise ValueError("An allowed review is not a paused tool result")
         result = {"output": self.reason or "This action needs human review.",
                   "exit_code": None, "executed": False,
                   "approval_review_status": self.status}
-        if self.status in {"manual", "denied"}:
+        if self.status == "manual":
             result.update(approval_required=True,
                           ask_user=self.pending.public_payload(reason=self.reason))
         else:
-            result.update(blocked=True, failure_kind="approval_" + self.status)
+            result.update(error=self.reason or 'Automatic review stopped this action.', exit_code=1,
+                          blocked=True, failure_kind="approval_" + self.status)
         if self.decision is not None:
             result["approval_review"] = self.decision
         return result
@@ -156,11 +157,13 @@ class ApprovalReviewService:
             self._retire(pending)
             return ReviewOutcome("bypass", pending)
         if evaluator is None:
-            return ReviewOutcome("manual", pending,
-                                 reason="Automatic review is unavailable. Review the action yourself.")
+            self._retire(pending)
+            return ReviewOutcome("unavailable", pending,
+                                 reason="Auto-Approve review is unavailable. This action was stopped.")
         if not self.store.begin_review(pending):
-            return ReviewOutcome("manual", pending,
-                                 reason="This action already has a review attempt. Review it yourself; no retry was made.")
+            self._retire(pending)
+            return ReviewOutcome("unavailable", pending,
+                                 reason="This action already has a review attempt. It was stopped; no retry was made.")
 
         state = {
             "trusted_context": {
@@ -197,8 +200,9 @@ class ApprovalReviewService:
             if not self._current(pending, policy):
                 self._retire(pending)
                 return ReviewOutcome("stale", pending, reason="The action changed while review was pending.")
-            return ReviewOutcome("manual", pending,
-                                 reason="Automatic review could not be verified. Review this action yourself; no retry was made.")
+            self._retire(pending)
+            return ReviewOutcome("error", pending,
+                                 reason="Auto-Approve review could not be verified. This action was stopped; no retry was made.")
 
         if await _cancelled(cancelled):
             self._retire(pending)
@@ -209,14 +213,16 @@ class ApprovalReviewService:
             return ReviewOutcome("stale", pending, reason="The action changed while review was pending.",
                                  decision=projection)
         if projection["choice"] == "deny":
+            self._retire(pending)
             return ReviewOutcome("denied", pending,
                                  reason="Independent review recommended denying this action. It has not run.",
                                  decision=projection)
         if (projection["choice"] != "allow"
                 or projection["confidence"] < MIN_ALLOW_CONFIDENCE
                 or projection["probabilities"]["allow"] < MIN_ALLOW_PROBABILITY):
-            return ReviewOutcome("manual", pending,
-                                 reason="Independent review needs your decision before this action can run.",
+            self._retire(pending)
+            return ReviewOutcome("uncertain", pending,
+                                 reason="Auto-Approve needs human review or is uncertain. This action was stopped. Change mode explicitly to review a new request.",
                                  decision=projection)
         grant = self.store.consume_reviewed(pending, owner=pending.owner,
                                            session_id=pending.session_id,
