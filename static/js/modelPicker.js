@@ -215,13 +215,13 @@ function _initModelPickerDropdown() {
   const autoSelect=document.getElementById('model-auto-select');
   const autoEdit=document.getElementById('model-auto-edit');
   const autoFeedback=document.getElementById('model-auto-feedback');
-  const poolKey=m=>`${m.endpoint_id}::${m.model}`;
+  const poolKey=m=>JSON.stringify([m.endpoint_id,m.model]);
   function renderAutoControls(){
     const policy=window.ChatAutomation?.getPolicy();
     const selected=poolDraft || policy?.auto_models || [];
     autoSelect.setAttribute('aria-checked',String(policy?.route_mode==='auto'));
     autoSelect.disabled=poolSaving || !window.ChatAutomation;
-    autoEdit.disabled=poolSaving || !window.ChatAutomation;
+    autoEdit.disabled=poolSaving || _pickerLoading || !window.ChatAutomation;
     autoEdit.textContent=poolDraft?'Auto models':selected.length?'Edit Auto models':'Choose Auto models';
     document.getElementById('model-auto-count').textContent=`${selected.length} selected`;
     document.getElementById('model-auto-help').hidden=!poolDraft;
@@ -405,6 +405,7 @@ function _initModelPickerDropdown() {
   }
 
   function _renderLoading(text = 'Loading models…') {
+    positionPicker();
     listEl.innerHTML = '';
     listEl.classList.remove('is-empty');
     listEl.classList.add('is-loading');
@@ -426,6 +427,7 @@ function _initModelPickerDropdown() {
     if (!window.modelsModule || typeof window.modelsModule.refreshModels !== 'function') return false;
     const seq = ++_pickerLoadSeq;
     _pickerLoading = true;
+    renderAutoControls();
     if (showLoading) _renderLoading(force ? 'Refreshing models…' : 'Loading models…');
     try {
       await window.modelsModule.refreshModels(force, { waitForRefresh: force });
@@ -433,11 +435,22 @@ function _initModelPickerDropdown() {
     } finally {
       if (seq === _pickerLoadSeq) {
         _pickerLoading = false;
+        renderAutoControls();
         listEl.classList.remove('is-loading');
       }
     }
     return seq === _pickerLoadSeq;
   }
+
+  function positionPicker(){
+    if(menu.classList.contains('hidden'))return;
+    menu.style.maxHeight=`${Math.max(80,Math.min(window.innerHeight*.7,wrap.getBoundingClientRect().top-28))}px`;
+  }
+  function pickerLoadFailed(){
+    _populate(search.value || '');
+    autoFeedback.textContent='Models could not be loaded. Refresh to try again.';
+  }
+  window.addEventListener('resize',positionPicker);
 
   // ── Provider display names and grouping ──
   const _PROVIDER_NAMES = {
@@ -508,7 +521,8 @@ function _initModelPickerDropdown() {
   let _justExpandedProvider = null;
 
   function _populate(filter) {
-    const roleFocus=document.activeElement?.dataset?.autoRoleModel;
+    positionPicker();
+    const roleFocus=document.activeElement?.dataset?.autoRoleKey;
     const roleSelection=roleFocus?[document.activeElement.selectionStart,document.activeElement.selectionEnd]:null;
     listEl.innerHTML = '';
     listEl.classList.remove('is-loading');
@@ -537,7 +551,7 @@ function _initModelPickerDropdown() {
         listEl.append(row);
       });
       matching.sort((a,b)=>Number(chosen.has(poolKey({endpoint_id:b.endpointId,model:b.mid})))-Number(chosen.has(poolKey({endpoint_id:a.endpointId,model:a.mid})))).forEach(m=>_addRow(m));
-      if(roleFocus){const input=[...listEl.querySelectorAll('[data-auto-role-model]')].find(e=>e.dataset.autoRoleModel===roleFocus);if(input){input.focus({preventScroll:true});input.setSelectionRange(...roleSelection);}}
+      if(roleFocus){const input=[...listEl.querySelectorAll('[data-auto-role-key]')].find(e=>e.dataset.autoRoleKey===roleFocus);if(input){input.focus({preventScroll:true});input.setSelectionRange(...roleSelection);}}
       if(!matching.length){const empty=document.createElement('p');empty.className='model-switch-empty';empty.textContent=hasAnyModel?'No matching models':'No registered API models available. Add an endpoint or refresh.';listEl.append(empty);}
       return;
     }
@@ -634,6 +648,8 @@ function _initModelPickerDropdown() {
           input.placeholder='Describe when Jev should choose this model';
           input.setAttribute('aria-label',`Role for ${m.mid} on ${m.epName || m.endpointId}`);
           input.dataset.autoRoleModel=m.mid;
+          input.dataset.autoRoleEndpoint=m.endpointId;
+          input.dataset.autoRoleKey=poolKey(identity);
           input.value=poolDraft.find(item=>poolKey(item)===poolKey(identity))?.description || '';
           input.disabled=poolSaving;
           input.addEventListener('input',()=>{poolDraft=poolDraft.map(item=>poolKey(item)===poolKey(identity)?{...item,description:input.value}:item);});
@@ -946,7 +962,7 @@ async function _pick(m) {
         _refreshPickerModels({ force: true, showLoading: !hasCache }).then(isLatest => {
           if (isLatest && !menu.classList.contains('hidden')) _populate(search.value || '');
           updateModelPicker();
-        }).catch(() => {autoFeedback.textContent='Models could not be loaded. Refresh to try again.';});
+        }).catch(pickerLoadFailed);
       }
       if (window.innerWidth >= 768) search.focus();
       // Hide scroll button so it doesn't overlap
@@ -972,7 +988,7 @@ async function _pick(m) {
         if (!menu.classList.contains('hidden')) _populate(search.value || '');
         updateModelPicker();
       } catch (_) {
-        uiModule.showToast('Model refresh failed');
+        pickerLoadFailed();
       } finally {
         refreshBtn.disabled = false;
         refreshBtn.classList.remove('spinning');
