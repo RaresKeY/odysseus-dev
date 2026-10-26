@@ -39,6 +39,31 @@ async def test_owner_cas_roundtrip_and_no_cross_owner_state(api):
 
 
 @pytest.mark.asyncio
+@pytest.mark.parametrize('saved_mode', ['auto_approve', 'yolo'])
+async def test_created_session_api_defaults_to_ask_and_keeps_saved_chat(api, store, monkeypatch, saved_mode):
+    from core import session_manager
+    monkeypatch.setattr(session_manager, 'SessionLocal', store.session_factory)
+    manager = session_manager.SessionManager.__new__(session_manager.SessionManager)
+    manager.sessions, manager.upload_handler = {}, None
+    async with httpx.AsyncClient(transport=httpx.ASGITransport(app=api), base_url='http://test', headers={'test-owner':'alice'}) as c:
+        saved = await c.put('/api/session/a/automation', json={'policy_revision':0,'changes':{'approval_mode':saved_mode}})
+        assert saved.status_code == 200
+        preferences = (await c.get('/api/chat-settings')).json()
+        assert preferences['last_explicit_mode'] == saved_mode
+        # Exercise the shared production session-creation transaction, without a provider call.
+        manager.create_session('new', 'New chat', 'http://synthetic.invalid/v1', 'manual', owner='alice')
+        for _ in range(2):
+            new_chat = await c.get('/api/session/new/automation')
+            assert new_chat.status_code == 200
+            assert new_chat.json()['approval_mode'] == 'always_ask'
+            assert new_chat.json()['policy_revision'] == 0
+            existing = (await c.get('/api/session/a/automation')).json()
+            assert existing['approval_mode'] == saved_mode
+            assert existing['policy_revision'] == saved.json()['policy_revision']
+        assert (await c.get('/api/chat-settings')).json() == preferences
+
+
+@pytest.mark.asyncio
 async def test_settings_cannot_be_changed_by_api_token_or_unknown_user(api):
     async with httpx.AsyncClient(transport=httpx.ASGITransport(app=api), base_url='http://test') as c:
         assert (await c.get('/api/chat-settings')).status_code == 401
