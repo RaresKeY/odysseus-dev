@@ -114,3 +114,32 @@ async def test_policy_or_category_mutation_during_decision_invalidates_offer(mon
             await model_auto.select_model_and_effort(ASK,assignments,owner='alice',provider=Reviewer(mutate=mutate),
                 config={},context=DecisionContext('alice','chat','run'),resolver=resolve)
         monkeypatch.undo()
+
+
+def test_new_category_chats_never_materialize_unrelated_legacy_mapping_history(registered):
+    names=('established_procedure','bounded_domain','approach_discovery')
+    mappings={key:{**POOL[1],'reasoning_effort':None} for key in names}
+    registered.update_configuration('alice',{'approaches':mappings},0)
+    registered.update_chat('alice','a',{'auto_categories':CATEGORIES,'route_mode':'auto'},0)
+    registered.policy('alice','a')
+    with registered.transaction() as db:
+        _, row=registered.state(db,'alice','a')
+        assert 'auto_models' not in row.feature_settings
+    registered.update_configuration('alice',{'approaches':{
+        key:{**POOL[0],'reasoning_effort':None} for key in names}},1)
+    with registered.transaction() as db:
+        _, row=registered.state(db,'alice','a')
+        assert 'auto_models' not in row.feature_settings
+        assert row.feature_settings['auto_categories']==CATEGORIES
+
+
+def test_explicit_assignments_clear_stale_legacy_invalid_guidance_without_deleting_history(registered):
+    with registered.transaction() as db:
+        _, row=registered.state(db,'alice','a')
+        row.route_mode='auto'
+        row.feature_settings={'auto_models':[],'auto_models_source':'legacy_invalid'}
+    assert 'Assign a model' in registered.policy('alice','a')['restriction']
+    saved=registered.update_chat('alice','a',{'auto_categories':CATEGORIES},0)
+    assert saved['auto_models']==[] and saved['auto_models_source']=='legacy_invalid'
+    assert saved['restriction'] is None
+    assert registered.policy('alice','a')['restriction'] is None
