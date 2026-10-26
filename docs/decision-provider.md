@@ -52,26 +52,13 @@ not carried into chat execution. A literal SystemOne wire pair lives in
 `tests/fixtures/decision_port/systemone-wire-v1.json`, independently of the
 request-generation helper.
 
-`src/model_auto.py` selects model and compatible effort in one call from the
-chat's explicit registered endpoint/model pool. It preserves the donor's scope
-and effort instructions, with closed candidate IDs and no vendor-specific model
-rankings. Server-owned effort metadata uses exact ChatGPT subscription catalogue entries
-and the documented seven-ID Google compatibility table on the canonical HTTPS
-Google OpenAI route. Unknown routes/models disclose default-only. Per-candidate
-optional roles preserve bounded user wording and supply distinct task-fit
-criteria; these hints are data, never classifier instructions or authority.
-Capability revision and role text are part of the immutable offer snapshot. Complete
-finite distributions, a maximum-consistent choice, bounded confidence, known
-usage and model/effort compatibility are required. As in the donor routers,
-`model_auto` has no absolute confidence or selected-probability floor: valid
-low-confidence winners bind, with raw scores retained as routing metadata.
-Explicit `unavailable` still stops. Routing grants no action authority; the
-separate action-approval 0.95 allow thresholds are unchanged. No silent normalization or wider pool
-is used. Registration and credentials are revalidated after inference; actual
-provider dispatch rechecks current pool, model, headers and effort. The exact
-original ask is sent only after a valid binding. Manual selection skips Jev.
-Legacy `src/approach_routing.py` remains for experiments; old Auto chats retain
-only their previous mapped identities as compatibility candidates.
+`src/model_auto.py` selects a task category and compatible effort in one call. Each chat explicitly assigns one registered endpoint/model to `complex_tasks` (Complex tasks) and `straightforward_tasks` (Straightforward tasks); the same exact model may be assigned to both. The selected category resolves deterministically to that custom model. `src/model_auto_policy.json` preserves the complete user's Codex-Jev policy scope, model, effort, ten anchors and persistence wording, changing only fixed Sol/Luna names and slugs to category labels/IDs. The donor's request learning/teaching versus conventional repeatable-work criteria are retained; its comparative model-quality assertion is omitted because categories do not establish chosen-model capabilities. No per-model roles/descriptions are sent or required.
+
+The closed `execution_model` question offers the two categories plus `unavailable`; `reasoning_effort` offers the union of their exact supported efforts plus `unavailable`. The chosen effort must be supported by the model assigned to the selected category. Exact subscription runtime entries and the canonical HTTPS Google seven-ID table supply evidence; unknown routes/models disclose default-only. The full routing policy is in `state.routing_policy`; its hash, category assignments and capability revisions bind the immutable offer and actual dispatch. Task/brief/endpoint labels are data, never classifier instructions or action authority.
+
+Complete finite normalized vectors, a maximum-consistent choice, bounded confidence and known nonnegative integer usage are required. Valid low-confidence winners bind with raw scores retained; no absolute confidence/selected-probability floor is added. Explicit unavailable, unsupported/stale/unowned/disabled/hidden/unpinned assignments or changed credentials error with no retry, fallback, guessing or human approval continuation. Action approval's separate 0.95 allow thresholds are unchanged. Original ask dispatch waits for a valid binding; Manual skips Jev.
+
+Existing single-pool `auto_models` entries/descriptions and old mapping data stay stored unchanged as compatibility history. They never infer task categories. Existing Auto without both assignments stops before Jev and requests explicit assignment; partial Manual configuration is allowed. Saving complete category assignments uses the existing revision CAS and exact local inventory/pin validator without credential refresh under a writer lock. Forks preserve categories/legacy choices with existing grant reset. No schema migration or destructive default/model rewrite is introduced.
 
 ## Offline evidence
 

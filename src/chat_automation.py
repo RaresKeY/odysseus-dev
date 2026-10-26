@@ -144,6 +144,7 @@ class AutomationStore:
         features = {**FEATURE_DEFAULTS, **copy.deepcopy(s.feature_settings or {})}
         features.setdefault('auto_models', [])
         features.setdefault('auto_models_source', 'explicit')
+        features.setdefault('auto_categories', {})
         grant = copy.deepcopy(s.elevation_grant)
         requested_grant = copy.deepcopy(grant)
         restriction = None
@@ -172,7 +173,10 @@ class AutomationStore:
                 **features,
                 "route_mode": s.route_mode, "entrypoint": entrypoint,
                 "execution_scope": "expanded" if grant else "workspace",
-                "restriction": restriction or ('Previous Auto selection is invalid. Choose Auto models again.'
+                "restriction": restriction or ('Assign a model to Complex tasks and Straightforward tasks before using Auto.'
+                    if s.route_mode == 'auto' and (not isinstance(features['auto_categories'], dict)
+                        or set(features['auto_categories']) != {'complex_tasks', 'straightforward_tasks'}) else
+                    'Previous Auto selection is invalid. Choose Auto models again.'
                     if features['auto_models_source'] == 'legacy_invalid' else
                     None if grant or not p.elevation_ceiling else "No additional scope is granted")}
 
@@ -182,7 +186,7 @@ class AutomationStore:
             return self._policy(p, s, owner, entrypoint)
 
     def update_chat(self, owner, session_id, changes, expected_revision):
-        if set(changes) - {"approval_mode", "route_mode", "auto_models", "elevation_roots", *FEATURE_DEFAULTS}:
+        if set(changes) - {"approval_mode", "route_mode", "auto_models", "auto_categories", "elevation_roots", *FEATURE_DEFAULTS}:
             raise HTTPException(422, "Unsupported chat setting")
         with self.transaction() as db:
             p, s = self.state(db, owner, session_id)
@@ -193,7 +197,7 @@ class AutomationStore:
             if mode not in MODES or route not in {"manual", "auto"}:
                 raise HTTPException(422, "Invalid chat mode")
             features = {**FEATURE_DEFAULTS, **copy.deepcopy(s.feature_settings or {})}
-            from src.model_auto import validate_candidates, validate_registered_candidates
+            from src.model_auto import validate_candidates, validate_registered_candidates, validate_registered_categories
             from src.decisions import DecisionError
             try:
                 if 'auto_models' in changes:
@@ -202,14 +206,20 @@ class AutomationStore:
                         validate_registered_candidates(owner, candidates, db=db)
                     features['auto_models'] = candidates
                     features['auto_models_source'] = 'explicit'
-                if route == 'auto' and ('auto_models' in changes or changes.get('route_mode') == 'auto'):
-                    validate_registered_candidates(owner, features.get('auto_models', []), db=db)
+                if 'auto_categories' in changes:
+                    features['auto_categories'] = validate_registered_categories(owner,
+                        changes['auto_categories'], db=db, require_complete=route == 'auto')
+                if route == 'auto' and ('auto_categories' in changes or 'auto_models' in changes
+                                        or changes.get('route_mode') == 'auto'):
+                    validate_registered_categories(owner, features.get('auto_categories', {}), db=db)
             except DecisionError as error:
-                messages = {'auto_models_empty': 'Choose at least one available model to use Auto.',
+                messages = {'auto_categories_incomplete': 'Assign a model to Complex tasks and Straightforward tasks before using Auto.',
+                    'auto_categories_invalid': 'Assign one exact registered endpoint/model to each task category.',
+                    'auto_models_empty': 'Choose at least one available model to use Auto.',
                     'auto_models_invalid': 'Choose up to 32 exact registered endpoint/model identities.',
                     'auto_models_duplicate': 'Each Auto model may be selected only once.',
                     'auto_model_not_allowed': 'A selected Auto model is not allowed for your account.'}
-                raise HTTPException(422, messages.get(error.code, 'A selected Auto model is unavailable. Edit the selected pool.'),
+                raise HTTPException(422, messages.get(error.code, 'An assigned Auto model is unavailable. Edit the category assignments.'),
                                     headers={'X-Decision-Failure': error.code}) from None
             for key in FEATURE_DEFAULTS:
                 if key in changes:
@@ -803,7 +813,7 @@ async def prepare_chat_turn(store, owner, session, raw_ask, *, entrypoint="inter
             from src.model_auto import select_model_and_effort
             from src.decisions import DecisionProvider
             from src.decisions.contracts import DecisionContext
-            selected = await select_model_and_effort(raw_ask, bound.policy.get('auto_models', []), owner=owner,
+            selected = await select_model_and_effort(raw_ask, bound.policy.get('auto_categories', {}), owner=owner,
                 provider=decision_provider or DecisionProvider(store=SqlAttemptStore(store)),
                 config=bound.configuration.get("decision_provider", {}),
                 context=DecisionContext(owner, session.id, bound.run_id,
@@ -842,7 +852,8 @@ async def prepare_chat_turn(store, owner, session, raw_ask, *, entrypoint="inter
             "route_mode": bound.policy["route_mode"], "submission_id": bound.submission_id}
         if bound.policy['route_mode'] == 'auto':
             bound.descriptor['supported_efforts'] = selected['supported_efforts']
-            bound.descriptor['auto_candidate_snapshot'] = selected['candidate_snapshot']
+            bound.descriptor['auto_category'] = selected['category']
+            bound.descriptor['auto_category_snapshot'] = selected['category_snapshot']
             bound.descriptor['effort_support_source'] = 'registered_runtime'
         if not bound.current():
             raise HTTPException(409, "Chat settings changed before submission")
@@ -869,12 +880,12 @@ def validate_provider_binding(url, model, headers, session_id, reasoning_effort=
     from src.model_admission import require_owner_model
     require_owner_model(bound.owner, model)
     if bound.policy.get('route_mode') == 'auto':
-        from src.model_auto import candidate_snapshot, public_snapshot
-        snapshot = candidate_snapshot(bound.owner, bound.policy.get('auto_models', []))
-        if (public_snapshot(snapshot) != bound.descriptor.get('auto_candidate_snapshot')
-                or not any(item['endpoint_id'] == bound.descriptor['endpoint_id'] and item['model'] == model
-                           for item in bound.policy['auto_models'])):
-            raise RuntimeError('Auto model pool changed before provider dispatch')
+        from src.model_auto import category_snapshot, public_category_snapshot
+        snapshot = category_snapshot(bound.owner, bound.policy.get('auto_categories', {}))
+        assigned = bound.policy['auto_categories'].get(bound.descriptor.get('auto_category'))
+        if (public_category_snapshot(snapshot) != bound.descriptor.get('auto_category_snapshot')
+                or assigned != {'endpoint_id': bound.descriptor['endpoint_id'], 'model': model}):
+            raise RuntimeError('Auto category assignments changed before provider dispatch')
     endpoint_id = bound.descriptor["endpoint_id"]
     if endpoint_id:
         from src.endpoint_resolver import resolve_endpoint_by_id
@@ -899,6 +910,8 @@ async def prepare_chat_submission(*args, **kwargs):
         return await prepare_chat_turn(*args, **kwargs)
     except DecisionError as error:
         model_errors = {
+            'auto_categories_incomplete': 'Assign a model to Complex tasks and Straightforward tasks before using Auto.',
+            'auto_categories_invalid': 'Auto category assignments are invalid. Choose the models again.',
             'auto_models_empty': 'Choose at least one available model to use Auto.',
             'auto_model_unavailable': 'A selected Auto model is unavailable. Edit Auto models before sending.',
             'auto_model_not_allowed': 'A selected Auto model is no longer allowed for your account.',

@@ -8,7 +8,7 @@ from fastapi import HTTPException
 from core import database as d
 from src import llm_core, model_auto
 from src.chat_automation import prepare_chat_submission
-from tests.test_model_auto import registered, store, Reviewer, ASK
+from tests.test_model_auto import registered, store, Reviewer, ASK, categories, CATEGORIES
 
 BASE='https://generativelanguage.googleapis.com/v1beta/openai'
 URL=BASE+'/chat/completions'
@@ -19,7 +19,7 @@ def google_pool(store, model='gemini-2.5-pro', description='  Established docume
         row=db.query(d.ModelEndpoint).filter_by(id='one').one()
         row.base_url=BASE;row.cached_models=json.dumps([model]);row.pinned_models=None
     pool=[{'endpoint_id':'one','model':model,'description':description}]
-    store.update_chat('alice','a',{'auto_models':pool,'route_mode':'auto'},0)
+    store.update_chat('alice','a',{'auto_categories':categories({k:pool[0][k] for k in ('endpoint_id','model')}),'route_mode':'auto'},0)
     return pool
 
 
@@ -56,14 +56,15 @@ def test_single_native_google_prefix_is_capability_alias_only(model,efforts):
 @pytest.mark.asyncio
 @pytest.mark.parametrize('stream',[False,True])
 @pytest.mark.parametrize('model',['gemini-2.5-pro','models/gemini-2.5-flash'])
-async def test_google_selected_effort_and_verbatim_role_reach_actual_transport(registered,monkeypatch,stream,model):
+async def test_google_category_selected_effort_reaches_actual_transport(registered,monkeypatch,stream,model):
     pool=google_pool(registered,model=model)
     reviewer=Reviewer(effort='high')
     bound=await prepare_chat_submission(registered,'alice',session(),ASK,decision_provider=reviewer)
-    assert registered.policy('alice','a')['auto_models']==pool
+    assert registered.policy('alice','a')['auto_categories']==categories({k:pool[0][k] for k in ('endpoint_id','model')})
     request=reviewer.calls[0]
-    assert request.state['candidates']['candidate_0']['user_role']==pool[0]['description']
-    assert pool[0]['description'] in json.loads(request.choices['candidate_0'].split('quoted data: ',1)[1])
+    assert request.state['categories']['complex_tasks']['model']==model
+    assert 'user_role' not in request.state['categories']['complex_tasks']
+    assert 'routing_policy' in request.state
     calls=[]
     def transport(request):
         payload=json.loads(request.content);calls.append(payload)
@@ -90,11 +91,11 @@ async def test_google_selected_effort_and_verbatim_role_reach_actual_transport(r
                     headers=bound.headers,session_id='a',reasoning_effort='high')=='complete'
     assert len(calls)==1
     assert bound.descriptor['model']==pool[0]['model']==model
-    assert registered.policy('alice','a')['auto_models']==pool
+    assert registered.policy('alice','a')['auto_categories']==categories({k:pool[0][k] for k in ('endpoint_id','model')})
 
 
 @pytest.mark.asyncio
-@pytest.mark.parametrize('change',['capability_revision','endpoint','role'])
+@pytest.mark.parametrize('change',['capability_revision','endpoint','assignment','routing_policy'])
 @pytest.mark.parametrize('model',['gemini-2.5-pro','models/gemini-2.5-flash'])
 async def test_stale_google_evidence_stops_before_provider_transport(registered,monkeypatch,change,model):
     pool=google_pool(registered,model=model)
@@ -102,7 +103,8 @@ async def test_stale_google_evidence_stops_before_provider_transport(registered,
     if change=='capability_revision':monkeypatch.setattr(model_auto,'GOOGLE_CAPABILITY_REVISION','changed')
     if change=='endpoint':
         with registered.transaction() as db:db.query(d.ModelEndpoint).filter_by(id='one').one().base_url='https://proxy.invalid/v1'
-    if change=='role':registered.update_chat('alice','a',{'auto_models':[{**pool[0],'description':'Changed role'}]},1)
+    if change=='assignment':registered.update_chat('alice','a',{'route_mode':'manual','auto_categories':{}},1)
+    if change=='routing_policy':monkeypatch.setitem(model_auto.ROUTING_POLICY,'scope','Changed routing scope')
     calls=[]
     async with httpx.AsyncClient(transport=httpx.MockTransport(lambda req:calls.append(req))) as client:
         monkeypatch.setattr(llm_core,'_get_http_client',lambda:client)
@@ -141,22 +143,19 @@ async def test_supported_union_effort_cannot_be_used_with_incompatible_pro_model
     with registered.transaction() as db:
         db.query(d.ModelEndpoint).filter_by(id='one').one().cached_models=json.dumps(['gemini-2.5-pro','gemini-2.5-flash'])
     pool=[{'endpoint_id':'one','model':m} for m in ['gemini-2.5-pro','gemini-2.5-flash']]
-    registered.update_chat('alice','a',{'auto_models':pool},1)
+    registered.update_chat('alice','a',{'auto_categories':{'complex_tasks':pool[0],'straightforward_tasks':pool[1]}},1)
     with pytest.raises(HTTPException) as error:
         await prepare_chat_submission(registered,'alice',session(),ASK,decision_provider=Reviewer(effort='none'))
     assert 'unsupported reasoning effort' in error.value.detail
 
 
 @pytest.mark.asyncio
-async def test_candidate_specific_roles_are_preserved_as_data_and_bound_to_revision(registered):
-    pool=[{'endpoint_id':'one','model':'shared','description':'Exact retrieval and documented repeatable work.'},
-          {'endpoint_id':'two','model':'shared','description':'Learning, teaching, bespoke work and interacting contracts.'}]
-    registered.update_chat('alice','a',{'auto_models':pool,'route_mode':'auto'},0)
-    reviewer=Reviewer('candidate_1')
+async def test_category_assignments_bind_exact_identity_and_revision_without_roles(registered):
+    registered.update_chat('alice','a',{'auto_categories':CATEGORIES,'route_mode':'auto'},0)
+    reviewer=Reviewer('straightforward_tasks')
     bound=await prepare_chat_submission(registered,'alice',session(),ASK,decision_provider=reviewer)
-    choices=reviewer.calls[0].choices
-    assert pool[0]['description'] in choices['candidate_0'] and pool[1]['description'] in choices['candidate_1']
-    assert bound.descriptor['auto_candidate_snapshot'][1]['description']==pool[1]['description']
+    assert bound.descriptor['auto_category']=='straightforward_tasks'
+    assert bound.descriptor['auto_category_snapshot']['categories']['straightforward_tasks']['endpoint_id']=='two'
     assert bound.effort_selection['status']=='bound' and bound.effort_selection['source']=='auto'
-    registered.update_chat('alice','a',{'auto_models':[{**pool[0],'description':'Changed'},pool[1]]},1)
+    registered.update_chat('alice','a',{'auto_categories':categories(CATEGORIES['complex_tasks'])},1)
     assert not bound.current()
