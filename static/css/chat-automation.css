@@ -100,6 +100,7 @@
 #chat-decision-pane .decision-capture-controls button{margin:0;font-size:11px}
 #chat-decision-pane summary{background:transparent;color:var(--fg);font:inherit;border:0;min-height:40px;padding:8px 0}
 #chat-decision-pane a{display:inline-block;color:var(--accent,var(--fg));padding:8px 0;min-height:24px}
+#chat-decision-pane [hidden]{display:none}
 #chat-decision-status{color:var(--color-warning)}
 @media(max-width:900px){
   .chat-top-bar:has(.decision-activity-trigger){min-height:44px}

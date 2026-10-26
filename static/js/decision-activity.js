@@ -31,6 +31,7 @@ function mount(container, sessionId, {pane, trigger, closeButton, refreshButton}
     state.setAttribute('role', 'status');
     const list = document.createElement('ol');
     list.setAttribute('aria-label', 'Decision attempts');
+    const rows = new Map();
     const handoffList = document.createElement('ul');
     handoffList.setAttribute('aria-label', 'Execution handoffs');
     const taskState = document.createElement('p');
@@ -61,26 +62,36 @@ function mount(container, sessionId, {pane, trigger, closeButton, refreshButton}
         return anchor;
     }
     function render(items) {
-        list.replaceChildren();
+        const retained = new Set(), focused = document.activeElement;
+        let cursor = list.firstChild;
         for (const item of items) {
-            const row = document.createElement('li');
-            const text = document.createElement('span');
-            text.textContent = decisionSummary(item);
-            row.append(text, document.createTextNode(' '), link('Export metadata', item.run_id));
-            if (Object.keys(item.questions || {}).length) {
+            const key = item.attempt_id || `${item.run_id}:${item.purpose}`;
+            retained.add(key);
+            let entry = rows.get(key);
+            if (!entry) {
+                const row = document.createElement('li'), text = document.createElement('span');
                 const distribution = document.createElement('details');
                 const label = document.createElement('summary');
                 label.textContent = 'Reported distribution';
                 const values = document.createElement('p');
-                values.textContent = distributionSummary(item.questions);
                 distribution.append(label, values);
-                row.append(distribution);
+                const capture = link('Download redacted capture', item.run_id, true);
+                row.append(text, document.createTextNode(' '), link('Export metadata', item.run_id), distribution, capture);
+                entry = {row, text, distribution, values, capture};
+                rows.set(key, entry);
             }
-            if (['complete', 'outcome_recorded'].includes(item.capture_state)) {
-                row.append(document.createTextNode(' '), link('Download redacted capture', item.run_id, true));
-            }
-            list.append(row);
+            const text = decisionSummary(item), values = distributionSummary(item.questions || {});
+            if (entry.text.textContent !== text) entry.text.textContent = text;
+            if (entry.values.textContent !== values) entry.values.textContent = values;
+            entry.distribution.hidden = !Object.keys(item.questions || {}).length;
+            entry.capture.hidden = !['complete', 'outcome_recorded'].includes(item.capture_state);
+            if (entry.row !== cursor) list.insertBefore(entry.row, cursor);
+            cursor = entry.row.nextSibling;
         }
+        for (const [key, entry] of rows) {
+            if (!retained.has(key)) {entry.row.remove(); rows.delete(key);}
+        }
+        if (list.contains(focused) && document.activeElement !== focused) focused.focus({preventScroll:true});
         state.textContent = items.length ? '' : 'No recorded decision attempts.';
     }
     function renderHandoffs(items) {
@@ -153,7 +164,12 @@ function mount(container, sessionId, {pane, trigger, closeButton, refreshButton}
     const toggle = () => pane.open ? close() : open();
     const cancel = event => {event.preventDefault(); close();};
     const closed = () => {if (!pane.open) close(false);};
-    const escape = event => {if (pane.open && event.key === 'Escape') {event.preventDefault(); close();}};
+    const escape = event => {
+        if (!pane.open || event.key !== 'Escape' || event.defaultPrevented) return;
+        // A newer modal owns its Escape; desktop activity remains nonmodal.
+        if ([...document.querySelectorAll('dialog:modal')].some(dialog => dialog !== pane)) return;
+        event.preventDefault(); close();
+    };
     const visibility = () => {if (document.hidden) stopPolling(); else refresh();};
     const resize = () => {
         if (!pane.open) return;
@@ -168,7 +184,7 @@ function mount(container, sessionId, {pane, trigger, closeButton, refreshButton}
     refreshButton.addEventListener('click', refresh);
     pane.addEventListener('cancel', cancel);
     pane.addEventListener('close', closed);
-    pane.addEventListener('keydown', escape);
+    document.addEventListener('keydown', escape);
     document.addEventListener('visibilitychange', visibility);
     narrow.addEventListener('change', resize);
     captureButton.addEventListener('click', async () => {
@@ -206,7 +222,7 @@ function mount(container, sessionId, {pane, trigger, closeButton, refreshButton}
         refreshButton.removeEventListener('click', refresh);
         pane.removeEventListener('cancel', cancel);
         pane.removeEventListener('close', closed);
-        pane.removeEventListener('keydown', escape);
+        document.removeEventListener('keydown', escape);
         document.removeEventListener('visibilitychange', visibility);
         narrow.removeEventListener('change', resize);
         content.remove();
