@@ -106,7 +106,8 @@ class AutomationStore:
         return prefs, row
 
     def _materialize_auto_models(self, prefs, row):
-        if row.route_mode != 'auto' or 'auto_models' in (row.feature_settings or {}):
+        if (row.route_mode != 'auto' or 'auto_models' in (row.feature_settings or {})
+                or 'auto_categories' in (row.feature_settings or {})):
             return
         from src.model_auto import legacy_candidates
         from src.decisions import DecisionError
@@ -177,7 +178,7 @@ class AutomationStore:
                     if s.route_mode == 'auto' and (not isinstance(features['auto_categories'], dict)
                         or set(features['auto_categories']) != {'complex_tasks', 'straightforward_tasks'}) else
                     'Previous Auto selection is invalid. Choose Auto models again.'
-                    if features['auto_models_source'] == 'legacy_invalid' else
+                    if features['auto_models_source'] == 'legacy_invalid' and not features['auto_categories'] else
                     None if grant or not p.elevation_ceiling else "No additional scope is granted")}
 
     def policy(self, owner, session_id, entrypoint="interactive"):
