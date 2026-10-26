@@ -46,12 +46,17 @@ def test_invalid_incomplete_or_unavailable_categories_cannot_activate(registered
 
 def test_same_exact_model_can_be_assigned_to_both_categories_and_forked(registered):
     assignments=categories(POOL[0])
-    registered.update_chat('alice','a',{'auto_categories':assignments,'route_mode':'auto'},0)
+    source=registered.update_chat('alice','a',{'approval_mode':'yolo','auto_categories':assignments,'route_mode':'auto'},0)
+    preferences=registered.configuration('alice')
     reopened=AutomationStore(registered.session_factory)
     assert reopened.policy('alice','a')['auto_categories'] == assignments
     reopened.fork('alice','a','b')
     assert reopened.policy('alice','b')['auto_categories'] == assignments
+    assert reopened.policy('alice','b')['route_mode'] == 'auto'
+    assert reopened.policy('alice','b')['approval_mode'] == 'always_ask'
     assert not reopened.policy('alice','b')['effective_roots']
+    assert reopened.policy('alice','a') == source
+    assert reopened.configuration('alice') == preferences
     with pytest.raises(HTTPException): reopened.policy('bob','a')
 
 

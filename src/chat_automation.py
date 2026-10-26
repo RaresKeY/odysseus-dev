@@ -131,7 +131,7 @@ class AutomationStore:
         with self.transaction() as db:
             _, source = self.state(db, owner, source_id)
             _, target = self.state(db, owner, target_id)
-            target.approval_mode, target.route_mode = source.approval_mode, source.route_mode
+            target.approval_mode, target.route_mode = "always_ask", source.route_mode
             target.feature_settings = copy.deepcopy(source.feature_settings or {})
             target.elevation_grant = None
             target.policy_revision += 1

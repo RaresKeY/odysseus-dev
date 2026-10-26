@@ -24,7 +24,7 @@ def store(tmp_path):
 
 
 @pytest.mark.parametrize('saved_mode', ['always_ask', 'auto_approve', 'yolo'])
-def test_new_chat_always_asks_without_resetting_saved_modes_or_forks(store, saved_mode):
+def test_new_chats_and_forks_always_ask_without_resetting_saved_modes(store, saved_mode):
     assert store.policy('alice', 'a')['approval_mode'] == 'always_ask'
     saved = store.update_chat('alice', 'a', {'approval_mode': saved_mode, 'followup_enabled': True}, 0)
     preferences = store.configuration('alice')
@@ -32,6 +32,7 @@ def test_new_chat_always_asks_without_resetting_saved_modes_or_forks(store, save
     assert store.policy('alice', 'b')['approval_mode'] == 'always_ask'
     with store.transaction() as db:
         db.add(d.Session(id='new', name='new', owner='alice', model='m', endpoint_url='http://local'))
+        db.add(d.Session(id='fork', name='fork', owner='alice', model='m', endpoint_url='http://local'))
         db.flush()
         store.state(db, 'alice', 'new', new=True)
     reopened = AutomationStore(store.session_factory)
@@ -42,10 +43,11 @@ def test_new_chat_always_asks_without_resetting_saved_modes_or_forks(store, save
         _, existing = reopened.state(db, 'alice', 'a', new=True)
         assert existing.approval_mode == saved_mode
     assert reopened.configuration('alice') == preferences
-    store.fork('alice', 'a', 'b')
-    forked = reopened.policy('alice', 'b')
-    assert forked['approval_mode'] == saved_mode and forked['followup_enabled'] is True
+    store.fork('alice', 'a', 'fork')
+    forked = reopened.policy('alice', 'fork')
+    assert forked['approval_mode'] == 'always_ask' and forked['followup_enabled'] is True
     assert forked['elevation_grant'] is None
+    assert reopened.policy('alice', 'a') == saved
     assert reopened.configuration('alice') == preferences
     with pytest.raises(HTTPException) as denied:
         store.policy('bob', 'a')
