@@ -86,6 +86,7 @@
 #model-auto-dialog::backdrop{background:#0008}
 #model-auto-dialog .modal-header{flex:none;padding:14px 16px;gap:12px}
 #model-auto-title{font-size:18px;margin:0}
+#model-auto-close{width:auto;min-width:64px;flex:none}
 #model-auto-dialog button,#model-auto-dialog input{font:inherit;color:var(--fg);border:1px solid var(--border);border-radius:6px;background:var(--bg);box-sizing:border-box}
 #model-auto-dialog button{height:auto;min-height:40px;padding:7px 10px;cursor:pointer}
 #model-auto-dialog button:disabled{opacity:.5;cursor:default}
