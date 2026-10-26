@@ -215,7 +215,7 @@ function _initModelPickerDropdown() {
   if (!wrap || !btn || !menu || !search || !listEl) return;
   if (wrap.dataset.modelPickerBound === '1') return;
   wrap.dataset.modelPickerBound = '1';
-  let autoSaving=false;
+  let autoSaving=false, pickerCloseGeneration=0, pickerCloseTimer=null, pickerCloseListener=null;
   const autoSelect=document.getElementById('model-auto-select');
   const autoEdit=document.getElementById('model-auto-edit');
   const autoFeedback=document.getElementById('model-auto-feedback');
@@ -262,27 +262,27 @@ function _initModelPickerDropdown() {
   });
   btn.setAttribute('aria-haspopup','menu');btn.setAttribute('aria-expanded','false');
 
+  function cancelPickerClose() {
+    ++pickerCloseGeneration;
+    if(pickerCloseTimer!==null){clearTimeout(pickerCloseTimer);pickerCloseTimer=null;}
+    if(pickerCloseListener){menu.removeEventListener('animationend',pickerCloseListener);pickerCloseListener=null;}
+  }
   function _close() {
-    if (menu.classList.contains('hidden')) return;
+    if(menu.classList.contains('hidden'))return;
+    cancelPickerClose();
+    const generation=pickerCloseGeneration;
     btn.setAttribute('aria-expanded','false');
-    // Restore scroll button
-    const _scrollBtn = document.getElementById('scroll-bottom-btn');
-    if (_scrollBtn) _scrollBtn.style.display = '';
+    const scrollButton=document.getElementById('scroll-bottom-btn');
+    if(scrollButton)scrollButton.style.display='';
     menu.classList.add('closing');
-    menu.addEventListener('animationend', function _onDone() {
-      menu.removeEventListener('animationend', _onDone);
-      menu.classList.remove('closing');
-      menu.classList.add('hidden');
-      search.value = '';
-    }, { once: true });
-    // Fallback if animationend doesn't fire
-    setTimeout(() => {
-      if (!menu.classList.contains('hidden')) {
-        menu.classList.remove('closing');
-        menu.classList.add('hidden');
-        search.value = '';
-      }
-    }, 200);
+    const finish=()=>{
+      if(generation!==pickerCloseGeneration)return;
+      cancelPickerClose();
+      menu.classList.remove('closing');menu.classList.add('hidden');search.value='';
+    };
+    pickerCloseListener=event=>{if(event.target===menu)finish();};
+    menu.addEventListener('animationend',pickerCloseListener);
+    pickerCloseTimer=setTimeout(finish,200);
   }
 
   function _openPickerShortcut(kind) {
@@ -879,6 +879,7 @@ async function _pick(m) {
   btn.addEventListener('click', (e) => {
     e.stopPropagation();
     if (menu.classList.contains('hidden') || menu.classList.contains('closing')) {
+      cancelPickerClose();
       // Force-clear any in-progress close animation
       menu.classList.remove('closing', 'hidden');
       btn.setAttribute('aria-expanded','true');renderAutoControls();
