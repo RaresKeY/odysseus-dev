@@ -46,31 +46,13 @@ grant from historical transcripts. Control tools do not require action review.
 
 ## Models and acknowledgement
 
-Each chat stores an explicit `auto_models` pool (up to 32 exact registered
-endpoint/model identities) in its existing SQL feature settings. Model Auto in
-the existing API picker chooses model and compatible effort together in one
-bounded Jev call. Empty, disabled, hidden, unregistered, foreign or stale pools
-stop visibly without widening the offer. Effort comes from the exact ChatGPT subscription runtime catalogue or the
-versioned exact-ID Google compatibility table on the canonical verified HTTPS
-Google endpoint. Unknown models/providers offer only the explicit default,
-disclosed in the picker; capability is not inferred from names. An unsupported
-model/effort pair errors without normalization. Manual selection does not classify
-and selecting a concrete model returns the chat to Manual. The legacy approach
-classifier remains available to experiment callers; foreground Auto no longer
-routes through fixed category slots. Existing Auto chats without `auto_models`
-materialize only their previous unique mapped endpoint/model identities once
-under the SQL transaction, including before legacy owner mapping edits or forks; stored empty pools remain empty. Forks preserve the pool.
-Pool saves validate the same picker inventory/pin allow-list inside CAS without
-credential refresh under the writer lock. Independent permission/settings edits
-remain available when an unchanged pool becomes unavailable. Each candidate may carry up to800 characters of verbatim user role text. Roles
-are task-fit evidence in candidate-specific criteria, never instructions or
-authority; unassessed fit stays unknown. Roles bind to the pool revision and
-snapshot. The full offer and current credentials/effort metadata are rechecked after Jev
-and the current selected pool is checked again at actual provider dispatch.
-Donor-aligned `model_auto` accepts any structurally valid winning supported pair,
-without an absolute confidence/probability floor. Raw scores remain observable
-routing metadata; explicit `unavailable` still errors. This is separate from
-action approval, whose 0.95 allow thresholds and deterministic ceilings remain.
+Each chat stores `auto_categories` in its existing SQL feature settings, with exactly `complex_tasks` (Complex tasks) and `straightforward_tasks` (Straightforward tasks), each assigned one exact registered endpoint/model. Both categories may intentionally use the same model; endpoint identity remains exact. Partial assignments can be saved in Manual, while Auto activation or assignment edits in Auto require both currently available models. Empty, missing, disabled, hidden, unregistered, foreign or stale assignments stop visibly without guessing or model fallback.
+
+`src/model_auto_policy.json` preserves the complete supplied Codex-Jev scope/model/effort/anchors/persistence policy, replacing only Sol/Luna labels/slugs with neutral category labels/IDs. `src/model_auto.py` preserves the learning/teaching versus established repeatable-work request criteria, omitting the donor's unsupported comparative model-quality claim. Jev receives the full policy as `state.routing_policy`, chooses `execution_model=complex_tasks|straightforward_tasks|unavailable` and supported `reasoning_effort` in one `model_auto` call. The chosen category resolves deterministically to its assigned custom model. Category role is task policy, never an invented capability description for that model. The complete policy hash, category identities and exact supported capability revision bind the immutable offer and actual provider dispatch.
+
+Effort comes from the exact ChatGPT subscription runtime catalogue or versioned exact-ID Google compatibility table on the canonical HTTPS Google endpoint; unknown providers/models offer default-only with disclosure. Unsupported category/model/effort combinations error without normalization. Complete finite normalized winner vectors, bounded confidence and known usage remain required; raw scores are observable routing metadata, without an absolute confidence/probability floor. Explicit `unavailable` still errors. Action approval's separate 0.95 allow thresholds and deterministic ceilings are unchanged.
+
+Existing `auto_models`, descriptions, old three-approach mappings and unrelated feature data are retained as compatibility history, never classified or inferred into the two categories. Already-Auto chats without complete category assignments must explicitly assign both before sending; the existing old-mapping materialization still preserves prior unique identities before owner mapping edits/forks. No schema migration or destructive default/model rewrite occurs. Forks preserve explicit categories, legacy choices and existing grant-reset behavior. Assignment saves reuse exact picker inventory/pin admission inside CAS without credential refresh under the writer lock. Independent permission/settings/manual recovery remains possible if an unchanged assignment becomes unavailable. Manual model selection skips Jev.
 
 JSON/SSE chat ingress and `/v1/chat` bind committed settings, the exact original
 ask and provider descriptor before execution. The real provider boundary

@@ -127,16 +127,16 @@ async def test_actual_auto_route_and_independent_effort_bind_selected_endpoint(s
     monkeypatch.setattr(endpoint_resolver,'resolve_endpoint_by_id',lambda identifier,model,**kw:registered('alice',{'endpoint_id':identifier,'model':model})['route'])
     store.update_configuration('alice', {'decision_provider': {
         'endpoint_id':'decision','model':'neutral-decider','protocol':'systemone'}},0)
-    store.update_chat('alice','a',{'route_mode':'auto','auto_models':candidates},0)
-    provider=Provider({'execution_model':'candidate_1','reasoning_effort':'high'})
+    store.update_chat('alice','a',{'route_mode':'auto','auto_categories':dict(zip(model_auto.CATEGORIES,candidates))},0)
+    provider=Provider({'execution_model':'straightforward_tasks','reasoning_effort':'high'})
     bound=await prepare_chat_turn(store,'alice',session(),'A short novel correctness question',decision_provider=provider)
     assert len(provider.requests)==1
-    assert provider.requests[0].state['candidates']['candidate_1']['endpoint_id']=='chosen-1'
+    assert provider.requests[0].state['categories']['straightforward_tasks']['endpoint_id']=='chosen-1'
     assert bound.descriptor['reasoning_effort']=='high'
     assert bound.descriptor['endpoint_id']=='chosen-1'
     assert bound.endpoint_url=='https://chosen-1.invalid/v1'
     assert bound.headers=={'X-Registered':'chosen-1'}
-    assert bound.approach_selection['choice']=='candidate_1'
+    assert bound.approach_selection['choice']=='straightforward_tasks'
     assert bound.effort_selection['choice']=='high'
     assert bound.descriptor['supported_efforts']==['low','high']
     assert bound.descriptor['effort_support_source']=='registered_runtime'

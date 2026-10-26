@@ -44,27 +44,11 @@ explicit owner foreground consent and rebinds the committed descriptor after an
 eligible availability failure. Unsupported effective reasoning effort fails
 instead of reporting an effort the request cannot supply.
 
-`src/model_auto.py` owns foreground Auto selection from an explicit per-chat
-registered endpoint/model pool, with supported effort chosen in the same decision.
-The exact ChatGPT subscription runtime catalogue and a versioned seven-ID
-Google compatibility table supply non-default effort. Google evidence applies
-only to the canonical verified HTTPS generativelanguage.googleapis.com
-/v1beta/openai route, without credentials/query/fragment/foreign ports in URL
-identity. A single native models/ prefix is recognized for capability lookup only, with exact stored/bound/payload identity retained. Unknown IDs and proxies retain default; no payload-only
-normalization occurs. Existing llm_core top-level reasoning_effort paths carry
-these values. Capability revision, roles and supported sets are rechecked.
-Donor-aligned `model_auto` requires complete finite normalized vectors and
-maximum-consistent choices, but no absolute routing confidence/probability
-floor. Raw scores remain metadata; explicit `unavailable`, invalid identities
-and incompatible/stale selections still fail. Action approval remains separate.
-Optional per-selected-model user role descriptions stay verbatim and bounded;
-candidate-specific criteria use them as data rather than inventing rankings. Model/effort incompatibility, a changed pool or
-unavailable registration errors without fallback. Old category mappings materialize once into only their previously selected
-unique identities for already-Auto chats. Save admission uses the exact picker
-pin/visibility calculation without refreshing credentials under the writer lock.
-`src/approach_routing.py` retains the neutral three-category mechanism for legacy
-experiments. Independent `src/decisions/` calls remain bounded and cannot grant
-action authority. See [decision-provider.md](../docs/decision-provider.md).
+`src/model_auto.py` owns foreground Auto from two explicit per-chat category assignments: Complex tasks and Straightforward tasks, each one exact registered endpoint/model (same model in both allowed intentionally). The full mapped Codex-Jev policy asset and category request criteria preserve task scope, established versus bespoke/foundation, learning/teaching, mixed deliverables, effort independent from complexity and persistence. Jev chooses category and supported effort; category resolves deterministically to its assigned model, without user model descriptions or quality inference.
+
+The exact ChatGPT runtime catalogue and versioned seven-ID canonical HTTPS Google compatibility table supply non-default efforts. One native models/ prefix is recognized only for capability lookup; selected/bound/HTTP identity remains exact. Unknown IDs/proxies keep default. Existing llm_core top-level reasoning_effort transport is reused. Full policy hash, both category identities, supported sets/versions, current credentials and owner/pin eligibility revalidate before dispatch. Complete finite normalized maximum-consistent vectors/known usage remain required without an absolute routing confidence floor; raw scores remain metadata. Explicit unavailable, incompatible/invalid/stale selections stop without fallback. Action approval remains separate.
+
+Legacy pools/descriptions remain stored and are never used to infer category assignments; old Auto requires explicit assignment, preserving choices and unrelated data. Existing old-map materialization/fork compatibility remains; no schema or default-model rewrite. Saves reuse exact picker inventory/pin checks without credential refresh under a writer lock. `src/approach_routing.py` remains for old experiments only; foreground uses the two categories. See [decision-provider.md](../docs/decision-provider.md).
 
 Kimi Code User-Agent discovery has both sync and async implementations. Async post and stream paths probe `/models` through their existing async client and await each candidate, so header negotiation does not block the event loop; both paths share the accepted-value cache and 403 fallback policy.
 

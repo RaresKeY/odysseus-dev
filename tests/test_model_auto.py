@@ -12,6 +12,11 @@ from src.decisions import DecisionContext, DecisionError, DecisionResult
 from tests.test_chat_automation_state import store
 
 POOL = [{'endpoint_id':'one', 'model':'shared'}, {'endpoint_id':'two', 'model':'shared'}]
+CATEGORIES = {'complex_tasks':POOL[0], 'straightforward_tasks':POOL[1]}
+
+def categories(item):
+    return {key:dict(item) for key in model_auto.CATEGORIES}
+
 ASK = '  Preserve the original ask\n\tλ  '
 
 
@@ -31,7 +36,7 @@ def registered(store, monkeypatch):
     return store
 
 
-def result(request, model='candidate_0', effort='default', confidence=.99):
+def result(request, model='complex_tasks', effort='default', confidence=.99):
     answers = {}
     for key, question in request.questions().items():
         chosen = model if key=='execution_model' else effort
@@ -44,7 +49,7 @@ def result(request, model='candidate_0', effort='default', confidence=.99):
 
 
 class Reviewer:
-    def __init__(self, model='candidate_0', effort='default', mutate=None, corrupt=None):
+    def __init__(self, model='complex_tasks', effort='default', mutate=None, corrupt=None):
         self.calls=[];self.model=model;self.effort=effort;self.mutate=mutate;self.corrupt=corrupt
     async def evaluate(self, request, context, **kwargs):
         self.calls.append(request)
@@ -54,15 +59,15 @@ class Reviewer:
 
 
 def test_pool_is_durable_exact_owner_scoped_and_forked_without_scope(registered):
-    saved=registered.update_chat('alice','a',{'auto_models':POOL,'route_mode':'auto'},0)
+    saved=registered.update_chat('alice','a',{'auto_categories':CATEGORIES,'route_mode':'auto'},0)
     reopened=AutomationStore(registered.session_factory)
-    assert reopened.policy('alice','a')['auto_models']==POOL
+    assert reopened.policy('alice','a')['auto_categories']==CATEGORIES
     assert saved['route_mode']=='auto'
     reopened.fork('alice','a','b')
-    assert reopened.policy('alice','b')['auto_models']==POOL
+    assert reopened.policy('alice','b')['auto_categories']==CATEGORIES
     assert reopened.policy('alice','b')['effective_roots']==[]
     reopened.update_chat('alice','a',{'route_mode':'manual'},1)
-    assert reopened.policy('alice','a')['auto_models']==POOL
+    assert reopened.policy('alice','a')['auto_categories']==CATEGORIES
     with pytest.raises(HTTPException):reopened.policy('bob','a')
     with pytest.raises(HTTPException):reopened.update_chat('alice','a',{'auto_models':[]},0)
 
@@ -85,8 +90,9 @@ def test_legacy_auto_retains_only_prior_exact_identities_then_persists_explicit_
         _,row=registered.state(db,'alice','a');row.route_mode='auto'
     policy=registered.policy('alice','a')
     assert policy['auto_models']==POOL and policy['auto_models_source']=='legacy_approaches'
-    registered.update_chat('alice','a',{'auto_models':[POOL[1]]},0)
-    assert registered.policy('alice','a')['auto_models']==[POOL[1]]
+    registered.update_chat('alice','a',{'auto_categories':categories(POOL[1])},0)
+    assert registered.policy('alice','a')['auto_models']==POOL
+    assert registered.policy('alice','a')['auto_categories']==categories(POOL[1])
 
 
 def test_unvisited_legacy_chat_and_fork_freeze_pool_before_owner_mapping_changes(registered):
@@ -118,7 +124,7 @@ async def test_subscription_credential_refresh_commit_occurs_outside_chat_writer
             row.access_token='SYNTHETIC_REFRESHED';db.commit()
         return {'base_url':'https://one.invalid/v1','api_key':'SYNTHETIC_REFRESHED'}
     monkeypatch.setattr(chatgpt_subscription,'resolve_runtime_credentials',refresh)
-    registered.update_chat('alice','a',{'auto_models':[POOL[0]],'route_mode':'auto'},0)
+    registered.update_chat('alice','a',{'auto_categories':categories(POOL[0]),'route_mode':'auto'},0)
     assert calls==[]
     session=SimpleNamespace(id='a',name='a',model='manual',endpoint_id=None,thinking_mode='off')
     bound=await prepare_chat_submission(registered,'alice',session,ASK,decision_provider=Reviewer())
@@ -126,7 +132,7 @@ async def test_subscription_credential_refresh_commit_occurs_outside_chat_writer
 
 
 def test_unavailable_pool_does_not_prevent_explicit_permission_or_manual_recovery(registered):
-    registered.update_chat('alice','a',{'auto_models':[POOL[0]],'route_mode':'auto'},0)
+    registered.update_chat('alice','a',{'auto_categories':categories(POOL[0]),'route_mode':'auto'},0)
     with registered.transaction() as db:db.query(d.ModelEndpoint).filter_by(id='one').one().is_enabled=False
     assert registered.update_chat('alice','a',{'approval_mode':'always_ask'},1)['approval_mode']=='always_ask'
     assert registered.update_chat('alice','a',{'route_mode':'manual'},1)['route_mode']=='manual'
@@ -134,8 +140,8 @@ def test_unavailable_pool_does_not_prevent_explicit_permission_or_manual_recover
 
 @pytest.mark.asyncio
 async def test_actual_turn_ignores_stale_manual_fields_and_revalidates_whole_pool(registered):
-    registered.update_chat('alice','a',{'auto_models':POOL,'route_mode':'auto'},0)
-    reviewer=Reviewer(model='candidate_1')
+    registered.update_chat('alice','a',{'auto_categories':CATEGORIES,'route_mode':'auto'},0)
+    reviewer=Reviewer(model='straightforward_tasks')
     session=SimpleNamespace(id='a',name='a',model='manual',endpoint_id='foreign',
         endpoint_url='https://foreign.invalid',headers={},thinking_mode='effort:high')
     bound=await prepare_chat_submission(registered,'alice',session,ASK,reasoning_effort='high',decision_provider=reviewer)
@@ -152,7 +158,7 @@ async def test_actual_turn_ignores_stale_manual_fields_and_revalidates_whole_poo
 @pytest.mark.asyncio
 @pytest.mark.parametrize('mutation', ['disabled','hidden','no_inventory','pins_empty','pins_exclude','policy','credential'])
 async def test_changed_candidates_or_chat_during_jev_stop_before_binding(registered,mutation):
-    registered.update_chat('alice','a',{'auto_models':POOL,'route_mode':'auto'},0)
+    registered.update_chat('alice','a',{'auto_categories':CATEGORIES,'route_mode':'auto'},0)
     def mutate():
         if mutation=='policy':registered.update_chat('alice','a',{'route_mode':'manual'},1);return
         with registered.transaction() as db:
@@ -177,21 +183,21 @@ async def test_effort_is_separate_but_must_match_exact_candidate():
             'supported_efforts':['low','high'] if item['endpoint_id']=='one' else ['default']}
     context=DecisionContext('alice','chat','run')
     reviewer=Reviewer(effort='high')
-    selected=await model_auto.select_model_and_effort(ASK,POOL,owner='alice',provider=reviewer,
+    selected=await model_auto.select_model_and_effort(ASK,CATEGORIES,owner='alice',provider=reviewer,
         config={},context=context,resolver=resolve)
     assert selected['reasoning_effort']=='high' and selected['endpoint_id']=='one'
     assert 'Choose effort separately from model strength.' in reviewer.calls[0].instructions
     with pytest.raises(DecisionError,match='auto_effort_unsupported'):
-        await model_auto.select_model_and_effort(ASK,POOL,owner='alice',provider=Reviewer('candidate_1','high'),
+        await model_auto.select_model_and_effort(ASK,CATEGORIES,owner='alice',provider=Reviewer('straightforward_tasks','high'),
             config={},context=context,resolver=resolve)
 
 
 @pytest.mark.asyncio
 @pytest.mark.parametrize('corrupt', [lambda r:replace(r,usage=None),lambda r:replace(r,choice='foreign'),
-    lambda r:replace(r,probabilities={'candidate_0':float('nan')}),
-    lambda r:replace(r,answers={}),lambda r: {'choice':'candidate_0'}])
+    lambda r:replace(r,probabilities={'complex_tasks':float('nan')}),
+    lambda r:replace(r,answers={}),lambda r: {'choice':'complex_tasks'}])
 async def test_malformed_jev_never_normalizes_or_silently_falls_back(registered,corrupt):
-    registered.update_chat('alice','a',{'auto_models':POOL,'route_mode':'auto'},0)
+    registered.update_chat('alice','a',{'auto_categories':CATEGORIES,'route_mode':'auto'},0)
     session=SimpleNamespace(id='a',name='a',model='manual',endpoint_id=None,thinking_mode='off')
     reviewer=Reviewer(corrupt=corrupt)
     with pytest.raises(HTTPException):await prepare_chat_submission(registered,'alice',session,ASK,decision_provider=reviewer)
@@ -210,12 +216,12 @@ def test_api_pin_allowlist_excludes_cached_inventory_on_save(registered,pins):
         row=db.query(d.ModelEndpoint).filter_by(id='one').one()
         row.endpoint_kind='api';row.pinned_models=pins;row.hidden_models=None
         assert row.cached_models=='["shared"]'
-    with pytest.raises(HTTPException):registered.update_chat('alice','a',{'auto_models':[POOL[0]],'route_mode':'auto'},0)
+    with pytest.raises(HTTPException):registered.update_chat('alice','a',{'auto_categories':categories(POOL[0]),'route_mode':'auto'},0)
 
 
 @pytest.mark.asyncio
 async def test_api_unpin_after_binding_blocks_actual_dispatch(registered):
-    registered.update_chat('alice','a',{'auto_models':[POOL[0]],'route_mode':'auto'},0)
+    registered.update_chat('alice','a',{'auto_categories':categories(POOL[0]),'route_mode':'auto'},0)
     session=SimpleNamespace(id='a',name='a',model='manual',endpoint_id=None,thinking_mode='off')
     bound=await prepare_chat_submission(registered,'alice',session,ASK,decision_provider=Reviewer())
     with registered.transaction() as db:

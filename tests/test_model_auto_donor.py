@@ -10,12 +10,12 @@ from src.chat_automation import prepare_chat_submission, validate_provider_bindi
 from src.decisions import (DecisionContext, DecisionError, DecisionProvider,
                            MemoryAttemptStore, ResolvedDecisionEndpoint)
 from src.model_auto import select_model_and_effort
-from tests.test_model_auto import ASK, POOL, registered, store
+from tests.test_model_auto import ASK, CATEGORIES, registered, store, categories
 from tests.test_model_auto_google import google_pool, session
 
 
 CONFIG = {'endpoint_id': 'decision', 'model': 'shared', 'protocol': 'systemone'}
-MODEL_PROBABILITIES = {'candidate_0': .8, 'unavailable': .2}
+MODEL_PROBABILITIES = {'complex_tasks': .8, 'straightforward_tasks': 0., 'unavailable': .2}
 EFFORT_PROBABILITIES = {'none': 0., 'minimal': .06, 'low': .01,
                         'medium': .24, 'high': .51, 'unavailable': .18}
 
@@ -24,7 +24,7 @@ def reply(model_confidence=.6, effort_confidence=.41):
     # Exact finite distributions reported by the current live Auto diagnostic;
     # only fixture identity/usage are synthetic. No provider body/key is copied.
     return {'model': 'shared', 'answers': {
-        'execution_model': {'type': 'choice', 'choice': 'candidate_0',
+        'execution_model': {'type': 'choice', 'choice': 'complex_tasks',
             'confidence': model_confidence, 'probabilities': dict(MODEL_PROBABILITIES)},
         'reasoning_effort': {'type': 'choice', 'choice': 'high',
             'confidence': effort_confidence, 'probabilities': dict(EFFORT_PROBABILITIES)},
@@ -68,7 +68,7 @@ async def test_valid_donor_winner_binds_and_retains_raw_scores(registered, model
     assert bound.effort_selection['confidence'] == effort_confidence
     assert bound.effort_selection['probabilities'] == EFFORT_PROBABILITIES
     assert bound.policy['approval_mode'] == 'always_ask' and not bound.policy['elevation_grant']
-    assert registered.policy('alice', 'a')['auto_models'] == pool
+    assert registered.policy('alice', 'a')['auto_categories'] == categories({k:pool[0][k] for k in ('endpoint_id','model')})
     with bound.activate():
         validate_provider_binding(bound.endpoint_url, pool[0]['model'], bound.headers, 'a', 'high')
     record = next(iter(attempts.records.values()))
@@ -115,7 +115,7 @@ async def test_low_confidence_does_not_bypass_strict_provider_answers(registered
     if corruption == 'confidence_negative': answer['confidence'] = -.01
     if corruption == 'confidence_bool': answer['confidence'] = True
     if corruption == 'question': raw['answers']['wrong_question'] = raw['answers'].pop('reasoning_effort')
-    if corruption == 'outside_pool': raw['answers']['execution_model']['choice'] = 'candidate_1'
+    if corruption == 'outside_pool': raw['answers']['execution_model']['choice'] = 'foreign_category'
     if corruption == 'model_identity': raw['model'] = 'another-model'
     if corruption == 'purpose': raw['purpose'] = 'approval'
     if corruption == 'usage': raw['usage']['input_tokens'] = -1
@@ -131,6 +131,6 @@ async def test_low_confidence_does_not_bypass_strict_provider_answers(registered
 async def test_owner_mismatch_stops_before_provider_request():
     client, attempts, calls = provider(reply())
     with pytest.raises(DecisionError, match='auto_models_owner_mismatch'):
-        await select_model_and_effort(ASK, POOL, owner='alice', provider=client,
+        await select_model_and_effort(ASK, CATEGORIES, owner='alice', provider=client,
             config=CONFIG, context=DecisionContext('bob', 'a', 'run'))
     assert not calls and not attempts.records

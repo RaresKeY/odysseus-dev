@@ -37,8 +37,8 @@ def store(tmp_path, monkeypatch):
     monkeypatch.setattr(llm_core, "_clear_host_dead", lambda *_: None)
     from src import model_auto
     def snapshot(owner, candidates):
-        return [{'identity':c, 'supported_efforts':['low','high'], 'route':(URL,c['model'],HEADERS), 'label':'Fixture'} for c in candidates]
-    monkeypatch.setattr(model_auto,'candidate_snapshot',snapshot)
+        return {key:{'identity':c, 'supported_efforts':['low','high'], 'route':(URL,c['model'],HEADERS), 'label':'Fixture'} for key,c in candidates.items()}
+    monkeypatch.setattr(model_auto,'category_snapshot',snapshot)
     from src import endpoint_resolver
     store._test_routes={}
     monkeypatch.setattr(endpoint_resolver,'resolve_endpoint_by_id',lambda ep,model,**kw: store._test_routes.get((ep,model)))
@@ -53,8 +53,10 @@ async def bind(store, mode="auto", *, effort="low", url=URL, model="selected"):
     # Classifier-to-route binding is covered separately. These execution tests
     # pin the actual descriptor while retaining the real persisted CAS/epoch.
     turn.policy["route_mode"] = mode
-    turn.policy['auto_models']=[{'endpoint_id':'fixture-endpoint','model':model}]
-    turn.descriptor['auto_candidate_snapshot']=[{'endpoint_id':'fixture-endpoint','model':model,'supported_efforts':['low','high']}]
+    turn.policy['auto_categories']={key:{'endpoint_id':'fixture-endpoint','model':model} for key in ('complex_tasks','straightforward_tasks')}
+    turn.descriptor['auto_category']='complex_tasks'
+    from src import model_auto
+    turn.descriptor['auto_category_snapshot']=model_auto.public_category_snapshot({key:{'identity':value,'supported_efforts':['low','high']} for key,value in turn.policy['auto_categories'].items()})
     # This fixture isolates the payload validator from SQL route selection;
     # full selected-pool registration is covered in test_model_auto.
     if mode=='auto':

@@ -13,23 +13,9 @@ Last updated: dev@f8e043e8 | 2026-10-24
 ## Routing and semantic lifecycle
 
 Canonical SQL chat settings independently select `tool_routing=existing|jev|all`
-and follow-up, preparation and completion-advice flags. Foreground Auto now uses
-`src/model_auto.py` and a per-chat `auto_models` pool from the existing model
-picker, choosing model and supported effort in one closed decision. Legacy
-`effort_mode` and three approach mappings remain compatibility/experiment data;
-they do not restrict or override the new foreground selection. The exact offer
-is validated before and after inference and at actual execution. Exact documented Google compatibility IDs on the canonical endpoint and exact
-ChatGPT catalogue entries supply supported efforts; unknowns use default.
-Candidate-specific criteria use optional bounded verbatim owner role hints as
-data, not action authority. Pool revisions and dispatch snapshots bind roles
-and capability revisions. Manual
-model selection does not classify model or effort.
-For `model_auto` only, complete finite normalized distributions and a winning
-compatible choice bind regardless of absolute reported confidence/probability,
-matching the supplied donor parsers. Confidence stays bounded and raw scores
-are retained as observable routing metadata. Explicit decline, malformed data
-and stale/unauthorized offers still stop. This does not alter action approval's
-separate 0.95 allow thresholds or grant any resource authority.
+and follow-up, preparation and completion-advice flags. Foreground Auto uses `src/model_auto.py` and owner/chat `auto_categories`, assigning exactly one custom registered model to Complex tasks and Straightforward tasks. The complete mapped donor policy in `src/model_auto_policy.json` supplies scope/model/effort/anchors/persistence; fixed Sol/Luna slugs become category IDs, while the request retains learning/teaching versus established-work criteria without comparative chosen-model rankings. Jev selects category and effort together, then the selected category resolves to its exact endpoint/model. Category assignments, full routing-policy hash and supported capability revisions are validated before/after inference and again at actual execution. Exact documented Google compatibility IDs and ChatGPT catalogue entries supply efforts; unknowns use disclosed default. No per-model description setup is used.
+
+Legacy `auto_models`/descriptions and three approach mappings remain retained compatibility data, never inferred into categories. Existing Auto chats need explicit assignments before further inference; partial Manual configuration is allowed, but Auto requires both valid categories. Forks preserve assignments and old data. No schema/default rewrite. For `model_auto`, complete finite normalized distributions and a winning compatible choice bind regardless of absolute confidence/probability, preserving raw scores as routing metadata. Explicit decline, malformed/unknown/stale/unauthorized offers still stop without retry or fallback. Manual selection skips Jev. Action approval's separate 0.95 allow thresholds and resource authority are unchanged.
 
 `prepare_http_selection` filters the complete current catalog by owner/admin,
 credential, request toggles and contextual restrictions before a decision. The
