@@ -120,7 +120,7 @@ function changeChat(changes, context) {
     $('chat-automation-state').textContent='Saving chat settings…';
     try {
       if(requestedNavigation!==navigationGeneration || sid()!==requestedId) throw new Error('The chat changed. Choose the setting again in the current chat.');
-      const id = requestedId || await currentChat(changes.auto_models?.[0]), ticket=++sequence;
+      const id = requestedId || await currentChat(changes.auto_categories?.complex_tasks), ticket=++sequence;
       const previous=policy?.session_id===id ? policy : await api(`/api/session/${encodeURIComponent(id)}/automation`);
       if(context && (context.navigation!==requestedNavigation || context.session_id!==requestedId || (requestedId && context.policy_revision!==previous.policy_revision)))throw new Error('The chat settings changed. Reopen Auto models before saving.');
       const saved=await api(`/api/session/${encodeURIComponent(id)}/automation`,'PUT',{policy_revision:previous.policy_revision,changes});
@@ -170,7 +170,7 @@ async function initialize(){
   window.ChatAutomation={
     getPolicy:()=>policy,
     selectionContext:()=>({session_id:sid(),navigation:navigationGeneration,policy_revision:policy?.policy_revision}),
-    saveAutoModels:(models,context)=>changeChat({auto_models:models,route_mode:'auto'},context),
+    saveAutoCategories:(categories,context)=>changeChat({auto_categories:categories,route_mode:'auto'},context),
     enableAuto:()=>changeChat({route_mode:'auto'}),
   };
   $('chat-tool-routing').addEventListener('change',async e=>{
@@ -221,7 +221,7 @@ async function initialize(){
   });
   $('chat-auto-models-settings').addEventListener('click',event=>{
     event.stopPropagation();
-    $('chat-automation-dialog').close();document.getElementById('model-picker-btn').click();window.dispatchEvent(new Event('odysseus:edit-auto-models'));
+    $('chat-automation-dialog').close();window.dispatchEvent(new Event('odysseus:edit-auto-models'));
   });
   $('chat-automation-settings').addEventListener('click',openSettings);
   $('chat-resume-input').addEventListener('click',async()=>{
