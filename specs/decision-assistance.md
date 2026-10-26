@@ -48,7 +48,7 @@ accounting. Owner/chat history, bounded read-only polling, metadata export,
 explicit next-turn sanitized capture, deletion and handoffs are served by
 `routes/decision_activity.py`. These routes do not infer, dispatch or invoke
 the scheduler event bus. Retention runs through the application's explicit
-lifespan. Account/session deletion and rename cover observation and semantic
+lifespan. The frontend exposes this through the compact Decision activity header trigger, closed by default: attached desktop pane/narrow native modal overlay, separate from the composer and main chat flow. Close/Escape returns focus. Reads pause while closed/hidden and are aborted/generation-invalidated on close or chat navigation. Loading/errors/empty/refresh, choices/confidence/full probabilities, native known/null usage, task/advice/handoff status and owned metadata/capture export links remain visible inside; critical action/chat failures remain inline. Opening activity never opts into capture or dispatches inference/tools. Account/session deletion and rename cover observation and semantic
 state, including SessionManager tool deletion and SQLite without FK enforcement.
 
 Default metadata/captures omit free text and private choice names, use opaque
