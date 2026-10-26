@@ -154,19 +154,27 @@ export function createAutoCategoryDialog({getModels, refreshModels, returnFocus,
   refresh.addEventListener('click', load);
   for (const id of ['model-auto-close', 'model-auto-cancel']) document.getElementById(id).addEventListener('click', close);
   dialog.addEventListener('cancel', event => { if (saving) event.preventDefault(); });
-  dialog.addEventListener('close', () => { ++generation; loading = false; draft = {}; context = null; returnFocus(); });
+  dialog.addEventListener('close', () => {
+    if (dialog.open) return; // A queued close event can belong to an earlier opening.
+    ++generation; saving = false; loading = false; draft = {}; context = null; returnFocus();
+  });
   save.addEventListener('click', async () => {
     if (save.disabled) return;
+    const saveGeneration = generation;
     saving = true; renderSelection(); feedback.textContent = 'Saving categories…';
     try {
       await window.ChatAutomation.saveAutoCategories(copyAssignments(draft), context);
+      if (generation !== saveGeneration || !dialog.open) return;
       saving = false; dialog.close(); onSaved();
-    } catch (error) { feedback.textContent = error.message; }
-    finally { saving = false; if (dialog.open) renderSelection(); }
+    } catch (error) {
+      if (generation === saveGeneration && dialog.open) feedback.textContent = error.message;
+    } finally {
+      if (generation === saveGeneration && dialog.open) { saving = false; renderSelection(); }
+    }
   });
   window.addEventListener('odysseus:session-changed', event => {
     if (event.detail?.materialized && saving) return;
-    if (dialog.open) { saving = false; dialog.close(); }
+    if (dialog.open) { ++generation; saving = false; dialog.close(); }
   });
   return {open};
 }
