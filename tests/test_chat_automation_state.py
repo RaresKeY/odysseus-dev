@@ -23,17 +23,30 @@ def store(tmp_path):
     engine.dispose()
 
 
-def test_owner_default_snapshot_existing_chat_and_fork(store):
+@pytest.mark.parametrize('saved_mode', ['always_ask', 'auto_approve', 'yolo'])
+def test_new_chat_always_asks_without_resetting_saved_modes_or_forks(store, saved_mode):
     assert store.policy('alice', 'a')['approval_mode'] == 'always_ask'
-    store.update_chat('alice', 'a', {'approval_mode': 'auto_approve'}, 0)
+    saved = store.update_chat('alice', 'a', {'approval_mode': saved_mode, 'followup_enabled': True}, 0)
+    preferences = store.configuration('alice')
+    assert preferences['last_explicit_mode'] == saved_mode
     assert store.policy('alice', 'b')['approval_mode'] == 'always_ask'
     with store.transaction() as db:
         db.add(d.Session(id='new', name='new', owner='alice', model='m', endpoint_url='http://local'))
         db.flush()
         store.state(db, 'alice', 'new', new=True)
-    assert store.policy('alice', 'new')['approval_mode'] == 'auto_approve'
+    reopened = AutomationStore(store.session_factory)
+    assert reopened.policy('alice', 'new')['approval_mode'] == 'always_ask'
+    assert reopened.policy('alice', 'a') == saved
+    # The creation flag must also leave an already-saved chat untouched.
+    with reopened.transaction() as db:
+        _, existing = reopened.state(db, 'alice', 'a', new=True)
+        assert existing.approval_mode == saved_mode
+    assert reopened.configuration('alice') == preferences
     store.fork('alice', 'a', 'b')
-    assert store.policy('alice', 'b')['approval_mode'] == 'auto_approve'
+    forked = reopened.policy('alice', 'b')
+    assert forked['approval_mode'] == saved_mode and forked['followup_enabled'] is True
+    assert forked['elevation_grant'] is None
+    assert reopened.configuration('alice') == preferences
     with pytest.raises(HTTPException) as denied:
         store.policy('bob', 'a')
     assert denied.value.status_code == 404

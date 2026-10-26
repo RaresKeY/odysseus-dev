@@ -13,13 +13,7 @@ submission and decision-attempt SQL tables in `core/database.py`,
 
 ## Persistence and authority
 
-Owner settings are SQL-backed, independently of the general JSON preferences.
-New sessions snapshot the latest explicit approval choice in their creation
-transaction. Existing sessions without feature state start in Always Ask.
-Forks copy mode and model-choice policy, without additional folder grants.
-Settings writes use revisions; SQLite reserves the write transaction before
-reading, while PostgreSQL locks the owner row. Preparing a turn obtains a
-bounded lease; submission IDs cannot be silently reused after ambiguous calls.
+Owner settings are SQL-backed, independently of the general JSON preferences. First-use and new sessions start in Always Ask in their creation transaction, regardless of the owner's retained `last_explicit_mode`. Existing sessions without feature state also start in Always Ask. Saved per-chat approval choices survive reload/resume; stored owner choices and history are preserved rather than rewritten or used as automatic defaults. Explicit forks copy the source mode and model-choice policy, without additional folder grants. Settings writes use revisions; SQLite reserves the write transaction before reading, while PostgreSQL locks the owner row. Preparing a turn obtains a bounded lease; submission IDs cannot be silently reused after ambiguous calls.
 
 | Mode | Tool review after deterministic admission | Extra folders with ceiling off | Extra folders with ceiling on |
 | --- | --- | --- | --- |

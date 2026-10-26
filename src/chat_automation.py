@@ -95,8 +95,9 @@ class AutomationStore:
         prefs = self.owner(db, owner)
         row = db.query(d.ChatAutomationState).filter_by(session_id=str(session_id)).first()
         if row is None:
+            # The owner's last explicit mode is history, not consent for a new chat.
             row = d.ChatAutomationState(session_id=str(session_id), owner_key=owner_key(owner),
-                approval_mode=prefs.last_explicit_mode if new else "always_ask",
+                approval_mode="always_ask",
                 policy_revision=0, route_mode="manual", elevation_grant=None)
             db.add(row)
             db.flush()
