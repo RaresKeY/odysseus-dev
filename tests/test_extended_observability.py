@@ -50,9 +50,11 @@ def test_default_observer_is_shared_per_factory_and_never_reuses_another_databas
 def test_model_auto_capture_keeps_known_questions_but_omits_roles_models_and_labels(observations):
     observations.consent('alice','a',{'purposes':['model_auto'],'required':True})
     observations.bind_turn('alice','a','auto-run')
-    request=DecisionRequest('model_auto',{'ask':'PRIVATE_ASK','candidates':{
-        'candidate_0':{'model':'PRIVATE_EXECUTION_MODEL','user_role':'PRIVATE_ROLE_EVIDENCE'}}},
-        {'candidate_0':'PRIVATE_ROLE_EVIDENCE','unavailable':'Unknown'},question_id='execution_model',
+    request=DecisionRequest('model_auto',{'ask':'PRIVATE_ASK',
+        'routing_policy':{'scope':'PRIVATE_POLICY'},'categories':{
+        'complex_tasks':{'model':'PRIVATE_EXECUTION_MODEL','endpoint_label':'PRIVATE_ENDPOINT'},
+        'straightforward_tasks':{'model':'PRIVATE_OTHER_MODEL'}}},
+        {'complex_tasks':'PRIVATE_CRITERIA','straightforward_tasks':'Known flow','unavailable':'Unknown'},question_id='execution_model',
         additional_questions={'reasoning_effort':{'low':'Low','high':'High'}})
     context=DecisionContext('alice','a','auto-run')
     record={'attempt_id':'model-auto-one','owner':'alice','session_id':'a','run_id':'auto-run',
@@ -62,7 +64,7 @@ def test_model_auto_capture_keeps_known_questions_but_omits_roles_models_and_lab
     ledger=SqlAttemptStore(AutomationStore(observations.session_factory));ledger.reserve(record,max_calls=32)
     ticket=observations.before_dispatch(request,context,record)
     answers={name:{'choice':next(iter(question['criteria'])),'confidence':.9,
-        'probabilities':{key:(.9 if i==0 else .1) for i,key in enumerate(question['criteria'])}}
+        'probabilities':{key:(.9 if i==0 else .1/(len(question['criteria'])-1)) for i,key in enumerate(question['criteria'])}}
         for name,question in request.questions().items()}
     main=answers['execution_model'];usage={'input_tokens':12,'output_tokens':3}
     result=DecisionResult(main['choice'],main['confidence'],main['probabilities'],usage,
