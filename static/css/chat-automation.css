@@ -63,12 +63,10 @@
 .model-auto-selected{background:color-mix(in srgb,var(--fg) 9%,transparent)}
 .model-auto-check{flex:none;width:15px;text-align:center}
 .model-auto-capability{display:block;font-size:11px;line-height:1.5;font-weight:400;opacity:.75;white-space:normal}
-.model-auto-role{display:grid;gap:4px;padding:3px 10px 10px;font-size:11px;border-bottom:1px solid var(--border)}
-.model-auto-role textarea{width:100%;box-sizing:border-box;resize:vertical;max-height:120px;min-height:44px;font:inherit;line-height:1.5;color:var(--fg);background:var(--bg);border:1px solid var(--border);border-radius:5px;padding:6px}
 #model-picker-list [aria-disabled=true]{opacity:.45;cursor:default}
 #model-picker-list .model-auto-missing{width:100%;color:var(--color-warning);font:inherit;font-size:11px;background:transparent;border:0;text-align:left;overflow-wrap:anywhere}
 .chat-permissions-control :focus-visible,.chat-permissions-menu :focus-visible,#chat-auto-approve-dialog :focus-visible,.model-auto-controls :focus-visible,#model-picker-list .model-switch-item:focus-visible{outline:2px solid var(--fg);outline-offset:-2px}
-#chat-permissions-menu[hidden],#model-auto-help[hidden],#model-auto-save-row[hidden]{display:none}
+#chat-permissions-menu[hidden]{display:none}
 @media(max-width:540px){
   .chat-automation-route{grid-template-columns:1fr}#chat-automation-dialog{padding:14px}
   .chat-permissions-trigger{min-height:44px;min-width:44px;padding:0;gap:2px}
@@ -80,4 +78,52 @@
   .chat-permissions-menu>button{min-height:68px}
   #model-picker-list .model-switch-item{min-height:44px}
   .model-auto-actions button{min-height:36px}
+}
+
+/* Native roomy model assignment surface, following the existing larger model dialogs. */
+#model-auto-dialog{width:min(780px,calc(100vw - 28px));height:min(740px,calc(100dvh - 32px));max-height:calc(100dvh - 32px);box-sizing:border-box;padding:0;color:var(--fg);background:var(--bg);border:1px solid var(--border);border-radius:12px;overflow:hidden;font:inherit}
+#model-auto-dialog[open]{display:flex;flex-direction:column}
+#model-auto-dialog::backdrop{background:#0008}
+#model-auto-dialog .modal-header{flex:none;padding:14px 16px;gap:12px}
+#model-auto-title{font-size:18px;margin:0}
+#model-auto-dialog button,#model-auto-dialog input{font:inherit;color:var(--fg);border:1px solid var(--border);border-radius:6px;background:var(--bg);box-sizing:border-box}
+#model-auto-dialog button{height:auto;min-height:40px;padding:7px 10px;cursor:pointer}
+#model-auto-dialog button:disabled{opacity:.5;cursor:default}
+#model-auto-dialog p{font-size:12px;line-height:1.5;overflow-wrap:anywhere}
+#model-auto-description{margin:0 16px 12px}
+.model-auto-tabs{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin:0 16px 12px;flex:none}
+#model-auto-dialog .model-auto-tabs button{padding:10px;text-align:left;min-width:0}
+.model-auto-tabs strong{display:block;font-size:13px;font-weight:500}
+.model-auto-tabs small{display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden;font-size:11px;line-height:1.5;margin-top:6px;overflow-wrap:anywhere;opacity:.75}
+#model-auto-dialog .model-auto-tabs [aria-selected=true]{border-color:var(--fg);background:color-mix(in srgb,var(--fg) 8%,var(--bg))}
+#model-auto-panel{display:flex;flex-direction:column;flex:1;min-height:0;padding:0 16px}
+#model-auto-selected{flex:none;margin:0 0 10px;max-height:64px;overflow:auto}
+.model-auto-search-row{display:flex;gap:8px;flex:none}
+#model-auto-search{width:100%;min-width:0;margin:0;padding:8px 10px;min-height:40px}
+#model-auto-results{flex:none;margin:7px 0;font-size:11px;opacity:.75}
+#model-auto-models{flex:1;min-height:80px;overflow:auto;border-top:1px solid var(--border);border-bottom:1px solid var(--border)}
+#model-auto-dialog .model-switch-item{display:flex;align-items:center;justify-content:space-between;gap:12px;width:100%;min-height:62px;border:0;border-bottom:1px solid var(--border);border-radius:0;padding:10px;text-align:left;white-space:normal;background:transparent}
+#model-auto-dialog .model-switch-item:hover{background:color-mix(in srgb,var(--fg) 8%,transparent)}
+#model-auto-dialog .model-switch-item.model-auto-selected{background:color-mix(in srgb,var(--fg) 9%,transparent)}
+.model-auto-model-label{min-width:0;flex:1;overflow-wrap:anywhere}
+.model-auto-model-label strong{display:block;font-size:12px;font-weight:500;line-height:1.5}
+.model-auto-model-label small{display:block;font-size:11px;line-height:1.5;opacity:.75}
+.model-auto-radio{flex:none;min-width:58px;font-size:11px;text-align:right}
+#model-auto-dialog .modal-footer{flex:none;display:flex;justify-content:space-between;align-items:center;gap:10px;padding:12px 16px}
+#model-auto-assigned{font-size:11px;white-space:nowrap;opacity:.75}
+#model-auto-dialog .model-auto-actions{padding:0;gap:8px}
+#model-auto-dialog #model-auto-save{border-color:var(--fg)}
+#model-auto-migration,#model-auto-dialog-feedback{margin:8px 16px 0;flex:none;font-size:11px}
+#model-auto-migration:empty,#model-auto-dialog-feedback:empty{display:none}
+#model-auto-dialog-feedback{color:var(--color-warning)}
+#model-auto-dialog :focus-visible{outline:2px solid var(--fg);outline-offset:-2px}
+@media(max-width:540px){
+  #model-auto-dialog button,#model-auto-search{min-height:44px}
+  #model-auto-dialog .modal-header{padding:12px}
+  #model-auto-description{margin:0 12px 10px}
+  .model-auto-tabs{margin:0 12px 10px;gap:6px}
+  #model-auto-panel{padding:0 12px}
+  #model-auto-dialog .modal-footer{padding:10px 12px;gap:6px}
+  #model-auto-dialog .model-auto-actions{gap:6px}
+  #model-auto-dialog .model-auto-actions button{font-size:11px;padding:7px}
 }

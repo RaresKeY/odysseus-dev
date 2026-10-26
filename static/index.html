@@ -1070,12 +1070,28 @@
         <label class="chat-automation-checkbox"><input type="checkbox" id="chat-elevation-ceiling"> Allow requests for additional folders</label>
         <p id="chat-elevation-explanation">Off by default. This allows a separate chat grant within the deployment’s limits. Review approval never grants additional access.</p>
         <fieldset><legend>This chat’s extra folders</legend><div id="chat-elevation-folders"></div><button type="button" id="chat-elevation-save">Apply folder grant</button><p id="chat-elevation-status"></p></fieldset>
-        <fieldset><legend>Decision model</legend><p>Reviews actions and chooses model and effort from your Auto models. Your execution model is selected separately.</p><div id="chat-decision-route"></div><label>Connection format <select id="chat-decision-protocol"><option value="openai_json">Compatible JSON inference</option><option value="systemone">Jev SystemOne</option></select></label></fieldset>
-        <fieldset><legend>Auto models</legend><p>Choose the API models Jev may use for this chat in the composer’s model menu. Jev selects only from those models and chooses supported reasoning effort.</p><button type="button" id="chat-auto-models-settings">Choose Auto models</button></fieldset>
+        <fieldset><legend>Decision model</legend><p>Reviews actions and chooses a task category and supported effort using your routing rules.</p><div id="chat-decision-route"></div><label>Connection format <select id="chat-decision-protocol"><option value="openai_json">Compatible JSON inference</option><option value="systemone">Jev SystemOne</option></select></label></fieldset>
+        <fieldset><legend>Auto models</legend><p>Assign one registered API model to Complex tasks and one to Straightforward tasks. Jev chooses the category and supported effort using your routing rules.</p><button type="button" id="chat-auto-models-settings">Set up Auto</button></fieldset>
         <fieldset><legend>Decision assistance for this chat</legend><label><input id="chat-followup-enabled" type="checkbox"> Interpret follow-ups with prior task status</label><label><input id="chat-preparation-enabled" type="checkbox"> Include available context readiness</label><label><input id="chat-completion-advice-enabled" type="checkbox"> Check completion meaning after verified actions</label><p>Advice cannot grant tool access or prove that an action ran. Failed or missing execution evidence still prevents a success claim.</p></fieldset>
         <fieldset id="chat-browser-controls"><legend>Private browser</legend><label>Page URL <input id="chat-browser-url" type="url" placeholder="https://…"></label><label><input id="chat-browser-clicks" type="checkbox"> Allow clicks</label><label><input id="chat-browser-fill" type="checkbox"> Allow filling named fields</label><label>Field label <input id="chat-browser-field-label" type="text"></label><label>Prepared value <input id="chat-browser-field-value" type="text" autocomplete="off"></label><label>Stop when the page contains <input id="chat-browser-check" type="text" placeholder="Optional completion text"></label><label><input id="chat-browser-submit" type="checkbox"> Allow submitting forms on this site</label><div><button type="button" id="chat-browser-open">Open private browser</button><button type="button" id="chat-browser-scope">Allow for next message</button><button type="button" id="chat-browser-navigate">Open page myself</button><button type="button" id="chat-browser-view">Take control / View</button><button type="button" id="chat-browser-close">Close browser</button></div><p id="chat-browser-status" role="status"></p><img id="chat-browser-screenshot" hidden alt="Current private browser screenshot"><div id="chat-browser-targets"></div></fieldset>
         <p id="chat-automation-feedback" role="status" aria-live="polite"></p><button type="submit">Save settings</button>
       </form>
+    </dialog>
+    <dialog id="model-auto-dialog" aria-labelledby="model-auto-title" aria-describedby="model-auto-description">
+      <div class="modal-header"><h2 id="model-auto-title">Auto models</h2><button type="button" id="model-auto-close" class="close-btn">Close</button></div>
+      <p id="model-auto-description">Jev chooses a task category and supported effort using your routing rules, then uses its assigned model.</p>
+      <div class="model-auto-tabs" role="tablist" aria-label="Task category">
+        <button type="button" id="model-auto-complex_tasks" role="tab" aria-selected="true" aria-controls="model-auto-panel"><strong>Complex tasks</strong><small>Choose a model</small></button>
+        <button type="button" id="model-auto-straightforward_tasks" role="tab" aria-selected="false" aria-controls="model-auto-panel" tabindex="-1"><strong>Straightforward tasks</strong><small>Choose a model</small></button>
+      </div>
+      <div id="model-auto-panel" role="tabpanel" aria-labelledby="model-auto-complex_tasks">
+        <p id="model-auto-selected" role="status"></p>
+        <div class="model-auto-search-row"><input id="model-auto-search" class="memory-search-input" type="search" placeholder="Search models or providers…" aria-label="Search registered models" autocomplete="off"><button type="button" id="model-auto-refresh">Refresh</button></div>
+        <p id="model-auto-results" role="status" aria-live="polite"></p>
+        <div id="model-auto-models" role="listbox" aria-label="Registered API models"></div>
+      </div>
+      <p id="model-auto-migration"></p><p id="model-auto-dialog-feedback" role="status" aria-live="polite"></p>
+      <div class="modal-footer"><span id="model-auto-assigned">0/2 assigned</span><div class="model-auto-actions"><button type="button" id="model-auto-cancel">Cancel</button><button type="button" id="model-auto-save">Save &amp; enable Auto</button></div></div>
     </dialog>
     <dialog id="chat-auto-approve-dialog" aria-labelledby="chat-auto-approve-title">
       <h2 id="chat-auto-approve-title">Enable Auto-Approve for this chat?</h2>
@@ -1121,12 +1137,12 @@
               </button>
             </div>
             <div class="model-auto-controls">
-              <button type="button" id="model-auto-select" role="menuitemradio" aria-checked="false"><strong>Auto · Jev</strong><small>Choose model and effort for each message.</small></button>
-              <div class="model-auto-actions"><button type="button" id="model-auto-edit">Choose Auto models</button><span id="model-auto-count"></span></div>
-              <p id="model-auto-help" hidden>Jev uses only the models you select and chooses supported reasoning effort. Add an optional role to explain when to use each model.</p>
+              <button type="button" id="model-auto-select" role="menuitemradio" aria-checked="false"><strong>Auto · Jev</strong><small>Choose a task category and effort for each message.</small></button>
+              <div class="model-auto-actions"><button type="button" id="model-auto-edit">Set up Auto</button><span id="model-auto-count"></span></div>
+
               <p id="model-auto-eligibility" role="status" aria-live="polite"></p>
               <p id="model-auto-feedback" role="status" aria-live="polite"></p>
-              <div id="model-auto-save-row" class="model-auto-actions" hidden><button type="button" id="model-auto-cancel">Cancel</button><button type="button" id="model-auto-save">Save &amp; enable Auto</button></div>
+
             </div>
             <div class="model-picker-list" id="model-picker-list"></div>
           </div>

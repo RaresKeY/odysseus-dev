@@ -6,6 +6,7 @@ import uiModule from './ui.js?v=20260916largetoolscroll1';
 import settingsModule from './settings.js?v=20260912writingstyle3';
 import { sortModelObjects } from './modelSort.js';
 import spinnerModule from './spinner.js';
+import {AUTO_CATEGORIES, categoriesAvailable, createAutoCategoryDialog} from './modelAutoDialog.js';
 
 const API_BASE = window.location.origin;
 
@@ -214,78 +215,47 @@ function _initModelPickerDropdown() {
   if (!wrap || !btn || !menu || !search || !listEl) return;
   if (wrap.dataset.modelPickerBound === '1') return;
   wrap.dataset.modelPickerBound = '1';
-  let poolDraft=null, poolContext=null, poolSaving=false, editAutoWhenReady=false;
+  let autoSaving=false;
   const autoSelect=document.getElementById('model-auto-select');
   const autoEdit=document.getElementById('model-auto-edit');
   const autoFeedback=document.getElementById('model-auto-feedback');
-  const poolKey=m=>JSON.stringify([m.endpoint_id,m.model]);
-  function eligiblePool(models){
-    const catalogue=new Map(_getAllModels().map(m=>[poolKey({endpoint_id:m.endpointId,model:m.mid}),m]));
-    return !!models.length && models.every(item=>{
-      const model=catalogue.get(poolKey(item));return model?.endpointId && !model.stale && model.modelType==='llm';
-    });
-  }
+  const categoryDialog=createAutoCategoryDialog({
+    getModels:()=>_getAllModels(),
+    refreshModels:()=>_refreshPickerModels({force:true,showLoading:false}),
+    returnFocus:()=>btn.focus(),
+    onSaved:()=>{renderAutoControls();updateModelPicker();},
+  });
   function renderAutoControls(){
     const policy=window.ChatAutomation?.getPolicy();
-    const selected=poolDraft || policy?.auto_models || [];
+    const categories=policy?.auto_categories || {};
+    const count=AUTO_CATEGORIES.filter(([id])=>categories[id]).length;
+    const valid=categoriesAvailable(categories,_getAllModels());
     autoSelect.setAttribute('aria-checked',String(policy?.route_mode==='auto'));
-    const valid=eligiblePool(selected);
-    autoSelect.disabled=poolSaving || _pickerLoading || !!poolDraft || !window.ChatAutomation
-      || (!!policy?.auto_models?.length && !eligiblePool(policy.auto_models));
-    autoEdit.disabled=poolSaving || _pickerLoading || !!poolDraft || !window.ChatAutomation;
-    autoEdit.textContent=poolDraft?'Auto models':selected.length?'Edit Auto models':'Choose Auto models';
-    document.getElementById('model-auto-count').textContent=`${selected.length} selected`;
-    document.getElementById('model-auto-help').hidden=!poolDraft;
-    document.getElementById('model-auto-save-row').hidden=!poolDraft;
-    document.getElementById('model-auto-save').disabled=poolSaving || _pickerLoading || !valid;
-    document.getElementById('model-auto-cancel').disabled=poolSaving;
-    document.getElementById('model-auto-eligibility').textContent=poolDraft
-      ?_pickerLoading?'Refreshing models…':!selected.length?'Choose at least one available model to use Auto.':!valid?'Remove unavailable models before enabling Auto.':''
-      :policy?.auto_models?.length && !valid && !_pickerLoading?'Some Auto models are unavailable. Edit Auto models to continue.':'';
+    autoSelect.disabled=autoSaving || _pickerLoading || !window.ChatAutomation;
+    autoEdit.disabled=autoSaving || !window.ChatAutomation;
+    autoEdit.textContent=count?'Edit categories':'Set up Auto';
+    document.getElementById('model-auto-count').textContent=`${count}/2 assigned`;
+    document.getElementById('model-auto-eligibility').textContent=count && !valid && !_pickerLoading
+      ?'Assign an available model to both categories to use Auto.':'';
   }
-  function editAutoModels(){
-    if(poolSaving || !window.ChatAutomation)return;
-    if(poolDraft){_populate(search.value || '');return;}
-    const policy=window.ChatAutomation.getPolicy();
-    poolDraft=(policy?.auto_models || []).map(m=>({...m}));
-    poolContext=window.ChatAutomation.selectionContext();
-    autoFeedback.textContent=policy?.auto_models_source==='legacy_approaches'
-      ?'Your previous approach models are retained. Review this pool before saving.'
-      :'';
-    _populate(search.value || '');
-  }
-  autoEdit.addEventListener('click',editAutoModels);
-  window.addEventListener('odysseus:edit-auto-models',()=>{
-    if(_pickerLoading)editAutoWhenReady=true;else editAutoModels();
-  });
-  autoSelect.addEventListener('click',async()=>{
-    if(poolSaving)return;
-    const policy=window.ChatAutomation?.getPolicy();
-    if(!policy?.auto_models?.length){editAutoModels();return;}
-    poolSaving=true;renderAutoControls();autoFeedback.textContent='Applying Auto…';
-    try{await window.ChatAutomation.enableAuto();poolDraft=null;autoFeedback.textContent='Reasoning effort · chosen automatically';renderAutoControls();}
+  function editAutoModels(){_close();categoryDialog.open();}
+  autoEdit.addEventListener('click',event=>{event.stopPropagation();editAutoModels();});
+  window.addEventListener('odysseus:edit-auto-models',editAutoModels);
+  autoSelect.addEventListener('click',async event=>{
+    event.stopPropagation();if(autoSaving)return;
+    if(!categoriesAvailable(window.ChatAutomation?.getPolicy()?.auto_categories,_getAllModels())){editAutoModels();return;}
+    autoSaving=true;renderAutoControls();autoFeedback.textContent='Applying Auto…';
+    try{await window.ChatAutomation.enableAuto();autoFeedback.textContent='';renderAutoControls();updateModelPicker();_close();}
     catch(error){autoFeedback.textContent=error.message;}
-    finally{poolSaving=false;renderAutoControls();}
-  });
-  document.getElementById('model-auto-cancel').addEventListener('click',()=>{
-    poolDraft=null;poolContext=null;autoFeedback.textContent='';_populate(search.value || '');autoEdit.focus();
-  });
-  document.getElementById('model-auto-save').addEventListener('click',async()=>{
-    if(!poolDraft || poolSaving)return;
-    poolSaving=true;renderAutoControls();_populate(search.value || '');autoFeedback.textContent='Saving Auto models…';
-    try{
-      await window.ChatAutomation.saveAutoModels(poolDraft.map(m=>({...m})),poolContext);
-      poolDraft=null;poolContext=null;autoFeedback.textContent='Reasoning effort · chosen automatically';
-    }catch(error){autoFeedback.textContent=error.message;}
-    finally{poolSaving=false;_populate(search.value || '');}
+    finally{autoSaving=false;renderAutoControls();}
   });
   window.addEventListener('odysseus:automation-policy',()=>{
     renderAutoControls();
-    if(!menu.classList.contains('hidden') && !poolDraft)_populate(search.value || '');
+    if(!menu.classList.contains('hidden'))_populate(search.value || '');
   });
   window.addEventListener('odysseus:session-changed',event=>{
-    if(event.detail?.materialized && poolSaving)return;
-    poolDraft=null;poolContext=null;autoFeedback.textContent='';_close();
+    if(event.detail?.materialized && autoSaving)return;
+    autoFeedback.textContent='';_close();
   });
   menu.addEventListener('keydown',event=>{
     if(event.key==='Escape'){event.preventDefault();_close();btn.focus();}
@@ -293,7 +263,6 @@ function _initModelPickerDropdown() {
   btn.setAttribute('aria-haspopup','menu');btn.setAttribute('aria-expanded','false');
 
   function _close() {
-    editAutoWhenReady=false;
     if (menu.classList.contains('hidden')) return;
     btn.setAttribute('aria-expanded','false');
     // Restore scroll button
@@ -456,9 +425,6 @@ function _initModelPickerDropdown() {
       if (seq === _pickerLoadSeq) {
         _pickerLoading = false;
         renderAutoControls();
-        if(editAutoWhenReady && !menu.classList.contains('hidden') && !menu.classList.contains('closing')){
-          editAutoWhenReady=false;editAutoModels();
-        }
         listEl.classList.remove('is-loading');
       }
     }
@@ -545,8 +511,6 @@ function _initModelPickerDropdown() {
 
   function _populate(filter) {
     positionPicker();
-    const roleFocus=document.activeElement?.dataset?.autoRoleKey;
-    const roleSelection=roleFocus?[document.activeElement.selectionStart,document.activeElement.selectionEnd]:null;
     listEl.innerHTML = '';
     listEl.classList.remove('is-loading');
     renderAutoControls();
@@ -562,22 +526,6 @@ function _initModelPickerDropdown() {
       searchRow.classList.toggle('searching', !!q);
     }
 
-    if(poolDraft){
-      const matching=all.filter(m=>[m.mid,m.display,m.epName,m.providerText].join(' ').toLowerCase().includes(q));
-      const chosen=new Set(poolDraft.map(poolKey));
-      const available=new Set(all.map(m=>poolKey({endpoint_id:m.endpointId,model:m.mid})));
-      poolDraft.filter(m=>!available.has(poolKey(m))).forEach(m=>{
-        const row=document.createElement('button');row.type='button';row.className='model-switch-item model-auto-missing';
-        row.disabled=poolSaving;row.textContent=`${m.model} · unavailable — remove`;
-        row.title=m.endpoint_id;
-        row.addEventListener('click',event=>{event.stopPropagation();poolDraft=poolDraft.filter(item=>poolKey(item)!==poolKey(m));autoFeedback.textContent='';_populate(search.value || '');});
-        listEl.append(row);
-      });
-      matching.sort((a,b)=>Number(chosen.has(poolKey({endpoint_id:b.endpointId,model:b.mid})))-Number(chosen.has(poolKey({endpoint_id:a.endpointId,model:a.mid})))).forEach(m=>_addRow(m));
-      if(roleFocus){const input=[...listEl.querySelectorAll('[data-auto-role-key]')].find(e=>e.dataset.autoRoleKey===roleFocus);if(input){input.focus({preventScroll:true});input.setSelectionRange(...roleSelection);}}
-      if(!matching.length){const empty=document.createElement('p');empty.className='model-switch-empty';empty.textContent=hasAnyModel?'No matching models':'No registered API models available. Add an endpoint or refresh.';listEl.append(empty);}
-      return;
-    }
     if (!hasAnyModel) {const empty=document.createElement('p');empty.className='model-switch-empty';empty.textContent='No registered models available. Add an endpoint or refresh.';listEl.append(empty);return;}
 
     // Unique lookup so Recent/Favorites (stored as bare model IDs) can be
@@ -639,48 +587,6 @@ function _initModelPickerDropdown() {
       epSpan.textContent = _epDisplay;
       row.appendChild(epSpan);
 
-      if(poolDraft){
-        const identity={endpoint_id:m.endpointId,model:m.mid};
-        const selected=poolDraft.some(item=>poolKey(item)===poolKey(identity));
-        const unavailable=!m.endpointId || m.stale || m.modelType!=='llm';
-        row.setAttribute('role','menuitemcheckbox');row.setAttribute('aria-checked',String(selected));
-        row.setAttribute('aria-disabled',String(poolSaving || (unavailable && !selected)));
-        row.tabIndex=0;row.classList.toggle('model-auto-selected',selected);
-        const mark=document.createElement('span');mark.className='model-auto-check';mark.textContent=selected?'✓':'＋';row.append(mark);
-        epSpan.textContent=m.epName || 'Unregistered';
-        const capability=document.createElement('small');capability.className='model-auto-capability';
-        const efforts=m.autoCapabilities.supported_efforts || ['default'];
-        capability.textContent=unavailable?'Unavailable for Auto':efforts.length===1 && efforts[0]==='default'
-          ?'Model default · explicit effort unavailable':`Jev chooses effort: ${efforts.join(', ')}`;
-        nameSpan.append(capability);
-        row.title=`${m.mid} · ${m.epName || 'Unregistered'}${m.stale?' · unavailable':''}`;
-        const toggle=()=>{
-          if(poolSaving || (unavailable && !selected))return;
-          if(!selected && poolDraft.length>=32){autoFeedback.textContent='Choose up to 32 Auto models.';return;}
-          poolDraft=selected?poolDraft.filter(item=>poolKey(item)!==poolKey(identity)):[...poolDraft,identity];
-          autoFeedback.textContent='';
-          const scroll=listEl.scrollTop;_populate(search.value || '');listEl.scrollTop=scroll;
-          [...listEl.querySelectorAll('[role="menuitemcheckbox"]')].find(el=>el.dataset.poolKey===poolKey(identity))?.focus();
-        };
-        row.dataset.poolKey=poolKey(identity);row.addEventListener('click',event=>{event.stopPropagation();toggle();});
-        row.addEventListener('keydown',event=>{if(event.key===' ' || event.key==='Enter'){event.preventDefault();toggle();}});
-        listEl.appendChild(row);
-        if(selected){
-          const label=document.createElement('label');label.className='model-auto-role';
-          const caption=document.createElement('span');caption.textContent='Role for Auto (optional)';
-          const input=document.createElement('textarea');input.rows=2;input.maxLength=800;
-          input.placeholder='Describe when Jev should choose this model';
-          input.setAttribute('aria-label',`Role for ${m.mid} on ${m.epName || m.endpointId}`);
-          input.dataset.autoRoleModel=m.mid;
-          input.dataset.autoRoleEndpoint=m.endpointId;
-          input.dataset.autoRoleKey=poolKey(identity);
-          input.value=poolDraft.find(item=>poolKey(item)===poolKey(identity))?.description || '';
-          input.disabled=poolSaving;
-          input.addEventListener('input',()=>{poolDraft=poolDraft.map(item=>poolKey(item)===poolKey(identity)?{...item,description:input.value}:item);});
-          label.append(caption,input);listEl.append(label);
-        }
-        return;
-      }
       // Inline favorite button — toggles favorite, never picks the model.
       const favDot = document.createElement('button');
       favDot.type = 'button';
@@ -1138,8 +1044,8 @@ export function updateModelPicker() {
   }
 
   if(_automationPolicy?.session_id===currentSessionId && _automationPolicy.route_mode==='auto'){
-    const count=_automationPolicy.auto_models?.length || 0;
-    label.textContent=`Auto · Jev · ${count}`;
+    const count=Object.keys(_automationPolicy.auto_categories || {}).length;
+    label.textContent=count===2?'Auto · Jev':'Auto · assign categories';
     label.title=`Choose model and effort for each message. ${count} selected API models. Reasoning effort · chosen automatically`;
     const effortWrap=document.getElementById('reasoning-effort-wrap');if(effortWrap)effortWrap.style.display='none';
     return;

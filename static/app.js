@@ -2121,7 +2121,7 @@ function initializeEventListeners() {
       // Don't refocus for attach — file picker needs full focus control
       if (e.target.closest('#overflow-attach-btn')) return;
       // Don't refocus for model picker button — focus should go to picker search input
-      if (e.target.closest('.model-picker-btn, #model-picker-menu, .chat-permissions-control, #chat-permissions-menu, #chat-automation-settings')) return;
+      if (e.target.closest('.model-picker-btn, #model-picker-menu, .chat-permissions-control, #chat-permissions-menu, #chat-automation-settings, #model-auto-dialog')) return;
       // Don't refocus when tapping the +/chevron tools button — the user
       // is explicitly trying to dismiss the keyboard and open the tools
       // menu. Without this, the textarea blurs (keyboard down), then this
