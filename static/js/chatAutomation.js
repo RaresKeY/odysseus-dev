@@ -7,7 +7,7 @@ let settingsWrite = Promise.resolve(true);
 let navigationGeneration = 0;
 let settingsChatId = null, settingsNavigation = 0;
 let activity = null, activitySessionId = null;
-let saving = false, activationChat = null, activationNavigation = null;
+let saving = false, activation = null, activationGeneration = 0;
 const modeLabels = {always_ask:'Always Ask',auto_approve:'Auto-Approve',yolo:'YOLO'};
 function notice(text='') { const el=$('chat-automation-notice'); el.textContent=text; el.hidden=!text; }
 function permissionFeedback(text='') { $('chat-permissions-feedback').textContent=text; notice(text); }
@@ -39,7 +39,6 @@ function controlsBusy(busy) {
   saving=busy;
   $('chat-approval-mode').disabled=busy || !configuration;
   $('chat-tool-routing').disabled=busy;
-  $('chat-automation-default').disabled=busy;
   $('chat-permissions-menu').setAttribute('aria-busy',String(busy));
   $('chat-permissions-menu').querySelectorAll('button').forEach(b=>b.disabled=busy);
 }
@@ -86,7 +85,7 @@ async function currentChat(seed) {
   return existingId;
 }
 function render() {
-  const mode=policy?.approval_mode || configuration?.last_explicit_mode || 'always_ask';
+  const mode=policy?.approval_mode || 'always_ask';
   $('chat-permissions-label').textContent=modeLabels[mode] || 'Permissions';
   $('chat-permissions-short').textContent={always_ask:'Ask',auto_approve:'Auto',yolo:'YOLO'}[mode] || '…';
   $('chat-approval-mode').title=`Permissions for this chat: ${modeLabels[mode] || 'Loading'}`;
@@ -110,7 +109,7 @@ async function refresh() {
     const chat = id ? await api(`/api/session/${encodeURIComponent(id)}/automation`) : null;
     if (ticket !== sequence || id !== sid()) return;
     configuration = config; policy = chat; render();
-    if(activitySessionId!==id){activity?.destroy();activity=null;activitySessionId=id;if(id)activity=window.DecisionActivity?.mount($('chat-decision-activity'),id);}
+    if(activitySessionId!==id){activity?.destroy();activity=null;activitySessionId=id;if(id)activity=window.DecisionActivity?.mount($('chat-decision-activity'),id,{pane:$('chat-decision-pane'),trigger:$('chat-decision-toggle'),closeButton:$('chat-decision-close'),refreshButton:$('chat-decision-refresh')});}
   } catch(e) { if(ticket===sequence){notice(e.message);$('chat-approval-mode').disabled=true;} }
 }
 function changeChat(changes, context) {
@@ -122,7 +121,7 @@ function changeChat(changes, context) {
       if(requestedNavigation!==navigationGeneration || sid()!==requestedId) throw new Error('The chat changed. Choose the setting again in the current chat.');
       const id = requestedId || await currentChat(changes.auto_categories?.complex_tasks), ticket=++sequence;
       const previous=policy?.session_id===id ? policy : await api(`/api/session/${encodeURIComponent(id)}/automation`);
-      if(context && (context.navigation!==requestedNavigation || context.session_id!==requestedId || (requestedId && context.policy_revision!==previous.policy_revision)))throw new Error('The chat settings changed. Reopen Auto models before saving.');
+      if(context && (context.navigation!==requestedNavigation || context.session_id!==requestedId || (requestedId && context.policy_revision!==previous.policy_revision)))throw new Error(`The chat settings changed. Reopen ${context.label || 'Auto models'} before saving.`);
       const saved=await api(`/api/session/${encodeURIComponent(id)}/automation`,'PUT',{policy_revision:previous.policy_revision,changes});
       if(id===sid() && ticket===sequence){++sequence;policy=saved;render();}else await refresh();
       return saved;
@@ -201,24 +200,37 @@ async function initialize(){
     const mode=button.dataset.approvalMode;
     if(saving)return;
     permissionFeedback('');
-    if(mode==='auto_approve' && $('chat-approval-mode').value!=='auto_approve'){
-      activationChat=sid();activationNavigation=navigationGeneration;
-      closePermissions();$('chat-auto-approve-feedback').textContent='';$('chat-auto-approve-dialog').showModal();return;
+    if(['auto_approve','yolo'].includes(mode) && $('chat-approval-mode').value!==mode){
+      const prefix=mode==='yolo'?'chat-yolo':'chat-auto-approve';
+      activation={mode,prefix,chat:sid(),navigation:navigationGeneration,revision:policy?.policy_revision,generation:++activationGeneration};
+      closePermissions();$(`${prefix}-feedback`).textContent='';$(`${prefix}-enable`).disabled=false;$(`${prefix}-cancel`).disabled=false;$(`${prefix}-dialog`).showModal();return;
     }
     try{await changeChat({approval_mode:mode});closePermissions(true);}
     catch(error){permissionFeedback(error.message);render();}
   }));
-  $('chat-auto-approve-cancel').addEventListener('click',()=>{$('chat-auto-approve-dialog').close();$('chat-approval-mode').focus();});
-  $('chat-auto-approve-dialog').addEventListener('cancel',event=>{if(saving){event.preventDefault();return;}$('chat-approval-mode').focus();});
-  $('chat-auto-approve-enable').addEventListener('click',async()=>{
-    const button=$('chat-auto-approve-enable');button.disabled=true;$('chat-auto-approve-cancel').disabled=true;
-    try{
-      if(activationChat!==sid() || activationNavigation!==navigationGeneration)throw new Error('The chat changed. Choose Auto-Approve again.');
-      await changeChat({approval_mode:'auto_approve'});
-      $('chat-auto-approve-dialog').close();$('chat-approval-mode').focus();
-    }catch(error){$('chat-auto-approve-feedback').textContent=error.message;render();}
-    finally{button.disabled=false;$('chat-auto-approve-cancel').disabled=false;}
-  });
+  function dismissActivation(restore=false){
+    ++activationGeneration;activation=null;
+    for(const prefix of ['chat-auto-approve','chat-yolo'])if($(`${prefix}-dialog`).open)$(`${prefix}-dialog`).close();
+    if(restore)$('chat-approval-mode').focus();
+  }
+  for(const prefix of ['chat-auto-approve','chat-yolo']){
+    const dialog=$(`${prefix}-dialog`),button=$(`${prefix}-enable`),cancel=$(`${prefix}-cancel`);
+    cancel.addEventListener('click',()=>dismissActivation(true));
+    dialog.addEventListener('cancel',event=>{event.preventDefault();if(!saving)dismissActivation(true);});
+    dialog.addEventListener('close',()=>{if(!dialog.open && activation?.prefix===prefix)dismissActivation();});
+    button.addEventListener('click',async()=>{
+      const context=activation;
+      if(!context || context.prefix!==prefix)return;
+      const current=()=>activation===context && context.generation===activationGeneration && dialog.open;
+      button.disabled=true;cancel.disabled=true;
+      try{
+        if(context.chat!==sid() || context.navigation!==navigationGeneration || (context.chat && context.revision!==policy?.policy_revision))throw new Error('The chat settings changed. Choose the permission mode again.');
+        await changeChat({approval_mode:context.mode},{session_id:context.chat,navigation:context.navigation,policy_revision:context.revision,label:'permissions'});
+        if(current())dismissActivation(true);
+      }catch(error){if(current()){$(`${prefix}-feedback`).textContent=error.message;render();}}
+      finally{if(current()){button.disabled=false;cancel.disabled=false;}}
+    });
+  }
   $('chat-auto-models-settings').addEventListener('click',event=>{
     event.stopPropagation();
     $('chat-automation-dialog').close();window.dispatchEvent(new Event('odysseus:edit-auto-models'));
@@ -230,7 +242,6 @@ async function initialize(){
     const renderer=await import('./chatRenderer.js?v=20260914metricssummary1');
     if(id===sid() && ticket===sequence)renderer.renderAskUserCard(pending,{focus:true,scroll:true});
   });
-  $('chat-automation-default').addEventListener('click',async()=>{try{await changeChat({approval_mode:$('chat-approval-mode').value});await refresh();message('New chats will use this approval mode.');}catch(e){$('chat-automation-state').textContent=e.message;await refresh();}});
   $('chat-automation-close').addEventListener('click',()=>$('chat-automation-dialog').close());
   const browserPath=async()=>{if(settingsChatId!==sid() || settingsNavigation!==navigationGeneration)throw new Error('The chat changed. Open settings again.');return `/api/session/${encodeURIComponent(await currentChat())}/browser`;};
   function browserScope(){const effects=[];if($('chat-browser-clicks').checked)effects.push('click');if($('chat-browser-fill').checked)effects.push('fill');if($('chat-browser-submit').checked)effects.push('submit');const label=$('chat-browser-field-label').value;return {url:$('chat-browser-url').value,effects,fields:label?[{label,value:$('chat-browser-field-value').value}]:[],checks:$('chat-browser-check').value?[{kind:'text_contains',value:$('chat-browser-check').value}]:[]};}
@@ -252,7 +263,7 @@ async function initialize(){
       await refresh(); message('Settings saved. New messages use the committed choices.');
     } catch(error) { message(error.message); } finally {if(button)button.disabled=false;}
   });
-  window.addEventListener('odysseus:session-changed',()=>{++navigationGeneration;policy=null;closePermissions();notice();refresh();});
+  window.addEventListener('odysseus:session-changed',()=>{++navigationGeneration;policy=null;dismissActivation();closePermissions();activity?.destroy();activity=null;activitySessionId=null;notice();render();refresh();});
   window.addEventListener('odysseus:automation-changed',refresh);
   document.addEventListener('visibilitychange',()=>{if(!document.hidden)refresh();});
   await refresh();
