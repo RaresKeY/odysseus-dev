@@ -17,8 +17,11 @@ from src.tool_capabilities import ToolRunSecurityContext
 
 @pytest.fixture
 def dispatch_runtime(store, tmp_path, monkeypatch):
-    from src import decisions, tool_approvals, tool_execution
+    from src import decisions, tool_approvals, tool_execution, model_admission
     from core import database as d
+    monkeypatch.setattr(model_admission, '_AUTH_MANAGER', SimpleNamespace(
+        users={'alice': {}}, get_privileges=lambda _owner: {
+            'allowed_models': ['decision-model', 'manual'], 'allowed_models_restricted': True}))
     workspace = tmp_path / "workspace"
     workspace.mkdir()
     (workspace / "target.txt").write_text("before")

@@ -64,3 +64,9 @@ Offline regression tests use complete HTTP mock transports and the canonical
 dispatcher, with an executor that records synthetic effects. They establish
 lifecycle, owner, concurrency, strict-response and replay contracts. They do
 not establish model judgment quality, browser speed or a working OS sandbox.
+
+The disabled permission control was also exercised in Chromium at desktop and
+mobile sizes using production HTML, CSS and controller code with synthetic
+API/session responses. [Desktop](auto-approve-readiness/desktop.png) and
+[mobile](auto-approve-readiness/mobile.png) screenshots show this isolated
+component fixture, not a full-application run.

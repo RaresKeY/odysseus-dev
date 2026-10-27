@@ -24,8 +24,12 @@ def store(tmp_path):
 
 
 @pytest.fixture
-def configured_reviewer(store):
+def configured_reviewer(store, monkeypatch):
     """A selected, keyless local reviewer for tests that explicitly enable Auto."""
+    from src import model_admission
+    monkeypatch.setattr(model_admission, '_AUTH_MANAGER', SimpleNamespace(
+        users={'alice': {}, 'bob': {}}, get_privileges=lambda _owner: {
+            'allowed_models': ['decision-model', 'manual', 'm'], 'allowed_models_restricted': True}))
     with store.transaction() as db:
         db.add(d.ModelEndpoint(id='reviewer', name='Local reviewer', owner='alice',
             base_url='http://127.0.0.1:8000/v1', cached_models='["decision-model"]'))
