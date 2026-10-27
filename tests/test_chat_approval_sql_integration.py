@@ -18,9 +18,13 @@ from src.tool_capabilities import ToolRunSecurityContext
 @pytest.fixture
 def dispatch_runtime(store, tmp_path, monkeypatch):
     from src import decisions, tool_approvals, tool_execution
+    from core import database as d
     workspace = tmp_path / "workspace"
     workspace.mkdir()
     (workspace / "target.txt").write_text("before")
+    with store.transaction() as db:
+        db.add(d.ModelEndpoint(id='reviewer', name='Synthetic reviewer', owner='alice',
+            base_url='https://synthetic.invalid/v1', cached_models='["decision-model"]'))
     store.update_configuration("alice", {"decision_provider": CONFIG}, 0)
     calls, effects = [], []
     attempts = SqlAttemptStore(store)

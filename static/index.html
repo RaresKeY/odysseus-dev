@@ -1092,11 +1092,12 @@
     </dialog>
     <dialog id="chat-auto-approve-dialog" aria-labelledby="chat-auto-approve-title">
       <h2 id="chat-auto-approve-title">Enable Auto-Approve for this chat?</h2>
-      <p>Jev will review actions automatically within this chat’s permissions.</p>
+      <p>Your configured decision model will review actions automatically within this chat’s permissions.</p>
       <p>You will not be asked to approve individual actions. If an action is denied, needs human review, or the review fails, Odysseus will stop with an error.</p>
       <p>Workspace permissions and deployment limits still apply.</p>
+      <p id="chat-auto-approve-dialog-unavailable" role="status">Checking decision model availability…</p>
       <p id="chat-auto-approve-feedback" role="alert"></p>
-      <div class="chat-confirm-actions"><button type="button" id="chat-auto-approve-cancel" autofocus>Cancel</button><button type="button" id="chat-auto-approve-enable">Enable Auto-Approve</button></div>
+      <div class="chat-confirm-actions"><button type="button" id="chat-auto-approve-cancel" autofocus>Cancel</button><button type="button" id="chat-auto-approve-enable" disabled>Enable Auto-Approve</button></div>
     </dialog>
     <dialog id="chat-yolo-dialog" class="chat-mode-activation" aria-labelledby="chat-yolo-title" aria-describedby="chat-yolo-description">
       <h2 id="chat-yolo-title">Enable YOLO for this chat?</h2>
@@ -1252,8 +1253,10 @@
             <div id="chat-permissions-menu" class="chat-permissions-menu" role="menu" aria-label="Permissions for this chat" hidden>
               <div class="chat-menu-heading">Permissions for this chat</div>
               <button type="button" role="menuitemradio" data-approval-mode="always_ask" aria-checked="true"><span><strong>Always Ask</strong><small>Ask you when an action needs approval.</small></span><span class="chat-mode-check" aria-hidden="true">✓</span></button>
-              <button type="button" role="menuitemradio" data-approval-mode="auto_approve" aria-checked="false"><span><strong>Auto-Approve</strong><small>Jev reviews actions automatically. Denied actions and review errors stop.</small></span><span class="chat-mode-check" aria-hidden="true">✓</span></button>
+              <button type="button" role="menuitemradio" data-approval-mode="auto_approve" aria-checked="false" aria-disabled="true" aria-describedby="chat-auto-approve-unavailable" disabled><span><strong>Auto-Approve</strong><small>Your configured decision model reviews actions. Denied actions and review errors stop.</small></span><span class="chat-mode-check" aria-hidden="true">✓</span></button>
               <button type="button" role="menuitemradio" data-approval-mode="yolo" aria-checked="false"><span><strong>YOLO</strong><small>Run permitted actions without approval prompts.</small></span><span class="chat-mode-check" aria-hidden="true">✓</span></button>
+              <p id="chat-auto-approve-unavailable" role="status">Checking decision model availability…</p>
+              <button type="button" id="chat-auto-approve-setup" role="menuitem">Configure decision model</button>
               <p id="chat-permissions-feedback" role="status" aria-live="polite"></p>
             </div>
           </div>

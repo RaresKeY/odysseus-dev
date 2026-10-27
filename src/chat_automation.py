@@ -198,6 +198,13 @@ class AutomationStore:
             route = changes.get("route_mode", s.route_mode)
             if mode not in MODES or route not in {"manual", "auto"}:
                 raise HTTPException(422, "Invalid chat mode")
+            if changes.get("approval_mode") == "auto_approve":
+                from src.decisions.config import decision_provider_availability
+                availability = decision_provider_availability(
+                    (p.configuration or {}).get("decision_provider"), owner, db=db)
+                if not availability["available"]:
+                    raise HTTPException(422, availability["reason"],
+                                        headers={"X-Decision-Failure": availability["reason_code"]})
             features = {**FEATURE_DEFAULTS, **copy.deepcopy(s.feature_settings or {})}
             from src.model_auto import validate_candidates, validate_registered_candidates, validate_registered_categories
             from src.decisions import DecisionError

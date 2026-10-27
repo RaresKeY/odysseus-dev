@@ -80,8 +80,11 @@ def decision_url(base: str, protocol: str) -> str:
     raise DecisionError("decision_endpoint_invalid")
 
 
-def resolve_decision_endpoint(config: dict, owner: str | None) -> ResolvedDecisionEndpoint:
-    """No raw URL/key overrides and no ownerless fall-through to named owners."""
+def resolve_decision_endpoint(config: dict, owner: str | None, *, db=None) -> ResolvedDecisionEndpoint:
+    """Resolve locally, optionally within an existing settings transaction.
+
+    No probes, credential refresh, raw URL/key overrides or ownerless fall-through.
+    """
     config = validate_config(config)
     owner = admit_decision_owner(owner)
     from src.model_admission import require_owner_model
@@ -94,7 +97,9 @@ def resolve_decision_endpoint(config: dict, owner: str | None) -> ResolvedDecisi
     from src.endpoint_resolver import (_endpoint_enabled_models, _endpoint_hidden_models,
                                        build_headers, resolve_endpoint_runtime)
 
-    db = SessionLocal()
+    owns_session = db is None
+    if owns_session:
+        db = SessionLocal()
     try:
         # Shared registrations are visible by the existing canonical policy;
         # an explicit endpoint ID is still mandatory. Empty-owner mode never
@@ -115,6 +120,11 @@ def resolve_decision_endpoint(config: dict, owner: str | None) -> ResolvedDecisi
             raise DecisionError("decision_model_unavailable")
         base, key = resolve_endpoint_runtime(row, owner=owner)
         url = decision_url(base, config["protocol"])
+        # The hosted Jev API requires a key. The protocol itself does not:
+        # self-hosted SystemOne and compatible JSON endpoints may be keyless.
+        if (urlsplit(url).hostname or "").lower().rstrip(".") == "api.typesafe.ai" and not (
+                isinstance(key, str) and key.strip()):
+            raise DecisionError("decision_credentials_missing")
         # Credentials are obtained only from the selected encrypted registration.
         headers = build_headers(key, base) if key else {}
         return ResolvedDecisionEndpoint(
@@ -126,4 +136,30 @@ def resolve_decision_endpoint(config: dict, owner: str | None) -> ResolvedDecisi
     except Exception:
         raise DecisionError("decision_endpoint_unavailable") from None
     finally:
-        db.close()
+        if owns_session:
+            db.close()
+
+
+def decision_provider_availability(config: dict | None, owner: str | None, *, db=None) -> dict:
+    """Public configuration readiness; never a live health or key-validity probe."""
+    reasons = {
+        "decision_provider_not_configured": "Configure Jev credentials or select a compatible local decision model in Chat settings.",
+        "decision_credentials_missing": "Add the Jev API key to the selected endpoint, or select a compatible local decision model.",
+        "decision_endpoint_unavailable": "The selected decision endpoint is unavailable. Choose an enabled endpoint in Chat settings.",
+        "decision_endpoint_protocol_unavailable": "The selected endpoint does not support decision review. Choose a compatible decision model.",
+        "decision_model_unavailable": "The selected decision model is unavailable. Choose an enabled model in Chat settings.",
+        "decision_model_not_allowed": "The selected decision model is not allowed for your account.",
+        "decision_owner_unavailable": "Sign in before configuring automatic review.",
+        "decision_endpoint_invalid": "The selected decision endpoint has an invalid configuration.",
+        "decision_invalid_provider_budget": "The decision provider has invalid call limits. Update its settings.",
+    }
+    try:
+        resolve_decision_endpoint(config, owner, db=db)
+    except DecisionError as error:
+        code = error.code if error.code in reasons else "decision_endpoint_unavailable"
+        return {"available": False, "reason_code": code, "reason": reasons[code]}
+    except Exception:
+        # Do not expose database, endpoint or credential details in a UI response.
+        return {"available": False, "reason_code": "decision_endpoint_unavailable",
+                "reason": reasons["decision_endpoint_unavailable"]}
+    return {"available": True, "reason_code": None, "reason": None}

@@ -23,8 +23,18 @@ def store(tmp_path):
     engine.dispose()
 
 
+@pytest.fixture
+def configured_reviewer(store):
+    """A selected, keyless local reviewer for tests that explicitly enable Auto."""
+    with store.transaction() as db:
+        db.add(d.ModelEndpoint(id='reviewer', name='Local reviewer', owner='alice',
+            base_url='http://127.0.0.1:8000/v1', cached_models='["decision-model"]'))
+    store.update_configuration('alice', {'decision_provider': {
+        'endpoint_id': 'reviewer', 'model': 'decision-model', 'protocol': 'openai_json'}}, 0)
+
+
 @pytest.mark.parametrize('saved_mode', ['always_ask', 'auto_approve', 'yolo'])
-def test_new_chats_and_forks_always_ask_without_resetting_saved_modes(store, saved_mode):
+def test_new_chats_and_forks_always_ask_without_resetting_saved_modes(store, configured_reviewer, saved_mode):
     assert store.policy('alice', 'a')['approval_mode'] == 'always_ask'
     saved = store.update_chat('alice', 'a', {'approval_mode': saved_mode, 'followup_enabled': True}, 0)
     preferences = store.configuration('alice')
@@ -55,7 +65,7 @@ def test_new_chats_and_forks_always_ask_without_resetting_saved_modes(store, sav
     assert store.configuration('bob')['last_explicit_mode'] == 'always_ask'
 
 
-def test_simultaneous_cas_one_winner(store):
+def test_simultaneous_cas_one_winner(store, configured_reviewer):
     store.policy('alice', 'a')
     def change(mode):
         try:
