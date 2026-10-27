@@ -8,7 +8,7 @@ from core.auth import AuthManager
 from src.chat_automation import prepare_chat_turn, SqlAttemptStore, rename_automation_owner, retire_automation_owner
 from src.decisions import DecisionProvider, DecisionContext, DecisionRequest, DecisionError
 from src.decisions.config import resolve_decision_endpoint
-from tests.test_chat_automation_state import store
+from tests.test_chat_automation_state import store, configured_reviewer
 
 
 @pytest.fixture
@@ -76,7 +76,7 @@ async def test_privilege_revocation_invalidates_bound_turn_and_does_not_revive(s
 
 
 @pytest.mark.asyncio
-async def test_owner_rename_keeps_preferences_and_retires_live_permissions(store):
+async def test_owner_rename_keeps_preferences_and_retires_live_permissions(store, configured_reviewer):
     store.update_chat('alice','a',{'approval_mode':'auto_approve'},0)
     bound=await prepare_chat_turn(store,'alice',SimpleNamespace(id='a',model='manual',endpoint_id=None,
         endpoint_url='https://synthetic.invalid',headers={}), 'Original ask')

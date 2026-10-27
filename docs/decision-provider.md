@@ -17,6 +17,13 @@ An absent authenticated identity, request sentinel, or local-owner identity in
 authenticated mode fails before resolver/credential access or HTTP. Shared registrations retain canonical
 visibility rules; they do not confer another named owner's private credential.
 
+Auto-Approve availability is derived from this selected registration, not the
+execution-model inventory. Hosted Jev (`api.typesafe.ai`) requires a nonblank
+registered API key; keyless compatible local endpoints remain supported. The
+settings availability check reuses local configuration admission without probing
+the endpoint, spending tokens or refreshing provider authentication. It does not
+guarantee that a configured key is valid or the service is online.
+
 Each call reserves a durable attempt before transport. The supplied store must
 atomically enforce the run's call limit and reject a pending or unresolved
 attempt, plus any known over-reservation result; the in-memory implementation is only for offline fixtures. Requests

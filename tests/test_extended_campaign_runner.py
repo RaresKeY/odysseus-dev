@@ -14,7 +14,11 @@ SPEC.loader.exec_module(runner)
 
 @pytest.mark.asyncio
 async def test_full_offline_registered_resolver_sql_capture_replay(tmp_path, monkeypatch):
+    import httpx
     from core import database as d
+    async def no_network(_transport, _request):
+        pytest.fail("offline network dispatch forbidden")
+    monkeypatch.setattr(httpx.AsyncHTTPTransport, 'handle_async_request', no_network)
     monkeypatch.setattr(d, "SessionLocal", d.SessionLocal)
     monkeypatch.setattr(runner, "read_test_key", lambda: pytest.fail("offline key read forbidden"))
     report = await runner.run(tmp_path, wall_seconds=30)

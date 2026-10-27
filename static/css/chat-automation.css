@@ -29,13 +29,17 @@
 .chat-permissions-trigger>svg{flex-shrink:0}
 .chat-permissions-trigger:disabled{opacity:.55;cursor:default}
 .mode-yolo .chat-permissions-trigger{color:var(--color-warning)}
+.mode-unavailable .chat-permissions-trigger{color:var(--color-warning)}
 .chat-permissions-menu{position:fixed;z-index:260;width:310px;max-width:calc(100vw - 32px);max-height:min(430px,65dvh);overflow-y:auto;box-sizing:border-box;padding:6px;background:var(--panel);border:1px solid var(--border);border-radius:8px;box-shadow:0 -4px 20px #0006}
 .chat-menu-heading{padding:6px;font-size:11px;opacity:.7}
 .chat-permissions-menu>button{display:flex;align-items:center;justify-content:space-between;gap:8px;width:100%;min-height:62px;padding:8px;border:0;border-radius:5px;background:transparent;color:var(--fg);font:inherit;text-align:left;cursor:pointer}
 .chat-permissions-menu>button>span:first-child{min-width:0}
 .chat-permissions-menu strong,.model-auto-controls strong{display:block;font-size:12px;font-weight:500}
 .chat-permissions-menu small,.model-auto-controls small{display:block;font-size:11px;line-height:1.5;margin-top:4px;opacity:.75}
-.chat-permissions-menu button:hover,.chat-permissions-menu [aria-checked=true],.model-auto-controls [aria-checked=true]{background:color-mix(in srgb,var(--fg) 9%,transparent)}
+.chat-permissions-menu button:not(:disabled):hover,.chat-permissions-menu [aria-checked=true],.model-auto-controls [aria-checked=true]{background:color-mix(in srgb,var(--fg) 9%,transparent)}
+.chat-permissions-menu>button:disabled,.chat-confirm-actions button:disabled{opacity:.55;cursor:default}
+#chat-auto-approve-setup{min-height:40px;border:1px solid var(--border);font-size:12px}
+#chat-auto-approve-setup[hidden],#chat-auto-approve-unavailable[hidden],#chat-auto-approve-dialog-unavailable[hidden]{display:none}
 .chat-permissions-menu [aria-checked=false] .chat-mode-check{visibility:hidden}
 .chat-permissions-menu>p{font-size:11px;margin:6px;color:var(--color-warning);line-height:1.5}
 #chat-auto-approve-dialog,#chat-yolo-dialog{color:var(--fg);background:var(--panel);border:1px solid var(--border);border-radius:12px;width:min(460px,calc(100vw - 28px));max-height:85dvh;box-sizing:border-box;padding:20px}

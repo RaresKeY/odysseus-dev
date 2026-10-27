@@ -5,7 +5,7 @@ import pytest
 from fastapi import FastAPI
 from core import database as d
 from routes.chat_automation_routes import setup_chat_automation_routes
-from tests.test_chat_automation_state import store
+from tests.test_chat_automation_state import store, configured_reviewer
 
 
 @pytest.fixture
@@ -40,7 +40,7 @@ async def test_owner_cas_roundtrip_and_no_cross_owner_state(api):
 
 @pytest.mark.asyncio
 @pytest.mark.parametrize('saved_mode', ['auto_approve', 'yolo'])
-async def test_created_session_api_defaults_to_ask_and_keeps_saved_chat(api, store, monkeypatch, saved_mode):
+async def test_created_session_api_defaults_to_ask_and_keeps_saved_chat(api, store, configured_reviewer, monkeypatch, saved_mode):
     from core import session_manager
     monkeypatch.setattr(session_manager, 'SessionLocal', store.session_factory)
     manager = session_manager.SessionManager.__new__(session_manager.SessionManager)

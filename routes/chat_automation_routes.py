@@ -25,6 +25,12 @@ def interactive_owner(request):
 def setup_chat_automation_routes(session_manager):
     router = APIRouter(tags=["chat settings"])
 
+    def with_review_availability(result, owner, *, configuration=None):
+        from src.decisions.config import decision_provider_availability
+        config = configuration if configuration is not None else AutomationStore().configuration(owner)
+        return {**result, "auto_approve_availability": decision_provider_availability(
+            config.get("decision_provider"), owner)}
+
     from src.decision_advice import SafetyAdviceService
     from src.tool_approvals import tool_approval_store
     safety = SafetyAdviceService(tool_approval_store)
@@ -64,7 +70,7 @@ def setup_chat_automation_routes(session_manager):
         from src.settings import get_setting
         result["elevation_available"] = bool(get_setting("agent_elevation_enabled", False))
         result["available_folders"] = get_setting("agent_elevation_roots", []) if result["elevation_available"] else []
-        return result
+        return with_review_availability(result, owner, configuration=result)
 
     @router.put("/api/chat-settings")
     async def save_configuration(request: Request, body: dict):
@@ -87,7 +93,8 @@ def setup_chat_automation_routes(session_manager):
                     raise HTTPException(422, "An approach model is unavailable")
         except (DecisionError, ValueError):
             raise HTTPException(422, "The decision model is unavailable") from None
-        return AutomationStore().update_configuration(owner, body["changes"], body["revision"])
+        result = AutomationStore().update_configuration(owner, body["changes"], body["revision"])
+        return with_review_availability(result, owner, configuration=result)
 
     @router.get("/api/session/{session_id}/automation")
     async def chat_settings(request: Request, session_id: str):
@@ -95,13 +102,14 @@ def setup_chat_automation_routes(session_manager):
         store = AutomationStore()
         result = store.policy(owner, session_id)
         result['task'] = store.task_state(owner, session_id)
-        return result
+        return with_review_availability(result, owner)
 
     @router.put("/api/session/{session_id}/automation")
     async def save_chat_settings(request: Request, session_id: str, body: dict):
         owner = interactive_owner(request)
         if set(body) != {"policy_revision", "changes"} or not isinstance(body["changes"], dict):
             raise HTTPException(422, "Provide a chat revision and changes")
-        return AutomationStore().update_chat(owner, session_id, body["changes"], body["policy_revision"])
+        result = AutomationStore().update_chat(owner, session_id, body["changes"], body["policy_revision"])
+        return with_review_availability(result, owner)
 
     return router

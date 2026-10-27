@@ -7,6 +7,19 @@ an exact human decision. Auto-Approve uses an independent configured decision
 provider invocation. YOLO skips discretionary review only after deterministic
 admission. Saved interactive preferences do not grant unattended consent.
 
+Auto-Approve is selectable only when the owner's selected decision endpoint and
+model pass configuration admission. The settings API reports availability and a
+safe explanation; activation checks the same condition in the chat-settings
+transaction. Hosted Jev requires a nonblank registered API key. Compatible local
+reviewers may be keyless, and an installed execution model alone does not select
+a reviewer. This check makes no inference call and does not verify live endpoint
+health or credential validity.
+
+If the selected reviewer becomes unavailable, the UI keeps the saved mode but
+labels Auto-Approve unavailable. Always Ask and decision settings remain
+accessible. No mode change, provider fallback or action retry happens implicitly;
+the runtime review checks below remain authoritative.
+
 `src/tool_execution.py` applies this policy after request/tool restrictions and
 resource binding. Missing semantic authority may produce a human card in
 Always Ask or the existing manual/YOLO flow when the request is valid,
@@ -51,3 +64,9 @@ Offline regression tests use complete HTTP mock transports and the canonical
 dispatcher, with an executor that records synthetic effects. They establish
 lifecycle, owner, concurrency, strict-response and replay contracts. They do
 not establish model judgment quality, browser speed or a working OS sandbox.
+
+The disabled permission control was also exercised in Chromium at desktop and
+mobile sizes using production HTML, CSS and controller code with synthetic
+API/session responses. [Desktop](auto-approve-readiness/desktop.png) and
+[mobile](auto-approve-readiness/mobile.png) screenshots show this isolated
+component fixture, not a full-application run.

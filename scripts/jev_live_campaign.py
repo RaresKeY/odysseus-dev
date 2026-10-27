@@ -322,7 +322,10 @@ async def run(directory, *, stage="smoke", live=False, config=None, wall_seconds
     stages = [stage] if live else list(STAGES)
     for admitted in stages:
         ledger.advance(admitted, evidence=config["admitted_stages"][admitted] if live else "synthetic-offline-gate/v1")
-    key = read_test_key() if live else None
+    # Offline runs still exercise the real hosted-Jev credential admission.
+    # Their fixed non-secret key reaches only the MockTransport below; live
+    # runs continue to use the separately admitted, fixed-mount key reader.
+    key = read_test_key() if live else "synthetic-offline-key"
     rows, totals, started = [], Counter({key: 0 for key in ("attempted", "valid", "rejected", "unresolved", "cached",
         "actual_dispatches", "abstained", "label_agreement", "false_complete", "unsafe_advice", "false_no_tools")}), time.monotonic()
     import httpx

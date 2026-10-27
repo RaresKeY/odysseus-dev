@@ -63,7 +63,13 @@ distributions. Missing or ambiguous usage remains reserved/unresolved, not zero.
 No SDK, model download, provisioning or inference probe is needed. See
 `docs/decision-provider.md` and `docs/chat-approval-review.md`.
 
-The composer permission menu shows Always Ask / Auto-Approve / YOLO. Selecting
+The composer permission menu shows Always Ask / Auto-Approve / YOLO. Auto-Approve
+stays visible but disabled until the selected decision endpoint/model passes
+configuration admission, including required hosted Jev credentials. Keyless local
+reviewers remain supported. The API reports an availability reason and enforces
+the same requirement when activating the mode; no inference probe is made.
+Unavailable saved Auto-Approve is labelled as such without changing its mode,
+and Always Ask and reviewer settings remain accessible. Selecting available
 Auto-Approve shows an activation disclosure; cancel or failed save retains the
 last acknowledged mode. Enabled Auto-Approve retires unsuccessful action reviews
 and emits a blocked error, never an individual approval card. Explicitly changing
