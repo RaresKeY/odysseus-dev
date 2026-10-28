@@ -730,6 +730,7 @@ class BoundChatTurn:
     review_observations_omitted: bool = False
     review_model_origin: str = ""
     review_route_revision: int = 0
+    review_route_lineage: list[str] = field(default_factory=list, repr=False)
     preparation: Any = None
     tool_selection: Any = None
     followup: Any = None
@@ -776,8 +777,10 @@ class BoundChatTurn:
                 or type(status) is not int or status not in FOREGROUND_AVAILABILITY_STATUSES):
             raise RuntimeError("Manual fallback is unavailable for this turn")
         from src.approval_fallback import model_snapshot
-        if not self.review_model_origin or model_snapshot(self) != self.review_model_origin:
-            raise RuntimeError("The originating conversation route changed")
+        if (not self.review_model_origin or model_snapshot(self) != self.review_model_origin
+                or not self.review_route_lineage or self.review_route_lineage[-1] != self.review_model_origin
+                or len(self.review_route_lineage) >= 16):
+            raise RuntimeError("The originating conversation route changed or exceeded its fallback limit")
         policy = resolve_foreground_model_policy(self.owner)
         chosen = next(((route, descriptor) for route, descriptor in zip(
             policy.fallback_candidates, policy.fallback_descriptors)
@@ -803,6 +806,7 @@ class BoundChatTurn:
         self.endpoint_url, self.headers = candidate[0], dict(candidate[2] or {})
         self.descriptor = descriptor
         self.review_model_origin = model_snapshot(self)
+        self.review_route_lineage = [*self.review_route_lineage, self.review_model_origin]
 
 
 def current_turn():
@@ -903,6 +907,7 @@ async def prepare_chat_turn(store, owner, session, raw_ask, *, entrypoint="inter
         bind_prepared_browser_scope(bound)
         from src.approval_fallback import model_snapshot
         bound.review_model_origin = model_snapshot(bound)
+        bound.review_route_lineage = [bound.review_model_origin]
         store.record(bound, "bound", bound.descriptor)
         return bound
     except BaseException:

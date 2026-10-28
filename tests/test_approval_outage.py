@@ -12,6 +12,7 @@ from tests.test_chat_automation_state import store
 from tests.test_chat_approval_sql_integration import dispatch_runtime
 from tests.test_approval_fallback import install_fallback, openai_answer
 from tests.test_approval_review import CONFIG
+from tests.test_approval_route_rebind import backup
 from src.agent_runtime.authority import OperationGrant, RequestAuthority
 from src.chat_automation import prepare_chat_turn
 from src.decisions import DecisionContext, DecisionError, DecisionRequest, MemoryAttemptStore
@@ -36,6 +37,10 @@ def outage_runtime(store, dispatch_runtime, monkeypatch, tmp_path):
             await asyncio.Event().wait()
         if settings["failure"] == "transport":
             raise httpx.ReadTimeout("synthetic timeout")
+        if settings["failure"] == "invalid_json":
+            return httpx.Response(200, content=b"not-json")
+        if settings["failure"] == "missing_usage":
+            return httpx.Response(200, json={"model":"decision-model", "answers":{}})
         return httpx.Response(401, json={"error": "synthetic unauthorized"})
 
     def fallback(request):
@@ -77,7 +82,7 @@ def outage_runtime(store, dispatch_runtime, monkeypatch, tmp_path):
 
 
 @pytest.mark.asyncio
-@pytest.mark.parametrize("failure", ["http", "transport", "timeout"])
+@pytest.mark.parametrize("failure", ["http", "transport", "timeout", "invalid_json", "missing_usage"])
 async def test_sequential_actions_keep_one_primary_hold_and_separate_reviews(outage_runtime, failure):
     rt = outage_runtime
     rt.settings["failure"] = failure
@@ -228,3 +233,61 @@ async def test_memory_store_preserves_the_same_continuation_boundaries(outage_ru
         with pytest.raises(DecisionError, match="decision_budget_unavailable"):
             memory.reserve({**continuation, **changes, "attempt_id": "forged", "status": "reserved"}, max_calls=32)
     assert memory.records[continuation["approval_outage_of"]]["usage"] is None
+
+
+@pytest.mark.asyncio
+async def test_established_outage_follows_only_authorized_registered_route_handoff(outage_runtime, backup):
+    rt = outage_runtime
+    bound = await rt.start()
+    assert (await rt.action(bound, 0))[1]['exit_code'] == 0
+    original = list(bound.review_route_lineage)
+    bound.rebind_manual(backup, status=503)
+    assert bound.review_route_lineage[:1] == original
+    rt.settings['fallback'] = {'model': 'backup-model'}
+    second = (await rt.action(bound, 1))[1]
+    third = (await rt.action(bound, 2))[1]
+    assert second['exit_code'] == third['exit_code'] == 0, (second, third)
+    assert len(rt.primary_calls) == 1 and len(rt.fallback_calls) == len(rt.effects) == 3
+    assert str(rt.fallback_calls[-1].url) == backup[0]
+    records = rt.attempts.records_for_run('alice', 'a', bound.run_id)
+    root = next(r for r in records if r['status'] == 'unresolved')
+    assert root['usage'] is None and len(records) == 4
+    continuations = [r for r in records if r.get('approval_outage_of')]
+    assert all(r['approval_route_lineage'] == bound.review_route_lineage for r in continuations)
+    assert all(r['approval_route_origin'] == bound.review_model_origin for r in continuations)
+    assert all(r['provider_identity']['model'] == 'backup-model' for r in continuations)
+
+
+@pytest.mark.asyncio
+async def test_changed_identity_without_exact_server_route_lineage_is_not_handoff(outage_runtime, backup):
+    rt = outage_runtime
+    bound = await rt.start()
+    assert (await rt.action(bound, 0))[1]['exit_code'] == 0
+    bound.rebind_manual(backup, status=503)
+    rt.settings['fallback'] = {'model': 'backup-model'}
+    bound.review_route_lineage = ['0' * 64, bound.review_model_origin]
+    stopped = (await rt.action(bound, 1))[1]
+    assert stopped['blocked'] and len(rt.fallback_calls) == len(rt.effects) == 1
+
+
+@pytest.mark.asyncio
+async def test_outage_route_handoff_metadata_cannot_waive_original_call_limit(outage_runtime, backup):
+    rt = outage_runtime
+    bound = await rt.start(max_calls=2)
+    assert (await rt.action(bound, 0))[1]['exit_code'] == 0
+    bound.rebind_manual(backup, status=503)
+    rt.settings['fallback'] = {'model': 'backup-model'}
+    stopped = (await rt.action(bound, 1))[1]
+    assert stopped['approval_review']['failure_kind'] == 'decision_budget_unavailable'
+    assert len(rt.primary_calls) == len(rt.fallback_calls) == len(rt.effects) == 1
+
+
+def test_route_handoff_requires_actual_origin_and_exact_previous_prefix():
+    from src.decisions.store import _route_continues
+    old = {'provider_identity': {'model':'A'}, 'approval_route_lineage':['a' * 64], 'approval_route_origin':'a' * 64}
+    new = {'provider_identity': {'model':'B'}, 'approval_route_lineage':['a' * 64,'b' * 64], 'approval_route_origin':'b' * 64}
+    assert _route_continues(new, old)
+    for mutation in ({'approval_route_origin':'c' * 64}, {'approval_route_lineage':['c' * 64,'b' * 64]},
+                     {'approval_route_lineage':[]}, {'approval_route_lineage':['a' * 64]},
+                     {'approval_route_lineage':['a' * 64,'not-an-origin']}):
+        assert not _route_continues({**new, **mutation}, old)

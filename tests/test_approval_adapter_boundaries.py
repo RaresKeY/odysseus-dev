@@ -90,3 +90,33 @@ def test_anthropic_cache_input_is_real_usage():
     endpoint = ConversationEndpoint('selected','manual','approval_anthropic',URLS['anthropic'],{})
     client = object.__new__(ConversationReviewProvider)
     assert client._usage({'usage':{'input_tokens':30,'output_tokens':10,'cache_creation_input_tokens':7,'cache_read_input_tokens':9}},endpoint) == {'input_tokens':46,'output_tokens':10}
+
+
+@pytest.mark.asyncio
+@pytest.mark.parametrize('protocol,url,reported', [
+    ('openai','https://generativelanguage.googleapis.com/v1beta/openai','models/manual'),
+    ('ollama',URLS['ollama'],'manual:latest'),
+    ('anthropic',URLS['anthropic'],'manual'),
+])
+async def test_canonical_response_identity_and_cache_usage_use_actual_adapter(store, dispatch_runtime, monkeypatch, protocol, url, reported):
+    rt = dispatch_runtime
+    rt.session.endpoint_url = url
+    with store.transaction() as db: db.get(d.Session,'a').endpoint_url = url
+    store.update_configuration('alice', {'decision_provider':None},1)
+    store.update_chat('alice','a',{'approval_mode':'auto_approve'},0)
+    calls = []
+    def transport(request):
+        calls.append(request)
+        assert json.loads(request.content)['model'] == 'manual'  # never rewrite outgoing selection
+        raw = answer(protocol, None)
+        raw['model'] = reported
+        if protocol == 'anthropic':
+            raw['usage'].update(cache_creation_input_tokens=7, cache_read_input_tokens=9)
+        return httpx.Response(200,json=raw)
+    install_fallback(monkeypatch, transport)
+    bound = await prepare_chat_turn(store,'alice',rt.session,'Write fixture.')
+    _, result = await rt.dispatch(bound)
+    assert result['exit_code'] == 0 and len(calls) == len(rt.effects) == 1
+    [record] = rt.attempts.records_for_run('alice','a',bound.run_id)
+    assert record['status'] == 'settled' and record['provider_identity']['model'] == 'manual'
+    assert record['usage'] == {'input_tokens':46 if protocol == 'anthropic' else 30,'output_tokens':10}

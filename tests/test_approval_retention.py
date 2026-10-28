@@ -129,3 +129,21 @@ async def test_private_prior_expiry_is_not_reconstructed_from_model_history(stor
         for item in context._PRIVATE[store.session_factory].values(): item['expires'] = 0
     with pytest.raises(DecisionError, match='approval_private_context_unavailable'):
         user_snapshot(second)
+
+
+@pytest.mark.asyncio
+async def test_active_private_followup_refreshes_idle_ttl_without_reviving_missing_rows(store, dispatch_runtime):
+    import time
+    from src import approval_context as context
+    rt = dispatch_runtime
+    first = await prepare_chat_turn(store, 'alice', rt.session, 'Never publish.', ephemeral_semantics=True)
+    key = ('user:alice', 'a', first.submission_id)
+    with context._PRIVATE_LOCK:
+        context._PRIVATE[store.session_factory][key]['expires'] = time.monotonic() + 1
+    second = await prepare_chat_turn(store, 'alice', rt.session, 'Continue locally.', ephemeral_semantics=True)
+    with context._PRIVATE_LOCK:
+        assert context._PRIVATE[store.session_factory][key]['expires'] > time.monotonic() + context.PRIVATE_TTL - 10
+        del context._PRIVATE[store.session_factory][key]
+    third = await prepare_chat_turn(store, 'alice', rt.session, 'Continue.', ephemeral_semantics=True)
+    with pytest.raises(DecisionError, match='approval_private_context_unavailable'):
+        user_snapshot(third)

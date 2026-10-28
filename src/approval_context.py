@@ -124,7 +124,14 @@ def retain_private_submission(bound):
     key = (owner_key(bound.owner), bound.session_id, bound.submission_id)
     with _PRIVATE_LOCK:
         cache = _PRIVATE.setdefault(_private_namespace(bound), OrderedDict())
-        cache[key] = {"text": bound.raw_ask, "events": [], "expires": time.monotonic() + PRIVATE_TTL}
+        _prune_private(cache)
+        expires = time.monotonic() + PRIVATE_TTL
+        # An active private conversation keeps its complete retained evidence;
+        # idle expiry remains explicit, and missing entries are never revived.
+        for identity, item in cache.items():
+            if identity[:2] == key[:2]:
+                item["expires"] = expires
+        cache[key] = {"text": bound.raw_ask, "events": [], "expires": expires}
         _prune_private(cache)
 
 

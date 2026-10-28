@@ -1,6 +1,6 @@
 import assert from 'node:assert/strict';
 import test from 'node:test';
-import {decisionSummary} from '../static/js/decision-activity.js';
+import {decisionSummary, compactDecisionSummary} from '../static/js/decision-activity.js';
 
 test('approval activity shows explicit assessments and fixed provenance', () => {
     const text = decisionSummary({purpose: 'approval', status: 'settled',
@@ -44,4 +44,18 @@ test('conversation fallback identifies its model without fabricated confidence',
     assert.match(text, /conversation_model/);
     assert.match(text, /fallback: decision_http_error/);
     assert.doesNotMatch(text, /confidence|0%/);
+});
+
+
+test('ordinary approval rows stay concise while details retain route and policy', () => {
+    const item = {purpose: 'approval', status: 'settled', questions: {},
+        usage: {input_tokens: 30, output_tokens: 10},
+        provider: {name: 'synthetic', model: 'selected-model', distribution_source: 'not_reported'},
+        approval: {decision_source: 'conversation_model', risk_level: 'low', user_authorization: 'high',
+            disposition: 'approved', policy: 'odysseus-approval-review/v2', fallback_reason: 'decision_http_error'}};
+    const brief = compactDecisionSummary(item), details = decisionSummary(item);
+    assert.match(brief, /Conversation review.*approved.*risk low.*authorization high.*30 in \/ 10 out/);
+    assert.doesNotMatch(brief, /odysseus-approval-review|decision_http_error|selected-model|not_reported/);
+    assert.match(details, /selected-model.*decision_http_error.*odysseus-approval-review/);
+    assert.match(compactDecisionSummary({...item, usage: null}), /usage unknown \(held\)/);
 });

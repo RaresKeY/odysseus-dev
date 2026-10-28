@@ -9,6 +9,7 @@ from __future__ import annotations
 import asyncio
 from dataclasses import dataclass, replace
 import inspect
+import re
 import time
 from typing import Any, Awaitable, Callable, Mapping
 
@@ -195,9 +196,18 @@ class ApprovalReviewService:
                 decision={"policy": APPROVAL_REVIEW_POLICY, "decision_source": "deterministic",
                           "assessed": False, "failure_kind": error.code})
         shared_deadline = min(deadline if deadline is not None else float("inf"), time.monotonic() + 60)
+        lineage = tuple(getattr(pending.bound_turn, "review_route_lineage", ()))
+        if lineage:
+            from src.approval_fallback import model_snapshot
+            if (len(lineage) > 16 or any(not isinstance(item, str) or not re.fullmatch(r"[0-9a-f]{64}", item) for item in lineage)
+                    or lineage[-1] != pending.bound_turn.review_model_origin
+                    or model_snapshot(pending.bound_turn) != lineage[-1]):
+                self._retire(pending)
+                return ReviewOutcome("stale", pending, reason="The originating review route changed.")
         context = DecisionContext(pending.owner, pending.session_id, pending.origin_run_id,
                                   policy.policy_revision, policy.authority_epoch,
-                                  deadline=shared_deadline, cancelled=cancelled, max_calls=max_calls)
+                                  deadline=shared_deadline, cancelled=cancelled, max_calls=max_calls,
+                                  approval_route_lineage=lineage)
         source, fallback_reason, primary_attempt_id = "jev", None, None
 
         async def assess(callback, attempt_context):

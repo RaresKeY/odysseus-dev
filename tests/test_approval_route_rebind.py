@@ -90,3 +90,15 @@ async def test_inflight_old_route_allow_is_stale_after_authorized_rebind(store, 
     _, result = await rt.dispatch(bound)
     assert result['failure_kind'] == 'approval_stale' and not rt.effects
     assert not rt.approvals._pending
+
+
+@pytest.mark.asyncio
+async def test_consumed_old_route_grant_is_invalid_after_authorized_rebind(store, dispatch_runtime, backup):
+    rt = dispatch_runtime
+    bound = await prepare_chat_turn(store, 'alice', rt.session, 'Write fixture.')
+    _, card = await rt.dispatch(bound)
+    grant = rt.approvals.consume(card['ask_user']['approval_id'], owner='alice', session_id='a', decision='approve_once')
+    assert grant is not None
+    bound.rebind_manual(backup, status=503)
+    _, result = await rt.dispatch(bound, grant)
+    assert result['blocked'] and not rt.effects

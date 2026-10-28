@@ -131,6 +131,8 @@ class DecisionContext:
     cancelled: Callable[[], bool | Awaitable[bool]] | None = field(default=None, repr=False)
     max_calls: int = 32
     fallback_of: str | None = None
+    # Server-owned registered foreground handoffs; never read from request.state.
+    approval_route_lineage: tuple[str, ...] = ()
 
 
 @dataclass(frozen=True)

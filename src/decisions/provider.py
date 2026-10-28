@@ -256,6 +256,9 @@ class DecisionProvider:
                   "call_limit": min(context.max_calls, endpoint.max_calls),
                   "reservation": {"input_tokens": 65536, "output_tokens": 65536}}
         if request.purpose == "approval":
+            record["approval_route_lineage"] = list(context.approval_route_lineage)
+            if endpoint.protocol.startswith("approval_"):
+                record["approval_route_origin"] = endpoint.registration_revision
             record["approval_action_digest"] = request.state.get("server_context", {}).get("action_digest")
             if context.fallback_of:
                 continuation = any(r.get("fallback_of") == context.fallback_of for r in previous)

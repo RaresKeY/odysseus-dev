@@ -12,6 +12,20 @@ export function decisionSummary(item) {
     return `${item.purpose} · ${item.status} · ${usage}${confidence ? ` · ${confidence}` : ''}${provider}${assessment}${item.failure_kind ? ` · ${item.failure_kind}` : ''}`;
 }
 
+export function compactDecisionSummary(item) {
+    const review = item.approval;
+    if (!review) return decisionSummary(item);
+    const sources = {jev: 'Jev review', conversation_model: 'Conversation review',
+        human: 'Your decision', yolo: 'YOLO', deterministic: 'Action check'};
+    const source = sources[review.decision_source] || 'Action review';
+    const assessment = review.assessed === false ? 'unassessed'
+        : `risk ${review.risk_level || 'unassessed'} · authorization ${review.user_authorization || 'unassessed'}`;
+    const known = value => Number.isInteger(value) && value >= 0 ? value : 'unknown';
+    const usage = item.usage_provenance === 'not_applicable' ? 'no model call'
+        : item.usage ? `${known(item.usage.input_tokens)} in / ${known(item.usage.output_tokens)} out` : 'usage unknown (held)';
+    return `${source} · ${review.disposition || item.status} · ${assessment} · ${usage}${review.reason ? ` · ${review.reason}` : ''}`;
+}
+
 export function distributionSummary(questions) {
     return Object.entries(questions).map(([qid, answer]) =>
         `${qid}: ${Object.entries(answer.probabilities).map(([choice, value]) =>
@@ -81,13 +95,16 @@ function mount(container, sessionId, {pane, trigger, closeButton, refreshButton}
                 distribution.append(label, values);
                 const capture = link('Download redacted capture', item.run_id, true);
                 row.append(text, document.createTextNode(' '), link('Export metadata', item.run_id), distribution, capture);
-                entry = {row, text, distribution, values, capture};
+                entry = {row, text, distribution, label, values, capture};
                 rows.set(key, entry);
             }
-            const text = decisionSummary(item), values = distributionSummary(item.questions || {});
+            const text = compactDecisionSummary(item);
+            const probabilities = distributionSummary(item.questions || {});
+            const values = item.approval ? `${decisionSummary(item)}${probabilities ? ` · ${probabilities}` : ''}` : probabilities;
+            entry.label.textContent = item.approval ? 'Review details' : 'Reported distribution';
             if (entry.text.textContent !== text) entry.text.textContent = text;
             if (entry.values.textContent !== values) entry.values.textContent = values;
-            entry.distribution.hidden = !Object.keys(item.questions || {}).length;
+            entry.distribution.hidden = !item.approval && !Object.keys(item.questions || {}).length;
             entry.capture.hidden = !['complete', 'outcome_recorded'].includes(item.capture_state);
             if (entry.row !== cursor) list.insertBefore(entry.row, cursor);
             cursor = entry.row.nextSibling;
