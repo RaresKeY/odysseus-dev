@@ -110,3 +110,7 @@ Native launch readiness is a bounded functional containment probe plus exact sup
 - Long-running route timeout exemptions are manual and prefix-based; new SSE/proxy/task paths can be missed, while broad prefixes can exempt more routes than intended.
 - Runtime tests cover small helper slices, but not full app import/TestClient behavior for mounted static cache headers, generated-image serving, timeout middleware, middleware order, lifespan startup wiring, or route/static drift.
 - The diagnostics service-health endpoint is not a readiness gate and does not cover every optional subsystem.
+
+## Integrated shutdown and private review admission
+
+The streamed-chat shutdown check precedes Jev event observation; shutdown does not emit a completion tail and records the bound submission as cancelled. Task automation-off admission remains independent of upstream auth-disabled/admin/task endpoint restrictions. Private review state has a process-owned admission nonce, regenerated after fork; configured multi-worker private Auto fails before inference and offers user-controlled renewal or Always Ask. No shared-memory durability or sticky routing is claimed.

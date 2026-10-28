@@ -59,3 +59,10 @@ test('ordinary approval rows stay concise while details retain route and policy'
     assert.match(details, /selected-model.*decision_http_error.*odysseus-approval-review/);
     assert.match(compactDecisionSummary({...item, usage: null}), /usage unknown \(held\)/);
 });
+
+
+test('review details distinguish selected and actually reported accepted model IDs', () => {
+    const text = decisionSummary({purpose:'approval',status:'settled',usage:{input_tokens:1,output_tokens:1},
+        provider:{protocol:'approval_openai',model:'gpt-4o',reviewed_model:'gpt-4o-2024-08-06',distribution_source:'not_reported'}});
+    assert.match(text,/gpt-4o \/ reported gpt-4o-2024-08-06/);
+});

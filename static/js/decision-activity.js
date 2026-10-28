@@ -4,7 +4,7 @@ export function decisionSummary(item) {
         `${answer.choice}: ${Math.round(answer.confidence * 100)}% confidence`).join('; ');
     const known = value => Number.isInteger(value) && value >= 0 ? value : 'unknown';
     const usage = item.usage_provenance === 'not_applicable' ? 'no model call' : item.usage ? `${known(item.usage.input_tokens)} in / ${known(item.usage.output_tokens)} out` : 'usage unknown (held)';
-    const provider = item.provider ? ` · ${item.provider.name || item.provider.protocol} / ${item.provider.distribution_source}${item.provider.model ? ` / ${item.provider.model}` : ''}` : '';
+    const provider = item.provider ? ` · ${item.provider.name || item.provider.protocol} / ${item.provider.distribution_source}${item.provider.model ? ` / ${item.provider.model}` : ''}${item.provider.reviewed_model && item.provider.reviewed_model !== item.provider.model ? ` / reported ${item.provider.reviewed_model}` : ''}` : '';
     const review = item.approval;
     const assessment = review
         ? ` · ${review.decision_source} · risk ${review.risk_level || 'unassessed'} · authorization ${review.user_authorization || 'unassessed'}${review.disposition ? ` · ${review.disposition}` : ''}${review.reason ? ` · ${review.reason}` : ''}${review.fallback_reason ? ` · fallback: ${review.fallback_reason}` : ''} · ${review.policy}`
