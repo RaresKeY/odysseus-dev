@@ -63,11 +63,12 @@ def loaded_path(library):
 
 def check_decoder(library):
     # The fix adds error -17. Older decoders return INVALID here, including
-    # upstream 1.1.0 and 1.2.0. Debian's fixed 1.1.0 backport exposes this marker.
+    # upstream 1.1.0 and 1.2.0. Fixed Debian 12 and 13 backports expose the same
+    # marker with different error-string prefixes.
     # No malformed attacker-controlled stream is needed for this build check.
     library.BrotliDecoderErrorString.argtypes = [ctypes.c_int]
     library.BrotliDecoderErrorString.restype = ctypes.c_char_p
-    if library.BrotliDecoderErrorString(-17) != b"_ERROR_FORMAT_BLOCK_SWITCH":
+    if library.BrotliDecoderErrorString(-17) not in (b"BLOCK_SWITCH", b"_ERROR_FORMAT_BLOCK_SWITCH"):
         raise ValueError("native decoder lacks the CVE-2026-111497 BLOCK_SWITCH fix marker")
 
     library.BrotliDecoderDecompress.argtypes = [

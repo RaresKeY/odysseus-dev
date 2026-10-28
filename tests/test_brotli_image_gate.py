@@ -5,6 +5,8 @@ import ctypes
 import io
 from pathlib import Path
 import shutil
+import subprocess
+import tempfile
 from types import SimpleNamespace
 import unittest
 from unittest.mock import patch
@@ -70,19 +72,24 @@ def decoder(marker=b"_ERROR_FORMAT_BLOCK_SWITCH", result=1, decoded=b"hello worl
 
 
 class DecoderTests(unittest.TestCase):
+    def test_fixed_debian_12_plain_marker_is_accepted(self):
+        checker.check_decoder(decoder(marker=b"BLOCK_SWITCH"))
+
     def test_fixed_native_decoder_is_accepted_without_upstream_version_metadata(self):
         # A Debian 1.1.0 backport has no new upstream version requirement.
         checker.check_decoder(decoder())
 
     def test_unpatched_native_error_table_is_rejected(self):
-        for marker in (b"INVALID", b"_ERROR_FORMAT_DISTANCE", None):
+        for marker in (b"INVALID", b"_ERROR_FORMAT_DISTANCE", b"BLOCK_SWITCH_EXTRA", None):
             with self.subTest(marker=marker), self.assertRaisesRegex(ValueError, "BLOCK_SWITCH"):
                 checker.check_decoder(decoder(marker=marker))
 
     def test_fix_marker_does_not_replace_valid_decoding_control(self):
-        for native in (decoder(result=0), decoder(decoded=b"wrong bytes"), decoder(decoded=b"hello")):
-            with self.subTest(native=native), self.assertRaisesRegex(ValueError, "valid-stream"):
-                checker.check_decoder(native)
+        for marker in (b"BLOCK_SWITCH", b"_ERROR_FORMAT_BLOCK_SWITCH"):
+            for native in (decoder(marker=marker, result=0), decoder(marker=marker, decoded=b"wrong bytes"),
+                           decoder(marker=marker, decoded=b"hello")):
+                with self.subTest(marker=marker, native=native), self.assertRaisesRegex(ValueError, "valid-stream"):
+                    checker.check_decoder(native)
 
     def test_node_must_link_the_same_decoder(self):
         native = Path("/usr/lib/example/libbrotlidec.so.1")
@@ -109,6 +116,27 @@ class DecoderTests(unittest.TestCase):
 
 
 class ImageRecipeTests(unittest.TestCase):
+    @unittest.skipUnless(shutil.which("sh"), "Docker RUN guard requires a POSIX shell")
+    def test_base_ca_guard_failure_stops_before_package_network_access(self):
+        base = (ROOT / "Dockerfile").read_text(encoding="utf-8").split("# ---- builder:", 1)[0]
+        # Execute the actual first RUN with command stubs. A failed CA check must
+        # stop the shell before either changing sources or invoking APT.
+        command = base.split("\nRUN ", 1)[1].split("\n\n", 1)[0].replace("\\\n", "")
+        self.assertLess(base.index("COPY scripts/check_ca_trust.py"), base.index("\nRUN "))
+        with tempfile.TemporaryDirectory() as tmp:
+            directory = Path(tmp)
+            trace = directory / "commands"
+            for name in ("python", "sed", "apt-get"):
+                stub = directory / name
+                stub.write_text('#!/bin/sh\nprintf "%s\\n" "$0 $*" >> "$TRACE"\n' +
+                                ("exit 1\n" if name == "python" else "exit 0\n"))
+                stub.chmod(0o755)
+            result = subprocess.run([shutil.which("sh"), "-c", command],
+                                    env={"PATH": tmp, "TRACE": str(trace)}, capture_output=True, text=True)
+            self.assertEqual(result.returncode, 1, result.stderr)
+            self.assertEqual(trace.read_text().splitlines(),
+                             [f"{directory}/python /usr/local/bin/check-ca-trust.py --system"])
+
     def test_builder_and_runtime_inherit_the_guarded_package_layer(self):
         dockerfile = (ROOT / "Dockerfile").read_text(encoding="utf-8")
         # This declarative inheritance is not exercised by Python unit tests.

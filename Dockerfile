@@ -2,9 +2,11 @@
 # distro Node in the runtime. A cached Python base may predate the Debian fix.
 FROM python:3.14.9-slim AS brotli-base
 COPY scripts/check_brotli.py /usr/local/bin/check-brotli.py
-# Keep Debian's signed archive verification and require verified HTTPS for the
-# package refresh. Install only the explicit native dependency, not a full upgrade.
-RUN sed -i 's|http://deb.debian.org/|https://deb.debian.org/|g' /etc/apt/sources.list.d/debian.sources \
+COPY scripts/check_ca_trust.py /usr/local/bin/check-ca-trust.py
+# Check inherited trust before the first HTTPS package request, retaining Debian's
+# signed archive verification. Refresh only the explicit native dependency.
+RUN python /usr/local/bin/check-ca-trust.py --system \
+    && sed -i 's|http://deb.debian.org/|https://deb.debian.org/|g' /etc/apt/sources.list.d/debian.sources \
     && apt-get update && apt-get install -y --no-install-recommends libbrotli1 \
     && python /usr/local/bin/check-brotli.py \
     && rm -rf /var/lib/apt/lists/*
