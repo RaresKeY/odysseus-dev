@@ -180,8 +180,6 @@ def estimate_cost_usd(
     """
     from src.llm_usage import has_cache_usage
 
-    # The base-rate table has no provider-specific cache read/write prices.
-    # Preserve reported cost at call sites, but do not invent a cached bill.
     if has_cache_usage(cache_usage):
         return None
     if not model:

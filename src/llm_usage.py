@@ -1,9 +1,3 @@
-"""Provider-neutral token accounting, including optional prompt-cache usage.
-
-Input tokens always include cached reads and cache writes. Missing cache counters
-mean unreported, not zero; do not infer a cache hit from a request hint.
-"""
-
 import math
 
 
@@ -20,7 +14,6 @@ def _token_count(value):
 
 
 def normalize_usage_counts(input_value=0, output_value=0, *, cache_usage=None):
-    """Validate totals; retain only valid, bounded optional cache counters."""
     input_tokens = _token_count(input_value)
     output_tokens = _token_count(output_value)
     if input_tokens is None or output_tokens is None:
@@ -37,7 +30,6 @@ def normalize_usage_counts(input_value=0, output_value=0, *, cache_usage=None):
 
 
 def openai_cache_usage(usage, timings=None):
-    """Read Chat Completions/Responses counters, with llama.cpp timing fallback."""
     for name in ("prompt_tokens_details", "input_tokens_details"):
         details = usage.get(name)
         if isinstance(details, dict) and "cached_tokens" in details:
@@ -48,7 +40,6 @@ def openai_cache_usage(usage, timings=None):
 
 
 def normalize_anthropic_usage(usage):
-    """Anthropic's input_tokens excludes cache reads/writes; add them once."""
     counts = [_token_count(usage.get(key, 0)) for key in ("input_tokens", *CACHE_TOKEN_FIELDS)]
     if any(count is None for count in counts):
         return None
@@ -58,7 +49,6 @@ def normalize_anthropic_usage(usage):
 
 
 def aggregate_cache_usage(usages):
-    """Only report a total for a counter reported by every contributing call."""
     if not usages:
         return {}
     result = {}
@@ -72,7 +62,6 @@ def aggregate_cache_usage(usages):
 
 
 def has_cache_usage(usage):
-    """Whether a reported cache read/write makes the base-rate estimate unsafe."""
     if not isinstance(usage, dict):
         return False
     buckets = usage.get("usage_buckets")

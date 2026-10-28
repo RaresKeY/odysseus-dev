@@ -1,5 +1,3 @@
-"""Cache evidence survives route attribution and cannot fabricate dollar savings."""
-
 import pytest
 
 from src.agent_loop import _compute_final_metrics, _usage_bucket, _usage_bucket_summary

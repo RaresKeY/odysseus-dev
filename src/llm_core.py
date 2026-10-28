@@ -1838,6 +1838,12 @@ def _build_anthropic_payload(model, messages, temperature, max_tokens, stream=Fa
             # Convert multimodal content (image_url → image) for Anthropic
             content = _convert_openai_content_to_anthropic(m["content"])
             chat_messages.append({"role": m["role"], "content": content})
+    has_explicit_cache_control = any(
+        isinstance(block, dict) and "cache_control" in block
+        for message in chat_messages
+        if isinstance(message.get("content"), list)
+        for block in message["content"]
+    )
     # Anthropic only accepts temperature in [0.0, 1.0] and 400s on anything above
     # 1.0. Clamp here (in the Anthropic builder only) so presets/sliders that use
     # the wider OpenAI 0.0-2.0 range — e.g. the shipped "Nietzsche" preset at 1.2
@@ -1862,7 +1868,7 @@ def _build_anthropic_payload(model, messages, temperature, max_tokens, stream=Fa
         # cache-WRITE premium wouldn't pay back (no reuse). Presence of `tools`
         # means an agentic/multi-round call, where the prefix is always reused.
         system_block = {"type": "text", "text": system_text}
-        if tools or len(system_text) > 4000:
+        if not has_explicit_cache_control and (tools or len(system_text) > 4000):
             system_block["cache_control"] = {"type": "ephemeral"}
         payload["system"] = [system_block]
     if stream:
@@ -1881,15 +1887,17 @@ def _build_anthropic_payload(model, messages, temperature, max_tokens, stream=Fa
         if anthropic_tools:
             # Cache the tool schemas too — they're stable for the whole agent run.
             # The breakpoint caches all tool defs preceding it in the request.
-            anthropic_tools[-1]["cache_control"] = {"type": "ephemeral"}
+            if not has_explicit_cache_control:
+                anthropic_tools[-1]["cache_control"] = {"type": "ephemeral"}
             payload["tools"] = anthropic_tools
-    if tools or any(message.get("role") == "assistant" for message in chat_messages):
+    if not has_explicit_cache_control and (
+        tools or any(message.get("role") == "assistant" for message in chat_messages)
+    ):
         _cache_anthropic_history(payload)
     return payload
 
 
 def _cache_anthropic_history(payload):
-    """Cache stable history and the current tail without mutating caller blocks."""
     blocks = list(payload.get("system", [])) + list(payload.get("tools", []))
     for message in payload["messages"]:
         if isinstance(message.get("content"), list):
@@ -1898,7 +1906,6 @@ def _cache_anthropic_history(payload):
 
     def mark(message):
         nonlocal breakpoints
-        # Respect the API's four-breakpoint limit and caller-supplied markers.
         if breakpoints >= 4:
             return True
         content = message.get("content")
@@ -1930,8 +1937,6 @@ def _cache_anthropic_history(payload):
             return True
         return False
 
-    # Date/retrieval context is temporary and may move on the next chat turn.
-    # Retain a checkpoint before that tail as well as one for agent tool rounds.
     for message in reversed(payload["messages"][:-1]):
         if message.get("role") == "assistant" and mark(message):
             break
@@ -3407,7 +3412,6 @@ async def _stream_llm_inner(url: str, model: str, messages: List[Dict], temperat
                         elif evt == "message_delta":
                             _u = j.get("usage") or {}
                             if isinstance(_u, dict):
-                                # Later usage replaces cumulative counters; never add snapshots.
                                 _anth_usage.update(_u)
                                 _anth_usage_seen = any(key in _anth_usage for key in (
                                     "input_tokens", "output_tokens",

@@ -1,5 +1,3 @@
-"""Prompt-cache accounting uses provider evidence, not request hints."""
-
 import asyncio
 import copy
 import json
@@ -243,3 +241,47 @@ def test_history_checkpoint_precedes_transient_context_and_respects_limit():
             blocks += message["content"]
     assert sum("cache_control" in block for block in blocks) == 4
     assert messages == original
+
+
+@pytest.mark.parametrize("ttl", ["1h", "5m"])
+@pytest.mark.parametrize("with_static_prefix", [False, True])
+def test_caller_cache_controls_override_automatic_checkpoints(ttl, with_static_prefix):
+    messages = [
+        {"role": "system", "content": "stable instructions"},
+        {"role": "user", "content": "old question"},
+        {"role": "assistant", "content": "old answer"},
+        {"role": "user", "content": [{
+            "type": "text", "text": "new question",
+            "cache_control": {"type": "ephemeral", "ttl": ttl},
+        }]},
+    ]
+    tools = [{"type": "function", "function": {"name": "read", "parameters": {}}}]
+    if not with_static_prefix:
+        messages = messages[1:]
+        tools = None
+    original = copy.deepcopy(messages)
+    payload = llm_core._build_anthropic_payload("claude", messages, 0, 100, tools=tools)
+    if with_static_prefix:
+        assert "cache_control" not in payload["system"][0]
+        assert "cache_control" not in payload["tools"][0]
+    assert payload["messages"][1]["content"] == "old answer"
+    assert payload["messages"][-1]["content"][0]["cache_control"] == {"type": "ephemeral", "ttl": ttl}
+    assert messages == original
+
+
+def test_caller_four_breakpoints_leave_no_automatic_static_markers():
+    messages = [
+        {"role": "system", "content": "stable instructions"},
+        {"role": "assistant", "content": "old answer"},
+        {"role": "user", "content": [
+            {"type": "text", "text": str(i), "cache_control": {"type": "ephemeral"}}
+            for i in range(4)
+        ]},
+    ]
+    tools = [{"type": "function", "function": {"name": "read", "parameters": {}}}]
+    payload = llm_core._build_anthropic_payload("claude", messages, 0, 100, tools=tools)
+    blocks = payload["system"] + payload["tools"]
+    for message in payload["messages"]:
+        if isinstance(message["content"], list):
+            blocks += message["content"]
+    assert sum("cache_control" in block for block in blocks) == 4

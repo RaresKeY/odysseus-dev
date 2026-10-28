@@ -1225,9 +1225,6 @@ async def build_chat_context(
     # history: the session id may be a temporary wrapper or, in buggy clients, a
     # stale normal session id. Only the ephemeral incognito transcript is safe.
     history = _incognito_messages(session_id) if incognito else sess.get_context_messages()
-    # Keep retrieved context current without rewriting the reusable history
-    # prefix. Preserve its untrusted metadata and place it before the new user
-    # turn, never between an assistant tool call and its results.
     messages = [item for item in preface if item.get("role") == "system"] + list(history)
     transient_context = [item for item in preface if item.get("role") != "system"]
     context_index = len(messages) - 1 if messages and messages[-1].get("role") == "user" else len(messages)
