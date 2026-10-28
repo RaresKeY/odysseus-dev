@@ -238,3 +238,35 @@ async def test_named_private_chat_forces_volatile_checkpoint_even_if_request_say
         row=db.get(d.ChatAutomationSubmission,updated['previous_submission_id'])
         assert row.current_ask is None and row.approval_evidence is None
     assert updated['private']
+
+
+@pytest.mark.asyncio
+async def test_mixed_legacy_history_renews_privately_by_default_after_loss(store,dispatch_runtime):
+    from src import approval_context as context
+    rt=dispatch_runtime
+    first=await prepare_chat_turn(store,'alice',rt.session,'Private restriction: never publish.',ephemeral_semantics=True)
+    later=await prepare_chat_turn(store,'alice',rt.session,'Ordinary follow-up.',ephemeral_semantics=False)
+    with store.transaction() as db:
+        state=db.query(d.ChatAutomationState).filter_by(session_id='a').one()
+        state.feature_settings={key:value for key,value in state.feature_settings.items() if key!=PROCESS_KEY}
+    with context._PRIVATE_LOCK:context._PRIVATE.pop(store.session_factory,None)
+    status=context_status(store,'alice','a')
+    assert status['previous_submission_id']==later.submission_id
+    assert not status['available'] and status['code']=='approval_private_context_unavailable' and status['private'] is True
+    renewed=replace_context(store,'alice','a',replacement(status,'Restated private restriction: never publish.',private=status['private']))
+    with store.transaction() as db:
+        assert db.get(d.ChatAutomationSubmission,renewed['previous_submission_id']).current_ask is None
+        assert db.get(d.ChatAutomationSubmission,first.submission_id).current_ask is None
+    assert renewed['private']
+
+
+@pytest.mark.asyncio
+async def test_explicit_normal_checkpoint_excludes_older_private_prefix_from_privacy_default(store,dispatch_runtime):
+    rt=dispatch_runtime
+    await prepare_chat_turn(store,'alice',rt.session,'Earlier private restriction.',ephemeral_semantics=True)
+    status=context_status(store,'alice','a');assert status['private']
+    renewed=replace_context(store,'alice','a',replacement(status,'New public task: write local documentation only.',private=False))
+    assert renewed['available'] and renewed['private'] is False
+    with store.transaction() as db:
+        row=db.get(d.ChatAutomationSubmission,renewed['previous_submission_id'])
+        assert row.current_ask=='New public task: write local documentation only.'

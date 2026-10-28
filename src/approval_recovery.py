@@ -69,7 +69,16 @@ def context_status(store, owner, session_id):
         session = db.get(d.Session, str(session_id))
         row = db.query(d.ChatAutomationSubmission).filter_by(owner_key=owner_key(owner), session_id=str(session_id)).order_by(
             d.ChatAutomationSubmission.created_at.desc(), d.ChatAutomationSubmission.submission_id.desc()).first()
-        private = str(session.name or '').strip().casefold() in {'incognito', 'nobody'} or bool((state.feature_settings or {}).get(PROCESS_KEY)) or bool(row and row.current_ask is None)
+        # Legacy chats may have later ordinary turns after a private one and
+        # no process marker. Metadata alone must keep renewal private by default.
+        private_rows = db.query(d.ChatAutomationSubmission.submission_id).filter_by(
+            owner_key=owner_key(owner), session_id=str(session_id)).filter(d.ChatAutomationSubmission.current_ask.is_(None))
+        checkpoint = (state.feature_settings or {}).get(CHECKPOINT_KEY)
+        if (isinstance(checkpoint, dict) and type(checkpoint.get('created_at')) in (int, float)
+                and math.isfinite(checkpoint['created_at'])):
+            private_rows = private_rows.filter(d.ChatAutomationSubmission.created_at >= checkpoint['created_at'])
+        private = (str(session.name or '').strip().casefold() in {'incognito', 'nobody'}
+                   or bool((state.feature_settings or {}).get(PROCESS_KEY)) or private_rows.first() is not None)
         private_owner = (state.feature_settings or {}).get(PROCESS_KEY)
         result = {'policy_revision': state.policy_revision, 'previous_submission_id': row.submission_id if row else None,
                   'private': private, 'process_id': process_id(), 'available': True, 'code': None,
@@ -89,6 +98,8 @@ def context_status(store, owner, session_id):
                 result['private'] = True
         except DecisionError as error:
             result.update(available=False, code=error.code)
+            if error.code in {'approval_private_context_unavailable', 'approval_private_process_changed'}:
+                result['private'] = True
     if result['private'] and not runtime['supported']:
         result.update(available=False, code=runtime['code'])
     result['runtime'] = runtime
