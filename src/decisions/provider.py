@@ -16,7 +16,7 @@ from .config import ResolvedDecisionEndpoint, resolve_decision_endpoint, validat
 from .contracts import (DecisionContext, DecisionError, DecisionRequest, DecisionResult,
                         MAX_REQUEST_BYTES, MAX_RESPONSE_BYTES, SCHEMA_VERSION,
                         decode, encode, valid_usage, validate_answers)
-from .store import AttemptStore
+from .store import AttemptStore, approval_outage
 
 
 def _openai_payload(request, questions, model):
@@ -190,6 +190,12 @@ class DecisionProvider:
                                   attempt_id=state.get("attempt_id"))
             error.dispatched = bool(state.get("dispatched"))
             raise error from None
+        except asyncio.CancelledError as error:
+            # An enclosing action-review deadline can cancel this scope first.
+            # Its TimeoutError retains this cause and the actual reservation.
+            # Explicit task cancellation always propagates unchanged.
+            error.attempt_id = state.get("attempt_id")
+            raise
         except DecisionError as error:
             error.dispatched = bool(state.get("dispatched"))
             raise
@@ -216,20 +222,44 @@ class DecisionProvider:
             timeout = min(timeout, context.deadline - self.clock())
         if timeout <= 0:
             raise DecisionError("decision_deadline_exceeded")
+        identity = endpoint.public_identity()
+        configuration_sha256 = hashlib.sha256(encode(checked_config)).hexdigest()
+        previous = []
+        if request.purpose == "approval" and request.state.get("server_context", {}).get("action_digest"):
+            try:
+                previous = await self._invoke(self.store.records_for_run, context.owner, context.session_id, context.run_id)
+            except Exception:
+                raise DecisionError("decision_attempt_store_unavailable") from None
+            if not context.fallback_of and endpoint.protocol in {"systemone", "openai_json"}:
+                outage = approval_outage(previous, identity=identity, configuration_sha256=configuration_sha256,
+                    context=context, action_digest=request.state.get("server_context", {}).get("action_digest"))
+                if outage:
+                    try:
+                        current = await self._invoke(self.resolver, checked_config, context.owner)
+                    except Exception:
+                        raise DecisionError("decision_endpoint_changed") from None
+                    if current != endpoint:
+                        raise DecisionError("decision_endpoint_changed")
+                    await self._check(context)
+                    error = DecisionError(outage["failure_kind"], attempt_id=outage["attempt_id"])
+                    error.approval_outage = True
+                    raise error
         attempt_id = uuid.uuid4().hex
         state["attempt_id"] = attempt_id
-        identity = endpoint.public_identity()
         record = {"attempt_id": attempt_id, "owner": context.owner,
                   "session_id": context.session_id, "run_id": context.run_id,
                   "purpose": request.purpose, "schema": SCHEMA_VERSION,
                   "policy_revision": context.policy_revision, "authority_epoch": context.authority_epoch,
                   "request_sha256": hashlib.sha256(wire).hexdigest(), "request_bytes": len(wire),
                   "provider_identity": identity, "status": "reserved", "usage": None,
+                  "configuration_sha256": configuration_sha256,
+                  "call_limit": min(context.max_calls, endpoint.max_calls),
                   "reservation": {"input_tokens": 65536, "output_tokens": 65536}}
         if request.purpose == "approval":
             record["approval_action_digest"] = request.state.get("server_context", {}).get("action_digest")
             if context.fallback_of:
-                record["fallback_of"] = context.fallback_of
+                continuation = any(r.get("fallback_of") == context.fallback_of for r in previous)
+                record["approval_outage_of" if continuation else "fallback_of"] = context.fallback_of
         campaign_reserved = False
         try:
             if self.campaign is not None:
@@ -381,7 +411,8 @@ class DecisionProvider:
             return result
         except asyncio.CancelledError:
             if not settled:
-                expired = state.get("scope") is not None and state["scope"].expired()
+                expired = (state.get("scope") is not None and state["scope"].expired()
+                           or context.deadline is not None and self.clock() >= context.deadline)
                 await settle("rejected" if measured is not None else "unresolved" if dispatched else "cancelled",
                        "decision_deadline_exceeded" if expired else "decision_cancelled", wait=False)
             raise

@@ -217,7 +217,8 @@ class ApprovalReviewService:
                                     if fallback_evaluator else shared_deadline)
                 projection = await assess(evaluator, replace(context, deadline=primary_deadline))
             except Exception as primary_error:
-                code = primary_error.code if isinstance(primary_error, DecisionError) else "decision_failed"
+                code = (primary_error.code if isinstance(primary_error, DecisionError)
+                        else "decision_deadline_exceeded" if isinstance(primary_error, TimeoutError) else "decision_failed")
                 # Accounting, capture and cancellation failures are not
                 # permission to spend another attempt or discard a restriction.
                 if (fallback_evaluator is None or code == "decision_cancelled"
@@ -226,8 +227,12 @@ class ApprovalReviewService:
                     raise
                 source, fallback_reason = "conversation_model", code
                 primary_attempt_id = getattr(primary_error, "attempt_id", None)
+                if isinstance(primary_error, TimeoutError):
+                    primary_attempt_id = getattr(primary_error.__cause__, "attempt_id", None)
                 projection = await assess(fallback_evaluator, replace(context, fallback_of=primary_attempt_id))
                 projection.update(fallback_reason=fallback_reason, primary_attempt_id=primary_attempt_id)
+                if getattr(primary_error, "approval_outage", False):
+                    projection["approval_outage_of"] = primary_attempt_id
         except asyncio.CancelledError:
             self._retire(pending)
             raise

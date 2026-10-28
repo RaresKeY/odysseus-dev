@@ -678,10 +678,11 @@ class SqlAttemptStore:
             self.store.owner(db, record["owner"])
             previous = db.query(d.DecisionAttempt).filter_by(owner_key=owner_key(record["owner"]),
                 session_id=record["session_id"], run_id=record["run_id"]).all()
-            from src.decisions.store import fallback_exemption
+            from src.decisions.store import fallback_exemption, reservation_limit
             exempt = fallback_exemption(record, [r.record for r in previous])
             if (db.query(d.DecisionAttempt).filter_by(attempt_id=record["attempt_id"]).first()
-                    or len(previous) >= max_calls or any((r.status in {"reserved", "unresolved"} and r.attempt_id != exempt)
+                    or len(previous) >= reservation_limit(record, [r.record for r in previous], max_calls)
+                    or any((r.status in {"reserved", "unresolved"} and r.attempt_id != exempt)
                         or (r.record or {}).get('failure_kind') == 'decision_usage_exceeded_reservation' for r in previous)):
                 raise DecisionError("decision_budget_unavailable")
             db.add(d.DecisionAttempt(attempt_id=record["attempt_id"], owner_key=owner_key(record["owner"]),
