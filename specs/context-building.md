@@ -126,3 +126,9 @@ Compact editor/email preparation can use current memory and bounded prior-source
 - Tool/context wording is spread across schema, prompt, and retrieval surfaces.
 - Source-specific wrapping and unavailable-state behavior still needs broader focused coverage for literal URL intent, research, RAG/memory/skills, and YouTube; external tool results and approval continuation now have dedicated gate/taint regressions.
 - Compare pre-search context is computed but may not be submitted through the current compare stream form.
+
+## Automatic approval evidence
+
+`src/approval_context.py` owns a separate bounded review envelope, not the execution model's context. Only authenticated submission records and exact human action decisions supply user-origin evidence. Tool results, MCP hints, inspected script contents and captured browser page content are untrusted. Earlier asks/revocations survive model-context trimming through the owner-scoped linked submission chain; missing/corrupt/oversized evidence stops Auto. Optional recent observations are byte-bounded with explicit omission markers. Complete actions and user evidence are never silently truncated. The approval-specific provider provenance wording does not change other decision purposes. Budgets, sensitive-input handling and unsupported legacy/project/delegation inputs are documented in [chat-approval-review.md](../docs/chat-approval-review.md#context-and-provenance).
+
+The review also seals the saved conversation selection and resolved originating-turn descriptor, endpoint and credential digest. A changed selected model invalidates pending approval before dispatch; automatic routing uses that turn’s resolved provider/model, never the stale manual selection or global default.

@@ -49,16 +49,24 @@ def proposal(tmp_path):
     return store, pending, current, cancelled
 
 
-def decision(choice="allow", probability=.99, confidence=.99, **changes):
-    probabilities = {key: (probability if key == choice else (1-probability)/2)
-                     for key in ("allow", "review", "deny")}
-    answer = {"type": "choice", "choice": choice, "confidence": confidence,
-              "probabilities": probabilities}
-    return DecisionResult(choice, confidence, probabilities,
+def decision(choice="allow", probability=.99, confidence=.99, *, risk="low", authorization="high",
+             policy_check="clear", effect_scope="narrow", **changes):
+    from src.approval_policy import QUESTIONS
+    if choice == "review":
+        policy_check = "insufficient_evidence"
+    elif choice == "deny":
+        policy_check = "explicit_restriction"
+    selected = dict(risk_level=risk, user_authorization=authorization,
+                    policy_check=policy_check, effect_scope=effect_scope)
+    answers = {qid: {"type": "choice", "choice": selected[qid], "confidence": confidence,
+        "probabilities": {key: probability if key == selected[qid] else (1-probability)/(len(choices)-1)
+                          for key in choices}} for qid, choices in QUESTIONS.items()}
+    answer = answers["risk_level"]
+    return DecisionResult(answer["choice"], confidence, answer["probabilities"],
                           {"input_tokens": 20, "output_tokens": 5}, "attempt",
                           {"model": "decision-model", "endpoint_id": "reviewer",
                            "protocol": "systemone", "distribution_source": "provider_reported"},
-                          {"decision": answer}, **changes)
+                          answers, **changes)
 
 
 def evaluator(result=None, *, mutate=None):
@@ -110,7 +118,7 @@ async def test_real_mocked_http_call_grants_one_exact_action_and_dispatches_once
     outcome = await ApprovalReviewService(store).review(pending, policy,
         deterministically_admitted=True, evaluator=evaluate)
     assert outcome.status == "approved" and len(requests) == 1
-    assert requests[0]["state"]["trusted_context"]["user_request"] == pending.request_text
+    assert requests[0]["state"]["server_context"]["user_evidence"][0]["text"] == pending.request_text
     grant = outcome.approval
     assert grant.scope is ToolApprovalScope.SINGLE_ACTION and not grant.allow_remaining_actions
     assert grant.reviewer == "decision_provider" and grant.decision_attempt_id
@@ -278,13 +286,20 @@ def canonical_dispatch(proposal, monkeypatch):
     the same dynamic-policy seam and never runs application source on host.
     """
     from src import decisions, tool_execution, tool_approvals
+    from src import approval_context
+    from src import approval_fallback
+    monkeypatch.setattr(approval_fallback, "model_snapshot", lambda _: "fixture-model")
+    from src.decisions import observability
+    monkeypatch.setattr(approval_context, "user_snapshot", lambda _: "")
+    monkeypatch.setattr(approval_context, "record_human_decision", lambda *_: None)
+    monkeypatch.setattr(observability, "default_observability", lambda *_: SimpleNamespace(record_approval=lambda *_: None))
     store, initial, policy, cancelled = proposal
     current_binding = [ChatPolicy.from_record(policy).binding()]
     attempts, calls, effects = MemoryAttemptStore(), [], []
     bound = SimpleNamespace(owner="alice", session_id="chat", submission_id="submission",
         run_id="submission", raw_ask=initial.request_text, policy=policy,
         configuration={"decision_provider": CONFIG}, pending=False,
-        store=SimpleNamespace(policy=lambda *_args, **_kwargs: dict(policy)))
+        store=SimpleNamespace(policy=lambda *_args, **_kwargs: dict(policy), session_factory=None))
     bound.current = lambda: not cancelled[0] and policy_matches_binding(current_binding[0], policy)
     automation = ModuleType("src.chat_automation")
     automation.current_turn = lambda: bound
@@ -413,7 +428,16 @@ async def test_task_cancellation_retires_proposal_without_review_retry(proposal)
 
 def test_concurrent_human_responses_consume_exactly_once(proposal):
     from concurrent.futures import ThreadPoolExecutor
-    store, pending, _, _ = proposal
+    store, original, policy, _ = proposal
+    policy["approval_mode"] = "always_ask"
+    pending = store.create(owner=original.owner, session_id=original.session_id,
+        origin_run_id=original.origin_run_id, tool_name=original.tool_name,
+        content=original.content, workspace=original.workspace,
+        external_untrusted_context_seen=True,
+        request_authority=original.request_authority,
+        request_text=original.request_text, submission_id=original.submission_id,
+        capabilities=capabilities_for_action(original.tool_name, original.content),
+        policy_record=policy, policy_validator=original.policy_validator)
     def consume(_):
         return store.consume(pending.approval_id, decision="approve_once", owner="alice", session_id="chat")
     with ThreadPoolExecutor(max_workers=4) as pool:

@@ -13,7 +13,7 @@ const modeLabels = {always_ask:'Always Ask',auto_approve:'Auto-Approve',yolo:'YO
 const autoApproveReady = () => reviewerAvailability?.available === true;
 function autoApproveReason() {
   if(reviewerLoading)return 'Checking decision model availability…';
-  return reviewerAvailability?.reason || 'Configure Jev credentials or select a compatible local decision model in Chat settings.';
+  return reviewerAvailability?.reason || 'Select an available conversation model or configure Jev in Chat settings.';
 }
 function notice(text='') { const el=$('chat-automation-notice'); el.textContent=text; el.hidden=!text; }
 function permissionFeedback(text='') { $('chat-permissions-feedback').textContent=text; notice(text); }
@@ -31,8 +31,11 @@ function positionPermissions() {
   menu.style.maxHeight=`${Math.max(80,Math.min(window.innerHeight*.65,trigger.top-20))}px`;
   menu.style.top=`${Math.max(10,trigger.top-menu.offsetHeight-10)}px`;
 }
-function openPermissions() {
+async function openPermissions() {
   if(saving)return;
+  if(!sid() && sessions.hasPendingChat()) {
+    try { await currentChat(); } catch(error) { permissionFeedback(error.message); return; }
+  }
   // The native toolbar intentionally clips collapsed tools. Like More tools,
   // portal this menu above that container while preserving its trigger owner.
   document.body.append($('chat-permissions-menu'));

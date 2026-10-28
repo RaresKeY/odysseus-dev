@@ -196,3 +196,7 @@ Foreground startup retirement retains unreadable/malformed stores. With an exist
 - Decide whether `McpServer.env` and OAuth key files need masking, encryption, and chmod beyond admin-only access.
 - Decide whether built-in MCP servers should become owner-aware or remain documented as admin/global compatibility surfaces.
 - Decide whether optional browser MCP cache misses should surface in `/api/mcp` status instead of startup logs only.
+
+## Synchronous chat review inputs
+
+Chat shell/MCP operations retain canonical exact dispatch and resource admission while `approval_review.py` independently assesses risk, authorization, policy and effect scope. `approval_files.py` can read a directly declared simple native shell script within admitted roots, up to 8 KiB, and rechecks its content/identity before consuming the approval; remote backends never substitute local files. Complex commands and transitive dependencies remain unverified. `McpManager.review_annotations` exposes only fixed boolean hints for the already-bound server/tool incarnation, explicitly as untrusted evidence. Missing/conflicting hints confer no review bypass or remembered grant. There is no generic agent stdin-write endpoint; existing background bootstrap, foreground closed stdin and later job/process controls retain their owners. See [the dispatch inventory](../docs/chat-approval-review.md#execution-entry-points-and-bypasses) for human shell, scoped API and unattended boundaries.

@@ -18,7 +18,7 @@ Owner settings are SQL-backed, independently of the general JSON preferences. Fi
 | Mode | Tool review after deterministic admission | Extra folders with ceiling off | Extra folders with ceiling on |
 | --- | --- | --- | --- |
 | Always Ask | One exact human decision | None | Explicit per-chat grant within deployment roots |
-| Auto-Approve | Independent configured decision call; deny/review/uncertainty/error stops, with no human card | None | Same explicit grant; reviewer cannot elevate |
+| Auto-Approve | Independent Jev review with one selected-conversation-model technical fallback; valid denial/uncertainty or dual failure stops, with no human card | None | Same explicit grant; reviewer cannot elevate |
 | YOLO | Discretionary review omitted for admitted operations | None | Explicit bounded scope, with process controls retained |
 
 The owner ceiling defaults off. `agent_elevation_enabled` and
@@ -44,7 +44,7 @@ Each chat stores `auto_categories` in its existing SQL feature settings, with ex
 
 `src/model_auto_policy.json` preserves the complete supplied Codex-Jev scope/model/effort/anchors/persistence policy, replacing only Sol/Luna labels/slugs with neutral category labels/IDs. `src/model_auto.py` preserves the learning/teaching versus established repeatable-work request criteria, omitting the donor's unsupported comparative model-quality claim. Jev receives the full policy as `state.routing_policy`, chooses `execution_model=complex_tasks|straightforward_tasks|unavailable` and supported `reasoning_effort` in one `model_auto` call. The chosen category resolves deterministically to its assigned custom model. Category role is task policy, never an invented capability description for that model. The complete policy hash, category identities and exact supported capability revision bind the immutable offer and actual provider dispatch.
 
-Effort comes from the exact ChatGPT subscription runtime catalogue or versioned exact-ID Google compatibility table on the canonical HTTPS Google endpoint; unknown providers/models offer default-only with disclosure. Unsupported category/model/effort combinations error without normalization. Complete finite normalized winner vectors, bounded confidence and known usage remain required; raw scores are observable routing metadata, without an absolute confidence/probability floor. Explicit `unavailable` still errors. Action approval's separate 0.95 allow thresholds and deterministic ceilings are unchanged.
+Effort comes from the exact ChatGPT subscription runtime catalogue or versioned exact-ID Google compatibility table on the canonical HTTPS Google endpoint; unknown providers/models offer default-only with disclosure. Unsupported category/model/effort combinations error without normalization. Complete finite normalized winner vectors, bounded confidence and known usage remain required; raw scores are observable routing metadata, without an absolute confidence/probability floor. Explicit `unavailable` still errors. Action approval's separate 0.95 assessment thresholds and deterministic ceilings are unchanged.
 
 Existing `auto_models`, descriptions, old three-approach mappings and unrelated feature data are retained as compatibility history, never classified or inferred into the two categories. Already-Auto chats without complete category assignments must explicitly assign both before sending; the existing old-mapping materialization still preserves prior unique identities before owner mapping edits/forks. No schema migration or destructive default/model rewrite occurs. Forks preserve explicit categories, legacy choices and existing grant-reset behavior. Assignment saves reuse exact picker inventory/pin admission inside CAS without credential refresh under the writer lock. Independent permission/settings/manual recovery remains possible if an unchanged assignment becomes unavailable. Manual model selection skips Jev.
 
@@ -63,14 +63,7 @@ distributions. Missing or ambiguous usage remains reserved/unresolved, not zero.
 No SDK, model download, provisioning or inference probe is needed. See
 `docs/decision-provider.md` and `docs/chat-approval-review.md`.
 
-The composer permission menu shows Always Ask / Auto-Approve / YOLO. Auto-Approve
-stays visible but disabled until the selected decision endpoint/model passes
-configuration admission, including required hosted Jev credentials. Keyless local
-reviewers remain supported. The API reports an availability reason and enforces
-the same requirement when activating the mode; no inference probe is made.
-Unavailable saved Auto-Approve is labelled as such without changing its mode,
-and Always Ask and reviewer settings remain accessible. Selecting available
-Auto-Approve shows an activation disclosure; cancel or failed save retains the
+The composer permission menu shows Always Ask / Auto-Approve / YOLO. Auto-Approve readiness accepts either an admitted configured Jev reviewer or the selected conversation model; automatic routing binds fallback to the originating turn's resolved model. Checks are local registration/owner/model checks, never live inference or health probes. Both paths unavailable disables activation without changing a saved mode; Always Ask and reviewer settings remain accessible. Auto-Approve shows an activation disclosure; cancel or failed save retains the
 last acknowledged mode. Enabled Auto-Approve retires unsuccessful action reviews
 and emits a blocked error, never an individual approval card. Explicitly changing
 mode and issuing a new request remains available. Tools and options live in More
@@ -105,3 +98,13 @@ signed-in owner or the explicit auth-disabled local operator; a missing
 authenticated owner never selects the local namespace. CDP origin checks do not provide DNS/socket pinning. No paid
 provider or application smoke is part of this port's evidence. Runtime gaps are
 distinct from passing fake-provider and fake-channel regression contracts.
+
+## Synchronous semantic action assessment
+
+`src/approval_policy.py` owns `odysseus-approval-review/v2`: one independent primary review answers risk, semantic authorization, policy category and effect scope, with one bounded conversation-model fallback after technical failure or missing Jev. `src/approval_review.py` validates complete distributions and known usage, then applies the deterministic matrix and every veto. All four Jev classifications require confidence/probability at least 0.95 for acceptance. The ordinary-model fallback instead requires four categorical labels and explicit uncertainty, without fabricated distributions; uncertainty stops. Low/medium risk can pass with any explicit authorization label; high requires medium/high authorization and narrow scope; critical always denies. Category restrictions and missing material evidence override allowances. Readiness, three user modes, exact grants, cancellation and hard execution authority remain independent.
+
+`src/approval_context.py` assembles the complete owner-scoped submission chain (128 items/16 KiB), exact proposed action, policy/environment/resource facts, and bounded untrusted observations within a 32 KiB state cap. It does not infer consent from mutable chat history or compaction. `ChatAutomationSubmission.approval_evidence` retains exact human allow/deny fingerprints with provenance; private-turn contents remain in memory. Missing/corrupt/over-budget history fails closed. `src/approval_files.py` inspects bounded directly declared native shell scripts inside admitted roots, binding their complete content and identity; complex/transitive/remote dependencies remain unverified. The authorization snapshot and inspected scripts are sealed into pending proposals and rechecked after await and at grant claim. Ordinary filesystem bindings remain object identity checks, not complete content snapshots.
+
+Decision activity adds fixed risk, authorization, source, policy/prompt version, rule/reason and redacted evidence counts. Jev, conversation-model fallback, human, YOLO and deterministic paths remain distinguishable; old records are unassessed. The approval-only provider provenance flag leaves other decision prompts unchanged. Adaptive scoring and cross-action caches remain disabled. The maintained dispatch inventory, budgets, policy rules and limitations are in [chat-approval-review.md](../docs/chat-approval-review.md).
+
+The fallback shares a 60-second deadline, gets at most one selected-model attempt, and uses existing durable accounting. Its narrowly linked reservation may coexist with a technically failed primary whose unknown usage remains held; it cannot waive other budget failures or reuse that exemption. Exact provider/model/turn and original selection are revalidated. Valid primary denial/uncertainty is final. See the linked review documentation for protocol contracts and offline qualification limits.

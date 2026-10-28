@@ -211,3 +211,9 @@ Filesystem postconditions derive exact requested content from the producer trans
 - External MCP output still needs a single central size cap before model re-entry; untrusted-result metadata and the post-external-context action gate now cover the prompt-injection/authorization boundary.
 - Auth-disabled/no-login owner propagation is inconsistent between route dependencies and chat/agent execution, so tool-security and native tool storage behavior need dedicated regression coverage.
 - Authority, resources, effects, containment, preview, and turn contracts have focused regression suites; live provider and platform behavior still requires separate validation.
+
+## Semantic approval assessment
+
+Versioned bound chat actions use the synchronous risk/authorization/policy/scope assessment described in [chat-automation.md](chat-automation.md) and [the dispatch inventory](../docs/chat-approval-review.md#execution-entry-points-and-bypasses). The host combiner cannot widen request or resource authority. The existing single-action store seals the authorization snapshot and bounded directly declared local script evidence, revalidates them after inference and at claim, and refuses a human response racing an automatic review. MCP annotation hints remain untrusted metadata, never skip conditions. Control tools and browser orchestration retain their bounded existing semantics; actual browser children still re-enter dispatch. YOLO/human/deterministic dispositions are explicitly distinguished from Jev assessments in activity and tool results.
+
+The independently assessed grant may come from Jev or one bounded selected-conversation-model fallback. Both paths share the same host policy and action/resource checks; no valid primary denial or uncertainty can be overridden by fallback.

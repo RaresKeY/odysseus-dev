@@ -135,6 +135,9 @@ def _binding_payload(
     policy_binding=None,
     user_intent_digest: str = "",
     submission_id: str = "",
+    review_context_json: str = "",
+    review_files: tuple = (),
+    review_policy_identity: str = "",
 ) -> dict[str, Any]:
     payload = {
         "owner": _normalized_owner(owner),
@@ -165,7 +168,10 @@ def _binding_payload(
     if policy_binding is not None:
         payload.update(policy_binding=dict(policy_binding),
                        user_intent_digest=user_intent_digest,
-                       submission_id=submission_id)
+                       submission_id=submission_id,
+                       review_context_json=review_context_json,
+                       review_files=[item.to_dict() for item in review_files],
+                       review_policy_identity=review_policy_identity)
     return payload
 
 
@@ -192,7 +198,7 @@ class PendingToolApproval:
     selected_tools: tuple[str, ...] = ()
     continuation_query: str = ""
     # The originating user request is internal continuation context only; it
-    # is never displayed or treated as authorization for the sealed action.
+    # is never displayed or treated as an execution grant for the sealed action.
     request_text: str = ""
     request_authority: RequestAuthority | None = None
     # Server-resolved targets at proposal time; never read from the approval UI.
@@ -206,6 +212,9 @@ class PendingToolApproval:
     policy_binding: dict[str, Any] | None = None
     user_intent_digest: str = ""
     submission_id: str = ""
+    review_context_json: str = ""
+    review_files: tuple = field(default=(), repr=False)
+    review_policy_identity: str = ""
     bound_turn: Any = field(default=None, repr=False, compare=False)
     policy_validator: Callable[["PendingToolApproval"], bool] | None = field(
         default=None, repr=False, compare=False)
@@ -216,7 +225,11 @@ class PendingToolApproval:
         if self.policy_binding is None:
             return True
         try:
-            return callable(self.policy_validator) and self.policy_validator(self) is True
+            from src.approval_policy import policy_identity
+            if self.review_policy_identity and self.review_policy_identity != policy_identity():
+                return False
+            return (all(item.validate() for item in self.review_files)
+                    and callable(self.policy_validator) and self.policy_validator(self) is True)
         except Exception:
             return False
 
@@ -299,6 +312,7 @@ class ExactToolApproval:
     allow_remaining_actions: bool = True
     reviewer: str = "human"
     decision_attempt_id: str | None = None
+    review_decision: dict | None = None
     _claimed: bool = field(default=False, init=False, repr=False)
     _lock: threading.Lock = field(default_factory=threading.Lock, init=False, repr=False)
 
@@ -363,6 +377,9 @@ class ExactToolApproval:
             policy_binding=self.pending.policy_binding,
             user_intent_digest=self.pending.user_intent_digest,
             submission_id=self.pending.submission_id,
+            review_context_json=self.pending.review_context_json,
+            review_files=self.pending.review_files,
+            review_policy_identity=self.pending.review_policy_identity,
         )
         return _canonical_digest(expected) == self.pending.digest
 
@@ -451,6 +468,7 @@ class ToolApprovalStore:
         policy_record: dict | None = None,
         policy_validator: Callable[[PendingToolApproval], bool] | None = None,
         submission_id: str = "",
+        review_context_json: str = "",
         bound_turn: Any = None,
     ) -> PendingToolApproval:
         if request_authority is not None and not isinstance(request_authority, RequestAuthority):
@@ -469,8 +487,11 @@ class ToolApprovalStore:
             if (policy_record.get("original_intent_digest") is not None
                     and policy_record["original_intent_digest"] != user_intent_digest):
                 raise ValueError("Versioned approval intent changed")
-        now = time.time()
         from src.agent_runtime.authority import ExactOperation
+        review_files = ()
+        from src.approval_policy import policy_identity
+        review_policy_identity = policy_identity() if policy_binding is not None else ""
+        now = time.time()
         from src.agent_runtime.resource_binding import NATIVE_FILESYSTEM_TOOLS, resolve_filesystem_operation
         from src.agent_runtime.resources import FilesystemRoot
         resource_operation = None
@@ -545,6 +566,13 @@ class ToolApprovalStore:
                 # An unresolved proposal may be displayed, but it cannot execute
                 # after approval by reconstructing its targets at claim time.
                 pass
+        if (policy_binding is not None and policy_binding["approval_mode"] == "auto_approve"
+                and backend_operation is not None
+                and isinstance(backend_operation.resource, NativeBackendResource)
+                and request_authority is not None
+                and request_authority.permits(ExactOperation.normalize(tool_name, content))):
+            from src.approval_files import declared_scripts
+            review_files = declared_scripts(tool_name, content, request_authority)
         effects = tuple(sorted(effect.value for effect in capabilities.effects))
         result_integrity = capabilities.result_integrity.value
         payload = _binding_payload(
@@ -571,6 +599,9 @@ class ToolApprovalStore:
             policy_binding=policy_binding,
             user_intent_digest=user_intent_digest,
             submission_id=submission_id,
+            review_context_json=review_context_json,
+            review_files=review_files,
+            review_policy_identity=review_policy_identity,
         )
         pending = PendingToolApproval(
             approval_id=secrets.token_urlsafe(32),
@@ -603,6 +634,9 @@ class ToolApprovalStore:
             policy_binding=policy_binding,
             user_intent_digest=user_intent_digest,
             submission_id=submission_id,
+            review_context_json=review_context_json,
+            review_files=review_files,
+            review_policy_identity=review_policy_identity,
             policy_validator=policy_validator,
             bound_turn=bound_turn,
         )
@@ -643,6 +677,7 @@ class ToolApprovalStore:
         owner: Any,
         session_id: Any,
         allow_continuation: bool = True,
+        _reviewed: bool = False,
     ) -> ExactToolApproval | None:
         """Consume a pending approval.
 
@@ -672,6 +707,9 @@ class ToolApprovalStore:
         # Fresh-policy validation may read SQL; never hold the store lock over
         # that callback or invert the persistence -> revocation lock ordering.
         if pending.policy_binding is not None:
+            if not _reviewed and (pending._review_started.is_set()
+                                  or pending.policy_binding["approval_mode"] == "auto_approve"):
+                return None
             if normalized_decision not in {SINGLE_ACTION_APPROVAL_DECISION, DENY_APPROVAL_DECISION}:
                 return None
             if not pending.policy_is_current():
@@ -685,6 +723,9 @@ class ToolApprovalStore:
                 and getattr(pending.bound_turn, "pending_approval_id", None) == pending.approval_id):
             pending.bound_turn.pending = False
             pending.bound_turn.pending_approval_id = None
+        if pending.policy_binding is not None and not pending._review_started.is_set():
+            from src.approval_context import record_human_decision
+            record_human_decision(pending, normalized_decision)
         scope = scope_for_decision(normalized_decision)
         if scope is None:
             return None
@@ -722,7 +763,7 @@ class ToolApprovalStore:
             if self._pending.get(pending.approval_id) is not pending:
                 return None
         grant = self.consume(pending.approval_id, decision=SINGLE_ACTION_APPROVAL_DECISION,
-                             owner=owner, session_id=session_id, allow_continuation=False)
+                             owner=owner, session_id=session_id, allow_continuation=False, _reviewed=True)
         if grant is not None:
             grant.reviewer = "decision_provider"
             grant.decision_attempt_id = decision_attempt_id

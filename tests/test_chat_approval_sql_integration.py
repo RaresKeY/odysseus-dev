@@ -29,10 +29,12 @@ def dispatch_runtime(store, tmp_path, monkeypatch):
         db.add(d.ModelEndpoint(id='reviewer', name='Synthetic reviewer', owner='alice',
             base_url='https://synthetic.invalid/v1', cached_models='["decision-model"]'))
     store.update_configuration("alice", {"decision_provider": CONFIG}, 0)
-    calls, effects = [], []
+    calls, effects, hooks = [], [], []
     attempts = SqlAttemptStore(store)
     def transport(request):
         calls.append(request)
+        for hook in hooks:
+            hook()
         result = decision()
         return httpx.Response(200, json={"model": "decision-model", "answers": result.answers,
                                         "usage": result.usage})
@@ -58,7 +60,7 @@ def dispatch_runtime(store, tmp_path, monkeypatch):
                 security_context=ToolRunSecurityContext(), exact_approval=exact)
     session = SimpleNamespace(id="a", model="manual", endpoint_url="http://local/v1", headers={}, endpoint_id=None)
     return SimpleNamespace(dispatch=dispatch, session=session, calls=calls, effects=effects,
-                           attempts=attempts, approvals=approvals)
+                           attempts=attempts, approvals=approvals, hooks=hooks)
 
 
 @pytest.mark.asyncio
@@ -69,7 +71,7 @@ async def test_sql_bound_auto_review_dispatch_persists_real_attempt(store, dispa
     bound = await prepare_chat_turn(store, "alice", runtime.session, raw)
     _, result = await runtime.dispatch(bound)
     assert result["exit_code"] == 0 and len(runtime.effects) == len(runtime.calls) == 1
-    assert json.loads(runtime.calls[0].content)["state"]["trusted_context"]["user_request"] == raw
+    assert json.loads(runtime.calls[0].content)["state"]["server_context"]["user_evidence"][-1]["text"] == raw
     records = runtime.attempts.records_for_run("alice", "a", bound.run_id)
     assert len(records) == 1 and records[0]["status"] == "settled"
     assert records[0]["usage"] == {"input_tokens": 20, "output_tokens": 5}

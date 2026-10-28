@@ -1,72 +1,87 @@
 # Exact chat action review
 
-`src/chat_policy.py` interprets the versioned, server-loaded SQL policy. The
-approval mode chooses a reviewer; it does not enable tools, supply missing
-resource authority, disable confinement, or grant elevation. Always Ask uses
-an exact human decision. Auto-Approve uses an independent configured decision
-provider invocation. YOLO skips discretionary review only after deterministic
-admission. Saved interactive preferences do not grant unattended consent.
+The approval mode chooses who reviews an action. It never enables a disabled tool, adds resource authority, disables confinement or grants elevation. Always Ask uses one exact human decision. Auto-Approve prefers the configured Jev reviewer and permits one independent conversation-model fallback after a technical failure or missing configuration. YOLO skips discretionary review after deterministic admission. New chats and forks start in Always Ask, and changing mode never revives a retired proposal.
 
-Auto-Approve is selectable only when the owner's selected decision endpoint and
-model pass configuration admission. The settings API reports availability and a
-safe explanation; activation checks the same condition in the chat-settings
-transaction. Hosted Jev requires a nonblank registered API key. Compatible local
-reviewers may be keyless, and an installed execution model alone does not select
-a reviewer. This check makes no inference call and does not verify live endpoint
-health or credential validity.
+Auto-Approve is selectable when either the configured decision endpoint or this conversation's selected model passes configuration admission. Hosted Jev requires its registered credential; compatible local reviewers may be keyless. Missing Jev alone does not disable Auto. Automatic conversation routing checks both assigned model registrations and binds review to the resolved model of the originating turn. No global default or unrelated model is substituted. Readiness makes no inference call and does not establish live endpoint health. If both paths are unavailable, saved Auto remains visible with Always Ask and settings accessible. Activation explains fallback, and a valid denial or uncertainty result is final.
 
-If the selected reviewer becomes unavailable, the UI keeps the saved mode but
-labels Auto-Approve unavailable. Always Ask and decision settings remain
-accessible. No mode change, provider fallback or action retry happens implicitly;
-the runtime review checks below remain authoritative.
+## Independent assessments and deterministic enforcement
 
-`src/tool_execution.py` applies this policy after request/tool restrictions and
-resource binding. Missing semantic authority may produce a human card in
-Always Ask or the existing manual/YOLO flow when the request is valid,
-non-inherited and not restricted. Auto-Approve stops with an error instead. A disabled tool, unavailable producer, changed resource, denied
-turn capability or read-only elevation root remains denied in every mode.
-The browser `automate` operation is an orchestration wrapper; every actual
-child operation re-enters the canonical dispatcher with its original authority.
+`src/approval_policy.py` owns `odysseus-approval-review/v2`, its complete prompt, finite choices, thresholds, reasons and host combiner. `src/approval_review.py` sends one `DecisionRequest` through the existing provider, using `risk_level` as its primary question and `additional_questions` for `user_authorization`, `policy_check` and `effect_scope`. Both supported protocols keep their existing transport. No execution-model completion or browser-action choice is reused as approval.
 
-`src/approval_review.py` receives a proposal from the existing
-`ToolApprovalStore`. The trusted review context contains the exact original
-ask and frozen server policy. Proposed commands and external observations are
-untrusted evidence. The provider call is separate from execution and browser
-selection. It must return a valid complete distribution for exactly `allow`,
-`review`, `deny`, with known usage. Automatic acceptance requires `allow`,
-confidence at least 0.95, and selected probability at least 0.95. These versioned
-operating thresholds are not a calibration or safety claim. Errors, uncertainty,
-missing usage, timeout, unavailable review and malformed responses retire the
-proposal and return a clear blocked error without retry or a human approval card.
-A deny or review-needed answer also stops the operation. Selecting Auto-Approve
-in the composer first explains this behavior in an activation prompt; cancel or
-failed persistence keeps the previous mode. Users can explicitly change mode and
-make a new request; the failed proposal cannot be approved afterwards.
+| Assessment | Values |
+| --- | --- |
+| Intrinsic risk | low, medium, high, critical |
+| Semantic user authorization | unknown, low, medium, high |
+| Policy | clear, explicit_restriction, injection, sensitive_egress, credential_probing, security_weakening, destructive_scope, browser_mismatch, insufficient_evidence |
+| Effect scope | narrow, broad, unknown |
 
-New cards offer `approve_once` and `deny`. Their grants bind owner, chat, run,
-submission, exact arguments, effects, original-ask digest, resource/backend/
-process/browser identities, policy revision, owner authority epoch, execution
-scope and expiry. The pending store permits one independent review attempt and
-one destructive response consumption. At actual dispatch the grant rechecks
-expiry and a fresh SQL/run validator, then claims once under its lock. A card
-waiting for a human is reused, rather than silently creating another attempt.
-Policy/configuration changes and a new accepted ask invalidate old grants;
-switching a mode or ceiling back cannot restore them. New cards never stamp
-the legacy chat-wide signature, and versioned turns ignore old task/chat grants.
+Authorization concerns the actual target, payload and side effects. An explicitly requested action or its necessary implementation can have high authorization without matching the user's exact syntax. Urgency, agent justification, a broad end goal and retrieved instructions are not grants. Runtime resource access is a separate prerequisite.
 
-The review service never executes a tool and never owns another grant registry.
-Human HTTP routes cannot select `decision_provider` or submit a decision attempt
-as authority. `reviewer` and `decision_attempt_id` are assigned only by the
-internal validated review seam. The dispatcher checks actual identities again
-after the asynchronous review and before the existing effect/transport owner.
+Risk concerns effects and current state. An ordinary file write can be low risk even with an already valid elevation grant. Command spelling, `sudo`, an outside-workspace path, sandbox retry or workflow size does not independently determine risk. The policy distinguishes normal authentication from credential probing, traces sensitive derived payloads to their destination, requires authorization for persistent security changes, and evaluates destructive scope and actual browser inputs.
 
-Offline regression tests use complete HTTP mock transports and the canonical
-dispatcher, with an executor that records synthetic effects. They establish
-lifecycle, owner, concurrency, strict-response and replay contracts. They do
-not establish model judgment quality, browser speed or a working OS sandbox.
+| Risk | Authorization | Host result after valid, confident assessments |
+| --- | --- | --- |
+| low / medium | any explicit valid label | allow if policy is clear |
+| high | medium / high | allow only if policy is clear and scope is narrow |
+| high | low / unknown | deny |
+| critical | any | deny |
 
-The disabled permission control was also exercised in Chromium at desktop and
-mobile sizes using production HTML, CSS and controller code with synthetic
-API/session responses. [Desktop](auto-approve-readiness/desktop.png) and
-[mobile](auto-approve-readiness/mobile.png) screenshots show this isolated
-component fixture, not a full-application run.
+Every policy veto overrides the matrix, including explicit restrictions and injection for low-risk actions. `insufficient_evidence` stops as uncertain. Each required Jev answer must have confidence and selected probability at least 0.95. These are operating thresholds, not calibrated safety probabilities. There is no final model `allow` label that can override the combiner, and no numeric freedom score. Missing, extra, incomplete, nonfinite, non-normalized or contradictory answers fail closed. Provider model identity, primary-answer projection, attempt identity and known usage remain required.
+
+The entire policy fits the existing 4,000-character instruction field. The approval-only `server_user_evidence` contract distinguishes server-provenance authorization evidence from ordinary state. Other decision purposes retain their existing instructions. The prompt version and SHA-256 are recorded; policy is never truncated or assembled from model-controlled text.
+
+## Conversation-model fallback
+
+`src/approval_fallback.py` reuses the existing provider request builders for OpenAI-compatible chat, Anthropic Messages, native Ollama and ChatGPT Subscription Responses. It sends no tools, performs no execution-model answer reuse, caches no approval and retries no provider request. The selected provider receives the same frozen state and semantic policy in a fresh request. Its complete categorical JSON answer contains the four assessment labels and an explicit boolean `uncertain`; it contains no confidence scores or distributions. The host uses the same vetoes/matrix, with uncertainty stopping the action. This separately versioned `categorical_uncertainty/v1` contract does not claim Jev calibration or fabricate probabilities. Both prompt hashes are retained.
+
+A missing/unusable primary or an authentication, transport, timeout or malformed-response failure permits one fallback. A valid denial, low-confidence Jev answer, explicit uncertainty or insufficient-evidence answer never triggers fallback. Accounting/capture failure, cancellation, changed identity or exhausted budget also stops. The review has a shared 60-second maximum: at most half the remaining time for the primary when fallback is possible, and at most 30 seconds for the fallback. Both attempts retain the same cancellation and stale-action checks. Changed saved selection, resolved turn model, action, authorization, resource or policy invalidates approval.
+
+The generic decision provider still owns durable reservations, TLS validation, no redirects, response-size limits, known usage and settlement. One linked fallback may reserve its own budget after a technically failed primary for the same exact action and policy. Unknown primary usage stays held; it is never changed to zero or treated as unspent. The exemption cannot cover a different action, a valid primary outcome, a second fallback, another unresolved attempt, a usage overrun or a call-count limit. Further ordinary decisions remain blocked by any unresolved usage until the owning accounting boundary is resolved or the run ends.
+
+Fallback requires the selected response model identity, a complete terminal response, valid reported usage and strictly parsed JSON. Tool calls, refusals, truncation and provider model substitution stop it. Native Ollama uses an explicit 16K context with a conservative byte budget covering policy, complete state, framing and output; oversized requests stop before inference. Responses SSE requires one complete terminal event. These are offline-qualified adapters, not guarantees that every configured server/model follows the contract; an incompatible model stops Auto with an error. No endpoint-health probing, credential migration or live inference is part of readiness.
+
+## Context and provenance
+
+`src/approval_context.py` reads the authenticated submission chain in owner/chat scope, following stable `previous_submission_id` links rather than sorting timestamps or guessing transcript roles. It retains every captured ask in order, including earlier restrictions and later revocations, independently of execution-context trimming. Exact human allow/deny choices are retained as operation fingerprints and source-tagged events in the nullable `ChatAutomationSubmission.approval_evidence` column. These events are evidence, never reusable grants. The startup migration is additive and idempotent; existing submissions and account data remain intact.
+
+The immutable review envelope includes the complete proposed tool input, canonical operation fingerprint, owner/chat/run/submission IDs, policy revision and authority epoch, effective roots and elevation scope, current request authority, effect classification, and sealed filesystem, owned-record, backend, process/job and browser identities. Backend serializers omit credentials. MCP hints retain their server source and untrusted status, including contradictory or missing hints; they do not bypass review. Captured browser target/state and bounded recent tool results are observations, never instructions. Tool errors and omissions remain visible as evidence.
+
+Limits are explicit: 128 submission entries and 16 KiB of user evidence; 32 KiB of total state; 4 KiB of optional observations; at most eight recent tool results with marked 1 KiB field truncation. Complete user evidence and exact action take priority. Overflow or a missing/corrupt chain blocks Auto instead of silently dropping a restriction. Optional observations can be omitted only with markers, and material missing facts require `insufficient_evidence`. The provider independently enforces its 60 KiB total wire limit. Recognizable literal credentials stop mandatory input or omit optional observations; this conservative pattern check is not a general secret-discovery guarantee. No credential store is consulted for review evidence.
+
+`src/approval_files.py` can inspect a directly declared simple native shell script operand, such as `python3 job.py`, within existing request filesystem roots. It uses bounded no-follow regular-file reads, supplies at most 8 KiB of complete UTF-8 content as untrusted evidence, and seals/rechecks content hash and file identity. Missing, oversized, inaccessible or unsupported script observation stops Auto. It never executes a script or grants a read outside current roots. External backends cannot be assessed using unrelated local files.
+
+Complex shell expressions, transitive script imports, dynamically selected files and remote script bodies have no complete dependency snapshot. The reviewer must return insufficient evidence when those unresolved facts matter. Ordinary native filesystem bindings still seal path/object identity rather than every byte of file contents; this is not an atomic filesystem snapshot. In-place mutations after the last check and arbitrary program dependencies remain runtime limitations, not guarantees supplied by semantic review.
+
+Private turns keep their current ask and human action evidence in memory and do not persist those contents. A later private turn with unavailable earlier submissions blocks Auto; earlier private evidence cannot be reconstructed later. Imported/legacy history, compaction summaries, repeated scheduled instructions, worker claims and arbitrary `AGENTS.md` files are never promoted to authenticated user grants. Active project/thread instruction inheritance and worker/root delegation evidence are not supported inputs to this review envelope; omissions say so. Unavailable earlier context requires a new chat with explicit instructions or Always Ask, not invented consent.
+
+## Grant lifecycle and activity
+
+The existing `ToolApprovalStore` remains the sole grant owner. Proposals bind exact arguments, action effects, owner/chat/run/submission, original request, authorization snapshot, policy, expiry and resource identities. New cards offer only `approve_once` and `deny`. At most one primary and one qualified fallback attempt are reserved per proposal; one final allowed assessment consumes it, and one locked claim permits execution. A human response cannot consume an Auto proposal before or during its independent review. Auto outcomes do not enter the human-authorization journal.
+
+Authorization context and declared script content are revalidated after the provider await and when consuming/claiming the grant. The canonical dispatcher also rechecks tool restrictions, resource/backend identity, browser state, elevation and current turn before dispatch. Owner changes, supersession, cancellation, expiry, changed resources and policy/ceiling changes invalidate old results. Changing a mode or ceiling back does not restore a retired grant. No model result can supply missing execution authority.
+
+The existing Decisions activity pane shows risk, authorization, source, disposition, applied rule and a fixed concise reason. It retains prompt/policy version, known/null usage and redacted evidence counts. Sources distinguish Jev, conversation-model fallback, human, YOLO and deterministic paths. Approval activity includes the actual provider/model, fallback cause and separate attempt usage; sanitized captures continue to omit provider labels. Records without the new assessment remain readable as unavailable/legacy; bypassed actions are unassessed, never labeled AI-reviewed. Activity contains no raw asks, paths, arguments, tool output or free-form model rationale. Observation failures do not alter authorization or usage accounting. The service-worker revision refreshes the changed module without deleting user storage.
+
+## Execution entry points and bypasses
+
+| Surface and owner | Review and authority boundary |
+| --- | --- |
+| Legacy and compact agents: `src/agent_loop.py`, `src/clean_agent_preview.py` | Their execution paths converge on `execute_tool_block`; shortcuts and retries retain canonical request/resource admission. A persisted chat without a current bound submission stops. |
+| Native shell/Python: `src/tool_execution.py`, `src/agent_tools/subprocess_tools.py` | Exact source plus process launch identity, workspace, runtime/network scope and containment are bound. No command-prefix allow cache or sandbox escape is added. |
+| Filesystem/document tools: `resource_binding.py`, `owned_resources.py` | Resolve allowed roots, paths and owned revisions before review; recheck at dispatch. Denied/control-plane paths and read-only roots remain enforced. |
+| Background jobs: `src/bg_jobs.py`, `process_resources.py` | Launches and later list/kill/status operations use existing scoped job/process identities. Foreground subprocess stdin is closed; background stdin only initializes the trusted bootstrap. There is no generic agent `write_stdin` API or inherited permission for later process input. |
+| Browser: `src/browser_automation.py`, `src/browser_pipe.py` | `automate` is orchestration, not an action allow. Each actual child re-enters canonical dispatch. Captured page/target identities and task effects remain required; raw global Playwright/native page-action bypasses stay denied. Human browser controls use their own owner/takeover boundary. |
+| MCP and native aliases: `src/mcp_manager.py`, `remote_resources.py` | Chat calls bind server/account/connection/tool identity and exact arguments before independent review. Annotation/name-based plan-mode filtering is not approval. No remembered MCP grant across different arguments is imported. Bound calls do not use the unbound builtin reconnect/retry shortcut. MCP server confinement remains external. |
+| Network/API tools | The exact tool action and sealed backend are assessed; payload/destination requirements apply. There is no new per-socket reviewer. Existing URL/SSRF and tool policy owners still enforce their boundaries. |
+| Scheduled, webhook, task and delegated/API chat | Existing task admission and delegated authority apply. Saved interactive Auto/YOLO preferences are not unattended consent. No unbound chat submission can manufacture an interactive approval. |
+| Human shell HTTP, MCP configuration and scoped integrations | These are separate administration/API surfaces, not chat-auto-approval entry points. They retain their existing human-admin, owner/token-scope and service checks. This change does not route all application mutations through Jev or turn a service's internal function into an authorization API. |
+| Control tools `ask_user`, `update_plan` | Existing bounded control operations skip discretionary review and are labeled deterministic. They do not execute a proposed side effect. |
+| YOLO and human exact grants | Explicit existing modes/decisions remain available; hard admission, one-use claims and resource revalidation remain authoritative. |
+
+## Reference behavior and validation limits
+
+The risk/authorization distinction and category policy were independently adapted from the source-audited OpenAI Codex Guardian baseline `5fd36fc5502136160a28a6bebec3590b0df9179a`. Codex's synchronous completion trusts its returned outcome and permits outcome-only parsing defaults; this implementation deliberately requires every Jev distribution and applies the matrix in the host. No upstream code or prompt text is vendored into the product.
+
+Codex also has adaptive trajectory scoring: a binary high/low classification can support a recent-score shortcut, subject to authorization fingerprints, freshness, ordering, coverage and retry/escalation gates. That is not an action-specific safety probability. This port is synchronous and has no adaptive cache, broad prefix trust, remembered MCP allowance or low-score bypass. Those would require separate confinement, cache-validity and policy semantics plus explicit qualification.
+
+Offline tests use real SQL, complete mocked provider transports, the canonical grant/dispatch path and synthetic classifications. They cover the matrix, policy vetoes, response validation, context budget/provenance, revocation, concurrency, readiness and resource changes. They do not measure production Jev judgment, verify a live provider or qualify OS/browser containment. Existing readiness screenshots document the earlier isolated component fixture, not a newly deployed application. No paid provider campaign or deployment is part of this change.

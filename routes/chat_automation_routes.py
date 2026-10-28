@@ -26,10 +26,11 @@ def setup_chat_automation_routes(session_manager):
     router = APIRouter(tags=["chat settings"])
 
     def with_review_availability(result, owner, *, configuration=None):
-        from src.decisions.config import decision_provider_availability
+        from src.approval_fallback import auto_approve_availability
         config = configuration if configuration is not None else AutomationStore().configuration(owner)
-        return {**result, "auto_approve_availability": decision_provider_availability(
-            config.get("decision_provider"), owner)}
+        return {**result, "auto_approve_availability": auto_approve_availability(
+            config.get("decision_provider"), owner,
+            session_id=result.get("session_id"), policy=result)}
 
     from src.decision_advice import SafetyAdviceService
     from src.tool_approvals import tool_approval_store

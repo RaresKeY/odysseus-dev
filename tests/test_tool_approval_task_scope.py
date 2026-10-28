@@ -341,7 +341,7 @@ def test_route_context_agent_frontend_and_cache_bust_wire_the_contract():
     assert "selected_tools=approval_selected_tools" in agent
     assert "continuation_query=_retrieval_query or _last_user" in agent
     assert "approval_gate_bypassed=bool(" in agent
-    assert "['approve', 'approve_task', 'deny']" in frontend
+    assert "['approve', 'approve_task', 'approve_once', 'deny']" in frontend
     assert "input.value = label" not in frontend
     assert "const msg = approvalForSend ? '' : el('message').value;" in frontend
     assert "const skipBubble = _hideUserBubble || !!approvalForSend;" in frontend

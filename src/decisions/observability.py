@@ -27,6 +27,7 @@ PURPOSES = frozenset({"model_auto", "approach", "approach_routing", "tools", "to
     "followup_routing", "effort", "execution_effort", "completion_advice", "safety_advice",
     "approval", "approval_review", "browser", "browser_action", "readiness", "diagnostics", "turn_preparation"})
 QUESTION_IDS = frozenset({"tools", "followup", "online_search", "freshness", "fresh_information", "project_context",
+    "risk_level", "user_authorization", "policy_check", "effect_scope",
     "projectcontext", "readiness", "approach", "effort", "execution_model", "reasoning_effort", "execution_effort", "completion", "safety", "permission"})
 STATUSES = frozenset({"reserved", "settled", "rejected", "unresolved", "cancelled"})
 FAILURES = frozenset({"decision_admission_failed", "decision_attempt_store_unavailable", "decision_cancelled",
@@ -127,9 +128,17 @@ def _projection(request, record):
         for i, (name, question) in enumerate(questions.items())}
     mapping = dict(zip(questions, offer))
     identity = record.get("provider_identity", {})
-    provider = {"protocol": identity.get("protocol") if identity.get("protocol") in {"systemone", "openai_json"} else "unknown",
+    provider = {"protocol": identity.get("protocol") if identity.get("protocol") in {"systemone", "openai_json", "approval_openai", "approval_anthropic", "approval_ollama", "approval_responses"} else "unknown",
         "distribution_source": identity.get("distribution_source") if identity.get("distribution_source") in
-        {"provider_reported", "model_reported"} else "unknown"}
+        {"provider_reported", "model_reported", "not_reported"} else "unknown"}
+    if request.purpose == "approval":
+        if identity.get("provider") in {"openai", "anthropic", "ollama", "chatgpt-subscription", "copilot",
+                "openrouter", "groq", "nvidia", "kimi-code", "moonshot", "featherless", "cerebras", "mistral", "opencode-go", "opencode-zen"}:
+            provider["name"] = identity["provider"]
+        for key in ("model", "endpoint_id"):
+            value = identity.get(key)
+            if isinstance(value, str) and len(value) <= 512:
+                provider[key] = value
     digest = identity.get("configuration_digest")
     if isinstance(digest, str) and _HASH.fullmatch(digest):
         provider["configuration_digest"] = digest
@@ -161,6 +170,9 @@ def _answers(result, mapping, offers):
 
 
 def _packet(public, offers):
+    observation = copy.deepcopy(public)
+    for key in ("model", "endpoint_id", "name"):
+        observation.get("provider", {}).pop(key, None)
     body = {"schema": CAPTURE_SCHEMA, "source_kind": "captured_live_redacted",
         "redaction_policy": REDACTION_POLICY, "exact_original_replay": False,
         "decision_schema": SCHEMA_VERSION, "implementation_sha256": _implementation_digest(),
@@ -171,7 +183,7 @@ def _packet(public, offers):
         "attempt_id": public["attempt_id"], "run_id": public["run_id"], "purpose": public["purpose"],
         "fixture": {"state": {"content_omitted": True}, "questions": {
             qid: list(choices) for qid, choices in offers.items()}},
-        "observation": copy.deepcopy(public)}
+        "observation": observation}
     return {"packet": body, "sanitized_sha256": hashlib.sha256(encode(body)).hexdigest()}
 
 
@@ -371,6 +383,75 @@ class DecisionObservability:
         except Exception:
             # A pre-dispatch capture remains explicitly reserved/incomplete.
             return
+
+    def record_approval(self, owner, session_id, run_id, assessment):
+        """Append/annotate an actual host disposition, with fixed public labels.
+
+        No free-form rationale, transcript, path, argument or user text enters
+        activity. This observation cannot restore a grant or alter accounting.
+        """
+        from src.approval_policy import APPROVAL_REVIEW_POLICY, QUESTIONS, REASONS, PROMPT_SHA256
+        try:
+            source = assessment.get("decision_source")
+            if source not in {"jev", "conversation_model", "human", "yolo", "deterministic"}:
+                return
+            public = {"decision_source": source, "policy": APPROVAL_REVIEW_POLICY,
+                      "prompt_sha256": PROMPT_SHA256,
+                      "assessed": assessment.get("assessed") is True}
+            if isinstance(assessment.get("prompt_sha256"), str) and _HASH.fullmatch(assessment["prompt_sha256"]):
+                public["prompt_sha256"] = assessment["prompt_sha256"]
+            fallback_reason = assessment.get("fallback_reason")
+            if isinstance(fallback_reason, str) and re.fullmatch(r"decision_[a-z_]{1,70}", fallback_reason):
+                public["fallback_reason"] = fallback_reason
+            if source == "conversation_model":
+                from src.approval_fallback import FALLBACK_PROMPT_SHA256
+                if "prompt_sha256" not in assessment:
+                    public["prompt_sha256"] = FALLBACK_PROMPT_SHA256
+                public["assessment_contract"] = "categorical_uncertainty/v1"
+            counts = assessment.get("evidence", {})
+            public["evidence"] = {key: value for key, value in counts.items()
+                if key in {"user_items", "omissions", "script_items"} and type(value) is int and 0 <= value <= 10000}
+            for name, choices in QUESTIONS.items():
+                value = assessment.get(name)
+                if value in choices:
+                    public[name] = value
+            rule = assessment.get("applied_rule")
+            if rule in REASONS:
+                public.update(applied_rule=rule, reason=REASONS[rule])
+            disposition = assessment.get("status")
+            if disposition in {"approved", "denied", "uncertain", "stale", "cancelled", "manual", "bypass", "error", "unavailable", "blocked"}:
+                public["disposition"] = disposition
+                if "reason" not in public:
+                    public["reason"] = {
+                        "approved": "The exact action was approved.",
+                        "denied": "The exact action was denied.",
+                        "uncertain": "The assessment was uncertain.",
+                        "stale": "The action or its policy changed.",
+                        "cancelled": "The action was cancelled.",
+                        "manual": "Waiting for an exact human decision.",
+                        "bypass": "Discretionary review was bypassed.",
+                        "error": "Review could not be verified.",
+                        "unavailable": "The reviewer was unavailable.",
+                        "blocked": "Deterministic admission stopped the action.",
+                    }[disposition]
+            with self._transaction(write=True) as db:
+                key = self._admit(db, owner, session_id)
+                attempt_id = assessment.get("attempt_id")
+                row = db.query(self.models.activity).filter_by(attempt_id=attempt_id,
+                    owner_key=key, session_id=session_id, run_id=run_id).first() if attempt_id else None
+                if row is not None:
+                    row.projection = {**row.projection, "approval": public}
+                else:
+                    identifier = uuid.uuid4().hex
+                    projection = {"attempt_id": identifier, "run_id": run_id, "purpose": "approval",
+                        "status": "settled", "questions": {}, "usage": None,
+                        "usage_provenance": "unknown_held" if source in {"jev", "conversation_model"} else "not_applicable", "approval": public}
+                    db.add(self.models.activity(attempt_id=identifier, owner_key=key,
+                        session_id=session_id, run_id=run_id, created_at=self.clock(), projection=projection))
+                    db.flush()
+                    self._bound_history(db, key, session_id)
+        except Exception:
+            return  # Observability never changes execution or accounting.
 
     def _bound_history(self, db, key, session_id):
         model = self.models.activity

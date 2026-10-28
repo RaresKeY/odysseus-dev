@@ -199,9 +199,10 @@ class AutomationStore:
             if mode not in MODES or route not in {"manual", "auto"}:
                 raise HTTPException(422, "Invalid chat mode")
             if changes.get("approval_mode") == "auto_approve":
-                from src.decisions.config import decision_provider_availability
-                availability = decision_provider_availability(
-                    (p.configuration or {}).get("decision_provider"), owner, db=db)
+                from src.approval_fallback import auto_approve_availability
+                availability = auto_approve_availability(
+                    (p.configuration or {}).get("decision_provider"), owner, db=db,
+                    session_id=str(session_id), policy={**self._policy(p, s, owner), **changes})
                 if not availability["available"]:
                     raise HTTPException(422, availability["reason"],
                                         headers={"X-Decision-Failure": availability["reason_code"]})
@@ -667,8 +668,10 @@ class SqlAttemptStore:
             self.store.owner(db, record["owner"])
             previous = db.query(d.DecisionAttempt).filter_by(owner_key=owner_key(record["owner"]),
                 session_id=record["session_id"], run_id=record["run_id"]).all()
+            from src.decisions.store import fallback_exemption
+            exempt = fallback_exemption(record, [r.record for r in previous])
             if (db.query(d.DecisionAttempt).filter_by(attempt_id=record["attempt_id"]).first()
-                    or len(previous) >= max_calls or any(r.status in {"reserved", "unresolved"}
+                    or len(previous) >= max_calls or any((r.status in {"reserved", "unresolved"} and r.attempt_id != exempt)
                         or (r.record or {}).get('failure_kind') == 'decision_usage_exceeded_reservation' for r in previous)):
                 raise DecisionError("decision_budget_unavailable")
             db.add(d.DecisionAttempt(attempt_id=record["attempt_id"], owner_key=owner_key(record["owner"]),
@@ -711,6 +714,10 @@ class BoundChatTurn:
     pending_input_id: str | None = None
     prior_task: dict = field(default_factory=dict)
     ephemeral_semantics: bool = False
+    approval_evidence: list = field(default_factory=list, repr=False)
+    review_observations: list = field(default_factory=list, repr=False)
+    review_observations_omitted: bool = False
+    review_model_origin: str = ""
     preparation: Any = None
     tool_selection: Any = None
     followup: Any = None
@@ -872,6 +879,8 @@ async def prepare_chat_turn(store, owner, session, raw_ask, *, entrypoint="inter
                                        provider=decision_provider, semantic_only=tool_inventory is None)
         store.record_preparation(bound)
         bind_prepared_browser_scope(bound)
+        from src.approval_fallback import model_snapshot
+        bound.review_model_origin = model_snapshot(bound)
         store.record(bound, "bound", bound.descriptor)
         return bound
     except BaseException:

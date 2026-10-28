@@ -558,6 +558,20 @@ class McpManager:
         return ExternalResource("mcp", record[0][0], server, qualified_name, record[1],
                                 owner=record[3])
 
+    def review_annotations(self, resource) -> Dict:
+        """Untrusted server hints for an already bound MCP resource, never grants."""
+        if self.resource_identity(resource.tool_id) != resource:
+            raise ValueError("MCP resource changed before review")
+        name = resource.tool_id.split("__", 2)[-1]
+        row = next(item for item in self._tools.get(resource.server_id, []) if item.get("name") == name)
+        annotations = row.get("annotations")
+        hints = {}
+        for key in ("readOnlyHint", "destructiveHint", "openWorldHint", "idempotentHint"):
+            value = annotations.get(key) if isinstance(annotations, dict) else getattr(annotations, key, None)
+            if type(value) is bool:
+                hints[key] = value
+        return {"source": "mcp_server_annotations", "trusted": False, "hints": hints}
+
     async def call_tool(self, qualified_name: str, arguments: Dict) -> Dict:
         """Call an MCP tool by its qualified name (mcp__{server_id}__{tool_name}).
 

@@ -318,6 +318,7 @@ class ChatAutomationSubmission(Base):
     status = Column(String, nullable=False, default="preparing")
     created_at = Column(Float, nullable=False)
     current_ask = Column(Text, nullable=True)
+    approval_evidence = Column(JSON, nullable=True)
     task_lineage_id = Column(String, nullable=True)
     original_submission_id = Column(String, nullable=True)
     previous_submission_id = Column(String, nullable=True)
@@ -1922,7 +1923,7 @@ def _migrate_chat_automation_semantics():
     additions = {
         "chat_automation_state": {"feature_settings": "JSON"},
         "chat_automation_submissions": {
-            "current_ask": "TEXT", "task_lineage_id": "VARCHAR",
+            "current_ask": "TEXT", "approval_evidence": "JSON", "task_lineage_id": "VARCHAR",
             "original_submission_id": "VARCHAR", "previous_submission_id": "VARCHAR",
             "prior_task": "JSON", "previous_answer": "TEXT", "answer_message_id": "VARCHAR",
             "preparation": "JSON", "routing": "JSON"},

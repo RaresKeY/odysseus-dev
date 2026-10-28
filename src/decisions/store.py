@@ -15,6 +15,30 @@ class AttemptStore(Protocol):
     def records_for_run(self, owner: str | None, session_id: str, run_id: str) -> list[dict]: ...
 
 
+def fallback_exemption(record, previous):
+    """One extra reserved budget for the same failed approval, never a retry.
+
+    The primary's unknown usage stays held. Subsequent ordinary decisions still
+    stop on it. A linked fallback cannot exempt another pending call or a deny.
+    """
+    parent_id = record.get("fallback_of")
+    if not parent_id:
+        return None
+    parent = next((r for r in previous if r["attempt_id"] == parent_id), None)
+    failure = parent.get("failure_kind", "") if parent else ""
+    if (not parent or parent["status"] not in {"unresolved", "rejected", "cancelled"}
+            or record.get("purpose") != "approval" or parent.get("purpose") != "approval"
+            or not record.get("provider_identity", {}).get("protocol", "").startswith("approval_")
+            or parent.get("provider_identity", {}).get("protocol") not in {"systemone", "openai_json"}
+            or not isinstance(failure, str) or not failure.startswith("decision_")
+            or any(part in failure for part in ("budget", "attempt_store", "capture_", "usage_exceeded", "cancelled"))
+            or not record.get("approval_action_digest")
+            or any(record.get(k) != parent.get(k) for k in ("approval_action_digest", "policy_revision", "authority_epoch"))
+            or any(r.get("fallback_of") == parent_id for r in previous)):
+        raise DecisionError("decision_budget_unavailable")
+    return parent_id
+
+
 class MemoryAttemptStore:
     """Thread-safe injected store for offline tests; never a production default."""
 
@@ -31,8 +55,9 @@ class MemoryAttemptStore:
     def reserve(self, record, *, max_calls):
         with self._lock:
             previous = self.records_for_run(record["owner"], record["session_id"], record["run_id"])
+            exempt = fallback_exemption(record, previous)
             if (record["attempt_id"] in self.records or len(previous) >= max_calls
-                    or any(r["status"] in {"reserved", "unresolved"}
+                    or any((r["status"] in {"reserved", "unresolved"} and r["attempt_id"] != exempt)
                            or r.get("failure_kind") == "decision_usage_exceeded_reservation" for r in previous)):
                 raise DecisionError("decision_budget_unavailable")
             self.records[record["attempt_id"]] = deepcopy(record)

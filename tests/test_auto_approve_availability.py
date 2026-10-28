@@ -95,12 +95,14 @@ def test_account_restriction_prevents_reviewer_availability(registration, monkey
 
 @pytest.mark.asyncio
 async def test_unconfigured_mode_cannot_be_enabled_through_api_and_does_not_change_policy(api, store):
+    with store.transaction() as db:
+        db.get(d.Session, 'a').model = ''  # Both reviewer paths unavailable.
     async with httpx.AsyncClient(transport=httpx.ASGITransport(app=api), base_url='http://test',
                                 headers={'test-owner': 'alice'}) as client:
         config = (await client.get('/api/chat-settings')).json()
         before = (await client.get('/api/session/a/automation')).json()
         availability = before['auto_approve_availability']
-        assert availability == config['auto_approve_availability']
+        assert availability['reason_code'] == config['auto_approve_availability']['reason_code']
         assert availability['available'] is False
         assert availability['reason_code'] == 'decision_provider_not_configured'
         result = await client.put('/api/session/a/automation', json={
@@ -115,6 +117,7 @@ async def test_unconfigured_mode_cannot_be_enabled_through_api_and_does_not_chan
 async def test_key_revocation_updates_readiness_but_preserves_saved_mode_and_manual_recovery(api, registration):
     with registration.transaction() as db:
         db.get(d.ModelEndpoint, 'reviewer').api_key = 'synthetic-private-key'
+        db.get(d.Session, 'a').model = ''  # This case has no selected-model fallback.
     async with httpx.AsyncClient(transport=httpx.ASGITransport(app=api), base_url='http://test',
                                 headers={'test-owner': 'alice'}) as client:
         saved_config = await client.put('/api/chat-settings', json={
@@ -130,7 +133,7 @@ async def test_key_revocation_updates_readiness_but_preserves_saved_mode_and_man
         assert unavailable['approval_mode'] == 'auto_approve'
         assert unavailable['policy_revision'] == saved.json()['policy_revision']
         assert unavailable['auto_approve_availability']['reason_code'] == 'decision_credentials_missing'
-        assert (await client.get('/api/chat-settings')).json()['auto_approve_availability'] == unavailable['auto_approve_availability']
+        assert (await client.get('/api/chat-settings')).json()['auto_approve_availability']['reason_code'] == unavailable['auto_approve_availability']['reason_code']
         # A stale enabled UI cannot reactivate Auto after key removal.
         denied = await client.put('/api/session/a/automation', json={
             'policy_revision': unavailable['policy_revision'], 'changes': {'approval_mode': 'auto_approve'}})

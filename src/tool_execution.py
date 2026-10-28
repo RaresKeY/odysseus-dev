@@ -1725,14 +1725,21 @@ async def _review_bound_chat_action(bound, block, *, owner, session_id, workspac
                                     client_runtime_context, deterministically_admitted):
     """Propose through the existing store; only this dispatcher claims effects."""
     from src.approval_review import ApprovalReviewService
+    from src.approval_context import user_snapshot
+    from src.decisions.contracts import DecisionError
     from src.chat_policy import policy_matches_binding
     from src.chat_automation import SqlAttemptStore
     from src.decisions import DecisionProvider
+    from src.approval_fallback import ConversationReviewProvider, model_snapshot
     from src.tool_approvals import tool_approval_store
     from src.tool_capabilities import capabilities_for_action
 
+    model_origin = getattr(bound, "review_model_origin", "") or model_snapshot(bound)
+
     def current(pending):
         return (bound.current() is True
+                and model_snapshot(bound) == model_origin
+                and (not pending.review_context_json or pending.review_context_json == user_snapshot(bound))
                 and pending.owner == str(bound.owner or "").strip().casefold()
                 and pending.session_id == str(bound.session_id)
                 and policy_matches_binding(pending.policy_binding,
@@ -1740,7 +1747,8 @@ async def _review_bound_chat_action(bound, block, *, owner, session_id, workspac
                                        entrypoint=bound.policy.get("entrypoint", "interactive")),
                     owner=pending.owner, session_id=pending.session_id))
 
-    if (not bound.current() or str(owner or "").strip().casefold() != str(bound.owner or "").strip().casefold()
+    if (not bound.current() or model_snapshot(bound) != model_origin
+            or str(owner or "").strip().casefold() != str(bound.owner or "").strip().casefold()
             or str(session_id or "") != str(bound.session_id)):
         return None, {"error": "This action belongs to an expired chat turn.", "exit_code": 1,
                       "blocked": True, "executed": False, "failure_kind": "approval_stale"}
@@ -1754,21 +1762,55 @@ async def _review_bound_chat_action(bound, block, *, owner, session_id, workspac
             "exit_code": 1, "blocked": True, "executed": False, "failure_kind": "approval_stale"}
     policy = bound.store.policy(bound.owner, bound.session_id,
                                entrypoint=bound.policy.get("entrypoint", "interactive"))
-    pending = tool_approval_store.create(
-        owner=owner, session_id=session_id, origin_run_id=bound.run_id,
-        tool_name=block.tool_type, content=block.content, workspace=workspace,
-        document_id=active_document_id,
-        external_untrusted_context_seen=bool(getattr(security_context, "external_untrusted_context_seen", False)),
-        selected_tools=[grant.tool for grant in authority.grants],
-        continuation_query=bound.raw_ask, request_text=bound.raw_ask,
-        capabilities=capabilities_for_action(block.tool_type, block.content),
-        request_authority=authority, client_runtime_context=client_runtime_context,
-        policy_record=policy, policy_validator=current,
-        submission_id=bound.submission_id, bound_turn=bound)
+
+    def context_failure(error, reason):
+        assessment = {"decision_source": "deterministic", "assessed": False,
+                      "status": "blocked", "applied_rule": "insufficient_evidence",
+                      "failure_kind": error.code}
+        try:
+            from src.decisions.observability import default_observability
+            default_observability(bound.store.session_factory).record_approval(
+                owner, session_id, bound.run_id, assessment)
+        except Exception:
+            pass
+        return None, {"error": reason, "exit_code": 1, "blocked": True,
+                      "executed": False, "failure_kind": error.code,
+                      "approval_review": assessment}
+
+    review_context_json = ""
+    if policy["approval_mode"] == "auto_approve" and block.tool_type not in {"ask_user", "update_plan"}:
+        try:
+            review_context_json = user_snapshot(bound)
+        except DecisionError as error:
+            return context_failure(error, "Auto-Approve cannot verify the complete authorization context. Start a new chat with explicit instructions or use Always Ask.")
+    try:
+        pending = tool_approval_store.create(
+            owner=owner, session_id=session_id, origin_run_id=bound.run_id,
+            tool_name=block.tool_type, content=block.content, workspace=workspace,
+            document_id=active_document_id,
+            external_untrusted_context_seen=bool(getattr(security_context, "external_untrusted_context_seen", False)),
+            selected_tools=[grant.tool for grant in authority.grants],
+            continuation_query=bound.raw_ask, request_text=bound.raw_ask,
+            capabilities=capabilities_for_action(block.tool_type, block.content),
+            request_authority=authority, client_runtime_context=client_runtime_context,
+            policy_record=policy, policy_validator=current,
+            submission_id=bound.submission_id, bound_turn=bound, review_context_json=review_context_json)
+    except DecisionError as error:
+        return context_failure(error, "Auto-Approve could not inspect the declared script within current permissions and review limits.")
+
     provider = DecisionProvider(SqlAttemptStore(bound.store))
     async def evaluate(request, context):
         return await provider.evaluate(request, context,
                                        config=bound.configuration.get("decision_provider", {}))
+    async def fallback(request, context):
+        if model_snapshot(bound) != model_origin:
+            raise DecisionError("decision_endpoint_changed")
+        # A timeout can leave one owned settlement task finishing. Its original
+        # reservation must be retained/settled before admitting the linked call.
+        if getattr(provider, "_store_tasks", None):
+            import asyncio
+            await asyncio.gather(*(asyncio.shield(task) for task in list(provider._store_tasks)), return_exceptions=True)
+        return await ConversationReviewProvider(SqlAttemptStore(bound.store), bound).review(request, context)
     evidence = None
     if block.tool_type == 'private_browser':
         from src.browser_pipe import get
@@ -1787,9 +1829,25 @@ async def _review_bound_chat_action(bound, block, *, owner, session_id, workspac
             if grant is not None:
                 from src.browser_automation import redact_prepared_evidence
                 evidence = redact_prepared_evidence(evidence, grant)
+    evidence = {"recent_tool_results": list(getattr(bound, "review_observations", [])),
+                "older_results_omitted": bool(getattr(bound, "review_observations_omitted", False)),
+                "browser_observation": evidence}
     outcome = await ApprovalReviewService(tool_approval_store).review(
         pending, policy, deterministically_admitted=deterministically_admitted,
-        evaluator=evaluate, cancelled=lambda: not bound.current(), evidence=evidence)
+        evaluator=evaluate, fallback_evaluator=fallback,
+        cancelled=lambda: not bound.current(), evidence=evidence)
+    try:
+        from src.decisions.observability import default_observability
+        source = "human" if outcome.status == "manual" else "yolo" if outcome.status == "bypass" and block.tool_type not in {"ask_user", "update_plan"} else "deterministic"
+        default_observability(bound.store.session_factory).record_approval(owner, session_id, bound.run_id,
+            {"decision_source": source, "assessed": False, **(outcome.decision or {}), "status": outcome.status})
+        if outcome.decision and outcome.decision.get("primary_attempt_id"):
+            default_observability(bound.store.session_factory).record_approval(owner, session_id, bound.run_id,
+                {"decision_source": "jev", "assessed": False, "status": "error",
+                 "attempt_id": outcome.decision["primary_attempt_id"],
+                 "fallback_reason": outcome.decision.get("fallback_reason")})
+    except Exception:
+        pass  # Optional activity cannot alter a review disposition.
     if outcome.status == "approved":
         return outcome.approval, None
     if outcome.status == "bypass":
@@ -1797,7 +1855,10 @@ async def _review_bound_chat_action(bound, block, *, owner, session_id, workspac
     if outcome.status == "manual":
         bound.pending = True
         bound.pending_approval_id = pending.approval_id
-    return None, outcome.tool_result()
+    result = outcome.tool_result()
+    from src.approval_context import remember_observation
+    remember_observation(bound, block.tool_type, result)
+    return None, result
 
 
 @record_action
@@ -2191,6 +2252,15 @@ async def execute_tool_block(
                 output[1],
                 getattr(block, "content", None),
             )
+        if bound_chat is not None and isinstance(output[1], dict):
+            if exact_approval is not None:
+                review = exact_approval.review_decision or {"decision_source": "human", "assessed": False}
+            else:
+                review = {"decision_source": "deterministic" if browser_orchestration or operation.tool in {"ask_user", "update_plan"}
+                          else "yolo", "assessed": False}
+            output[1]["approval_review"] = review
+            from src.approval_context import remember_observation
+            remember_observation(bound_chat, operation.tool, output[1])
         return output
     except ResourceIdentityError as error:
         if native_browser(operation, backend_operation.resource) and str(error) == PAGE_FAILURE:

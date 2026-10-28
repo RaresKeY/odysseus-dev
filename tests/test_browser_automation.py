@@ -175,6 +175,7 @@ class BrowserAutomationTests(unittest.IsolatedAsyncioTestCase):
         store = ToolApprovalStore()
         provider = FrozenProvider([])
         with (patch.object(tool_approvals, 'tool_approval_store', store),
+              patch('src.approval_fallback.model_snapshot', return_value='frozen-synthetic-model'),
               patch.object(decisions, 'DecisionProvider', return_value=provider)):
             _, output = await tool_execution.execute_tool_block(
                 ToolBlock('private_browser', json.dumps(args)), owner='alice', session_id='thread',
