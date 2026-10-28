@@ -1782,7 +1782,11 @@ async def _review_bound_chat_action(bound, block, *, owner, session_id, workspac
         try:
             review_context_json = user_snapshot(bound)
         except DecisionError as error:
-            return context_failure(error, "Auto-Approve cannot verify the complete authorization context. Start a new chat with explicit instructions or use Always Ask.")
+            reason = {
+                "approval_context_checkpoint_required": "The complete user instructions exceed this review’s input limit. Start a new chat and restate the task, restrictions and revoked permissions, or use Always Ask.",
+                "approval_private_context_unavailable": "Earlier private instructions are no longer in this process’s memory. Start a new private chat with the task and restrictions, or use Always Ask.",
+            }.get(error.code, "Auto-Approve cannot verify the complete authorization context. Start a new chat with explicit instructions or use Always Ask.")
+            return context_failure(error, reason)
     try:
         pending = tool_approval_store.create(
             owner=owner, session_id=session_id, origin_run_id=bound.run_id,

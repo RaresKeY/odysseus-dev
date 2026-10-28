@@ -148,7 +148,7 @@ async def test_history_budget_and_missing_chain_block_without_call(store, dispat
     store.update_chat("alice", "a", {"approval_mode": "auto_approve"}, 0)
     first = await prepare_chat_turn(store, "alice", rt.session, "x" * MAX_USER_BYTES)
     _, stopped = await rt.dispatch(first)
-    assert stopped["failure_kind"] == "approval_context_budget" and not rt.calls and not rt.effects
+    assert stopped["failure_kind"] == "approval_context_checkpoint_required" and not rt.calls and not rt.effects
     from src.decisions.observability import default_observability
     entry = default_observability(store.session_factory).history("alice", "a")["items"][0]
     assert entry["approval"]["decision_source"] == "deterministic"
@@ -334,7 +334,11 @@ async def test_private_followup_cannot_invent_missing_prior_authorization(store,
     first = await prepare_chat_turn(store, "alice", rt.session, "Never publish.", ephemeral_semantics=True)
     store.record(first, "completed")
     followup = await prepare_chat_turn(store, "alice", rt.session, "Continue.", ephemeral_semantics=True)
-    with pytest.raises(DecisionError, match="approval_context_unavailable"):
+    assert "Never publish." in user_snapshot(followup)
+    from src.approval_context import _PRIVATE, _PRIVATE_LOCK
+    with _PRIVATE_LOCK:
+        _PRIVATE.pop(store.session_factory, None)  # process restart/eviction
+    with pytest.raises(DecisionError, match="approval_private_context_unavailable"):
         user_snapshot(followup)
 
 

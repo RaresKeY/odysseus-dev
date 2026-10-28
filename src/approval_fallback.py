@@ -44,7 +44,8 @@ def model_snapshot(bound):
         row = db.get(_models().Session, bound.session_id)
         saved = {key: getattr(row, key) for key in ("model", "endpoint_id", "endpoint_url", "headers")}
     return digest({"saved": saved, "resolved": bound.descriptor,
-                   "url": bound.endpoint_url, "headers": bound.headers})
+                   "url": bound.endpoint_url, "headers": bound.headers,
+                   "route_revision": getattr(bound, "review_route_revision", 0)})
 
 
 def auto_approve_availability(config, owner, *, db=None, session_id=None, policy=None):
@@ -173,10 +174,32 @@ class ConversationReviewProvider(DecisionProvider):
             return valid_usage({"input_tokens": usage.get("prompt_tokens"), "output_tokens": usage.get("completion_tokens")})
         if endpoint.protocol == "approval_ollama":
             return valid_usage({"input_tokens": raw.get("prompt_eval_count"), "output_tokens": raw.get("eval_count")})
+        if endpoint.protocol == "approval_anthropic" and isinstance(usage, dict):
+            measured = valid_usage(usage)
+            extra = [usage.get(key, 0) for key in ("cache_creation_input_tokens", "cache_read_input_tokens")]
+            if measured is None or any(type(value) is not int or value < 0 for value in extra):
+                return None
+            return {**measured, "input_tokens": measured["input_tokens"] + sum(extra)}
         return valid_usage(usage)
 
+    @staticmethod
+    def _same_response_model(endpoint, reported):
+        # Only deterministic provider spellings, never an arbitrary sibling,
+        # date suffix, latest-version guess or any model in the endpoint catalog.
+        if reported == endpoint.model:
+            return True
+        if not isinstance(reported, str):
+            return False
+        if endpoint.protocol == "approval_ollama":
+            return ":" not in endpoint.model.rsplit("/", 1)[-1] and reported == endpoint.model + ":latest"
+        from urllib.parse import urlsplit
+        if (endpoint.protocol == "approval_openai"
+                and urlsplit(endpoint.url).hostname == "generativelanguage.googleapis.com"):
+            return reported.removeprefix("models/") == endpoint.model.removeprefix("models/")
+        return False
+
     def _answers(self, raw, questions, endpoint):
-        if raw.get("error") or raw.get("model") != endpoint.model or self._usage(raw, endpoint) is None:
+        if raw.get("error") or not self._same_response_model(endpoint, raw.get("model")) or self._usage(raw, endpoint) is None:
             raise DecisionError("decision_invalid_response")
         if endpoint.protocol == "approval_openai":
             choices = raw.get("choices")
@@ -187,7 +210,7 @@ class ConversationReviewProvider(DecisionProvider):
                 raise DecisionError("decision_invalid_response")
             content = message.get("content")
         elif endpoint.protocol == "approval_ollama":
-            if raw.get("done") is not True or raw.get("done_reason") not in {None, "stop"} or raw.get("message", {}).get("tool_calls"):
+            if raw.get("done") is not True or raw.get("done_reason") not in {None, "stop"} or raw.get("message", {}).get("tool_calls") or raw.get("message", {}).get("refusal"):
                 raise DecisionError("decision_incomplete_response")
             content = raw.get("message", {}).get("content")
         else:

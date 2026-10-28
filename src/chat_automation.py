@@ -352,11 +352,15 @@ class AutomationStore:
                 current_ask=None if ephemeral_semantics else raw_ask,
                 task_lineage_id=previous.task_lineage_id if reply_card is not None else identifier,
                 original_submission_id=previous.original_submission_id if reply_card is not None else identifier,
-                previous_submission_id=previous.submission_id if previous and not ephemeral_semantics else None,
+                previous_submission_id=previous.submission_id if previous else None,
                 prior_task=None if ephemeral_semantics else prior_task))
-            return BoundChatTurn(self, owner, sid, identifier, token, raw_ask, policy,
+            bound = BoundChatTurn(self, owner, sid, identifier, token, raw_ask, policy,
                                  {**copy.deepcopy(p.configuration or {}), **{key: policy[key] for key in FEATURE_DEFAULTS}},
                                  prior_task=prior_task, ephemeral_semantics=bool(ephemeral_semantics))
+            if bound.ephemeral_semantics:
+                from src.approval_context import retain_private_submission
+                retain_private_submission(bound)
+            return bound
 
     def current(self, bound):
         d = _models()
@@ -599,6 +603,8 @@ def validate_elevation_roots(owner, roots):
 
 def rename_automation_owner(db, old_owner, new_owner):
     """Move preferences with account data, never live capabilities."""
+    from src.approval_context import forget_private_evidence
+    forget_private_evidence(old_owner)
     d = _models()
     old_key, new_key = owner_key(old_owner), owner_key(new_owner)
     existing = db.query(d.OwnerChatAutomation).filter_by(owner_key=new_key).first()
@@ -626,6 +632,8 @@ def rename_automation_owner(db, old_owner, new_owner):
 
 
 def retire_automation_owner(db, owner):
+    from src.approval_context import forget_private_evidence
+    forget_private_evidence(owner)
     d = _models()
     key = owner_key(owner)
     # A later account with the same spelling must not inherit these settings.
@@ -651,6 +659,8 @@ def retire_automation_session(db, owner, session_id):
     session = db.query(d.Session).filter_by(id=sid).first()
     if session is None or owner_key(session.owner) != key:
         return False
+    from src.approval_context import forget_private_evidence
+    forget_private_evidence(owner, sid)
     for model in (d.ChatAutomationInputCard, d.ChatAutomationSubmission, d.ChatAutomationLease,
                   d.ChatAutomationState):
         db.query(model).filter_by(owner_key=key, session_id=sid).delete(synchronize_session=False)
@@ -718,6 +728,7 @@ class BoundChatTurn:
     review_observations: list = field(default_factory=list, repr=False)
     review_observations_omitted: bool = False
     review_model_origin: str = ""
+    review_route_revision: int = 0
     preparation: Any = None
     tool_selection: Any = None
     followup: Any = None
@@ -763,6 +774,9 @@ class BoundChatTurn:
         if (self.policy.get("route_mode") != "manual" or not self.current()
                 or type(status) is not int or status not in FOREGROUND_AVAILABILITY_STATUSES):
             raise RuntimeError("Manual fallback is unavailable for this turn")
+        from src.approval_fallback import model_snapshot
+        if not self.review_model_origin or model_snapshot(self) != self.review_model_origin:
+            raise RuntimeError("The originating conversation route changed")
         policy = resolve_foreground_model_policy(self.owner)
         chosen = next(((route, descriptor) for route, descriptor in zip(
             policy.fallback_candidates, policy.fallback_descriptors)
@@ -775,12 +789,19 @@ class BoundChatTurn:
             owner=self.owner or DEFAULT_LOCAL_OWNER, require_exact_model=True)
         if resolved is None or tuple(resolved) != tuple(candidate):
             raise RuntimeError("Fallback registration changed before dispatch")
+        # Retire old-route cards before publishing the authorized new binding.
+        # Revision also prevents route A -> B -> A from reviving old grants.
+        from src.tool_approvals import tool_approval_store
+        tool_approval_store.retire_for_session(owner=self.owner, session_id=self.session_id)
+        self.pending, self.pending_approval_id = False, None
+        self.review_route_revision += 1
         descriptor = {**self.descriptor, "endpoint_id": chosen[1]["endpoint_id"],
             "model": candidate[1], "reasoning_effort": reasoning_effort or "",
             "source": "explicit_fallback"}
         self.store.record(self, "bound", descriptor)
         self.endpoint_url, self.headers = candidate[0], dict(candidate[2] or {})
         self.descriptor = descriptor
+        self.review_model_origin = model_snapshot(self)
 
 
 def current_turn():

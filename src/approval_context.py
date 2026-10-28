@@ -10,12 +10,16 @@ import hashlib
 import json
 import re
 import uuid
+import time
+import threading
+import weakref
+from collections import OrderedDict
 
 from src.decisions.contracts import DecisionError, encode
 
-CONTEXT_VERSION = "odysseus-approval-context/v1"
-MAX_USER_BYTES = 16 * 1024
-MAX_USER_ITEMS = 128
+CONTEXT_VERSION = "odysseus-approval-context/v2"
+MAX_USER_BYTES = 24 * 1024
+MAX_USER_ITEMS = 4096
 MAX_STATE_BYTES = 32 * 1024
 MAX_OBSERVATION_BYTES = 4096
 
@@ -80,52 +84,132 @@ def fingerprint(tool, content):
     return hashlib.sha256(encode({"tool": operation.transport_tool, "input": operation.input})).hexdigest()
 
 
+# Volatile, bounded by SQL factory AND authenticated owner/chat. Restart,
+# eviction and expiry never reconstruct a private ask from a transcript.
+_PRIVATE = weakref.WeakKeyDictionary()
+_PRIVATE_LOCK = threading.RLock()
+PRIVATE_TTL = 3600
+PRIVATE_MAX_ITEMS = 1024
+PRIVATE_MAX_BYTES = 2 * 1024 * 1024
+
+
+def forget_private_evidence(owner, session_id=None):
+    """Deletion/rename invalidates volatile evidence as well as durable state."""
+    from src.chat_automation import owner_key
+    key = owner_key(owner)
+    with _PRIVATE_LOCK:
+        for cache in list(_PRIVATE.values()):
+            for identity in list(cache):
+                if identity[0] == key and (session_id is None or identity[1] == str(session_id)):
+                    del cache[identity]
+
+
+def _private_namespace(bound):
+    from src.chat_automation import _models
+    return bound.store.session_factory or _models().SessionLocal
+
+
+def _prune_private(cache):
+    now = time.monotonic()
+    for old in list(cache):
+        if cache[old]["expires"] <= now:
+            del cache[old]
+    while (len(cache) > PRIVATE_MAX_ITEMS or
+           sum(len(encode(v)) for v in cache.values()) > PRIVATE_MAX_BYTES):
+        cache.popitem(last=False)
+
+
+def retain_private_submission(bound):
+    from src.chat_automation import owner_key
+    key = (owner_key(bound.owner), bound.session_id, bound.submission_id)
+    with _PRIVATE_LOCK:
+        cache = _PRIVATE.setdefault(_private_namespace(bound), OrderedDict())
+        cache[key] = {"text": bound.raw_ask, "events": [], "expires": time.monotonic() + PRIVATE_TTL}
+        _prune_private(cache)
+
+
+def _private_item(bound, row):
+    from src.chat_automation import owner_key
+    key = (owner_key(bound.owner), bound.session_id, row.submission_id)
+    if row.submission_id == bound.submission_id and bound.ephemeral_semantics:
+        return bound.raw_ask, list(bound.approval_evidence)
+    with _PRIVATE_LOCK:
+        cache = _PRIVATE.get(_private_namespace(bound), {})
+        _prune_private(cache)
+        item = cache.get(key)
+        if item is None or item["expires"] <= time.monotonic():
+            raise DecisionError("approval_private_context_unavailable")
+        return item["text"], list(item["events"])
+
+
+def _pack(items):
+    # Lossless framing, not a summary or relevance classifier. Retain chronology,
+    # every exact ask and every exact human decision. A digest names the ordered
+    # archive; its provenance comes from SQL validation, never that hash alone.
+    if len(items) <= 32:
+        return items
+    older, recent = items[:-8], items[-8:]
+    archive = [[item["text"], item["action_decisions"]] for item in older]
+    return [{"source": "authenticated_submission_archive", "id": hashlib.sha256(encode(older)).hexdigest(),
+             "format": "ordered_exact_asks_and_human_decisions", "count": len(older),
+             "text": encode(archive).decode(), "action_decisions": []}, *recent]
+
+
 def user_snapshot(bound):
-    """Read the exact server submission chain, never a mutable model history."""
+    """One SQL read, exact chain verification and lossless bounded framing.
+
+    No last-N truncation: if all material user evidence cannot fit, require an
+    explicit new-chat checkpoint or manual review rather than discard a rule.
+    """
     from src.chat_automation import _models, owner_key, digest
     d = _models()
-    if bound.ephemeral_semantics:
-        if len(bound.approval_evidence) > 64:
-            raise DecisionError("approval_context_budget")
-        # Private turns deliberately have no durable earlier evidence. A claim
-        # about prior consent is therefore unavailable, not reconstructed.
-        with bound.store.transaction() as db:
-            bound.store.state(db, bound.owner, bound.session_id)
-            if db.query(d.ChatAutomationSubmission.submission_id).filter(
-                    d.ChatAutomationSubmission.owner_key == owner_key(bound.owner),
-                    d.ChatAutomationSubmission.session_id == bound.session_id,
-                    d.ChatAutomationSubmission.submission_id != bound.submission_id).first():
+    with bound.store.transaction() as db:
+        bound.store.state(db, bound.owner, bound.session_id)
+        # Fetch only this owned chain's possible rows in one bounded query.
+        rows = db.query(d.ChatAutomationSubmission).filter_by(
+            owner_key=owner_key(bound.owner), session_id=bound.session_id).order_by(
+                d.ChatAutomationSubmission.created_at.desc(),
+                d.ChatAutomationSubmission.submission_id.desc()).limit(MAX_USER_ITEMS + 1).all()
+        by_id = {row.submission_id: row for row in rows}
+        items, seen, identifier, private = [], set(), bound.submission_id, False
+        while identifier:
+            if identifier in seen or len(items) >= MAX_USER_ITEMS:
+                raise DecisionError("approval_context_checkpoint_required")
+            seen.add(identifier)
+            row = by_id.get(identifier)
+            if row is None:
                 raise DecisionError("approval_context_unavailable")
-        items = [{"source": "current_private_submission", "id": bound.submission_id,
-                  "text": bound.raw_ask, "action_decisions": list(bound.approval_evidence)}]
-        coverage = "current_private_turn_only"
-    else:
-        items, seen, identifier = [], set(), bound.submission_id
-        with bound.store.transaction() as db:
-            bound.store.state(db, bound.owner, bound.session_id)
-            while identifier:
-                if identifier in seen or len(items) >= MAX_USER_ITEMS:
-                    raise DecisionError("approval_context_budget")
-                seen.add(identifier)
-                row = db.query(d.ChatAutomationSubmission).filter_by(
-                    submission_id=identifier, owner_key=owner_key(bound.owner),
-                    session_id=bound.session_id).first()
-                if (row is None or row.current_ask is None
-                        or digest(row.current_ask) != row.intent_digest):
+            if row.current_ask is None:
+                text, events = _private_item(bound, row)
+                private = True
+            else:
+                text, events = row.current_ask, row.approval_evidence or []
+            if not isinstance(text, str) or digest(text) != row.intent_digest:
+                raise DecisionError("approval_context_unavailable")
+            if sensitive(text):
+                raise DecisionError("approval_sensitive_input")
+            if not isinstance(events, list) or len(events) > 64:
+                raise DecisionError("approval_context_budget")
+            # Decisions are server-authored audit evidence, never reusable grants.
+            for event in events:
+                if (not isinstance(event, dict) or set(event) != {"source", "id", "decision", "operation_sha256"}
+                        or event["source"] != "human_exact_action"
+                        or event["decision"] not in {"approve_once", "deny"}
+                        or not isinstance(event["id"], str)
+                        or not isinstance(event["operation_sha256"], str)
+                        or not re.fullmatch(r"[0-9a-f]{64}", event["operation_sha256"])):
                     raise DecisionError("approval_context_unavailable")
-                events = row.approval_evidence or []
-                if not isinstance(events, list) or len(events) > 64:
-                    raise DecisionError("approval_context_budget")
-                items.append({"source": "authenticated_submission", "id": row.submission_id,
-                              "text": row.current_ask, "action_decisions": events})
-                if len(encode(items)) > MAX_USER_BYTES:
-                    raise DecisionError("approval_context_budget")
-                identifier = row.previous_submission_id
-        items.reverse()
-        coverage = "complete_server_submission_chain"
-    snapshot = {"version": CONTEXT_VERSION, "coverage": coverage, "user_evidence": items}
+            items.append({"source": "current_private_submission" if row.current_ask is None else "authenticated_submission",
+                          "id": row.submission_id, "text": text, "action_decisions": events})
+            identifier = row.previous_submission_id
+    if private and len(seen) != len(rows):
+        raise DecisionError("approval_private_context_unavailable")
+    items.reverse()
+    snapshot = {"version": CONTEXT_VERSION,
+                "coverage": "complete_volatile_private_chain" if private else "complete_server_submission_chain",
+                "user_evidence": _pack(items)}
     if len(encode(snapshot)) > MAX_USER_BYTES:
-        raise DecisionError("approval_context_budget")
+        raise DecisionError("approval_context_checkpoint_required")
     return encode(snapshot).decode()
 
 
@@ -139,6 +223,11 @@ def record_human_decision(pending, decision):
              "decision": decision, "operation_sha256": fingerprint(pending.tool_name, pending.content)}
     if bound.ephemeral_semantics:
         bound.approval_evidence = [*bound.approval_evidence[:64], event]
+        with _PRIVATE_LOCK:
+            item = _PRIVATE.get(_private_namespace(bound), {}).get((owner_key(bound.owner), bound.session_id, bound.submission_id))
+            if item is not None:
+                item["events"] = list(bound.approval_evidence)
+                _prune_private(_PRIVATE[_private_namespace(bound)])
     else:
         with bound.store.transaction() as db:
             row = db.query(_models().ChatAutomationSubmission).filter_by(
