@@ -6,7 +6,7 @@
 #chat-automation-dialog h2{font-size:18px;margin:0}
 .chat-automation-heading{display:flex;align-items:center;justify-content:space-between;gap:12px}
 #chat-automation-dialog fieldset{border:1px solid color-mix(in srgb,var(--fg) 20%,transparent);border-radius:8px;display:grid;gap:10px;min-width:0}
-#chat-automation-dialog select,#chat-automation-dialog input:not([type=checkbox]),#chat-automation-dialog button{font:inherit;color:inherit;background:var(--bg);border:1px solid color-mix(in srgb,var(--fg) 25%,transparent);border-radius:6px;padding:7px;min-width:0}
+#chat-automation-dialog select,#chat-automation-dialog input:not([type=checkbox]),#chat-automation-dialog button,#chat-automation-dialog textarea{font:inherit;color:inherit;background:var(--bg);border:1px solid color-mix(in srgb,var(--fg) 25%,transparent);border-radius:6px;padding:7px;min-width:0}
 .chat-automation-route{display:grid;grid-template-columns:1fr 1fr 100px;gap:8px;margin:8px 0}
 .chat-automation-route label{display:grid;gap:5px;font-size:12px}
 .chat-automation-route strong{grid-column:1/-1;font-size:13px;font-weight:500}
@@ -162,3 +162,5 @@
   #model-auto-dialog .model-auto-actions{gap:6px}
   #model-auto-dialog .model-auto-actions button{font-size:11px;padding:7px}
 }
+
+#chat-review-context textarea{display:block;width:100%;min-height:7rem;resize:vertical;box-sizing:border-box}

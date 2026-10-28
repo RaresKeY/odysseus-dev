@@ -14,6 +14,7 @@ import time
 import threading
 import weakref
 from collections import OrderedDict
+from contextlib import nullcontext
 
 from src.decisions.contracts import DecisionError, encode
 
@@ -25,19 +26,58 @@ MAX_OBSERVATION_BYTES = 4096
 
 # Deliberately no arbitrary secret-store lookup. Recognizable literal secrets
 # cause review to stop, never approval of a redacted approximation of an action.
-_SECRET = re.compile(r"(?i)(?:bearer\s+[a-z0-9._~+/=-]{8,}|-----BEGIN [A-Z ]*PRIVATE KEY-----|"
-                     r"(?:password|api[_-]?key|access[_-]?token|client[_-]?secret)[\"']?\s*[=:]\s*[^\s,;]{4,})")
+_SECRET = re.compile(r"(?i)(?:bearer\s+[a-z0-9._~+/=-]{1,}|-----BEGIN [A-Z ]*PRIVATE KEY-----|"
+                     r"(?:password|api[_-]?key|access[_-]?token|client[_-]?secret)[\"']?\s*[=:]\s*[^\s,;]{1,})")
 
 
-def sensitive(value):
+# Exact public documentation placeholders only, not shape/prefix guesses.
+_PLACEHOLDERS = frozenset({'example', 'YOUR_API_KEY', '<API_KEY>', '<api_key>',
+    'REPLACE_ME', '<password>', 'YOUR_PASSWORD', '<token>', 'YOUR_TOKEN', '[REDACTED]'})
+
+
+def sensitive(value, _depth=0):
+    if _depth > 16:
+        return True
     if isinstance(value, str):
-        return bool(_SECRET.search(value))
+        if value.lstrip().startswith(('{', '[', '"')):
+            # Strict duplicate-key parsing prevents an inert last value from
+            # concealing an earlier secret in nested serialized tool arguments.
+            def unique(items):
+                parsed = {}
+                for key, item in items:
+                    if key in parsed:
+                        raise ValueError("duplicate key")
+                    parsed[key] = item
+                return parsed
+            def invalid(_):
+                raise ValueError("invalid constant")
+            try:
+                parsed = json.loads(value, object_pairs_hook=unique, parse_constant=invalid)
+            except json.JSONDecodeError:
+                pass
+            except (ValueError, RecursionError):
+                return True
+            else:
+                return sensitive(parsed, _depth + 1)
+        for match in _SECRET.finditer(value):
+            text = match.group()
+            if '-----BEGIN ' in text:
+                return True
+            if text.casefold().startswith('bearer '):
+                token = text.split(None, 1)[1]
+            else:
+                token = re.split(r'[=:]\s*', text, maxsplit=1)[-1]
+            # Backticks/quotes may delimit the documented placeholder, but no
+            # partial redaction, suffix stripping or arbitrary key whitelist.
+            if token.strip('`\"\'') not in _PLACEHOLDERS:
+                return True
+        return False
     if isinstance(value, dict):
-        return any(sensitive(key + "=" + str(item)) if key.casefold() in {
-            "password", "api_key", "apikey", "access_token", "client_secret"} else sensitive(item)
+        return any(sensitive(key + "=" + str(item), _depth + 1) if key.casefold() in {
+            "password", "api_key", "apikey", "access_token", "client_secret"} else sensitive(item, _depth + 1)
             for key, item in value.items())
     if isinstance(value, list):
-        return any(sensitive(item) for item in value)
+        return any(sensitive(item, _depth + 1) for item in value)
     return False
 
 
@@ -162,7 +202,7 @@ def _pack(items):
              "text": encode(archive).decode(), "action_decisions": []}, *recent]
 
 
-def user_snapshot(bound):
+def user_snapshot(bound, *, db=None):
     """One SQL read, exact chain verification and lossless bounded framing.
 
     No last-N truncation: if all material user evidence cannot fit, require an
@@ -170,11 +210,33 @@ def user_snapshot(bound):
     """
     from src.chat_automation import _models, owner_key, digest
     d = _models()
-    with bound.store.transaction() as db:
-        bound.store.state(db, bound.owner, bound.session_id)
+    with (nullcontext(db) if db is not None else bound.store.transaction()) as db:
+        _, state = bound.store.state(db, bound.owner, bound.session_id)
+        from src.approval_recovery import CHECKPOINT_KEY, check_private_admission
+        from fastapi import HTTPException
+        try:
+            check_private_admission(state, bound.ephemeral_semantics)
+        except HTTPException as error:
+            raise DecisionError(error.headers['X-Decision-Failure']) from None
+        checkpoint = (state.feature_settings or {}).get(CHECKPOINT_KEY)
+        anchor = None
+        anchor_id = None
+        if checkpoint is not None:
+            if (not isinstance(checkpoint, dict) or set(checkpoint) != {'submission_id', 'intent_digest', 'private', 'created_at', 'source'}
+                    or checkpoint['source'] != 'interactive_user_checkpoint' or type(checkpoint['private']) is not bool):
+                raise DecisionError("approval_context_unavailable")
+            anchor_id = checkpoint['submission_id']
+            anchor = db.query(d.ChatAutomationSubmission).filter_by(owner_key=owner_key(bound.owner),
+                session_id=bound.session_id, submission_id=checkpoint['submission_id']).first()
+            if (anchor is None or anchor.intent_digest != checkpoint['intent_digest']
+                    or anchor.created_at != checkpoint['created_at']
+                    or (anchor.current_ask is None) != checkpoint['private']):
+                raise DecisionError("approval_context_unavailable")
         # Fetch only this owned chain's possible rows in one bounded query.
-        rows = db.query(d.ChatAutomationSubmission).filter_by(
-            owner_key=owner_key(bound.owner), session_id=bound.session_id).order_by(
+        query = db.query(d.ChatAutomationSubmission).filter_by(owner_key=owner_key(bound.owner), session_id=bound.session_id)
+        if anchor is not None:
+            query = query.filter(d.ChatAutomationSubmission.created_at >= anchor.created_at)
+        rows = query.order_by(
                 d.ChatAutomationSubmission.created_at.desc(),
                 d.ChatAutomationSubmission.submission_id.desc()).limit(MAX_USER_ITEMS + 1).all()
         by_id = {row.submission_id: row for row in rows}
@@ -208,13 +270,21 @@ def user_snapshot(bound):
                     raise DecisionError("approval_context_unavailable")
             items.append({"source": "current_private_submission" if row.current_ask is None else "authenticated_submission",
                           "id": row.submission_id, "text": text, "action_decisions": events})
-            identifier = row.previous_submission_id
+            if anchor is not None and row.submission_id == anchor.submission_id:
+                identifier = None
+            else:
+                identifier = row.previous_submission_id
+        if anchor is not None and anchor.submission_id not in seen:
+            raise DecisionError("approval_context_unavailable")
     if len(seen) != len(rows):
         raise DecisionError("approval_private_context_unavailable" if private else "approval_context_unavailable")
     items.reverse()
     snapshot = {"version": CONTEXT_VERSION,
-                "coverage": "complete_volatile_private_chain" if private else "complete_server_submission_chain",
+                "coverage": "explicit_user_checkpoint_chain" if anchor is not None else "complete_volatile_private_chain" if private else "complete_server_submission_chain",
                 "user_evidence": _pack(items)}
+    if anchor is not None:
+        snapshot['checkpoint'] = {'source': 'interactive_user_checkpoint', 'submission_id': anchor_id,
+                                  'replaces_prior_review_context': True}
     if len(encode(snapshot)) > MAX_USER_BYTES:
         raise DecisionError("approval_context_checkpoint_required")
     return encode(snapshot).decode()

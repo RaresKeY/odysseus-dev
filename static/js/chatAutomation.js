@@ -9,6 +9,7 @@ let settingsChatId = null, settingsNavigation = 0;
 let activity = null, activitySessionId = null;
 let saving = false, activation = null, activationGeneration = 0;
 let reviewerAvailability = null, reviewerLoading = true;
+let reviewContext = null;
 const modeLabels = {always_ask:'Always Ask',auto_approve:'Auto-Approve',yolo:'YOLO'};
 const autoApproveReady = () => reviewerAvailability?.available === true;
 function autoApproveReason() {
@@ -188,6 +189,11 @@ async function openSettings() {
     $('chat-decision-protocol').value=configuration.decision_provider?.protocol||'openai_json';
     for(const name of ['followup','preparation','completion-advice']) $( `chat-${name}-enabled`).checked=!!policy?.[name.replaceAll('-','_')+'_enabled'];
     settingsChatId=sid();settingsNavigation=navigationGeneration;
+    reviewContext=await api(`/api/session/${encodeURIComponent(settingsChatId)}/approval-context`);
+    if(settingsChatId!==sid() || settingsNavigation!==navigationGeneration)throw new Error('The chat changed. Open settings again.');
+    $('chat-review-context-status').textContent=reviewContext.reason;
+    $('chat-review-context-private').checked=reviewContext.private;
+    $('chat-review-context-statement').value='';$('chat-review-context-confirm').checked=false;
     message('');$('chat-automation-dialog').showModal();
   } catch(e){notice(e.message);}
 }
@@ -271,6 +277,31 @@ async function initialize(){
     if(id===sid() && ticket===sequence)renderer.renderAskUserCard(pending,{focus:true,scroll:true});
   });
   $('chat-automation-close').addEventListener('click',()=>$('chat-automation-dialog').close());
+  $('chat-review-context-save').addEventListener('click',async()=>{
+    const id=settingsChatId, navigation=settingsNavigation, checkpoint=reviewContext;
+    const statement=$('chat-review-context-statement').value, privateChoice=$('chat-review-context-private').checked;
+    if(!checkpoint || id!==sid() || navigation!==navigationGeneration){message('The chat changed. Open settings again.');return;}
+    if(!$('chat-review-context-confirm').checked || !statement.trim()) {message('Enter the task and restrictions, then confirm replacement.');return;}
+    $('chat-review-context-save').disabled=true;
+    try {
+      await writeSettings(async()=>{
+        if(id!==sid() || navigation!==navigationGeneration)throw new Error('The chat changed. Open settings again.');
+        await api(`/api/session/${encodeURIComponent(id)}/approval-context`,'POST',{
+          policy_revision:checkpoint.policy_revision,previous_submission_id:checkpoint.previous_submission_id,
+          process_id:checkpoint.process_id,statement,replace_prior_context:true,private:privateChoice});
+      });
+      if(id!==sid() || navigation!==navigationGeneration)return;
+      $('chat-review-context-statement').value='';$('chat-review-context-confirm').checked=false;
+      const updated=await api(`/api/session/${encodeURIComponent(id)}/approval-context`);
+      if(id!==sid() || navigation!==navigationGeneration)return;
+      reviewContext=updated;$('chat-review-context-status').textContent=updated.reason;
+      await refresh();if(id===sid() && navigation===navigationGeneration)message('Review context replaced. Send a new request to continue; your permission mode is unchanged.');
+    } catch(error){if(id===sid() && navigation===navigationGeneration)message(error.message);}
+    finally{$('chat-review-context-save').disabled=false;}
+  });
+  $('chat-automation-dialog').addEventListener('close',()=>{
+    $('chat-review-context-statement').value='';$('chat-review-context-confirm').checked=false;reviewContext=null;
+  });
   const browserPath=async()=>{if(settingsChatId!==sid() || settingsNavigation!==navigationGeneration)throw new Error('The chat changed. Open settings again.');return `/api/session/${encodeURIComponent(await currentChat())}/browser`;};
   function browserScope(){const effects=[];if($('chat-browser-clicks').checked)effects.push('click');if($('chat-browser-fill').checked)effects.push('fill');if($('chat-browser-submit').checked)effects.push('submit');const label=$('chat-browser-field-label').value;return {url:$('chat-browser-url').value,effects,fields:label?[{label,value:$('chat-browser-field-value').value}]:[],checks:$('chat-browser-check').value?[{kind:'text_contains',value:$('chat-browser-check').value}]:[]};}
   async function viewBrowser(){const result=await api((await browserPath())+'/view');$('chat-browser-screenshot').src=result.screenshot.url;$('chat-browser-screenshot').hidden=false;$('chat-browser-status').textContent='You have control. This is a current browser image; automation’s previous targets have been invalidated.';const obs=result.observation;$('chat-browser-targets').replaceChildren();(obs.elements||[]).filter(n=>!n.disabled).forEach(node=>{const button=document.createElement('button');button.type='button';button.textContent=(node.editable?'Fill: ':'Click: ')+(node.label||node.role||'Unnamed target');button.addEventListener('click',async()=>{try{await api((await browserPath())+'/action','POST',{action:node.editable?'fill':'click',page:'t1',observation:obs.observation,ref:node.ref,...(node.editable?{value_id:node.label}:{})});await viewBrowser();}catch(e){$('chat-browser-status').textContent=e.message;}});$('chat-browser-targets').append(button);});}
@@ -291,7 +322,7 @@ async function initialize(){
       await refresh(); message('Settings saved. New messages use the committed choices.');
     } catch(error) { message(error.message); } finally {if(button)button.disabled=false;}
   });
-  window.addEventListener('odysseus:session-changed',()=>{++navigationGeneration;policy=null;dismissActivation();closePermissions();activity?.destroy();activity=null;activitySessionId=null;notice();render();refresh();});
+  window.addEventListener('odysseus:session-changed',()=>{++navigationGeneration;$('chat-review-context-statement').value='';$('chat-review-context-confirm').checked=false;reviewContext=null;policy=null;dismissActivation();closePermissions();activity?.destroy();activity=null;activitySessionId=null;notice();render();refresh();});
   window.addEventListener('odysseus:automation-changed',refresh);
   window.addEventListener('ge:model-endpoints-updated',refresh);
   document.addEventListener('visibilitychange',()=>{if(!document.hidden)refresh();});

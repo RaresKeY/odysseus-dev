@@ -133,7 +133,8 @@ class AutomationStore:
             _, source = self.state(db, owner, source_id)
             _, target = self.state(db, owner, target_id)
             target.approval_mode, target.route_mode = "always_ask", source.route_mode
-            target.feature_settings = copy.deepcopy(source.feature_settings or {})
+            target.feature_settings = {key: copy.deepcopy(value) for key, value in (source.feature_settings or {}).items()
+                                       if not key.startswith('_approval_')}
             target.elevation_grant = None
             target.policy_revision += 1
 
@@ -144,7 +145,8 @@ class AutomationStore:
             prefs.revision += 1
 
     def _policy(self, p, s, owner, entrypoint="interactive"):
-        features = {**FEATURE_DEFAULTS, **copy.deepcopy(s.feature_settings or {})}
+        features = {**FEATURE_DEFAULTS, **{key: value for key, value in copy.deepcopy(s.feature_settings or {}).items()
+                                          if not key.startswith('_approval_')}}
         features.setdefault('auto_models', [])
         features.setdefault('auto_models_source', 'explicit')
         features.setdefault('auto_categories', {})
@@ -333,6 +335,18 @@ class AutomationStore:
                     raise HTTPException(409, "Clarification expired; send a new message")
             chat_name = db.query(d.Session.name).filter_by(id=sid).scalar()
             ephemeral_semantics = ephemeral_semantics or str(chat_name or '').strip().casefold() in {'nobody', 'incognito'}
+            from src.approval_recovery import private_admission, PROCESS_KEY
+            private_admission(s, ephemeral_semantics)
+            if s.approval_mode == 'auto_approve' and previous and (ephemeral_semantics or (s.feature_settings or {}).get(PROCESS_KEY)):
+                from types import SimpleNamespace
+                from src.approval_context import user_snapshot
+                from src.decisions.contracts import DecisionError
+                try:
+                    user_snapshot(SimpleNamespace(store=self, owner=owner, session_id=sid, submission_id=previous.submission_id,
+                        ephemeral_semantics=False, raw_ask='', approval_evidence=[]), db=db)
+                except DecisionError as error:
+                    raise HTTPException(409, 'Private review evidence needs renewal in Chat settings, or use Always Ask.',
+                                        headers={'X-Decision-Failure': error.code}) from None
             if reply_card is not None and ephemeral_semantics:
                 raise HTTPException(409, "Reply to this question outside private mode, or send a new message")
             prior_task = self._task_projection(db, previous) if previous and not ephemeral_semantics else {}
@@ -380,6 +394,8 @@ class AutomationStore:
         try:
             with self.transaction() as db:
                 p, s = self.state(db, bound.owner, bound.session_id)
+                from src.approval_recovery import check_private_admission
+                check_private_admission(s, bound.ephemeral_semantics)
                 row = db.query(d.ChatAutomationSubmission).filter_by(submission_id=bound.submission_id).first()
                 lease = db.query(d.ChatAutomationLease).filter_by(session_id=bound.session_id,
                     token=bound.token, submission_id=bound.submission_id, owner_key=owner_key(bound.owner)).first() if row and row.status == 'preparing' else None

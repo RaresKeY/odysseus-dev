@@ -1783,9 +1783,10 @@ async def _review_bound_chat_action(bound, block, *, owner, session_id, workspac
             review_context_json = user_snapshot(bound)
         except DecisionError as error:
             reason = {
-                "approval_context_checkpoint_required": "The complete user instructions exceed this review’s input limit. Start a new chat and restate the task, restrictions and revoked permissions, or use Always Ask.",
-                "approval_private_context_unavailable": "Earlier private instructions are no longer in this process’s memory. Start a new private chat with the task and restrictions, or use Always Ask.",
-            }.get(error.code, "Auto-Approve cannot verify the complete authorization context. Start a new chat with explicit instructions or use Always Ask.")
+                "approval_context_checkpoint_required": "The complete user instructions exceed this review’s input limit. Renew review context in Chat settings with the task, restrictions and revoked permissions, or use Always Ask.",
+                "approval_private_context_unavailable": "Earlier private instructions are no longer in this process’s memory. Renew private review context in Chat settings with the task and restrictions, or use Always Ask.",
+                "approval_sensitive_input": "Review context contains credential-like material. Renew it in Chat settings without secret values, preserving the task and restrictions.",
+            }.get(error.code, "Auto-Approve cannot verify the complete authorization context. Renew review context in Chat settings or use Always Ask.")
             return context_failure(error, reason)
     try:
         pending = tool_approval_store.create(

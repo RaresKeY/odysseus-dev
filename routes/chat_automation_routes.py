@@ -28,9 +28,15 @@ def setup_chat_automation_routes(session_manager):
     def with_review_availability(result, owner, *, configuration=None):
         from src.approval_fallback import auto_approve_availability
         config = configuration if configuration is not None else AutomationStore().configuration(owner)
-        return {**result, "auto_approve_availability": auto_approve_availability(
-            config.get("decision_provider"), owner,
-            session_id=result.get("session_id"), policy=result)}
+        availability = auto_approve_availability(config.get("decision_provider"), owner,
+            session_id=result.get("session_id"), policy=result)
+        if result.get('session_id'):
+            from src.approval_recovery import context_status
+            context = context_status(AutomationStore(), owner, result['session_id'])
+            result = {**result, 'review_context': context}
+            if not context['available']:
+                availability = {**availability, 'available': False, 'reason_code': context['code'], 'reason': context['reason']}
+        return {**result, "auto_approve_availability": availability}
 
     from src.decision_advice import SafetyAdviceService
     from src.tool_approvals import tool_approval_store
@@ -105,11 +111,33 @@ def setup_chat_automation_routes(session_manager):
         result['task'] = store.task_state(owner, session_id)
         return with_review_availability(result, owner)
 
+    @router.get("/api/session/{session_id}/approval-context")
+    async def review_context(request: Request, session_id: str):
+        owner = interactive_owner(request)
+        from src.approval_recovery import context_status
+        return context_status(AutomationStore(), owner, session_id)
+
+    @router.post("/api/session/{session_id}/approval-context")
+    async def renew_review_context(request: Request, session_id: str, body: dict):
+        owner = interactive_owner(request)
+        # This is a deliberate user settings action, never agent input or an
+        # automatic transcript compaction. Browser controls use same-origin fetch.
+        if (request.headers.get('sec-fetch-site') != 'same-origin'
+                or request.headers.get('origin', '').rstrip('/') != str(request.base_url).rstrip('/')):
+            raise HTTPException(403, 'Replace review context from this application’s Chat settings.')
+        from src.approval_recovery import replace_context
+        return replace_context(AutomationStore(), owner, session_id, body)
+
     @router.put("/api/session/{session_id}/automation")
     async def save_chat_settings(request: Request, session_id: str, body: dict):
         owner = interactive_owner(request)
         if set(body) != {"policy_revision", "changes"} or not isinstance(body["changes"], dict):
             raise HTTPException(422, "Provide a chat revision and changes")
+        if body['changes'].get('approval_mode') == 'auto_approve':
+            from src.approval_recovery import context_status
+            context = context_status(AutomationStore(), owner, session_id)
+            if not context['available']:
+                raise HTTPException(409, context['reason'])
         result = AutomationStore().update_chat(owner, session_id, body["changes"], body["policy_revision"])
         return with_review_availability(result, owner)
 

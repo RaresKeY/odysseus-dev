@@ -95,7 +95,7 @@ function fixture({ availability = missing, mode = 'always_ask', omitAvailability
   document.body.append(control);
   const window = Object.assign(new Element(), { innerWidth: 1200, innerHeight: 800 });
   const state = { availability, mode, revision: 0, sessionId: 'chat', omitAvailability,
-    policyGate: null, failRefresh: false, rejectActivation: false };
+    policyGate: null, failRefresh: false, rejectActivation: false, checkpointGate:null };
   const requests = [];
   const projection = () => state.omitAvailability ? {} : { auto_approve_availability: structuredClone(state.availability) };
   const policy = () => ({ session_id: 'chat', approval_mode: state.mode, policy_revision: state.revision,
@@ -112,6 +112,13 @@ function fixture({ availability = missing, mode = 'always_ask', omitAvailability
       if (path === '/api/chat-settings/models') return respond({ endpoints: [], decision_endpoints: [] });
       if (options.method === 'GET' && state.failRefresh) throw new Error('Settings temporarily unavailable');
       if (path === '/api/chat-settings') return respond({ revision: 0, ...projection() });
+      if (path === '/api/session/chat/approval-context') {
+        if(options.method==='POST'){
+          if(state.checkpointGate)await state.checkpointGate.promise;
+          state.revision++;
+        }
+        return respond({policy_revision:state.revision, previous_submission_id:null, process_id:'synthetic-process', private:false, available:true, reason:'Earlier instructions remain applicable.'});
+      }
       assert.equal(path, '/api/session/chat/automation');
       if (options.method === 'PUT') {
         if (body.changes.approval_mode === 'auto_approve' && state.rejectActivation) {
@@ -236,4 +243,49 @@ test('refresh failures disable Auto while preserving Always Ask recovery', async
   assert.equal(h.nodes.get('chat-approval-mode').disabled, false);
   await h.modes.always_ask.click();
   assert.equal(h.state.mode, 'always_ask');
+});
+
+
+test('review context requires an explicit statement and confirmation without switching modes', async () => {
+  const h=fixture({availability:ready,mode:'auto_approve'});await h.initialized;
+  await h.nodes.get('chat-automation-settings').click();
+  h.nodes.get('chat-review-context-statement').value='Write only local documentation. Never publish.';
+  await h.nodes.get('chat-review-context-save').click();
+  assert.equal(h.requests.filter(r=>r.method==='POST').length,0);
+  h.nodes.get('chat-review-context-confirm').checked=true;
+  await h.nodes.get('chat-review-context-save').click();
+  const posts=h.requests.filter(r=>r.method==='POST');
+  assert.equal(posts.length,1);assert.equal(posts[0].path,'/api/session/chat/approval-context');
+  assert.equal(posts[0].body.statement,'Write only local documentation. Never publish.');
+  assert.equal(posts[0].body.replace_prior_context,true);assert.equal(posts[0].body.process_id,'synthetic-process');
+  assert.equal(h.writes().length,0);assert.equal(h.state.mode,'auto_approve');
+  assert.equal(h.nodes.get('chat-review-context-statement').value,'');
+  assert.equal(h.nodes.get('chat-review-context-confirm').checked,false);
+});
+
+test('closing settings clears volatile replacement text without persisting or sending it', async () => {
+  const h=fixture({availability:ready});await h.initialized;
+  await h.nodes.get('chat-automation-settings').click();
+  h.nodes.get('chat-review-context-statement').value='Private constraints';
+  h.nodes.get('chat-review-context-confirm').checked=true;
+  h.nodes.get('chat-automation-dialog').close();await settle();
+  assert.equal(h.nodes.get('chat-review-context-statement').value,'');
+  assert.equal(h.nodes.get('chat-review-context-confirm').checked,false);
+  assert.equal(h.requests.filter(r=>r.method==='POST').length,0);
+});
+
+test('a delayed old-chat checkpoint cannot render or repopulate private input in a new chat', async () => {
+  const h=fixture({availability:ready});await h.initialized;
+  await h.nodes.get('chat-automation-settings').click();
+  h.nodes.get('chat-review-context-statement').value='Old chat private constraints';
+  h.nodes.get('chat-review-context-confirm').checked=true;
+  const gate=deferred();h.state.checkpointGate=gate;
+  const pending=h.nodes.get('chat-review-context-save').click();await settle();
+  h.state.sessionId='new-chat';await h.window.dispatchEvent({type:'odysseus:session-changed'});
+  h.nodes.get('chat-review-context-status').textContent='New chat state';
+  gate.resolve();await pending;
+  assert.equal(h.nodes.get('chat-review-context-status').textContent,'New chat state');
+  assert.equal(h.nodes.get('chat-review-context-statement').value,'');
+  assert.equal(h.writes().length,0);
+  assert.equal(h.requests.filter(r=>r.method==='POST').length,1);
 });
