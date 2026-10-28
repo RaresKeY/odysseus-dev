@@ -135,7 +135,7 @@ def _projection(request, record):
         if identity.get("provider") in {"openai", "anthropic", "ollama", "chatgpt-subscription", "copilot",
                 "openrouter", "groq", "nvidia", "kimi-code", "moonshot", "featherless", "cerebras", "mistral", "opencode-go", "opencode-zen"}:
             provider["name"] = identity["provider"]
-        for key in ("model", "endpoint_id"):
+        for key in ("model", "endpoint_id", "canonical_model", "identity_contract", "output_contract"):
             value = identity.get(key)
             if isinstance(value, str) and len(value) <= 512:
                 provider[key] = value
@@ -171,7 +171,7 @@ def _answers(result, mapping, offers):
 
 def _packet(public, offers):
     observation = copy.deepcopy(public)
-    for key in ("model", "endpoint_id", "name"):
+    for key in ("model", "endpoint_id", "name", "canonical_model", "reviewed_model", "identity_contract", "output_contract"):
         observation.get("provider", {}).pop(key, None)
     body = {"schema": CAPTURE_SCHEMA, "source_kind": "captured_live_redacted",
         "redaction_policy": REDACTION_POLICY, "exact_original_replay": False,
@@ -363,6 +363,13 @@ class DecisionObservability:
                 duration_ms=max(0, round((self.clock() - ticket["started"]) * 1000)),
                 failure_kind=failure_kind if isinstance(failure_kind, str) and failure_kind in FAILURES else "decision_failed" if failure_kind is not None else None)
             public["usage_provenance"] = "provider_reported" if public["usage"] is not None else "unknown_held"
+            # Actual response identity is observation only. The selected route's
+            # pre-dispatch attempt identity remains stable for outage accounting.
+            identity = getattr(result, "provider_identity", {})
+            reviewed = identity.get("reviewed_model") if isinstance(identity, dict) else None
+            if (public["purpose"] == "approval" and public["provider"]["protocol"].startswith("approval_")
+                    and status == "settled" and isinstance(reviewed, str) and 0 < len(reviewed) <= 512):
+                public["provider"]["reviewed_model"] = reviewed
             with self._transaction(write=True) as db:
                 key = self._admit(db, ticket["owner"], ticket["session_id"])
                 self._expire(db)
@@ -434,6 +441,10 @@ class DecisionObservability:
                         "unavailable": "The reviewer was unavailable.",
                         "blocked": "Deterministic admission stopped the action.",
                     }[disposition]
+            if (disposition in {"uncertain", "blocked", "unavailable", "error", "stale"}
+                    and assessment.get("failure_kind") in {"approval_context_checkpoint_required",
+                        "approval_private_context_unavailable", "approval_private_process_changed", "approval_sensitive_input"}):
+                public["reason"] = "Renew review context in Chat settings."
             with self._transaction(write=True) as db:
                 key = self._admit(db, owner, session_id)
                 attempt_id = assessment.get("attempt_id")
