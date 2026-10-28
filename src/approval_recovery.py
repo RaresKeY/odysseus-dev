@@ -1,6 +1,7 @@
 """Interactive evidence renewal; never an execution grant or transcript summary."""
 from __future__ import annotations
 
+import json
 import math
 import os
 import uuid
@@ -68,7 +69,7 @@ def context_status(store, owner, session_id):
         session = db.get(d.Session, str(session_id))
         row = db.query(d.ChatAutomationSubmission).filter_by(owner_key=owner_key(owner), session_id=str(session_id)).order_by(
             d.ChatAutomationSubmission.created_at.desc(), d.ChatAutomationSubmission.submission_id.desc()).first()
-        private = str(session.name or '').casefold() in {'incognito', 'nobody'} or bool((state.feature_settings or {}).get(PROCESS_KEY)) or bool(row and row.current_ask is None)
+        private = str(session.name or '').strip().casefold() in {'incognito', 'nobody'} or bool((state.feature_settings or {}).get(PROCESS_KEY)) or bool(row and row.current_ask is None)
         private_owner = (state.feature_settings or {}).get(PROCESS_KEY)
         result = {'policy_revision': state.policy_revision, 'previous_submission_id': row.submission_id if row else None,
                   'private': private, 'process_id': process_id(), 'available': True, 'code': None,
@@ -83,9 +84,13 @@ def context_status(store, owner, session_id):
         bound = SimpleNamespace(store=store, owner=owner, session_id=str(session_id), submission_id=result['previous_submission_id'],
                                 ephemeral_semantics=False, raw_ask='', approval_evidence=[])
         try:
-            user_snapshot(bound)
+            snapshot = json.loads(user_snapshot(bound))
+            if snapshot.get('private_evidence'):
+                result['private'] = True
         except DecisionError as error:
             result.update(available=False, code=error.code)
+    if result['private'] and not runtime['supported']:
+        result.update(available=False, code=runtime['code'])
     result['runtime'] = runtime
     result['reason'] = {
         'approval_sensitive_input': 'Review context contains credential-like material. Renew it without secret values, keeping the task and restrictions.',
@@ -124,7 +129,7 @@ def replace_context(store, owner, session_id, body):
             d.ChatAutomationSubmission.created_at.desc(), d.ChatAutomationSubmission.submission_id.desc()).first()
         if (state.policy_revision != body['policy_revision'] or body['previous_submission_id'] != (previous.submission_id if previous else None)):
             raise HTTPException(409, 'The chat changed. Reload before replacing review context.')
-        private = body['private'] or str(session.name or '').casefold() in {'incognito', 'nobody'}
+        private = body['private'] or str(session.name or '').strip().casefold() in {'incognito', 'nobody'}
         if private and state.approval_mode == 'auto_approve' and not private_runtime()['supported']:
             raise HTTPException(409, private_runtime()['reason'])
         now = store.clock()

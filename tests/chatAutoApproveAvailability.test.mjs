@@ -289,3 +289,12 @@ test('a delayed old-chat checkpoint cannot render or repopulate private input in
   assert.equal(h.writes().length,0);
   assert.equal(h.requests.filter(r=>r.method==='POST').length,1);
 });
+
+test('new or pending chats can open settings without requesting a null chat context', async () => {
+  const h=fixture({availability:ready});h.state.sessionId=null;await h.initialized;
+  await h.nodes.get('chat-automation-settings').click();
+  assert.equal(h.nodes.get('chat-automation-dialog').open,true);
+  assert.equal(h.nodes.get('chat-review-context-save').disabled,true);
+  assert.equal(h.requests.some(r=>r.path.includes('/session/null/')),false);
+  assert.equal(h.writes().length,0);
+});

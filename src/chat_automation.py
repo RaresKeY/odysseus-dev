@@ -335,17 +335,19 @@ class AutomationStore:
                     raise HTTPException(409, "Clarification expired; send a new message")
             chat_name = db.query(d.Session.name).filter_by(id=sid).scalar()
             ephemeral_semantics = ephemeral_semantics or str(chat_name or '').strip().casefold() in {'nobody', 'incognito'}
-            from src.approval_recovery import private_admission, PROCESS_KEY
+            from src.approval_recovery import private_admission
             private_admission(s, ephemeral_semantics)
-            if s.approval_mode == 'auto_approve' and previous and (ephemeral_semantics or (s.feature_settings or {}).get(PROCESS_KEY)):
+            if s.approval_mode == 'auto_approve' and previous:
                 from types import SimpleNamespace
                 from src.approval_context import user_snapshot
                 from src.decisions.contracts import DecisionError
                 try:
-                    user_snapshot(SimpleNamespace(store=self, owner=owner, session_id=sid, submission_id=previous.submission_id,
-                        ephemeral_semantics=False, raw_ask='', approval_evidence=[]), db=db)
+                    prior_context = json.loads(user_snapshot(SimpleNamespace(store=self, owner=owner, session_id=sid,
+                        submission_id=previous.submission_id, ephemeral_semantics=False, raw_ask='', approval_evidence=[]), db=db))
+                    if prior_context.get('private_evidence'):
+                        private_admission(s, True)
                 except DecisionError as error:
-                    raise HTTPException(409, 'Private review evidence needs renewal in Chat settings, or use Always Ask.',
+                    raise HTTPException(409, 'Review evidence needs renewal in Chat settings, or use Always Ask.',
                                         headers={'X-Decision-Failure': error.code}) from None
             if reply_card is not None and ephemeral_semantics:
                 raise HTTPException(409, "Reply to this question outside private mode, or send a new message")

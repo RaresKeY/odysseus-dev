@@ -1,6 +1,6 @@
 # Decision assistance
 
-Last updated: dev@f8e043e8 | 2026-10-24
+Last updated: dev@1a7c79946 | 2026-10-28
 
 ## Scope
 
@@ -133,3 +133,5 @@ Synchronous approval context v2 revalidates the complete owner/chat submission c
 ## Owned evidence recovery and compatibility
 
 `src/approval_recovery.py` and the interactive settings routes provide metadata-only status and explicit user-written checkpoint replacement with owner/head/revision/process binding. Known tool/delegated callers and cross-origin requests cannot renew authority evidence. Old history stays, old proposals/folder grants retire, and the mode/ceilings stay; a new action still requires canonical review. Private replacements and decisions never persist as raw content. Known multi-worker private Auto is unavailable; unknown process changes fail early before supersession/inference, with renewal or Always Ask recovery. Exact public placeholders are distinct from credential-bearing/nested input; no automatic redaction creates consent. Provider contracts bind only documented exact official identities and supported output formats; selected and actually reported reviewer identities remain distinct. A bounded incompatibility pause is not an approval cache or hidden retry.
+
+Before a new Auto turn supersedes work or performs model/tool preparation, the prior complete review context is validated. This includes legacy private rows lacking a process marker, even if the next request turns incognito off. JSON sensitivity checks normalize exactly the recognized credential labels across case, hyphen and underscore spellings; typed null/boolean placeholders are public data, while string secrets remain blocked. Pending/new chats keep global settings accessible and cannot submit renewal until an owned chat exists.

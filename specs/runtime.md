@@ -1,6 +1,6 @@
 # Runtime
 
-Last updated: dev@c74f475 | 2026-10-15
+Last updated: dev@1a7c79946 | 2026-10-28
 
 ## Scope
 
@@ -114,3 +114,5 @@ Native launch readiness is a bounded functional containment probe plus exact sup
 ## Integrated shutdown and private review admission
 
 The streamed-chat shutdown check precedes Jev event observation; shutdown does not emit a completion tail and records the bound submission as cancelled. Task automation-off admission remains independent of upstream auth-disabled/admin/task endpoint restrictions. Private review state has a process-owned admission nonce, regenerated after fork; configured multi-worker private Auto fails before inference and offers user-controlled renewal or Always Ask. No shared-memory durability or sticky routing is claimed.
+
+Before a new Auto turn supersedes work or performs model/tool preparation, the prior complete review context is validated. This includes legacy private rows lacking a process marker, even if the next request turns incognito off. JSON sensitivity checks normalize exactly the recognized credential labels across case, hyphen and underscore spellings; typed null/boolean placeholders are public data, while string secrets remain blocked. Pending/new chats keep global settings accessible and cannot submit renewal until an owned chat exists.

@@ -154,9 +154,20 @@ async def test_history_budget_and_missing_chain_block_without_call(store, dispat
     assert entry["approval"]["decision_source"] == "deterministic"
     assert entry["approval"]["assessed"] is False and entry["approval"]["reason"]
     assert entry["usage_provenance"] == "not_applicable"
+    # Admission now rejects the unusable prefix before another foreground call.
+    from fastapi import HTTPException
+    with pytest.raises(HTTPException) as early:
+        await prepare_chat_turn(store, "alice", rt.session, "do it")
+    assert early.value.headers['X-Decision-Failure'] == 'approval_context_checkpoint_required'
+    from src.approval_recovery import context_status, replace_context
+    status = context_status(store, 'alice', 'a')
+    renewed = replace_context(store, 'alice', 'a', {key:status[key] for key in
+        ('policy_revision','previous_submission_id','process_id')} | {
+        'statement':'Write only the local fixture. Never publish.', 'replace_prior_context':True,'private':False})
+    anchor_id = renewed['previous_submission_id']
     second = await prepare_chat_turn(store, "alice", rt.session, "do it")
     with store.transaction() as db:
-        db.query(d.ChatAutomationSubmission).filter_by(submission_id=first.submission_id).delete()
+        db.query(d.ChatAutomationSubmission).filter_by(submission_id=anchor_id).delete()
     _, stopped = await rt.dispatch(second)
     assert stopped["failure_kind"] == "approval_context_unavailable" and not rt.calls and not rt.effects
 

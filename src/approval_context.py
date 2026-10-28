@@ -73,9 +73,9 @@ def sensitive(value, _depth=0):
                 return True
         return False
     if isinstance(value, dict):
-        return any(sensitive(key + "=" + str(item), _depth + 1) if key.casefold() in {
-            "password", "api_key", "apikey", "access_token", "client_secret"} else sensitive(item, _depth + 1)
-            for key, item in value.items())
+        return any((False if item is None or type(item) is bool else sensitive(key + "=" + str(item), _depth + 1))
+                   if re.search(r'(?:password|api[_-]?key|access[_-]?token|client[_-]?secret)$', key, re.IGNORECASE)
+                   else sensitive(item, _depth + 1) for key, item in value.items())
     if isinstance(value, list):
         return any(sensitive(item, _depth + 1) for item in value)
     return False
@@ -281,7 +281,7 @@ def user_snapshot(bound, *, db=None):
     items.reverse()
     snapshot = {"version": CONTEXT_VERSION,
                 "coverage": "explicit_user_checkpoint_chain" if anchor is not None else "complete_volatile_private_chain" if private else "complete_server_submission_chain",
-                "user_evidence": _pack(items)}
+                "user_evidence": _pack(items), "private_evidence": private}
     if anchor is not None:
         snapshot['checkpoint'] = {'source': 'interactive_user_checkpoint', 'submission_id': anchor_id,
                                   'replaces_prior_review_context': True}

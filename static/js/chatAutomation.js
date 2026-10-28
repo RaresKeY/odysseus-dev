@@ -189,10 +189,12 @@ async function openSettings() {
     $('chat-decision-protocol').value=configuration.decision_provider?.protocol||'openai_json';
     for(const name of ['followup','preparation','completion-advice']) $( `chat-${name}-enabled`).checked=!!policy?.[name.replaceAll('-','_')+'_enabled'];
     settingsChatId=sid();settingsNavigation=navigationGeneration;
-    reviewContext=await api(`/api/session/${encodeURIComponent(settingsChatId)}/approval-context`);
+    const contextReply=settingsChatId ? await api(`/api/session/${encodeURIComponent(settingsChatId)}/approval-context`) : null;
     if(settingsChatId!==sid() || settingsNavigation!==navigationGeneration)throw new Error('The chat changed. Open settings again.');
-    $('chat-review-context-status').textContent=reviewContext.reason;
-    $('chat-review-context-private').checked=reviewContext.private;
+    reviewContext=contextReply;
+    $('chat-review-context-status').textContent=contextReply?.reason || 'Create or send a chat before replacing its review context.';
+    $('chat-review-context-private').checked=!!contextReply?.private;
+    $('chat-review-context-save').disabled=!contextReply;
     $('chat-review-context-statement').value='';$('chat-review-context-confirm').checked=false;
     message('');$('chat-automation-dialog').showModal();
   } catch(e){notice(e.message);}
@@ -297,7 +299,7 @@ async function initialize(){
       reviewContext=updated;$('chat-review-context-status').textContent=updated.reason;
       await refresh();if(id===sid() && navigation===navigationGeneration)message('Review context replaced. Send a new request to continue; your permission mode is unchanged.');
     } catch(error){if(id===sid() && navigation===navigationGeneration)message(error.message);}
-    finally{$('chat-review-context-save').disabled=false;}
+    finally{$('chat-review-context-save').disabled=!reviewContext;}
   });
   $('chat-automation-dialog').addEventListener('close',()=>{
     $('chat-review-context-statement').value='';$('chat-review-context-confirm').checked=false;reviewContext=null;

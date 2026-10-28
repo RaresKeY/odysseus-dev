@@ -184,3 +184,57 @@ async def test_sensitive_nested_action_cannot_be_redacted_into_approval(store, d
             request_authority=RequestAuthority('req','alice','a',workspace,(OperationGrant('write_file'),)),security_context=ToolRunSecurityContext())
     assert result['blocked'] and not rt.calls and not rt.effects
     assert 'actual-private-value' not in str(result)
+
+
+@pytest.mark.parametrize('key',['api_key','api-key','apikey','apiKey','access_token','access-token','accessToken','client-secret','clientSecret','smtp_password','oauth_access_token'])
+@pytest.mark.asyncio
+async def test_every_recognized_nested_credential_label_stops_actual_review_egress(store,dispatch_runtime,tmp_path,key):
+    from src import tool_execution
+    from src.agent_runtime.authority import RequestAuthority,OperationGrant
+    from src.tool_capabilities import ToolRunSecurityContext
+    from src.tool_types import ToolBlock
+    rt=dispatch_runtime;store.update_chat('alice','a',{'approval_mode':'auto_approve'},0)
+    bound=await prepare_chat_turn(store,'alice',rt.session,'Write documentation only.')
+    workspace=str(tmp_path/'workspace')
+    content=json.dumps({'path':'target.txt','content':json.dumps({key:'actual-private-value'})})
+    with bound.activate():
+        _,result=await tool_execution.execute_tool_block(ToolBlock('write_file',content),owner='alice',session_id='a',workspace=workspace,
+            request_authority=RequestAuthority('req','alice','a',workspace,(OperationGrant('write_file'),)),security_context=ToolRunSecurityContext())
+    assert result['blocked'] and not rt.calls and not rt.effects
+    assert 'actual-private-value' not in str(result)
+
+
+@pytest.mark.asyncio
+async def test_legacy_private_history_loss_prevents_nonprivate_followup_before_supersession(store,dispatch_runtime):
+    from src import approval_context as context
+    from fastapi import HTTPException
+    rt=dispatch_runtime;store.update_chat('alice','a',{'approval_mode':'auto_approve'},0)
+    first=await prepare_chat_turn(store,'alice',rt.session,'Never publish.',ephemeral_semantics=True)
+    with store.transaction() as db:
+        state=db.query(d.ChatAutomationState).filter_by(session_id='a').one()
+        state.feature_settings={key:value for key,value in state.feature_settings.items() if key!=PROCESS_KEY}
+    with context._PRIVATE_LOCK:context._PRIVATE.pop(store.session_factory,None)
+    with pytest.raises(HTTPException) as error:
+        await prepare_chat_turn(store,'alice',rt.session,'Continue.',ephemeral_semantics=False)
+    assert error.value.headers['X-Decision-Failure']=='approval_private_context_unavailable'
+    with store.transaction() as db:
+        assert db.get(d.ChatAutomationSubmission,first.submission_id).status=='bound'
+        assert db.query(d.ChatAutomationSubmission).filter_by(session_id='a').count()==1
+    assert not rt.calls and not rt.effects
+
+
+def test_typed_public_noncredential_values_are_not_secret_strings():
+    assert not sensitive({'api_key':None,'password':False})
+    assert sensitive({'apiKey':'example-real-secret'})
+
+
+@pytest.mark.asyncio
+@pytest.mark.parametrize('name',['Incognito',' Nobody ',' Incognito '])
+async def test_named_private_chat_forces_volatile_checkpoint_even_if_request_says_public(store,dispatch_runtime,name):
+    with store.transaction() as db:db.get(d.Session,'a').name=name
+    status=context_status(store,'alice','a');assert status['private']
+    updated=replace_context(store,'alice','a',replacement(status,'Private restated restrictions: never publish.',private=False))
+    with store.transaction() as db:
+        row=db.get(d.ChatAutomationSubmission,updated['previous_submission_id'])
+        assert row.current_ask is None and row.approval_evidence is None
+    assert updated['private']
