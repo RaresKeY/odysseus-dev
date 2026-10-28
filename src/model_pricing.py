@@ -170,12 +170,20 @@ def estimate_cost_usd(
     input_tokens: int | float | None,
     output_tokens: int | float | None,
     endpoint_url: str | None = None,
+    *,
+    cache_usage: dict | None = None,
 ) -> float | None:
     """Estimated USD cost for a turn, or None when it can't be priced.
 
     None cases: unknown model (never guess), local/subscription/unknown
-    endpoint, or no token counts.
+    endpoint, no token counts, or cache usage without cache-specific prices.
     """
+    from src.llm_usage import has_cache_usage
+
+    # The base-rate table has no provider-specific cache read/write prices.
+    # Preserve reported cost at call sites, but do not invent a cached bill.
+    if has_cache_usage(cache_usage):
+        return None
     if not model:
         return None
     if not is_cost_tracked_endpoint(endpoint_url):

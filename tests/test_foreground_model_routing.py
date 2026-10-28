@@ -2994,7 +2994,8 @@ def test_toolless_multi_round_agent_persists_round_route_provenance(monkeypatch)
     assert "tool_events" not in metrics
 
 
-def test_agent_metrics_attribute_usage_to_each_answering_route(monkeypatch):
+@pytest.mark.parametrize("cache_reads", [None, (80, 150)])
+def test_agent_metrics_attribute_usage_to_each_answering_route(monkeypatch, cache_reads):
     calls = 0
     primary = ("https://paid.example/v1", "selected-model", {})
     backup = ("http://localhost:11434/v1", "backup-model", {})
@@ -3013,7 +3014,10 @@ def test_agent_metrics_attribute_usage_to_each_answering_route(monkeypatch):
         calls += 1
         if calls == 1:
             yield 'data: {"type": "model_actual", "model": "selected-alias"}\n\n'
-            yield 'data: {"type": "usage", "data": {"model": "selected-alias", "input_tokens": 100, "output_tokens": 10}}\n\n'
+            usage = {"model": "selected-alias", "input_tokens": 100, "output_tokens": 10}
+            if cache_reads:
+                usage["cache_read_input_tokens"] = cache_reads[0]
+            yield f'data: {json.dumps({"type": "usage", "data": usage})}\n\n'
             tool_call = {
                 "name": "bash",
                 "arguments": json.dumps({"command": "printf one"}),
@@ -3022,7 +3026,10 @@ def test_agent_metrics_attribute_usage_to_each_answering_route(monkeypatch):
         else:
             yield 'data: {"type": "fallback", "selected_model": "selected-model", "answered_by": "backup-model", "candidate_index": 1, "selected_endpoint_id": "paid", "selected_endpoint_label": "Paid", "selected_endpoint_cost_tracked": true, "answered_by_endpoint_id": "local", "answered_by_endpoint_label": "Local", "answered_by_endpoint_cost_tracked": false}\n\n'
             yield 'data: {"type": "model_actual", "model": "backup-alias"}\n\n'
-            yield 'data: {"type": "usage", "data": {"model": "backup-alias", "input_tokens": 200, "output_tokens": 20}}\n\n'
+            usage = {"model": "backup-alias", "input_tokens": 200, "output_tokens": 20}
+            if cache_reads:
+                usage["cache_read_input_tokens"] = cache_reads[1]
+            yield f'data: {json.dumps({"type": "usage", "data": usage})}\n\n'
             yield 'data: {"delta": "done"}\n\n'
         yield "data: [DONE]\n\n"
 
@@ -3056,6 +3063,10 @@ def test_agent_metrics_attribute_usage_to_each_answering_route(monkeypatch):
     assert metrics["input_tokens"] == 300
     assert metrics["output_tokens"] == 30
     assert metrics["usage_source"] == "real"
+    if cache_reads:
+        assert metrics["cache_read_input_tokens"] == sum(cache_reads)
+    else:
+        assert "cache_read_input_tokens" not in metrics
     assert metrics["usage_buckets"] == [
         {
             "round": 1,
@@ -3066,6 +3077,7 @@ def test_agent_metrics_attribute_usage_to_each_answering_route(monkeypatch):
             "output_tokens": 10,
             "usage_source": "real",
             "endpoint_cost_tracked": True,
+            **({"cache_read_input_tokens": cache_reads[0]} if cache_reads else {}),
         },
         {
             "round": 2,
@@ -3076,6 +3088,7 @@ def test_agent_metrics_attribute_usage_to_each_answering_route(monkeypatch):
             "output_tokens": 20,
             "usage_source": "real",
             "endpoint_cost_tracked": False,
+            **({"cache_read_input_tokens": cache_reads[1]} if cache_reads else {}),
         },
     ]
 

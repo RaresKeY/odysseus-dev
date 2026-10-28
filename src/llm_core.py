@@ -16,6 +16,11 @@ from fastapi import HTTPException
 from typing import Optional, Dict, List, Tuple
 from src.model_context import get_context_length, DEFAULT_CONTEXT, is_local_endpoint
 from src.model_profiles import is_odysseus_merged_tools_model
+from src.llm_usage import (
+    normalize_usage_counts as _normalize_usage_counts,
+    normalize_anthropic_usage,
+    openai_cache_usage,
+)
 from urllib.parse import urlparse
 
 logger = logging.getLogger(__name__)
@@ -42,32 +47,6 @@ def _is_managed_stream_endpoint(url: str) -> bool:
 _LOCAL_MODEL_LOCKS: Dict[str, asyncio.Lock] = {}
 _LOCAL_MODEL_WAITING_FOREGROUND: Dict[str, int] = {}
 _LOCAL_MODEL_CURRENT: Dict[str, Dict[str, object]] = {}
-
-
-def _normalize_usage_counts(input_value=0, output_value=0):
-    """Return safe integer token counts, or ``None`` for malformed usage."""
-
-    def _count(value):
-        if isinstance(value, bool) or not isinstance(value, (int, float)):
-            return None
-        if isinstance(value, int):
-            count = value
-        else:
-            if not math.isfinite(value) or not value.is_integer():
-                return None
-            count = int(value)
-        if count < 0 or count > (2**63 - 1):
-            return None
-        return count
-
-    input_tokens = _count(input_value)
-    output_tokens = _count(output_value)
-    if input_tokens is None or output_tokens is None:
-        return None
-    return {
-        "input_tokens": input_tokens,
-        "output_tokens": output_tokens,
-    }
 
 
 def _normalize_http_status(value) -> Optional[int]:
@@ -1904,7 +1883,62 @@ def _build_anthropic_payload(model, messages, temperature, max_tokens, stream=Fa
             # The breakpoint caches all tool defs preceding it in the request.
             anthropic_tools[-1]["cache_control"] = {"type": "ephemeral"}
             payload["tools"] = anthropic_tools
+    if tools or any(message.get("role") == "assistant" for message in chat_messages):
+        _cache_anthropic_history(payload)
     return payload
+
+
+def _cache_anthropic_history(payload):
+    """Cache stable history and the current tail without mutating caller blocks."""
+    blocks = list(payload.get("system", [])) + list(payload.get("tools", []))
+    for message in payload["messages"]:
+        if isinstance(message.get("content"), list):
+            blocks.extend(message["content"])
+    breakpoints = sum(isinstance(block, dict) and "cache_control" in block for block in blocks)
+
+    def mark(message):
+        nonlocal breakpoints
+        # Respect the API's four-breakpoint limit and caller-supplied markers.
+        if breakpoints >= 4:
+            return True
+        content = message.get("content")
+        if isinstance(content, str):
+            if not content.strip():
+                return False
+            message["content"] = [{
+                "type": "text", "text": content,
+                "cache_control": {"type": "ephemeral"},
+            }]
+            breakpoints += 1
+            return True
+        if not isinstance(content, list):
+            return False
+        for index in range(len(content) - 1, -1, -1):
+            block = content[index]
+            if not isinstance(block, dict):
+                continue
+            if "cache_control" in block:
+                return True
+            if block.get("type") not in {"text", "image", "tool_use", "tool_result"}:
+                continue
+            if block.get("type") == "text" and not str(block.get("text") or "").strip():
+                continue
+            copied = list(content)
+            copied[index] = {**block, "cache_control": {"type": "ephemeral"}}
+            message["content"] = copied
+            breakpoints += 1
+            return True
+        return False
+
+    # Date/retrieval context is temporary and may move on the next chat turn.
+    # Retain a checkpoint before that tail as well as one for agent tool rounds.
+    for message in reversed(payload["messages"][:-1]):
+        if message.get("role") == "assistant" and mark(message):
+            break
+    for message in reversed(payload["messages"]):
+        if mark(message):
+            break
+
 
 def _build_anthropic_headers(headers):
     """Convert Bearer auth to x-api-key for Anthropic."""
@@ -3141,6 +3175,7 @@ async def _stream_llm_inner(url: str, model: str, messages: List[Dict], temperat
                             normalized_usage = _normalize_usage_counts(
                                 raw_input,
                                 raw_output,
+                                cache_usage=openai_cache_usage(usage),
                             )
                             if normalized_usage and (
                                 "input_tokens" in usage
@@ -3287,8 +3322,7 @@ async def _stream_llm_inner(url: str, model: str, messages: List[Dict], temperat
 
     # ── Anthropic streaming ──
     if provider == "anthropic":
-        _anth_input_tokens = 0
-        _anth_output_tokens = 0
+        _anth_usage = {}
         _anth_usage_seen = False
         _anth_actual_model = ""
         _anth_model_announced = False
@@ -3365,25 +3399,20 @@ async def _stream_llm_inner(url: str, model: str, messages: List[Dict], temperat
                             ) or {}
                             if not isinstance(_u, dict):
                                 _u = {}
-                            if "input_tokens" in _u:
-                                _anth_usage_seen = True
-                            _anth_input_tokens = _u.get("input_tokens", 0)
-                            # Surface prompt-cache effectiveness: cache_read > 0 means the
-                            # stable system+tools prefix was served from cache this round.
-                            _c_read = _u.get("cache_read_input_tokens", 0)
-                            _c_write = _u.get("cache_creation_input_tokens", 0)
-                            if _c_read or _c_write:
-                                logger.info(
-                                    "[anthropic-cache] read=%s write=%s fresh_input=%s",
-                                    _c_read, _c_write, _anth_input_tokens,
-                                )
+                            _anth_usage.update(_u)
+                            _anth_usage_seen = any(key in _anth_usage for key in (
+                                "input_tokens", "output_tokens",
+                                "cache_read_input_tokens", "cache_creation_input_tokens",
+                            ))
                         elif evt == "message_delta":
                             _u = j.get("usage") or {}
-                            if not isinstance(_u, dict):
-                                _u = {}
-                            if "output_tokens" in _u:
-                                _anth_usage_seen = True
-                            _anth_output_tokens = _u.get("output_tokens", 0)
+                            if isinstance(_u, dict):
+                                # Later usage replaces cumulative counters; never add snapshots.
+                                _anth_usage.update(_u)
+                                _anth_usage_seen = any(key in _anth_usage for key in (
+                                    "input_tokens", "output_tokens",
+                                    "cache_read_input_tokens", "cache_creation_input_tokens",
+                                ))
                         elif evt == "message_stop":
                             # Emit accumulated tool calls in OpenAI-compatible format
                             if _anth_tool_blocks:
@@ -3396,10 +3425,7 @@ async def _stream_llm_inner(url: str, model: str, messages: List[Dict], temperat
                                         "arguments": tb["arguments"],
                                     })
                                 yield f'data: {json.dumps({"type": "tool_calls", "calls": calls})}\n\n'
-                            normalized_usage = _normalize_usage_counts(
-                                _anth_input_tokens,
-                                _anth_output_tokens,
-                            )
+                            normalized_usage = normalize_anthropic_usage(_anth_usage)
                             if normalized_usage and _anth_usage_seen:
                                 _annotate_usage_model(
                                     normalized_usage,
@@ -3648,6 +3674,7 @@ async def _stream_llm_inner(url: str, model: str, messages: List[Dict], temperat
                                     _usage_data = _normalize_usage_counts(
                                         u.get("prompt_tokens", 0),
                                         u.get("completion_tokens", 0),
+                                        cache_usage=openai_cache_usage(u, j.get("timings")),
                                     )
                                     if _usage_data is None:
                                         continue
