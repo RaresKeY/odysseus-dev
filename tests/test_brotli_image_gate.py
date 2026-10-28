@@ -3,9 +3,11 @@
 import contextlib
 import ctypes
 import io
+import os
 from pathlib import Path
 import shutil
 import subprocess
+import sys
 import tempfile
 from types import SimpleNamespace
 import unittest
@@ -57,6 +59,95 @@ class PackageFloorTests(unittest.TestCase):
                 checker.platform, "freedesktop_os_release", return_value={"ID": "debian", "VERSION_ID": "13"}
             ), patch.object(checker, "command", return_value=record), self.assertRaises(ValueError):
                 checker.check_package()
+
+
+@unittest.skipUnless(shutil.which("sh") and shutil.which("dpkg"), "diagnostics require sh and dpkg")
+class DiagnosticTests(unittest.TestCase):
+    def run_checker(self, body="raise SystemExit(checker.main([]))", **overrides):
+        # Keep the real subprocess/CLI diagnostic boundary; only external command
+        # responses and distro identity are controlled by this offline fixture.
+        with tempfile.TemporaryDirectory() as tmp:
+            directory = Path(tmp)
+            query = directory / "dpkg-query"
+            query.write_text('''#!/bin/sh
+case "$1" in
+    -W) printf '%s' "$BROTLI_TEST_RECORD"
+        printf '%s' "$BROTLI_TEST_QUERY_STDERR" >&2
+        exit "$BROTLI_TEST_QUERY_EXIT" ;;
+    -L) printf '%s' '/usr/lib/example/libbrotlidec.so.1'
+        printf '%s' "$BROTLI_TEST_LIST_STDERR" >&2
+        exit "$BROTLI_TEST_LIST_EXIT" ;;
+esac
+exit 2
+''')
+            query.chmod(0o755)
+            ldd = directory / "ldd"
+            ldd.write_text('#!/bin/sh\nprintf "%s" "ldd: cannot inspect executable" >&2\nexit 1\n')
+            ldd.chmod(0o755)
+            env = dict(os.environ, PATH=tmp + os.pathsep + os.environ.get("PATH", os.defpath),
+                       BROTLI_TEST_RECORD="install ok installed\n1.1.0-2+deb13u1",
+                       BROTLI_TEST_QUERY_STDERR="", BROTLI_TEST_QUERY_EXIT="0",
+                       BROTLI_TEST_LIST_STDERR="", BROTLI_TEST_LIST_EXIT="0")
+            env.update(overrides)
+            program = (
+                "from pathlib import Path\n"
+                "import subprocess\n"
+                "from tests.helpers.cli_loader import load_script\n"
+                "checker = load_script('check_brotli.py')\n"
+                "checker.platform.freedesktop_os_release = lambda: {'ID': 'debian', 'VERSION_ID': '13'}\n"
+                + body
+            )
+            return subprocess.run([sys.executable, "-c", program], cwd=ROOT, env=env,
+                                  capture_output=True, text=True)
+
+    def test_failed_package_queries_preserve_stderr(self):
+        for overrides, diagnostic in [
+            ({"BROTLI_TEST_QUERY_EXIT": "1", "BROTLI_TEST_QUERY_STDERR":
+              "dpkg-query: no packages found matching libbrotli1"}, "no packages found"),
+            ({"BROTLI_TEST_LIST_EXIT": "2", "BROTLI_TEST_LIST_STDERR":
+              "dpkg-query: cannot read package file list"}, "cannot read package file list"),
+        ]:
+            with self.subTest(overrides=overrides):
+                result = self.run_checker(**overrides)
+                self.assertEqual(result.returncode, 1, result.stderr)
+                self.assertIn(diagnostic, result.stderr)
+                self.assertIn("Brotli acceptance failed:", result.stderr)
+
+    def test_ldd_failure_preserves_stderr(self):
+        result = self.run_checker(body=(
+            "try:\n"
+            "    checker.check_node(Path('/usr/bin/node'), Path('/usr/lib/example/libbrotlidec.so.1'))\n"
+            "except subprocess.CalledProcessError:\n"
+            "    raise SystemExit(1)\n"
+        ))
+        self.assertEqual(result.returncode, 1)
+        self.assertIn("ldd: cannot inspect executable", result.stderr)
+
+    def test_package_query_warning_does_not_corrupt_record(self):
+        result = self.run_checker(body="print(checker.check_package()[0])",
+                                  BROTLI_TEST_QUERY_STDERR="dpkg-query: warning: package metadata warning\n")
+        self.assertEqual(result.returncode, 0, result.stderr)
+        self.assertEqual(result.stdout.strip(), "1.1.0-2+deb13u1")
+        self.assertIn("package metadata warning", result.stderr)
+
+    def test_invalid_package_status_has_its_own_diagnostic(self):
+        for status in ("deinstall ok config-files", "install ok unpacked", "install reinstreq half-installed"):
+            with self.subTest(status=status):
+                result = self.run_checker(BROTLI_TEST_RECORD=status + "\n1.1.0-2+deb13u1")
+                self.assertEqual(result.returncode, 1, result.stderr)
+                self.assertIn("libbrotli1 is not fully installed", result.stderr)
+                self.assertIn(status, result.stderr)
+                self.assertNotIn("fixed floor", result.stderr)
+
+    def test_malformed_package_records_have_actionable_diagnostic(self):
+        for record in ("", "install ok installed", "install ok installed\n", "\n1.1.0-2+deb13u1",
+                       "install ok installed\n1.1.0-2+deb13u1\nextra"):
+            with self.subTest(record=record):
+                result = self.run_checker(BROTLI_TEST_RECORD=record)
+                self.assertEqual(result.returncode, 1, result.stderr)
+                self.assertIn("invalid libbrotli1 package record: expected status and version", result.stderr)
+                self.assertNotIn("unpack", result.stderr)
+                self.assertNotIn("fixed floor", result.stderr)
 
 
 def decoder(marker=b"_ERROR_FORMAT_BLOCK_SWITCH", result=1, decoded=b"hello world"):

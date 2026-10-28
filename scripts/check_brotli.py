@@ -20,7 +20,7 @@ DECODER_SONAME = "libbrotlidec.so.1"
 
 
 def command(*args):
-    return subprocess.check_output(args, text=True, stderr=subprocess.STDOUT).strip()
+    return subprocess.check_output(args, text=True).strip()
 
 
 def check_package():
@@ -28,10 +28,15 @@ def check_package():
     floor = DEBIAN_FIXED.get(release.get("VERSION_ID"))
     if release.get("ID") != "debian" or floor is None:
         raise ValueError("Brotli package floor is not defined for this distribution")
-    status, version = command(
+    record = command(
         "dpkg-query", "-W", "-f=${Status}\n${Version}", "libbrotli1"
     ).splitlines()
-    if status != "install ok installed" or subprocess.run(
+    if len(record) != 2 or any(not value.strip() for value in record):
+        raise ValueError("invalid libbrotli1 package record: expected status and version")
+    status, version = record
+    if status != "install ok installed":
+        raise ValueError(f"libbrotli1 is not fully installed (status: {status})")
+    if subprocess.run(
         ["dpkg", "--compare-versions", version, "ge", floor], check=False
     ).returncode != 0:
         raise ValueError(f"libbrotli1 {version} does not meet Debian's fixed floor {floor}")
