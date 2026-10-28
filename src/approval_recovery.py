@@ -98,7 +98,8 @@ def context_status(store, owner, session_id):
                 result['private'] = True
         except DecisionError as error:
             result.update(available=False, code=error.code)
-            if error.code in {'approval_private_context_unavailable', 'approval_private_process_changed'}:
+            # Unknown/corrupt context cannot justify a saved-content default.
+            if error.code in {'approval_context_unavailable', 'approval_private_context_unavailable', 'approval_private_process_changed'}:
                 result['private'] = True
     if result['private'] and not runtime['supported']:
         result.update(available=False, code=runtime['code'])

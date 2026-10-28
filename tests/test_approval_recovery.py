@@ -270,3 +270,18 @@ async def test_explicit_normal_checkpoint_excludes_older_private_prefix_from_pri
     with store.transaction() as db:
         row=db.get(d.ChatAutomationSubmission,renewed['previous_submission_id'])
         assert row.current_ask=='New public task: write local documentation only.'
+
+
+@pytest.mark.asyncio
+async def test_invalid_checkpoint_cutoff_cannot_default_unknown_private_history_to_saved(store,dispatch_runtime):
+    from src import approval_context as context
+    rt=dispatch_runtime
+    await prepare_chat_turn(store,'alice',rt.session,'Private restrictions.',ephemeral_semantics=True)
+    await prepare_chat_turn(store,'alice',rt.session,'Later ordinary ask.')
+    with store.transaction() as db:
+        state=db.query(d.ChatAutomationState).filter_by(session_id='a').one()
+        state.feature_settings={CHECKPOINT_KEY:{'created_at':1e30}}
+    with context._PRIVATE_LOCK:context._PRIVATE.pop(store.session_factory,None)
+    status=context_status(store,'alice','a')
+    assert status['private'] is True and status['available'] is False
+    assert status['code']=='approval_context_unavailable'
