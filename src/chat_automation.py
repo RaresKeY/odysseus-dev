@@ -8,6 +8,7 @@ from __future__ import annotations
 import copy
 import hashlib
 import json
+import math
 import time
 import uuid
 from contextlib import contextmanager
@@ -311,6 +312,15 @@ class AutomationStore:
             previous = db.query(d.ChatAutomationSubmission).filter_by(
                 session_id=sid, owner_key=owner_key(owner)).order_by(
                     d.ChatAutomationSubmission.created_at.desc(), d.ChatAutomationSubmission.submission_id.desc()).first()
+            # Owner-serialized logical admission order must survive wall-clock
+            # rollback/ties. This metadata is not an execution authority grant.
+            admitted_at = self.clock()
+            if not math.isfinite(admitted_at) or (previous and not math.isfinite(previous.created_at)):
+                raise HTTPException(409, "Submission ordering is unavailable")
+            if previous is not None:
+                admitted_at = max(admitted_at, math.nextafter(previous.created_at, math.inf))
+            if not math.isfinite(admitted_at):
+                raise HTTPException(409, "Submission ordering is unavailable")
             reply_card = None
             if input_card_id is not None:
                 if not isinstance(input_card_id, str) or not 1 <= len(input_card_id) <= 128:
@@ -348,7 +358,7 @@ class AutomationStore:
             policy["original_intent_digest"] = digest(raw_ask)
             db.add(d.ChatAutomationSubmission(submission_id=identifier, owner_key=owner_key(owner),
                 session_id=sid, policy_revision=s.policy_revision, authority_epoch=p.authority_epoch,
-                intent_digest=digest(raw_ask), descriptor={}, status="preparing", created_at=self.clock(),
+                intent_digest=digest(raw_ask), descriptor={}, status="preparing", created_at=admitted_at,
                 current_ask=None if ephemeral_semantics else raw_ask,
                 task_lineage_id=previous.task_lineage_id if reply_card is not None else identifier,
                 original_submission_id=previous.original_submission_id if reply_card is not None else identifier,

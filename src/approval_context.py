@@ -209,8 +209,8 @@ def user_snapshot(bound):
             items.append({"source": "current_private_submission" if row.current_ask is None else "authenticated_submission",
                           "id": row.submission_id, "text": text, "action_decisions": events})
             identifier = row.previous_submission_id
-    if private and len(seen) != len(rows):
-        raise DecisionError("approval_private_context_unavailable")
+    if len(seen) != len(rows):
+        raise DecisionError("approval_private_context_unavailable" if private else "approval_context_unavailable")
     items.reverse()
     snapshot = {"version": CONTEXT_VERSION,
                 "coverage": "complete_volatile_private_chain" if private else "complete_server_submission_chain",

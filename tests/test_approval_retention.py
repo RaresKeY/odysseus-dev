@@ -147,3 +147,41 @@ async def test_active_private_followup_refreshes_idle_ttl_without_reviving_missi
     third = await prepare_chat_turn(store, 'alice', rt.session, 'Continue.', ephemeral_semantics=True)
     with pytest.raises(DecisionError, match='approval_private_context_unavailable'):
         user_snapshot(third)
+
+
+@pytest.mark.asyncio
+async def test_real_admission_keeps_restrictions_across_clock_rollback_and_ties(store, dispatch_runtime):
+    from core import database as d
+    rt = dispatch_runtime
+    store.clock = lambda: 1000
+    first = await prepare_chat_turn(store, 'alice', rt.session, 'Write local fixture files.')
+    store.clock = lambda: 999
+    restriction = await prepare_chat_turn(store, 'alice', rt.session, 'Never delete any fixture files.')
+    store.clock = lambda: 999.5
+    third = await prepare_chat_turn(store, 'alice', rt.session, 'Continue the task.')
+    snapshot = json.loads(user_snapshot(third))
+    assert [item['text'] for item in snapshot['user_evidence']] == [first.raw_ask, restriction.raw_ask, third.raw_ask]
+    with store.transaction() as db:
+        times = [db.get(d.ChatAutomationSubmission, bound.submission_id).created_at for bound in (first, restriction, third)]
+    assert times[0] < times[1] < times[2]
+    # Approval receives every exact statement through the canonical dispatcher.
+    store.update_chat('alice', 'a', {'approval_mode':'auto_approve'},0)
+    fourth = await prepare_chat_turn(store, 'alice', rt.session, 'Write only the local fixture.')
+    _, result = await rt.dispatch(fourth)
+    assert result['exit_code'] == 0 and len(rt.calls) == len(rt.effects) == 1
+    assert 'Never delete any fixture files.' in rt.calls[0].content.decode()
+
+
+@pytest.mark.asyncio
+async def test_premature_normal_chain_end_never_claims_complete_or_sends_review(store, dispatch_runtime):
+    from core import database as d
+    rt = dispatch_runtime
+    first = await prepare_chat_turn(store, 'alice', rt.session, 'Never publish my files.')
+    store.update_chat('alice', 'a', {'approval_mode':'auto_approve'},0)
+    second = await prepare_chat_turn(store, 'alice', rt.session, 'Continue.')
+    with store.transaction() as db:
+        db.get(d.ChatAutomationSubmission, second.submission_id).previous_submission_id = None
+    with pytest.raises(DecisionError, match='approval_context_unavailable'): user_snapshot(second)
+    _, stopped = await rt.dispatch(second)
+    assert stopped['failure_kind'] == 'approval_context_unavailable'
+    assert not rt.calls and not rt.effects
