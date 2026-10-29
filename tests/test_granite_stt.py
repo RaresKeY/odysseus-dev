@@ -307,11 +307,14 @@ def test_granite_media_rejects_forced_language(tmp_path, monkeypatch):
 
 
 def test_granite_model_is_advertised_by_tool_schema():
+    from src.tool_index import BUILTIN_TOOL_DESCRIPTIONS
     from src.tool_schemas import FUNCTION_TOOL_SCHEMAS
 
     function = next(item["function"] for item in FUNCTION_TOOL_SCHEMAS if item["function"]["name"] == "transcribe_media")
     assert GRANITE_STT_MODEL in function["parameters"]["properties"]["model"]["enum"]
     assert "without timestamps" in function["description"]
+    assert "Granite TurboCTC" in BUILTIN_TOOL_DESCRIPTIONS["transcribe_media"]
+    assert "plain text without timestamps" in BUILTIN_TOOL_DESCRIPTIONS["transcribe_media"]
 
 
 @pytest.mark.skipif(not os.environ.get("ODYSSEUS_GRANITE_SMOKE_AUDIO"), reason="opt-in real model download")
