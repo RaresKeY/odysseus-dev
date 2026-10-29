@@ -1,5 +1,6 @@
 """Pinned native GGUF preparation rules."""
 
+import ast
 import hashlib
 import json
 from pathlib import Path
@@ -20,8 +21,10 @@ def checkout(tmp_path, monkeypatch):
     scripts.mkdir(parents=True)
     converter = scripts / "convert-granite5_ctc.py"
     converter.write_text(
-        'languages=["en"],\n'
-        '"English encoder-CTC ASR. 16-block Granite Conformer encoder with "\n',
+        'def converter_stub():\n'
+        '    value = dict(languages=["en"],)\n'
+        '    description = ("English encoder-CTC ASR. 16-block Granite Conformer encoder with ")\n'
+        '    preproc = json.loads((model_dir / "preprocessor_config.json").read_text())\n',
     )
     monkeypatch.setattr(prepare, "_git", lambda root, *args: (
         TRANSCRIBE_CPP_REVISION if args == ("rev-parse", "HEAD")
@@ -39,8 +42,10 @@ def test_preparation_pins_revision_and_changes_multilingual_metadata(checkout, t
         assert args[args.index("--revision") + 1] == GRANITE_STT_REVISION
         overlay = Path(args[1])
         contents = overlay.read_text()
+        ast.parse(contents)
         assert "languages=['en', 'fr', 'de', 'es', 'pt', 'it', 'ja']" in contents
         assert "Multilingual encoder-CTC ASR" in contents
+        assert 'preproc = json.loads(preprocessor_path.read_text()) if preprocessor_path.is_file() else {}' in contents
         assert 'languages=["en"]' not in contents
         converted["overlay"] = overlay
         out = Path(args[args.index("--outdir") + 1])

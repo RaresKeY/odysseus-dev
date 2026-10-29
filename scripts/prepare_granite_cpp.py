@@ -4,6 +4,7 @@
 from __future__ import annotations
 
 import argparse
+import ast
 import hashlib
 import json
 from pathlib import Path
@@ -18,6 +19,7 @@ from src.constants import GRANITE_STT_LANGUAGES, GRANITE_STT_MODEL_ID, GRANITE_S
 CONVERTER_BLOB = "f3578f672bf8a8f5015b5de3ab3a6f910a4c3ed7"
 _ORIGINAL_LANGUAGES = 'languages=["en"],'
 _ORIGINAL_DESCRIPTION = '"English encoder-CTC ASR. 16-block Granite Conformer encoder with "'
+_ORIGINAL_PREPROCESSOR = '    preproc = json.loads((model_dir / "preprocessor_config.json").read_text())'
 _MANIFEST_SUFFIX = ".provenance.json"
 
 
@@ -42,12 +44,20 @@ def prepare(checkout: Path, outdir: Path) -> Path:
     outdir.mkdir(parents=True, exist_ok=True)
 
     source = converter.read_text(encoding="utf-8")
-    if source.count(_ORIGINAL_LANGUAGES) != 1 or source.count(_ORIGINAL_DESCRIPTION) != 1:
+    if any(source.count(marker) != 1 for marker in (
+        _ORIGINAL_LANGUAGES, _ORIGINAL_DESCRIPTION, _ORIGINAL_PREPROCESSOR,
+    )):
         raise ValueError("The reviewed converter's multilingual metadata markers changed")
     language_list = repr(list(GRANITE_STT_LANGUAGES))
     source = source.replace(_ORIGINAL_LANGUAGES, f"languages={language_list},")
     source = source.replace(_ORIGINAL_DESCRIPTION, '"Multilingual encoder-CTC ASR. 16-block Granite Conformer encoder with "')
+    source = source.replace(
+        _ORIGINAL_PREPROCESSOR,
+        '    preprocessor_path = model_dir / "preprocessor_config.json"\n'
+        '    preproc = json.loads(preprocessor_path.read_text()) if preprocessor_path.is_file() else {}',
+    )
 
+    ast.parse(source)
     with tempfile.NamedTemporaryFile(
         mode="w", suffix=".py", prefix="odysseus_granite_", dir=converter.parent,
         encoding="utf-8", delete=False,
