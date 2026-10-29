@@ -1224,7 +1224,11 @@ async def build_chat_context(
     # Build messages. In Nobody/incognito mode, never read saved session
     # history: the session id may be a temporary wrapper or, in buggy clients, a
     # stale normal session id. Only the ephemeral incognito transcript is safe.
-    messages = preface + (_incognito_messages(session_id) if incognito else sess.get_context_messages())
+    history = _incognito_messages(session_id) if incognito else sess.get_context_messages()
+    messages = [item for item in preface if item.get("role") == "system"] + list(history)
+    transient_context = [item for item in preface if item.get("role") != "system"]
+    context_index = len(messages) - 1 if messages and messages[-1].get("role") == "user" else len(messages)
+    messages[context_index:context_index] = transient_context
 
     # Current date/time — injected as a standalone *user*-role context message
     # placed immediately before the latest user turn, NOT folded into the

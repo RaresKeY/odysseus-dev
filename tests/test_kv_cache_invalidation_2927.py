@@ -461,3 +461,60 @@ def test_payload_omits_session_id_when_not_provided(monkeypatch):
     assert len(captured) == 1
     assert "session_id" not in captured[0]
     assert "cache_prompt" not in captured[0]
+
+
+@pytest.mark.asyncio
+async def test_retrieved_context_follows_stable_history_without_losing_taint(monkeypatch):
+    chat_helpers = _install_chat_helpers_stubs(monkeypatch)
+    import src.user_time as user_time
+    user_time.clear_user_time_context()
+    history = [
+        {"role": "user", "content": "Earlier question"},
+        {"role": "assistant", "content": "Earlier answer"},
+    ]
+    sess, request, chat_handler, processor = _build_context_harness(monkeypatch, chat_helpers, history)
+    transient = {"role": "user", "content": "retrieved A", "metadata": {"trusted": False, "tool_gate_untrusted": True}}
+    processor.build_context_preface = lambda **kwargs: (
+        [{"role": "system", "content": "stable policy"}, dict(transient)], [], [],
+    )
+    monkeypatch.setattr(user_time, "current_datetime_context_message", lambda: {"role": "user", "content": "clock A"})
+    first = await chat_helpers.build_chat_context(
+        sess=sess, request=request, chat_handler=chat_handler, chat_processor=processor,
+        message="First new turn", session_id="cache-context",
+    )
+    sess.messages.append({"role": "assistant", "content": "First new answer"})
+    transient["content"] = "retrieved B"
+    monkeypatch.setattr(user_time, "current_datetime_context_message", lambda: {"role": "user", "content": "clock B"})
+    second = await chat_helpers.build_chat_context(
+        sess=sess, request=request, chat_handler=chat_handler, chat_processor=processor,
+        message="Second new turn", session_id="cache-context",
+    )
+    assert first.messages[:3] == second.messages[:3] == [
+        {"role": "system", "content": "stable policy"}, *history,
+    ]
+    assert [m["content"] for m in first.messages[-3:]] == ["retrieved A", "clock A", "First new turn"]
+    assert [m["content"] for m in second.messages[-3:]] == ["retrieved B", "clock B", "Second new turn"]
+    assert first.messages[-3]["metadata"] == second.messages[-3]["metadata"] == {"trusted": False, "tool_gate_untrusted": True}
+    assert all("retrieved" not in str(m.get("content")) for m in sess.messages)
+
+
+@pytest.mark.asyncio
+async def test_cache_friendly_context_keeps_incognito_history_ephemeral(monkeypatch):
+    chat_helpers = _install_chat_helpers_stubs(monkeypatch)
+    sess, request, chat_handler, processor = _build_context_harness(monkeypatch, chat_helpers, [])
+    def forbid_persisted_history():
+        raise AssertionError("incognito must not read saved history")
+    sess.get_context_messages = forbid_persisted_history
+    ephemeral = [{"role": "assistant", "content": "ephemeral history"}, {"role": "user", "content": "new turn"}]
+    monkeypatch.setattr(chat_helpers, "_incognito_messages", lambda session_id: ephemeral)
+    processor.build_context_preface = lambda **kwargs: (
+        [{"role": "system", "content": "policy"}, {"role": "user", "content": "fresh context", "metadata": {"trusted": False}}], [], [],
+    )
+    ctx = await chat_helpers.build_chat_context(
+        sess=sess, request=request, chat_handler=chat_handler, chat_processor=processor,
+        message="new turn", session_id="ephemeral", incognito=True,
+    )
+    assert ctx.messages[1] == ephemeral[0]
+    assert ctx.messages[2]["content"] == "fresh context"
+    assert ctx.messages[2]["metadata"] == {"trusted": False}
+    assert ephemeral == [{"role": "assistant", "content": "ephemeral history"}, {"role": "user", "content": "new turn"}]

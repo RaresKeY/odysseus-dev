@@ -29,6 +29,7 @@ from pathlib import Path
 from typing import Any, AsyncGenerator, Dict, Iterable, List, Mapping, Optional, Sequence, Set
 from urllib.parse import parse_qs, parse_qsl, quote, unquote, urlencode, urlparse
 
+from src.llm_usage import aggregate_cache_usage
 from src.llm_core import (
     dedupe_model_candidates,
     stream_llm,
@@ -16196,6 +16197,7 @@ def _compute_final_metrics(
     backend_prefill_tps: float = 0,
     real_cost_usd: float = 0.0,
     endpoint_url: Optional[str] = None,
+    usage_buckets: Optional[list] = None,
 ) -> dict:
     """Compute token counts, TPS, and build the final metrics dict."""
     if has_real_usage:
@@ -16247,6 +16249,8 @@ def _compute_final_metrics(
         "usage_source": "real" if has_real_usage else "estimated",
         "model": model,
     }
+    if has_real_usage:
+        metrics.update(aggregate_cache_usage(usage_buckets or []))
     if backend_prefill_tps and backend_prefill_tps > 0:
         metrics["prefill_tps"] = round(backend_prefill_tps, 2)
     if prep_timings:
@@ -16269,7 +16273,8 @@ def _compute_final_metrics(
             from src.model_pricing import estimate_cost_usd
 
             _est = estimate_cost_usd(
-                model, input_tokens, output_tokens, endpoint_url
+                model, input_tokens, output_tokens, endpoint_url,
+                cache_usage={**metrics, "usage_buckets": usage_buckets or []},
             )
         except Exception:
             _est = None
@@ -16294,6 +16299,7 @@ def _usage_bucket(
     input_tokens: int,
     output_tokens: int,
     usage_source: str,
+    cache_usage: Optional[dict] = None,
 ) -> dict:
     """Build non-secret usage attribution for one concrete Agent round."""
 
@@ -16306,6 +16312,12 @@ def _usage_bucket(
         "output_tokens": max(int(output_tokens or 0), 0),
         "usage_source": "real" if usage_source == "real" else "estimated",
     }
+    if usage_source == "real":
+        normalized = _normalize_usage_counts(
+            bucket["input_tokens"], bucket["output_tokens"], cache_usage=cache_usage,
+        )
+        if normalized is not None:
+            bucket.update(normalized)
     # Persist the owner-resolved route classification so saved usage remains
     # stable even if the session later selects a different endpoint.
     if isinstance(endpoint_cost_tracked, bool):
@@ -16328,6 +16340,7 @@ def _usage_bucket_summary(usage_buckets: list) -> dict:
         "total_tokens": input_tokens + output_tokens,
         "usage_source": usage_source,
         "usage_buckets": [dict(bucket) for bucket in usage_buckets],
+        **aggregate_cache_usage(usage_buckets),
     }
 
 
@@ -22079,6 +22092,7 @@ async def stream_agent_loop(
         real_output_tokens = 0
         real_cost_usd = 0.0
         direct_has_real_usage = False
+        direct_cache_usages = []
         # The merged tools model has a clean native stream; do not hold its
         # visible answer until the full completion has finished.
         direct_defer_visible = (
@@ -22140,6 +22154,7 @@ async def stream_agent_loop(
                     else max(len(direct_response + direct_reasoning) // 4, 0)
                 ),
                 usage_source="real" if direct_has_real_usage else "estimated",
+                cache_usage=aggregate_cache_usage(direct_cache_usages),
             )
             failure_note = f"[Agent stopped: {failure_message}]"
             terminal_round = (
@@ -22210,6 +22225,7 @@ async def stream_agent_loop(
                         normalized_usage = _normalize_usage_counts(
                             usage.get("input_tokens", 0),
                             usage.get("output_tokens", 0),
+                            cache_usage=usage,
                         )
                         if normalized_usage is None:
                             logger.warning("[agent] ignoring malformed direct usage event")
@@ -22217,6 +22233,7 @@ async def stream_agent_loop(
                         real_input_tokens += normalized_usage["input_tokens"]
                         real_output_tokens += normalized_usage["output_tokens"]
                         direct_has_real_usage = True
+                        direct_cache_usages.append(normalized_usage)
                         try:
                             real_cost_usd += float(usage.get("cost_usd") or 0.0)
                         except (TypeError, ValueError):
@@ -22354,6 +22371,7 @@ async def stream_agent_loop(
                 else max(len(direct_response) // 4, 1)
             ),
             usage_source="real" if direct_has_real_usage else "estimated",
+            cache_usage=aggregate_cache_usage(direct_cache_usages),
         )
         metrics = {
             "model": direct_actual_model,
@@ -22386,6 +22404,7 @@ async def stream_agent_loop(
                     metrics.get("input_tokens"),
                     metrics.get("output_tokens"),
                     endpoint_url,
+                    cache_usage=metrics,
                 )
             except Exception:
                 _direct_est = None
@@ -26313,6 +26332,7 @@ async def stream_agent_loop(
         _round_real_input_tokens = 0
         _round_real_output_tokens = 0
         _round_has_real_usage = False
+        _round_cache_usages = []
         _round_usage_finalized = False
         # Some API models (notably DeepSeek) stream DSML/XML tool calls as
         # ordinary text instead of emitting structured tool-call events. Keep
@@ -26354,6 +26374,7 @@ async def stream_agent_loop(
                 input_tokens=round_input_tokens,
                 output_tokens=round_output_tokens,
                 usage_source=usage_source,
+                cache_usage=aggregate_cache_usage(_round_cache_usages),
             ))
         if (
             round_num == 1
@@ -27306,6 +27327,7 @@ async def stream_agent_loop(
                         normalized_usage = _normalize_usage_counts(
                             u.get("input_tokens", 0),
                             u.get("output_tokens", 0),
+                            cache_usage=u,
                         )
                         if normalized_usage is None:
                             logger.warning(
@@ -27322,6 +27344,7 @@ async def stream_agent_loop(
                         last_round_input_tokens = round_input
                         has_real_usage = True
                         _round_has_real_usage = True
+                        _round_cache_usages.append(normalized_usage)
                         # Backend-reported TRUE generation speed (llama.cpp
                         # timings.predicted_per_second) — pure decode, excludes
                         # prefill/network. Preferred over tokens/wall-clock, which
@@ -27817,6 +27840,7 @@ async def stream_agent_loop(
                 tool_events, round_texts, model=model,
                 round_models=round_models, round_endpoint_ids=round_endpoint_ids,
                 round_endpoint_labels=round_endpoint_labels,
+                usage_buckets=usage_buckets,
             )
             _required_metrics.update({
                 "requested_model": requested_model,
@@ -37959,6 +37983,7 @@ async def stream_agent_loop(
         backend_prefill_tps=backend_prefill_tps,
         real_cost_usd=real_cost_usd,
         endpoint_url=endpoint_url,
+        usage_buckets=usage_buckets,
     )
     metrics["requested_model"] = requested_model
     metrics["endpoint_id"] = actual_endpoint_id
