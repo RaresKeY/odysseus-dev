@@ -170,9 +170,14 @@ The source tree reads **147** `ODYSSEUS_*` variables: 90 an operator may want to
 
 | Variable | Default | Read in | What it does |
 |---|---|---|---|
+| `ODYSSEUS_GRANITE_ENGINE` | `'transformers'` | `services/stt/granite.py` | Select the Granite speech engine: transformers (default) or transcribe.cpp. |
+| `ODYSSEUS_GRANITE_GGUF` | `''` | `services/stt/transcribe_cpp.py` | Absolute path to prepared multilingual Granite GGUF weights for transcribe.cpp. |
 | `ODYSSEUS_GROUNDING_MODEL` | `'google/owlvit-base-patch32'` | `routes/gallery/gallery_routes.py` | Object-grounding model id the gallery loads for text-driven selection. |
 | `ODYSSEUS_SAM_MODEL` | `'facebook/sam-vit-base'` | `routes/gallery/gallery_routes.py` | Segmentation model id the gallery loads for subject selection. |
 | `ODYSSEUS_STT_MODEL` | *unset* | `src/agent_tools/media_tools.py` | Default speech-to-text model for media transcription when the tool call does not name one. |
+| `ODYSSEUS_TRANSCRIBE_CPP_BACKEND` | `'auto'` | `services/stt/transcribe_cpp.py` | Native inference backend: auto, CPU, CUDA, Metal, Vulkan or ROCm. |
+| `ODYSSEUS_TRANSCRIBE_CPP_BIN` | *unset* | `services/stt/transcribe_cpp.py` | Path or command for the optional transcribe.cpp CLI. |
+| `ODYSSEUS_TRANSCRIBE_CPP_THREADS` | `'2'` | `services/stt/transcribe_cpp.py` | Native transcribe.cpp CPU thread count. |
 | `ODYSSEUS_TTS_CACHE_MAX_BYTES` | `500 * 1024 * 1024` | `services/tts/tts_service.py` | Cap on the synthesized-speech cache. A non-numeric value falls back to the default. |
 
 ### Auth and internal API
@@ -254,7 +259,9 @@ Listed for completeness. Setting one of these on a real install is either a no-o
 | `ODYSSEUS_EDITOR_RICH_FIXTURE` | *unset* | `tests/tools/editor_writing_smoke.py` | Set to 1 to run the editor-writing smoke tool against a rich-text document fixture instead of Markdown. |
 | `ODYSSEUS_EDITOR_TEST_ENDPOINT` | *unset* | `tests/tools/editor_writing_smoke.py` (+1 more) | Chat-completions URL the opt-in editor-writing and organizer smoke tools drive. Both tools require it. |
 | `ODYSSEUS_EDITOR_TRACE` | *unset* | `tests/tools/editor_writing_smoke.py` | Any non-empty value prints every stream event after each editor-writing smoke action. |
+| `ODYSSEUS_GRANITE_SMOKE_AUDIO` | *unset* | `tests/test_granite_stt.py` | Opt-in speech fixture for the Transformers CPU smoke test. |
 | `ODYSSEUS_LLAMA_SERVER` | `'llama-server'` | `scripts/odysseus_related_flow_audit.py` | Binary name or path to llama-server used by the related-flow audit script. |
+| `ODYSSEUS_NATIVE_GRANITE_SMOKE_AUDIO` | *unset* | `tests/test_transcribe_cpp_stt.py` | Opt-in speech fixture for the native transcribe.cpp smoke test. |
 | `ODYSSEUS_ORGANIZER_AUTO_CHOICE` | *unset* | `tests/tools/organizer_smoke.py` | With organizer tracing on, any non-empty value replaces forced tool choice with auto on traced requests. |
 | `ODYSSEUS_ORGANIZER_CASES` | *unset* | `tests/tools/organizer_smoke.py` | Comma-separated organizer smoke case names to run. Unset runs every case. |
 | `ODYSSEUS_ORGANIZER_TRACE` | *unset* | `tests/tools/organizer_smoke.py` | Any non-empty value prints each provider request the organizer smoke tool sends. |
