@@ -146,7 +146,7 @@ def run_terminal_branch(monkeypatch, native_calls, result, operation=None, *, ma
         requested_model="fixture-model", round_texts=[], round_models=[],
         round_endpoint_ids=[], round_endpoint_labels=[], _last_route_request_messages=[],
         _last_route_context_length=4096, real_input_tokens=20, real_output_tokens=5,
-        has_real_usage=True, time_to_first_token=0.1, _t0=time.time(),
+        has_real_usage=True, usage_buckets=[], time_to_first_token=0.1, _t0=time.time(),
         json=json, time=time,
     )
     wrapper = ast.parse("async def run():\n    yield 'unexpected synthesis'\n").body[0]

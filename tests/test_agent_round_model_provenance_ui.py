@@ -249,3 +249,59 @@ def test_live_and_resumed_terminal_events_apply_usage_metrics_before_reload():
 def test_usage_command_does_not_hide_existing_fallback_cost_for_local_selection():
     assert "const cost = chatRenderer.getSessionCost" in _SLASH_SOURCE
     assert "const cost = costTracked && chatRenderer.getSessionCost" not in _SLASH_SOURCE
+
+
+@pytest.mark.skipif(not _HAS_NODE, reason="node binary not on PATH")
+@pytest.mark.parametrize("extra, expected_cost", [
+    ({"cache_read_input_tokens": 80}, None),
+    ({"cache_creation_input_tokens": 10}, None),
+    ({"usage_buckets": [
+        {"input_tokens": 100, "output_tokens": 5, "cache_read_input_tokens": 80},
+        {"input_tokens": 100, "output_tokens": 5},
+    ]}, None),
+    ({"usage_buckets": [
+        {"input_tokens": 100, "output_tokens": 5, "cache_creation_input_tokens": 10},
+    ]}, None),
+    ({}, 0.105),
+    ({"cache_read_input_tokens": 0}, 0.105),
+    ({"cache_read_input_tokens": True}, 0.105),
+    ({"cache_read_input_tokens": -1}, 0.105),
+    ({"cache_read_input_tokens": 1.5}, 0.105),
+    ({"cache_read_input_tokens": "80"}, 0.105),
+    ({"cache_read_input_tokens": 2**63}, 0.105),
+    ({"cache_read_input_tokens": 80, "cost_source": "reported", "cost_usd": 0.0123}, 0.0123),
+    ({"cache_read_input_tokens": 80, "cost_source": "reported", "cost_usd": 0}, 0),
+    ({"cache_read_input_tokens": 80, "cost_source": "estimated", "cost_usd": 0.105}, None),
+    ({"cache_read_input_tokens": 80, "cost_source": "reported", "cost_usd": -1}, None),
+    ({"cache_read_input_tokens": 80, "cost_source": "reported", "cost_usd": "0.0123"}, None),
+    ({"cost_source": "reported", "cost_usd": 0.0123}, 0.0123),
+])
+def test_cached_usage_never_invents_display_or_ledger_cost(extra, expected_cost):
+    metrics = {
+        "model": "paid-model", "input_tokens": 100, "output_tokens": 5,
+        "endpoint_cost_tracked": True, **extra,
+    }
+    source = "\n".join([
+        "const _COST_KEY = 'ody-session-cost';",
+        "const state = {};",
+        "const localStorage = {",
+        "  getItem(key) { return state[key] || null; },",
+        "  setItem(key, value) { state[key] = value; },",
+        "};",
+        "const window = {sessionModule: {getCurrentSessionId() { return 'session'; }}};",
+        "function updateSessionCostUI() {}",
+        "function _currentEndpointUrl() { return 'paid'; }",
+        "function isCostTrackedEndpoint() { return true; }",
+        "function getModelCost(_model, inputTokens, outputTokens) { return (inputTokens + outputTokens) / 1000; }",
+        _function_source("_billableCost"),
+        _function_source("_metricsBillableCost"),
+        _function_source("_readCostLedger"),
+        _function_source("_writeCostLedger"),
+        _function_source("recordSessionMetricsCost"),
+        f"const metrics = {json.dumps(metrics)};",
+        "const displayed = _metricsBillableCost(metrics, metrics.model, 100, 5);",
+        "recordSessionMetricsCost(metrics);",
+        "recordSessionMetricsCost(metrics);",
+        "console.log(JSON.stringify({displayed, recorded: JSON.parse(state[_COST_KEY] || '{}').session ?? null}));",
+    ])
+    assert _run_node(source) == {"displayed": expected_cost, "recorded": expected_cost}
