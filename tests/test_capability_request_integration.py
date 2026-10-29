@@ -232,3 +232,51 @@ def test_advertised_future_effort_keeps_its_wire_spelling(monkeypatch):
         monkeypatch, chatgpt_subscription.chatgpt_headers("account-a"), "future-effort",
     ))
     assert payload["reasoning"] == {"effort": "future-effort"}
+
+
+def test_async_retry_reloads_tightened_control_evidence(monkeypatch):
+    from dataclasses import replace
+    from src import model_capabilities as mc
+    from src.model_capability_readers import records_from_payload
+
+    url = "https://openrouter.ai/api/v1"
+    model = "future-model"
+    scope = model_capability_cache.scope_for_endpoint(url)
+    record, = records_from_payload(
+        {"data": [{"id": model}]}, base_url=url, endpoint_id=scope, vendor="openrouter",
+    )
+    unsupported = mc.DeterministicControl.build(
+        control=mc.CONTROL_TEMPERATURE,
+        status=mc.ASSERTION_UNSUPPORTED,
+        source=mc.SOURCE_PROVIDER_READER,
+        confidence=mc.CONFIDENCE_PROVIDER_REPORTED,
+    )
+    strict_record = replace(record, deterministic_controls=(unsupported,))
+    state = {"strict": False}
+    monkeypatch.setattr(
+        model_capability_cache, "cached_model_record",
+        lambda *args, **kwargs: strict_record if state["strict"] else record,
+    )
+    monkeypatch.setattr(llm_core.LLMConfig, "RETRY_DELAY", 0)
+    monkeypatch.setattr(llm_core, "_get_http_client", lambda: None)
+    captured = []
+
+    async def post(_client, target, _headers, **kwargs):
+        captured.append(kwargs["json"])
+        if len(captured) == 1:
+            state["strict"] = True
+            return httpx.Response(429, text="try again")
+        return httpx.Response(200, json={"choices": [{"message": {"content": "hello"}}]})
+
+    monkeypatch.setattr(llm_core, "httpx_post_kimi_aware_async", post)
+    before = llm_core._get_cache_key(url, model, MESSAGES, 0.2, 64)
+    response = asyncio.run(llm_core.llm_call_async(
+        url, model, MESSAGES, temperature=0.2, max_tokens=64, max_retries=2,
+    ))
+    after = llm_core._get_cache_key(url, model, MESSAGES, 0.2, 64)
+    assert response == "hello"
+    assert captured[0]["temperature"] == 0.2
+    assert "temperature" not in captured[1]
+    assert before != after
+    assert llm_core._response_cache.get(after) == "hello"
+    assert before not in llm_core._response_cache

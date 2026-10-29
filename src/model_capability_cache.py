@@ -1,8 +1,4 @@
-"""Bounded, process-local canonical catalog snapshots for one request route.
-
-Only opaque scope hashes and typed evidence are retained. Credentials, URLs,
-and raw catalog payloads are neither stored nor logged. No I/O or persistence.
-"""
+"""Bounded route/credential-scoped catalog evidence without retained secrets."""
 
 from __future__ import annotations
 
@@ -38,7 +34,7 @@ def scope_for_endpoint(base_url: str, headers: Mapping[str, str] | None = None) 
         parsed.port  # Reject malformed ports before building a cache identity.
         userinfo, separator, hostport = parsed.netloc.rpartition("@")
         netloc = userinfo + separator + hostport.lower() if separator else parsed.netloc.lower()
-        path = parsed.path
+        path = parsed.path.rstrip("/")
         for suffix in _OPERATION_PATHS:
             if path.endswith(suffix):
                 path = path[:-len(suffix)]

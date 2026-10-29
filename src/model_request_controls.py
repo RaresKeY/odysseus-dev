@@ -1,10 +1,4 @@
-"""Resolve canonical control evidence for one already-selected inference route.
-
-Catalog identity never selects a transport or grants tool authority. Transport
-contracts are separate from per-model claims: a model cannot enable a field
-that its serving API rejects. Unknown evidence preserves the caller's existing
-behavior; names and missing control entries are not evidence of support.
-"""
+"""Apply provider contracts and exact-route model evidence to requests."""
 
 from __future__ import annotations
 
@@ -37,12 +31,7 @@ _CODEX_TEMPERATURE = mc.DeterministicControl.build(
 
 @dataclass(frozen=True)
 class RequestControls:
-    """Evidence bound to one exact model and endpoint/credential snapshot.
-
-    endpoint_scope is supplied by the runtime cache, never by model metadata.
-    An unscoped or mismatched record is ignored. vendor and dialect describe
-    the route already selected by the transport.
-    """
+    """Control evidence cannot change transport selection or tool authority."""
 
     vendor: str
     dialect: str
@@ -78,13 +67,7 @@ class RequestControls:
         return self._model_controls(control)
 
     def permits(self, control: str, value: Any) -> bool:
-        """Whether an already-requested value may survive request shaping.
-
-        Explicit unsupported evidence wins. For supported controls, every
-        advertised allowed-values constraint must accept the value. Missing
-        evidence is neutral, so compatibility behavior remains with callers.
-        This does not insert defaults or infer capabilities.
-        """
+        """Reject unsupported values; unknown evidence preserves caller behavior."""
         for item in self.evidence_for(control):
             if item.status == mc.ASSERTION_UNSUPPORTED:
                 return False

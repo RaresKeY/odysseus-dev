@@ -24,6 +24,7 @@ def _remember(base_url="https://chatgpt.com/backend-api/codex", headers=None, pa
 
 @pytest.mark.parametrize(("base", "operation"), [
     ("https://API.example/v1", "https://api.example/v1/chat/completions"),
+    ("https://api.example/v1/", "https://api.example/v1/models/"),
     ("https://api.example/v1?tenant=A", "https://api.example/v1/models?tenant=A"),
     ("https://chatgpt.com/backend-api/codex", "https://chatgpt.com/backend-api/codex/responses"),
     ("http://localhost:11434", "http://localhost:11434/api/chat"),
@@ -38,11 +39,18 @@ def test_known_terminal_operations_share_one_route_scope(base, operation):
     "https://api.example/case/v1?tenant=A",
     "https://api.example:443/Case/v1?tenant=A",
     "https://api.example/Case/v1?tenant=B",
-    "https://api.example/Case/v1/?tenant=A",
     "https://api.example/other/v1?tenant=A",
 ])
 def test_scheme_path_case_explicit_port_query_and_base_path_are_distinct(other):
     assert cache.scope_for_endpoint("https://api.example/Case/v1?tenant=A") != cache.scope_for_endpoint(other)
+
+
+def test_trailing_slashes_do_not_split_catalog_and_inference_scope():
+    base = "https://api.example/Case/v1?tenant=A"
+    assert cache.scope_for_endpoint(base) == cache.scope_for_endpoint(base.replace("?", "/?"))
+    assert cache.scope_for_endpoint(base) == cache.scope_for_endpoint(
+        "https://api.example/Case/v1/chat/completions/?tenant=A"
+    )
 
 
 def test_userinfo_and_every_header_participate_without_retaining_secrets():

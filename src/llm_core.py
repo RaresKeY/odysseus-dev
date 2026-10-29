@@ -2829,6 +2829,7 @@ async def llm_call_async(
         _set_cached_response(cache_key, response, actual_model=actual_model)
         return (response, actual_model) if return_model_metadata else response
 
+    unfiltered_compatible_payload = None
     if provider == "anthropic":
         target_url = _normalize_anthropic_url(url)
         h = _build_anthropic_headers(headers)
@@ -2875,6 +2876,7 @@ async def llm_call_async(
             payload, target_url, model, thinking_mode
         )
         _apply_explicit_nonstream_reasoning_effort(payload, reasoning_effort)
+        unfiltered_compatible_payload = copy.deepcopy(payload)
         _apply_openai_request_controls(payload, url, model, headers, provider)
 
     if _is_host_dead(target_url):
@@ -2884,6 +2886,13 @@ async def llm_call_async(
     attempt = 0
     while attempt < max_retries:
         attempt += 1
+        if unfiltered_compatible_payload is not None:
+            payload = copy.deepcopy(unfiltered_compatible_payload)
+            _apply_openai_request_controls(payload, url, model, headers, provider)
+            cache_key = _get_cache_key(
+                url, model, messages_copy, temperature, max_tokens, headers=headers,
+                thinking_mode=thinking_mode, reasoning_effort=reasoning_effort,
+            )
         start = time.time()
         try:
             async with _local_model_slot(target_url, model, workload):
