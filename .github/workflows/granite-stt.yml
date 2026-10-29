@@ -1,0 +1,58 @@
+name: Granite STT
+
+on:
+  pull_request:
+    paths:
+      - '.github/workflows/granite-stt.yml'
+      - 'services/stt/**'
+      - 'routes/stt_routes.py'
+      - 'src/agent_tools/media_tools.py'
+      - 'src/constants.py'
+      - 'src/tool_schemas.py'
+      - 'requirements-stt-granite.txt'
+      - 'tests/test_granite_stt.py'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: granite-stt-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  granite-cpu:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 20
+    env:
+      OMP_NUM_THREADS: '2'
+      MKL_NUM_THREADS: '2'
+      HF_HOME: ${{ runner.temp }}/granite-hf
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - uses: actions/setup-python@5fda3b95a4ea91299a34e894583c3862153e4b97 # v7.0.0
+        with:
+          python-version: '3.11'
+      - name: Install CPU inference dependencies
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y --no-install-recommends ffmpeg ca-certificates
+          python scripts/check_ca_trust.py --system
+          python -m pip install --require-hashes --only-binary=:all: --no-deps -r requirements-bootstrap.txt
+          python scripts/check_ca_trust.py --python
+          python -m pip install 'torch>=2.6,<3' 'torchaudio>=2.6,<3' --index-url https://download.pytorch.org/whl/cpu
+          python -m pip install -r requirements.txt -r requirements-stt-granite.txt 'transformers==5.16.0'
+      - name: Focused transcription regressions
+        run: |
+          python -m pytest -q tests/test_granite_stt.py tests/test_stt_leak.py tests/test_speech_service_toggles.py
+          python -m pytest -q tests/test_inspect_media_tool.py -k transcribe
+      - name: Real CPU transcription through the STT route
+        env:
+          ODYSSEUS_GRANITE_SMOKE_AUDIO: ${{ runner.temp }}/jfk.wav
+        run: |
+          curl --fail --location --retry 3 --max-time 60 \
+            https://raw.githubusercontent.com/ggml-org/whisper.cpp/7e1059232546cab989b6c19716dc88b16d018a87/samples/jfk.wav \
+            --output "$ODYSSEUS_GRANITE_SMOKE_AUDIO"
+          python -m pytest -q -s tests/test_granite_stt.py -k real_cpu
