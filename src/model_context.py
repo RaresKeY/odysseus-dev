@@ -486,9 +486,7 @@ def _probe_ollama_runtime_context(
         if not isinstance(payload, dict) or not isinstance(payload.get("models"), list):
             return None
 
-        # A valid /api/ps response means this endpoint has dynamic runtime
-        # allocation even when the requested model is not loaded yet. Avoid
-        # pinning a static-table fallback in the remote/API cache in that case.
+        # A valid /api/ps response prevents caching static runtime assumptions.
         _ollama_runtime_endpoints.add(endpoint_url)
 
         from src.model_capability_readers import ollama
@@ -511,9 +509,7 @@ def _query_context_length(endpoint_url: str, model: str) -> Tuple[int, bool]:
     api_ctx = None
     configured_kind = _configured_endpoint_kind(endpoint_url)
 
-    # Manually registered local Ollama endpoints may be stored as
-    # endpoint_kind="api". Ask the native runtime endpoint before that kind's
-    # static/catalog short-circuit.
+    # Probe actual Ollama allocation before API-kind static fallback.
     if configured_kind == "api":
         runtime_ctx = _probe_ollama_runtime_context(
             endpoint_url,
@@ -528,9 +524,7 @@ def _query_context_length(endpoint_url: str, model: str) -> Tuple[int, bool]:
             )
             return runtime_ctx, True
         if endpoint_url in _ollama_runtime_endpoints:
-            # The endpoint answered as Ollama, but this model is not loaded, so
-            # no effective allocation exists yet. Do not promote a model-table
-            # maximum into runtime truth or send it back as options.num_ctx.
+            # An unloaded model has no effective runtime allocation.
             return DEFAULT_CONTEXT, False
 
     # Large OpenAI-compatible proxies can make /models expensive. If the
