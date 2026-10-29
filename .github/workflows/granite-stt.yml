@@ -27,7 +27,6 @@ jobs:
     env:
       OMP_NUM_THREADS: '2'
       MKL_NUM_THREADS: '2'
-      HF_HOME: ${{ runner.temp }}/granite-hf
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
@@ -50,6 +49,7 @@ jobs:
           python -m pytest -q tests/test_inspect_media_tool.py -k transcribe
       - name: Real CPU transcription through the STT route
         env:
+          HF_HOME: ${{ runner.temp }}/granite-hf
           ODYSSEUS_GRANITE_SMOKE_AUDIO: ${{ runner.temp }}/jfk.wav
         run: |
           curl --fail --location --retry 3 --max-time 60 \

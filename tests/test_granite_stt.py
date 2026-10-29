@@ -8,6 +8,7 @@ from pathlib import Path
 import shutil
 import struct
 import sys
+import time
 from types import SimpleNamespace
 from unittest.mock import Mock
 import wave
@@ -342,3 +343,22 @@ def test_granite_real_cpu_transcription_through_route(monkeypatch, tmp_path):
         assert "country" in text.lower()
         assert client.get("/api/stt/stats").json()["model_loaded"] is True
         print("Granite real CPU transcription:", text)
+
+
+def test_threaded_stt_only_loads_whisper_once(monkeypatch):
+    service = STTService()
+    loaded = object()
+    calls = []
+
+    def load(*args, **kwargs):
+        calls.append((args, kwargs))
+        time.sleep(0.02)
+        return loaded
+
+    monkeypatch.setattr(service, "_load_settings", lambda: {"stt_model": "base"})
+    monkeypatch.setitem(sys.modules, "faster_whisper", SimpleNamespace(WhisperModel=load))
+    monkeypatch.setitem(sys.modules, "torch", SimpleNamespace(cuda=SimpleNamespace(is_available=lambda: False)))
+    with ThreadPoolExecutor(max_workers=2) as pool:
+        results = list(pool.map(lambda _: service._get_whisper(), range(2)))
+    assert results == [loaded, loaded]
+    assert len(calls) == 1

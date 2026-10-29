@@ -9,10 +9,11 @@ tool parsing / execution logic.
 """
 
 import os
-from src.constants import GRANITE_STT_MODEL
 import json
 import logging
 import re
+
+from src.constants import GRANITE_STT_MODEL
 import shlex
 from typing import Any, Optional
 
@@ -494,7 +495,7 @@ FUNCTION_TOOL_SCHEMAS = [
                     "start": {"type": "string", "description": "Optional transcription start in seconds or HH:MM:SS. Pass the requested start directly when the user names a time interval."},
                     "end": {"type": "string", "description": "Optional transcription end in seconds or HH:MM:SS. Pass the requested end directly instead of transcribing and filtering the whole recording."},
                     "model": {"type": "string", "enum": ["tiny", "base", "small", GRANITE_STT_MODEL], "description": "Optional local Whisper size or Granite TurboCTC (multilingual, plain .txt only, at most five minutes; requires optional dependencies). Focused ranges up to five minutes default to small for accuracy; longer or unbounded recordings default to base for speed."},
-                    "output_path": {"type": "string", "description": "Optional workspace destination for the timestamped transcript. Use .txt for readable timestamped text, .jsonl for one {start, end, text} object per speech segment, or .srt/.vtt for subtitle files. If the requested final artifact is one of these formats, pass its path directly so the tool writes it atomically. If omitted, a .txt transcript is saved automatically under /workspace/.odysseus/transcripts/."},
+                    "output_path": {"type": "string", "description": "Optional workspace destination for the transcript. Granite supports plain .txt only. With Whisper, use .txt for readable timestamped text, .jsonl for one {start, end, text} object per speech segment, or .srt/.vtt for subtitle files. If the requested final artifact is one of these formats, pass its path directly so the tool writes it atomically. If omitted, a .txt transcript is saved automatically under /workspace/.odysseus/transcripts/."},
                     "timestamp_precision": {"type": "integer", "minimum": 0, "maximum": 3, "description": "Decimal places for JSONL start/end seconds (default 3). Match an explicitly requested rounding precision."}
                 },
                 "required": ["path"]

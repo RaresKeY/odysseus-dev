@@ -37,7 +37,7 @@ def dependency_error() -> str | None:
 
         if Version(version("transformers")) < Version("5.16.0"):
             return _INSTALL_HELP
-        if Version(version("torch")) < Version("2.6.0"):
+        if any(Version(version(name)) < Version("2.6.0") for name in ("torch", "torchaudio")):
             return _INSTALL_HELP
     except (ImportError, PackageNotFoundError, ValueError):
         return _INSTALL_HELP
@@ -72,7 +72,8 @@ def _decode_audio(source: bytes | Path, start: float = 0.0, end: float | None = 
                 "-map", "0:a:0", "-vn", "-ac", "1", "-ar", str(GRANITE_STT_SAMPLE_RATE),
                 "-f", "f32le", "pipe:1",
             ],
-            capture_output=True,
+            stdout=subprocess.PIPE,
+            stderr=subprocess.DEVNULL,
             timeout=60,
             check=False,
         )

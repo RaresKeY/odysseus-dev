@@ -5,6 +5,7 @@ import io
 import logging
 import httpx
 import tempfile
+import threading
 from pathlib import Path
 from typing import Optional, Dict, Any
 
@@ -27,6 +28,7 @@ class STTService:
 
     def __init__(self):
         self._whisper_model = None  # lazy-init
+        self._whisper_lock = threading.Lock()
 
     # ── Settings ──
 
@@ -61,6 +63,10 @@ class STTService:
     # ── Local Whisper ──
 
     def _get_whisper(self):
+        with self._whisper_lock:
+            return self._load_whisper()
+
+    def _load_whisper(self):
         if self._whisper_model is None:
             try:
                 from faster_whisper import WhisperModel
