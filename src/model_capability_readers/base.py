@@ -333,9 +333,7 @@ def build_capability(
 
 
 def detect_vendor(base_url: Any = "", endpoint_kind: Any = "") -> str:
-    # Import lazily to keep the reader primitives independent of registry load
-    # order.  Exact endpoint kind and host identity are authoritative enough
-    # for provider selection; default ports are not.
+    # Keep registry loading lazy; port hints are not provider identity.
     from src import provider_capability_schemas as pcs
 
     resolution = pcs.resolve_provider(

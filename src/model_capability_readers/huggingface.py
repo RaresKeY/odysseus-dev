@@ -19,9 +19,7 @@ from src.model_capability_readers.base import (
 vendor = VENDOR_HUGGINGFACE
 
 
-# Hugging Face publishes ``pipeline_tag`` as a provider-owned task enum.  Keep
-# its interpretation here, rather than teaching the inventory fallback that a
-# similarly named field has the same meaning for every provider.
+# `pipeline_tag` is Hugging Face evidence, not generic inventory evidence.
 _PIPELINE_SHAPES = {
     "text-generation": (mc.FAMILY_CHAT, (mc.MODALITY_TEXT,), (mc.MODALITY_TEXT,), ()),
     "image-text-to-text": (

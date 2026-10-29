@@ -160,9 +160,7 @@ class ProviderResolution:
         }
 
 
-# Generic envelopes are inventory fallbacks only.  Their field names are not a
-# portable capability contract, so readers may recover identity but nothing
-# else from them.
+# Generic envelopes establish identity only, not capabilities.
 GENERAL_DATA_SHAPE = ProviderCatalogShape(
     shape_id="fallback.models.data.v1",
     provider_id=PROVIDER_UNKNOWN,
@@ -244,9 +242,7 @@ OLLAMA_TAGS_SHAPE = ProviderCatalogShape(
     envelope=ENVELOPE_MODELS,
     identity_paths=("model", "name"),
     required_item_any_paths=("digest", "details.family", "details.families"),
-    # `name` plus a digest/details field is not globally provider-specific.
-    # Configured provider context remains authoritative for local Ollama
-    # inventories; payload-only detection would create false provider identity.
+    # Ollama inventory fields require configured provider identity.
     detection_priority=0,
 )
 OLLAMA_SHOW_SHAPE = ProviderCatalogShape(
@@ -257,10 +253,7 @@ OLLAMA_SHOW_SHAPE = ProviderCatalogShape(
     required_item_paths=("capabilities",),
     required_item_any_paths=("model_info", "details", "template", "parameters"),
     item_types=(("capabilities", (list, tuple)),),
-    # `/api/show` capability and parameter fields are not sufficiently unique
-    # to identify an otherwise unknown provider.  Local/default ports are also
-    # deliberately non-authoritative, so require configured provider context
-    # before interpreting this singleton response as Ollama-native metadata.
+    # `/api/show` needs configured Ollama identity; fields and ports are ambiguous.
     detection_priority=0,
 )
 LMSTUDIO_MODELS_V1_SHAPE = ProviderCatalogShape(
@@ -394,10 +387,7 @@ HUGGINGFACE_MODEL_SHAPE = ProviderCatalogShape(
     provider_id="huggingface",
     envelope=ENVELOPE_SINGLE,
     identity_paths=("modelId", "id"),
-    # Hub ModelInfo exposes pipeline_tag as optional metadata.  Provider/host
-    # context is still required because this shape has priority zero, so an
-    # identity-only card can stay native without making generic ``id`` payloads
-    # look like Hugging Face catalogs.
+    # Hugging Face metadata needs provider context, not generic `id` matching.
     detection_priority=0,
 )
 HUGGINGFACE_MODELS_LIST_SHAPE = ProviderCatalogShape(
@@ -584,9 +574,7 @@ def normalize_provider_id(value: Any) -> str:
     token = _token(value)
     if not token or token == PROVIDER_UNKNOWN:
         return PROVIDER_UNKNOWN
-    # An explicit, previously unseen provider id is still useful identity.  It
-    # selects the inventory-only reader until a native schema is added; it does
-    # not acquire capabilities merely by being preserved here.
+    # Unknown explicit providers retain identity, not inferred capabilities.
     return _ALIASES.get(token, token)
 
 
@@ -652,9 +640,7 @@ def native_shape_for_payload(
         return None
     priority = max(shape.detection_priority for shape in matches)
     best = [shape for shape in matches if shape.detection_priority == priority]
-    # Registry declaration order expresses preference between revisions of the
-    # same provider shape (for example LM Studio v1 before v0).  Alphabetical
-    # shape ids invert that version preference for otherwise equal evidence.
+    # Declaration order prefers newer shape revisions on ties.
     return best[0]
 
 

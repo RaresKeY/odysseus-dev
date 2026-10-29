@@ -60,10 +60,7 @@ def _family_from_ollama_capabilities(values: Any) -> str:
 
 
 def _parameters_mapping(value: Any) -> Mapping[str, Any]:
-    # `/api/show` currently serializes this field as Modelfile text.  Do not
-    # recover capability truth by reparsing that late text; prefer the native
-    # structured `model_info.*.context_length` shape.  Mapping support remains
-    # for compatible servers that already return structured parameters.
+    # Only structured parameters count; Modelfile text is not capability evidence.
     return value if isinstance(value, Mapping) else {}
 
 
