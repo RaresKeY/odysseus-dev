@@ -1285,7 +1285,16 @@ function _billableCost(model, inputTokens, outputTokens, endpointCostTracked, se
 
 /** Sum cost using the route/model that produced each Agent round. */
 function _metricsBillableCost(metrics, model, inputTokens, outputTokens, selectedEndpointUrl) {
+  if (metrics.cost_source === 'reported' && typeof metrics.cost_usd === 'number'
+      && Number.isFinite(metrics.cost_usd) && metrics.cost_usd >= 0) {
+    return metrics.cost_usd;
+  }
   const buckets = Array.isArray(metrics.usage_buckets) ? metrics.usage_buckets : [];
+  const hasCachedUsage = [metrics, ...buckets].some(usage => usage &&
+    ['cache_read_input_tokens', 'cache_creation_input_tokens'].some(field =>
+      Number.isInteger(usage[field]) && usage[field] > 0 && usage[field] < 2 ** 63,
+    ));
+  if (hasCachedUsage) return null;
   if (!buckets.length) {
     return _billableCost(
       model,
