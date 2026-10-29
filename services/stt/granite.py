@@ -5,6 +5,7 @@ from __future__ import annotations
 import importlib.util
 from importlib.metadata import PackageNotFoundError, version
 import math
+import os
 from pathlib import Path
 import shutil
 import subprocess
@@ -27,9 +28,24 @@ def is_granite_model(model: str) -> bool:
     return model in (GRANITE_STT_MODEL, GRANITE_STT_MODEL_ID)
 
 
+def granite_engine() -> str:
+    return os.environ.get("ODYSSEUS_GRANITE_ENGINE", "transformers").strip().lower()
+
+
+def validate_language(language: str) -> None:
+    if language.strip().lower() not in ("", *GRANITE_STT_LANGUAGES):
+        raise ValueError("Granite STT supports en, fr, de, es, pt, it, ja; leave language empty for automatic recognition")
+
+
 def dependency_error() -> str | None:
     if not shutil.which("ffmpeg"):
         return "Granite STT requires FFmpeg on PATH"
+    engine = granite_engine()
+    if engine == "transcribe.cpp":
+        from services.stt.transcribe_cpp import dependency_error as native_error
+        return native_error()
+    if engine != "transformers":
+        return "ODYSSEUS_GRANITE_ENGINE must be transformers or transcribe.cpp"
     try:
         if any(importlib.util.find_spec(name) is None for name in ("torch", "torchaudio", "transformers", "numpy")):
             return _INSTALL_HELP
@@ -117,9 +133,7 @@ class GraniteSTT:
         self, source: bytes | Path, language: str = "", *,
         start: float = 0.0, end: float | None = None,
     ) -> str:
-        language = language.strip().lower()
-        if language and language not in GRANITE_STT_LANGUAGES:
-            raise ValueError("Granite STT supports en, fr, de, es, pt, it, ja; leave language empty for automatic recognition")
+        validate_language(language)
         error = dependency_error()
         if error:
             raise RuntimeError(error)
@@ -143,5 +157,8 @@ class GraniteSTT:
 _granite_stt = GraniteSTT()
 
 
-def get_granite_stt() -> GraniteSTT:
+def get_granite_stt():
+    if granite_engine() == "transcribe.cpp":
+        from services.stt.transcribe_cpp import get_transcribe_cpp_stt
+        return get_transcribe_cpp_stt()
     return _granite_stt

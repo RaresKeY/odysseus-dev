@@ -9,7 +9,7 @@ import threading
 from pathlib import Path
 from typing import Optional, Dict, Any
 
-from services.stt.granite import dependency_error, get_granite_stt, is_granite_model
+from services.stt.granite import dependency_error, get_granite_stt, granite_engine, is_granite_model
 from src.constants import GRANITE_STT_MODEL_ID, GRANITE_STT_REVISION
 
 logger = logging.getLogger(__name__)
@@ -209,7 +209,7 @@ class STTService:
                 stats.update({
                     "model": GRANITE_STT_MODEL_ID,
                     "revision": GRANITE_STT_REVISION,
-                    "engine": "transformers",
+                    "engine": granite_engine(),
                     "model_loaded": get_granite_stt().loaded,
                     "timestamps": False,
                     "force_language": False,
