@@ -21,6 +21,7 @@ import httpx
 import jsonschema
 
 from src.context_compactor import prune_multimodal_images, trim_for_context
+from src.llm_usage import aggregate_cache_usage, normalize_usage_counts, openai_cache_usage
 from src.agent_runtime.runtime_selection import COMPACT_PREVIEW_MODE
 from src import agent_runs
 from src.agent_evidence import command_has_mutation_effect, workspace_artifact_is_usable
@@ -5562,6 +5563,7 @@ async def stream_preview(*, endpoint_url, model, messages, headers, turn_contrac
     # draft that completion/research checks subsequently replace.
     finalize_search_answer = broad_current_web_request(direct_user_text) or requested_web_source_links(direct_user_text)
     usage_in = usage_out = 0
+    usage_buckets = []
     intent_accounting = {}
     source_dependencies = ()
     source_requires_content = False
@@ -5703,6 +5705,11 @@ async def stream_preview(*, endpoint_url, model, messages, headers, turn_contrac
                 usage_in += intent_accounting.get('input_tokens', 0)
                 usage_out += intent_accounting.get('output_tokens', 0)
                 has_real_usage = intent_accounting.get('usage_source') == 'real'
+                if intent_accounting:
+                    usage_buckets.append({
+                        'round': 0, 'model': model, 'endpoint_cost_tracked': False,
+                        **intent_accounting,
+                    })
             # One extra iteration is available only when a provider emits raw
             # tool markup during the normal final no-tools round. Ordinary
             # turns still obey ``round_limit`` exactly.
@@ -6094,6 +6101,7 @@ async def stream_preview(*, endpoint_url, model, messages, headers, turn_contrac
                     # established budget/error semantics.
                     round_offered = list(request.get('tools') or [])
                 finish_during_stream = False
+                round_usage = {}
                 async with preview_model_response(client, endpoint_url, headers, request, context_recovery) as response:
                     response.raise_for_status()
                     finish_event = (
@@ -6113,16 +6121,18 @@ async def stream_preview(*, endpoint_url, model, messages, headers, turn_contrac
                                 provider_error = provider_error.get('message') or provider_error.get('detail')
                             detail = str(provider_error or 'Unknown provider error').strip()
                             raise ProviderStreamError(detail)
-                        usage = payload.get('usage') or {}
-                        if usage:
-                            has_real_usage = True
-                        prompt_tokens = usage.get('prompt_tokens', 0)
-                        usage_in += prompt_tokens
-                        usage_out += usage.get('completion_tokens', 0)
-                        if prompt_tokens:
-                            last_request_tokens = prompt_tokens
-                            if not first_request_tokens:
-                                first_request_tokens = prompt_tokens
+                        usage = payload.get('usage')
+                        if isinstance(usage, dict) and (
+                            'prompt_tokens' in usage or 'completion_tokens' in usage
+                        ):
+                            normalized_usage = normalize_usage_counts(
+                                usage.get('prompt_tokens', round_usage.get('input_tokens', 0)),
+                                usage.get('completion_tokens', round_usage.get('output_tokens', 0)),
+                                cache_usage={**round_usage, **openai_cache_usage(usage, payload.get('timings'))},
+                            )
+                            if normalized_usage is not None:
+                                round_usage = normalized_usage
+                                has_real_usage = True
                         choices = payload.get('choices') or []
                         if not choices:
                             continue
@@ -6180,6 +6190,18 @@ async def stream_preview(*, endpoint_url, model, messages, headers, turn_contrac
                                              'kind': editor_progress_kind,
                                              'proposed': proposed_edits, 'round': round_number})
                                 editor_progress_last = now
+                usage_buckets.append({
+                    'round': round_number, 'model': model, 'endpoint_cost_tracked': False,
+                    'input_tokens': 0, 'output_tokens': 0,
+                    'usage_source': 'real' if round_usage else 'estimated',
+                    **round_usage,
+                })
+                usage_in += round_usage.get('input_tokens', 0)
+                usage_out += round_usage.get('output_tokens', 0)
+                if round_usage.get('input_tokens'):
+                    last_request_tokens = round_usage['input_tokens']
+                    if not first_request_tokens:
+                        first_request_tokens = last_request_tokens
                 if active_editor_target and successful_write and agent_runs.should_finish(session_id):
                     finish_during_stream = True
                 if finish_during_stream:
@@ -8342,7 +8364,12 @@ async def stream_preview(*, endpoint_url, model, messages, headers, turn_contrac
         'time_to_first_token': round(ttft, 3) if ttft is not None else None,
         'tokens_per_second': round(usage_out / elapsed, 2) if elapsed > 0 else 0,
         'tps_source': 'computed', 'endpoint_cost_tracked': False,
-        'usage_source': 'real' if has_real_usage else 'estimated',
+        'usage_source': (
+            'real' if has_real_usage and all(bucket.get('usage_source') == 'real' for bucket in usage_buckets)
+            else 'mixed' if has_real_usage else 'estimated'
+        ),
+        'usage_buckets': usage_buckets,
+        **aggregate_cache_usage(usage_buckets),
         # Provider-counted prompt tokens for the initial injected request.
         # Total input_tokens remains the billable sum across all agent rounds.
         'injected_tokens': first_request_tokens,

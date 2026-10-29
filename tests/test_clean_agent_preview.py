@@ -4501,7 +4501,28 @@ def test_preview_contract_keeps_available_family_when_an_independent_family_is_u
 
 
 @pytest.mark.asyncio
-async def test_stream_emits_incremental_text_and_persistable_history(monkeypatch):
+@pytest.mark.parametrize('usage_events, expected_input, expected_output, expected_cache', [
+    ([{'usage': {'prompt_tokens': 100, 'completion_tokens': 5,
+                 'prompt_tokens_details': {'cached_tokens': 80}}}], 100, 5, 80),
+    ([{'usage': {'prompt_tokens': 100, 'completion_tokens': 5},
+       'timings': {'cache_n': 80}}], 100, 5, 80),
+    ([{'usage': {'prompt_tokens': 100, 'completion_tokens': 5,
+                 'prompt_tokens_details': {'cached_tokens': 0}}}], 100, 5, 0),
+    ([{'usage': {'prompt_tokens': 100, 'completion_tokens': 5,
+                 'prompt_tokens_details': {'cached_tokens': -1}}}], 100, 5, None),
+    ([{'usage': {'prompt_tokens': 100, 'completion_tokens': 2,
+                 'prompt_tokens_details': {'cached_tokens': 80}}},
+      {'usage': {'completion_tokens': 5}}], 100, 5, 80),
+    ([{'usage': {'prompt_tokens': 100, 'completion_tokens': 2,
+                 'prompt_tokens_details': {'cached_tokens': 80}}},
+      {'usage': {'prompt_tokens': 100, 'completion_tokens': 5,
+                 'prompt_tokens_details': {'cached_tokens': 80}}}], 100, 5, 80),
+    ([{'usage': 'malformed'}], 0, 0, None),
+    ([], 0, 0, None),
+])
+async def test_stream_emits_incremental_text_and_persistable_history(
+    monkeypatch, usage_events, expected_input, expected_output, expected_cache,
+):
     import src.clean_agent_preview as module
     requests = []
     class Response:
@@ -4511,6 +4532,8 @@ async def test_stream_emits_incremental_text_and_persistable_history(monkeypatch
         async def aiter_lines(self):
             for text in ['Hello', ' there']:
                 yield 'data: ' + json.dumps({'choices': [{'delta': {'content': text}}]})
+            for usage_event in usage_events:
+                yield 'data: ' + json.dumps(usage_event)
             yield 'data: [DONE]'
     class Client:
         def __init__(self, **kwargs): pass
@@ -4529,6 +4552,14 @@ async def test_stream_emits_incremental_text_and_persistable_history(monkeypatch
     assert requests[0]['messages'][0]['content'].startswith('You are Odysseus.')
     metrics = next(e['data'] for e in events if e.get('type') == 'metrics')
     assert metrics['clean_v3_turn'] == [{'role': 'assistant', 'content': 'Hello there'}]
+    assert metrics['input_tokens'] == expected_input
+    assert metrics['output_tokens'] == expected_output
+    assert metrics['total_tokens'] == expected_input + expected_output
+    assert metrics['usage_buckets'][0]['endpoint_cost_tracked'] is False
+    if expected_cache is None:
+        assert 'cache_read_input_tokens' not in metrics
+    else:
+        assert metrics['cache_read_input_tokens'] == expected_cache
     assert raw[-1] == 'data: [DONE]\n\n'
 
 
@@ -4719,7 +4750,17 @@ async def test_calendar_list_structured_result_owns_linked_terminal_render(monke
 
 
 @pytest.mark.asyncio
-async def test_whole_email_draft_is_protocol_bound_to_update_document(monkeypatch):
+@pytest.mark.parametrize('second_usage, expected_cache', [
+    ({'prompt_tokens': 400, 'completion_tokens': 9,
+      'prompt_tokens_details': {'cached_tokens': 300}}, 500),
+    ({'prompt_tokens': 400, 'completion_tokens': 9,
+      'prompt_tokens_details': {'cached_tokens': 0}}, 200),
+    ({'prompt_tokens': 400, 'completion_tokens': 9}, None),
+    ({}, None),
+])
+async def test_whole_email_draft_is_protocol_bound_to_update_document(
+    monkeypatch, second_usage, expected_cache,
+):
     import src.clean_agent_preview as module
     requests = []
     responses = iter([
@@ -4730,11 +4771,12 @@ async def test_whole_email_draft_is_protocol_bound_to_update_document(monkeypatc
                     'arguments': '{"content":"To: alex@example.com\\nSubject: Re: Meeting\\n---\\nTomorrow works."}',
                 },
             }]}}],
-            'usage': {'prompt_tokens': 321, 'completion_tokens': 20},
+            'usage': {'prompt_tokens': 321, 'completion_tokens': 20,
+                      'prompt_tokens_details': {'cached_tokens': 200}},
         },
         {
             'choices': [{'delta': {'content': 'Draft ready.'}}],
-            'usage': {'prompt_tokens': 400, 'completion_tokens': 9},
+            'usage': second_usage,
         },
     ])
 
@@ -4804,6 +4846,16 @@ async def test_whole_email_draft_is_protocol_bound_to_update_document(monkeypatc
     assert tool_output['document_content'].endswith('Tomorrow works.')
     metrics = next(e['data'] for e in events if e.get('type') == 'metrics')
     assert metrics['injected_tokens'] == 321
+    assert metrics['input_tokens'] == 321 + second_usage.get('prompt_tokens', 0)
+    assert metrics['output_tokens'] == 20 + second_usage.get('completion_tokens', 0)
+    assert metrics['usage_buckets'][0]['cache_read_input_tokens'] == 200
+    assert metrics['usage_source'] == ('real' if second_usage else 'mixed')
+    if expected_cache is None:
+        assert 'cache_read_input_tokens' not in metrics
+    else:
+        assert metrics['cache_read_input_tokens'] == expected_cache
+    from src.llm_usage import has_cache_usage
+    assert has_cache_usage(metrics)
     assert metrics['tool_schema_count'] == 1
     assert metrics['agent_rounds'] == 2
     assert metrics['tool_calls'] == 1
