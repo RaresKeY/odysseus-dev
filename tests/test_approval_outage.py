@@ -35,7 +35,21 @@ def outage_runtime(store, dispatch_runtime, monkeypatch, tmp_path):
         primary_started.set()
         if settings.get("answer") is not None:
             answer = settings["answer"]
-            return httpx.Response(200, json={"model": "decision-model", "answers": answer.answers, "usage": answer.usage})
+            body = {"model": "decision-model", "answers": answer.answers, "usage": answer.usage}
+            if settings.get("malformed_stream"):
+                body["answers"] = {}
+            if settings.get("stream_cleanup"):
+                class Body(httpx.AsyncByteStream):
+                    async def __aiter__(self):
+                        yield json.dumps(body).encode()
+                        settings["body_eof"] = True
+                    async def aclose(self):
+                        settings["cleanup_started"].set()
+                        if settings["stream_cleanup"] == "read_timeout":
+                            raise httpx.ReadTimeout("synthetic cleanup timeout")
+                        await asyncio.Event().wait()
+                return httpx.Response(200, stream=Body())
+            return httpx.Response(200, json=body)
         if settings["failure"] == "timeout":
             await asyncio.Event().wait()
         if settings["failure"] == "transport":
@@ -213,6 +227,53 @@ async def test_received_primary_veto_cannot_be_replaced_after_timeout(
     assert len(records) == 1 and records[0]["status"] == "rejected"
     assert records[0]["usage"] == {"input_tokens": 20, "output_tokens": 5}
     assert records[0]["failure_kind"] == "decision_response_not_finalized"
+
+
+@pytest.mark.asyncio
+@pytest.mark.parametrize("verdict", ["deny", "review", "malformed"])
+@pytest.mark.parametrize("deadline_owner", ["provider", "review", "read_timeout"])
+async def test_complete_stream_cleanup_cannot_override_response(
+        outage_runtime, monkeypatch, verdict, deadline_owner):
+    if deadline_owner == "review":
+        from src.approval_review import ApprovalReviewService
+        original = ApprovalReviewService.review
+        async def bounded_review(self, *args, **kwargs):
+            return await original(self, *args, **kwargs, deadline=time.monotonic() + .5)
+        monkeypatch.setattr(ApprovalReviewService, "review", bounded_review)
+    rt = outage_runtime
+    rt.settings.update(answer=decision("review" if verdict == "review" else "deny"),
+        malformed_stream=verdict == "malformed", cleanup_started=asyncio.Event(),
+        stream_cleanup="read_timeout" if deadline_owner == "read_timeout" else "hang")
+    bound = await rt.start(timeout=.2 if deadline_owner == "provider" else 30)
+    result = (await rt.action(bound, 0))[1]
+    assert rt.settings.get("body_eof") and rt.settings["cleanup_started"].is_set()
+    assert result.get("blocked") and not rt.fallback_calls and not rt.effects, result
+    for provider in rt.providers:
+        while provider._store_tasks:
+            await asyncio.gather(*list(provider._store_tasks), return_exceptions=True)
+    [record] = rt.attempts.records_for_run("alice", "a", bound.run_id)
+    assert record["status"] == "rejected" and record["usage"] == {"input_tokens": 20, "output_tokens": 5}
+    assert record["failure_kind"] == "decision_response_not_finalized"
+
+
+@pytest.mark.asyncio
+async def test_explicit_cancel_during_complete_stream_cleanup_stays_cancelled(outage_runtime):
+    rt = outage_runtime
+    rt.settings.update(answer=decision("deny"), stream_cleanup="hang", cleanup_started=asyncio.Event())
+    bound = await rt.start()
+    task = asyncio.create_task(rt.action(bound, 0))
+    await asyncio.wait_for(rt.settings["cleanup_started"].wait(), 2)
+    assert rt.settings.get("body_eof")
+    task.cancel()
+    with pytest.raises(asyncio.CancelledError):
+        await task
+    for provider in rt.providers:
+        while provider._store_tasks:
+            await asyncio.gather(*list(provider._store_tasks), return_exceptions=True)
+    [record] = rt.attempts.records_for_run("alice", "a", bound.run_id)
+    assert record["status"] == "rejected" and record["usage"] == {"input_tokens": 20, "output_tokens": 5}
+    assert record["failure_kind"] == "decision_cancelled"
+    assert not rt.fallback_calls and not rt.effects
 
 
 @pytest.mark.asyncio

@@ -392,7 +392,12 @@ class DecisionProvider:
                             if length < 0 or length > MAX_RESPONSE_BYTES:
                                 raise DecisionError("decision_response_too_large")
                         chunks, size = [], 0
-                        async for chunk in response.aiter_bytes():
+                        # Content-Encoding is identity-only above. Iterate the
+                        # body stream directly: HTTPX's aiter_bytes/aiter_raw
+                        # awaits aclose() before reporting EOF, which could
+                        # lose a complete veto/usage before our receipt seal.
+                        # The enclosing response context still owns cleanup.
+                        async for chunk in response.stream:
                             size += len(chunk)
                             if size > MAX_RESPONSE_BYTES:
                                 raise DecisionError("decision_response_too_large")
