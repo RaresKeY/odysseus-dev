@@ -905,12 +905,13 @@ def setup_history_routes(session_manager, upload_handler=None) -> APIRouter:
 
         try:
             from src.context_compactor import auto_compact_threshold_percent
-            from src.model_context import estimate_tokens, get_context_length
+            from src.model_context import estimate_tokens, get_session_context_length
+            from src.auth_helpers import effective_user
             from src.model_profiles import supports_user_thinking_toggle
 
             messages = session.get_context_messages()
             used = int(estimate_tokens(messages))
-            ctx_len = int(get_context_length(session.endpoint_url, session.model) or 0)
+            ctx_len = int(get_session_context_length(session, owner=effective_user(request)) or 0)
             thinking_supported = supports_user_thinking_toggle(session.model)
             pct = round((used / ctx_len) * 100, 1) if ctx_len else 0.0
             pct = max(0.0, min(100.0, pct))
@@ -1129,14 +1130,15 @@ def setup_history_routes(session_manager, upload_handler=None) -> APIRouter:
         _reject_compact_during_active_run(session_id)
 
         try:
-            from src.model_context import estimate_tokens, get_context_length
+            from src.model_context import estimate_tokens, get_session_context_length
+            from src.auth_helpers import effective_user
             from src.llm_core import llm_call_async
             from src.endpoint_resolver import resolve_endpoint
 
             if len(session.history) < 6:
                 return {"status": "ok", "message": "Not enough messages to compact"}
 
-            ctx_len = get_context_length(session.endpoint_url, session.model)
+            ctx_len = get_session_context_length(session, owner=effective_user(request))
             messages_before = session.get_context_messages()
             used_before = estimate_tokens(messages_before)
             pct_before = round((used_before / ctx_len) * 100, 1) if ctx_len else 0

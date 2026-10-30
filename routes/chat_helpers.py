@@ -1385,7 +1385,7 @@ async def build_chat_context(
     if defer_context_shaping:
         context_length = (
             prepared_window.get("context_length")
-            or get_context_length(sess.endpoint_url, sess.model)
+            or get_context_length(sess.endpoint_url, sess.model, headers=getattr(sess, "headers", None))
         )
         was_compacted = False
     else:
