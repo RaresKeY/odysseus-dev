@@ -253,3 +253,17 @@ def test_unknown_provider_fields_cannot_override_url_or_credentials():
     for field in ["url", "headers", "api_key", "follow_redirects"]:
         with pytest.raises(DecisionError):
             validate_config({**CONFIG, field: "untrusted"})
+
+
+@pytest.mark.asyncio
+async def test_response_adapter_fault_is_not_a_transport_outage(monkeypatch):
+    client, store = provider(lambda _: httpx.Response(200, json=reply()))
+    def broken_adapter(*_):
+        raise RuntimeError("synthetic decoder fault")
+    monkeypatch.setattr(client, "_answers", broken_adapter)
+    with pytest.raises(DecisionError, match="decision_invalid_response"):
+        await client.evaluate(REQUEST, CONTEXT, config=CONFIG)
+    record = next(iter(store.records.values()))
+    assert record["status"] == "rejected"
+    assert record["usage"] == {"input_tokens": 20, "output_tokens": 10}
+    assert record["failure_kind"] == "decision_invalid_response"

@@ -16,14 +16,10 @@ class AttemptStore(Protocol):
     def records_for_run(self, owner: str | None, session_id: str, run_id: str) -> list[dict]: ...
 
 
-# Explicit technical response failures only. A valid verdict never enters this
-# set; local context, accounting, cancellation and identity changes do not either.
+# Only absence of a response can establish an outage. Malformed/incomplete
+# assessments must not acquire authorization by asking a second reviewer.
 OUTAGE_FAILURES = frozenset({"decision_http_error", "decision_transport_failed",
-    "decision_deadline_exceeded", "decision_invalid_json", "decision_invalid_response",
-    "decision_invalid_answer", "decision_invalid_answers", "decision_invalid_distribution",
-    "decision_choice_mismatch", "decision_model_mismatch", "decision_usage_unavailable",
-    "decision_encoding_refused", "decision_response_too_large", "decision_incomplete_response",
-    "decision_redirect_refused"})
+    "decision_deadline_exceeded"})
 _BINDING = ("owner", "session_id", "run_id", "policy_revision", "authority_epoch")
 
 
@@ -32,9 +28,7 @@ def _failed_primary(parent):
     return (parent and parent.get("status") in {"unresolved", "rejected", "cancelled"}
             and parent.get("purpose") == "approval"
             and parent.get("provider_identity", {}).get("protocol") in {"systemone", "openai_json"}
-            and isinstance(failure, str) and failure.startswith("decision_")
-            and not any(part in failure for part in
-                        ("budget", "attempt_store", "capture_", "usage_exceeded", "cancelled", "endpoint_changed")))
+            and failure in OUTAGE_FAILURES)
 
 
 def approval_outage(previous, *, identity, configuration_sha256, context, action_digest):

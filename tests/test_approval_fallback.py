@@ -30,7 +30,7 @@ def fallback_result(**changes):
 @pytest.mark.asyncio
 @pytest.mark.parametrize("primary", [None, DecisionError("decision_provider_not_configured"),
     DecisionError("decision_http_error"), DecisionError("decision_transport_failed"),
-    DecisionError("decision_invalid_answers"), DecisionError("decision_model_mismatch"), object()])
+    DecisionError("decision_credentials_missing"), DecisionError("decision_endpoint_unavailable")])
 async def test_technical_failure_or_absence_uses_one_independent_fallback(proposal, primary):
     store, pending, policy, _ = proposal
     first, first_calls = evaluator(primary)
@@ -55,6 +55,25 @@ async def test_valid_primary_stop_is_final(proposal, answer):
     result = await ApprovalReviewService(store).review(pending, policy, deterministically_admitted=True,
         evaluator=first, fallback_evaluator=second)
     assert result.status in {"denied", "uncertain"} and not calls and result.approval is None
+
+
+@pytest.mark.asyncio
+@pytest.mark.parametrize("primary", [object(), RuntimeError("unknown failure"), *[
+    DecisionError(code) for code in (
+        "decision_invalid_json", "decision_invalid_response", "decision_invalid_answer",
+        "decision_invalid_answers", "decision_invalid_distribution", "decision_choice_mismatch",
+        "decision_model_mismatch", "decision_projection_mismatch", "decision_usage_unavailable",
+        "decision_encoding_refused", "decision_response_too_large", "decision_incomplete_response",
+        "decision_redirect_refused",
+    )]])
+async def test_malformed_or_incomplete_primary_cannot_be_overridden(proposal, primary):
+    store, pending, policy, _ = proposal
+    first, _ = evaluator(primary)
+    second, calls = evaluator(fallback_result())
+    result = await ApprovalReviewService(store).review(pending, policy, deterministically_admitted=True,
+        evaluator=first, fallback_evaluator=second)
+    assert result.status == "error" and result.approval is None and not calls
+    assert store.peek(pending.approval_id) is None
 
 
 @pytest.mark.asyncio
@@ -150,7 +169,7 @@ async def test_absent_jev_uses_selected_route_and_records_real_usage(store, disp
 
 
 @pytest.mark.asyncio
-@pytest.mark.parametrize("failure", ["http", "malformed", "transport"])
+@pytest.mark.parametrize("failure", ["http", "transport"])
 async def test_failed_real_jev_keeps_held_usage_and_links_one_fallback(store, dispatch_runtime, monkeypatch, failure):
     from src import decisions
     from src.decisions import ResolvedDecisionEndpoint
@@ -180,8 +199,7 @@ async def test_failed_real_jev_keeps_held_usage_and_links_one_fallback(store, di
     first = next(r for r in records if not r.get("fallback_of"))
     second = next(r for r in records if r.get("fallback_of"))
     assert second["fallback_of"] == first["attempt_id"] and second["status"] == "settled"
-    assert first["status"] == ("rejected" if failure == "malformed" else "unresolved")
-    assert first["usage"] == ({"input_tokens": 12, "output_tokens": 3} if failure == "malformed" else None)
+    assert first["status"] == "unresolved" and first["usage"] is None
     with pytest.raises(DecisionError, match="decision_budget_unavailable"):
         rt.attempts.reserve({**second, "attempt_id": "duplicate"}, max_calls=32)
 

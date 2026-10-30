@@ -423,10 +423,18 @@ class DecisionProvider:
             if not settled:
                 await settle("rejected" if measured is not None else "unresolved" if dispatched else "cancelled", error.code)
             raise DecisionError(error.code, attempt_id=attempt_id) from None
-        except Exception:
+        except (httpx.TransportError, TimeoutError):
             if not settled:
                 await settle("rejected" if measured is not None else "unresolved" if dispatched else "cancelled", "decision_transport_failed")
             raise DecisionError("decision_transport_failed", attempt_id=attempt_id) from None
+        except Exception:
+            # Decoder/adapter faults are not evidence of a network outage.
+            # Relabeling them as transport failure would enable approval
+            # fallback after an unreadable or incomplete assessment.
+            failure = "decision_invalid_response" if dispatched else "decision_admission_failed"
+            if not settled:
+                await settle("rejected" if measured is not None else "unresolved" if dispatched else "cancelled", failure)
+            raise DecisionError(failure, attempt_id=attempt_id) from None
 
 
 def _enforce_reservation(measured, record):

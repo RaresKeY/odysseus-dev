@@ -689,9 +689,11 @@ def private_browser_state_transition(args, current_url=None, result=None):
         ):
             return False, current_url
     action = str(args.get('action') or '').strip().lower()
-    if action in {'open', 'read'} and args.get('url'):
+    if action in {'open', 'navigate'} and args.get('url'):
         next_url = str(args['url']).strip()
-        return next_url != (current_url or ''), next_url
+        # A reload at the same URL still replaces the captured document. This
+        # is only evidence deduplication; the producer owns nonce validation.
+        return True, next_url
     if action in {'snapshot', 'read', 'find', 'screenshot'}:
         return False, current_url
     if action == 'batch':
@@ -5976,7 +5978,6 @@ async def stream_preview(*, endpoint_url, model, messages, headers, turn_contrac
         not active_editor_target and broad_current_web_request(direct_user_text)
     )
     force_web_search_next_round = web_briefing_target and not native_workspace_enabled
-    force_private_browser_next_round = False
     force_web_fetch_next_round = False
     suggestion_retry_required = False
     suggestion_retry_attempted = False
@@ -6487,20 +6488,6 @@ async def stream_preview(*, endpoint_url, model, messages, headers, turn_contrac
                                                 if s['function']['name'] == fetch_name]
                             request['tool_choice'] = 'required'
                         force_web_fetch_next_round = False
-                    if force_private_browser_next_round:
-                        private_browser_name = next(
-                            (
-                                schema['function']['name'] for schema in round_offered
-                                if canonical(schema['function']['name']) == 'private_browser'
-                            ),
-                            None,
-                        )
-                        if private_browser_name:
-                            request['tool_choice'] = {
-                                'type': 'function',
-                                'function': {'name': private_browser_name},
-                            }
-                        force_private_browser_next_round = False
                 # A declared source dependency must be attempted successfully before
                 # an answer is visible. Listing accounts alone is not evidence.
                 from src.email_task_intent import _DEPENDENCIES
@@ -8165,13 +8152,12 @@ async def stream_preview(*, endpoint_url, model, messages, headers, turn_contrac
                     ):
                         recovery = (
                             'The static fetch returned repeated navigation or site chrome without '
-                            'substantive page content. Treat it as unreadable and use the rendered '
-                            'private browser for the same URL.'
+                            'substantive page content. Treat it as unreadable and retrieve another '
+                            'relevant source, or explain the access limitation.'
                         )
                         result = {**result, 'error': recovery, 'exit_code': 1}
                         output = recovery
                         failed = True
-                        force_private_browser_next_round = True
                         yield event({
                             'type': 'tool_loop_recovery',
                             'reason': 'web_fetch_boilerplate_fallback',
@@ -8355,20 +8341,19 @@ async def stream_preview(*, endpoint_url, model, messages, headers, turn_contrac
                             for url in retrieved_source_urls(args)
                         )
                     ):
-                        # Static fetchers are routinely rejected by publisher
-                        # bot protection.  That is a transport failure, not
-                        # evidence that the source is unavailable.  Offer one
-                        # rendered-browser attempt at the same evidenced URL.
-                        suppressed_tool_until_round['web_fetch'] = round_number + 1
                         for fetch_url in retrieved_source_urls(args):
                             static_fetch_failed_urls.add(fetch_url.rstrip('/'))
-                        force_private_browser_next_round = True
+                        # Inventory membership cannot authorize navigation.
+                        # The compact runtime currently withholds its effects;
+                        # forcing it would terminate a recoverable source read.
                         round_recovery_messages.append(
-                            'The static page fetch failed or returned no readable content. Use '
-                            'private_browser once to open the strongest known URL and inspect the '
-                            'rendered page; if that also fails, report the limitation without '
-                            'inventing page content.'
+                            'The static page fetch failed or returned no readable content. '
+                            'Use another relevant source with an offered retrieval tool, or '
+                            'report the access limitation without inventing page content. '
+                            'Browser inventory membership alone does not authorize navigation.'
                         )
+                        yield event({'type': 'tool_loop_recovery',
+                                     'reason': 'static_fetch_failed_alternative_source'})
                     if canonical(actual_tool) == 'suggest_document':
                         if failed:
                             if not suggestion_retry_attempted:

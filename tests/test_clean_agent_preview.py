@@ -172,7 +172,10 @@ def test_private_browser_interactions_and_new_navigation_advance_page_revision()
     ) == (True, 'https://example.org')
     assert private_browser_state_transition(
         {'action': 'open', 'url': 'https://example.org'}, 'https://example.org',
-    ) == (False, 'https://example.org')
+    ) == (True, 'https://example.org')
+    assert private_browser_state_transition(
+        {'action': 'navigate', 'url': 'https://example.org'}, 'https://example.org',
+    ) == (True, 'https://example.org')
     assert private_browser_state_transition(
         {'action': 'click', 'target': '@e2'}, 'https://example.org',
     ) == (True, 'https://example.org')
@@ -3297,13 +3300,14 @@ def test_visual_tool_result_is_uniformly_bounded_to_endpoint_limit():
     ]
 
 
-def test_brokered_web_fetch_and_deliberately_offered_private_browser_are_preview_safe_reads():
+def test_brokered_fetch_is_safe_but_browser_navigation_requires_separate_authority():
     assert preview_call_allowed(
         'web_fetch', {'url': 'https://www.reuters.com/example'}, 'tell me more'
     )
-    assert preview_call_allowed(
+    assert not preview_call_allowed(
         'private_browser', {'action': 'open', 'url': 'https://example.com'}, 'open this'
     )
+    assert preview_call_allowed('private_browser', {'action': 'read', 'page': 't1'})
 
 
 def test_preview_policy_decisions_have_stable_sanitized_reasons():
@@ -4394,14 +4398,15 @@ def test_v3_browser_schema_does_not_offer_batch_or_current_tab_authority():
     assert 'unavailable' in browser['description']
 
 
-def test_v3_browser_target_fields_preserve_selector_semantics():
+def test_v3_browser_fields_preserve_opaque_observation_contract():
     browser = next(schema for schema in compact_schemas(FUNCTION_TOOL_SCHEMAS)
                    if schema['function']['name'] == 'private_browser')['function']
-    for name in ('target', 'selector'):
-        description = browser['parameters']['properties'][name].get('description', '')
-        assert '@e2' in description
-        assert 'CSS selector' in description
-        assert 'not visible text' in description
+    properties = browser['parameters']['properties']
+    assert not {'target', 'selector', 'text', 'script', 'commands'} & properties.keys()
+    assert properties['page']['enum'] == ['t1']
+    assert properties['ref']['pattern'] == '^n[0-9]+$'
+    assert 'nonce' in properties['observation']['description']
+    assert browser['parameters']['additionalProperties'] is False
 
 
 def test_long_skill_index_retains_readable_names_instead_of_truncated_json():
@@ -5536,7 +5541,8 @@ async def test_model_choice_budget_preserves_evidence_for_final_answer_without_e
 
 
 @pytest.mark.asyncio
-async def test_failed_static_fetch_recovers_once_through_rendered_browser(monkeypatch):
+@pytest.mark.parametrize("failure", ["http", "boilerplate"])
+async def test_failed_static_fetch_keeps_alternative_reader_without_forcing_navigation(monkeypatch, failure):
     from dataclasses import replace
     import src.clean_agent_preview as module
 
@@ -5545,15 +5551,11 @@ async def test_failed_static_fetch_recovers_once_through_rendered_browser(monkey
             'name': 'web_fetch',
             'arguments': json.dumps({'url': 'https://www.reuters.com/example'}),
         }}]}}]},
-        {'choices': [{'delta': {'tool_calls': [{'index': 0, 'id': 'browser', 'function': {
-            'name': 'private_browser',
-            'arguments': json.dumps({'action': 'open', 'url': 'https://www.reuters.com/example'}),
-        }}]}}]},
         {'choices': [{'delta': {'tool_calls': [{'index': 0, 'id': 'alternative', 'function': {
             'name': 'web_fetch',
             'arguments': json.dumps({'url': 'https://example.org/report'}),
         }}]}}]},
-        {'choices': [{'delta': {'content': 'Reuters blocked both access methods. The alternative report was readable.'}}]},
+        {'choices': [{'delta': {'content': 'Reuters blocked static access. The alternative report was readable.'}}]},
     ])
     requests = []
 
@@ -5581,11 +5583,10 @@ async def test_failed_static_fetch_recovers_once_through_rendered_browser(monkey
         if block.tool_type == 'web_fetch':
             if json.loads(block.content).get('url') == 'https://example.org/report':
                 return 'web_fetch', {'output': 'Independent report with readable evidence.', 'exit_code': 0}
-            return 'web_fetch', {'error': 'web_fetch: HTTP 401', 'exit_code': 1}
-        return 'private_browser', {
-            'output': 'Iframe "DataDome CAPTCHA" Access is temporarily restricted',
-            'exit_code': 0,
-        }
+            if failure == 'http':
+                return 'web_fetch', {'error': 'web_fetch: HTTP 401', 'exit_code': 1}
+            return 'web_fetch', {'output': 'Menu Home News Sport Business Technology More ' * 100, 'exit_code': 0}
+        pytest.fail('Unavailable browser navigation must not be dispatched')
 
     monkeypatch.setattr(module.httpx, 'AsyncClient', Client)
     monkeypatch.setattr(module, 'execute_tool_block', execute)
@@ -5604,16 +5605,15 @@ async def test_failed_static_fetch_recovers_once_through_rendered_browser(monkey
         disabled_tools=set(), tool_policy=ToolPolicy(), max_rounds=4,
     )]
 
-    assert executions == ['web_fetch', 'private_browser', 'web_fetch']
-    assert all(
-        schema['function']['name'] != 'web_fetch'
-        for schema in requests[1].get('tools', [])
-    )
-    assert any(schema['function']['name'] == 'web_fetch' for schema in requests[2]['tools'])
-    assert any('Use another relevant source' in str(msg.get('content')) for msg in requests[2]['messages'])
+    assert executions == ['web_fetch', 'web_fetch']
+    assert any(schema['function']['name'] == 'web_fetch' for schema in requests[1]['tools'])
+    assert requests[1].get('tool_choice') != {
+        'type': 'function', 'function': {'name': 'private_browser'},
+    }
+    assert any('Use another relevant source' in str(msg.get('content')) for msg in requests[1]['messages'])
     events = [json.loads(chunk[6:]) for chunk in raw if '[DONE]' not in chunk]
-    assert any(event.get('type') == 'tool_loop_recovery' for event in events)
-    assert any('blocked both access methods' in event.get('delta', '') for event in events)
+    assert any(event.get('reason') == 'static_fetch_failed_alternative_source' for event in events)
+    assert any('blocked static access' in event.get('delta', '') for event in events)
 
 
 @pytest.mark.asyncio
@@ -5690,8 +5690,7 @@ async def test_blocked_search_engine_browser_forces_native_web_search(monkeypatc
             'function': {
                 'name': 'private_browser',
                 'arguments': json.dumps({
-                    'action': 'open',
-                    'url': 'https://www.google.com/search?q=latest+AI+news',
+                    'action': 'read', 'page': 't1',
                 }),
             },
         }]}}]},
@@ -5760,7 +5759,7 @@ async def test_blocked_search_engine_browser_forces_native_web_search(monkeypatc
     )
     raw = [chunk async for chunk in stream_preview(
         endpoint_url='http://test', model='test',
-        messages=[{'role': 'user', 'content': 'Open browser and find an AI model release.'}],
+        messages=[{'role': 'user', 'content': 'Read the current browser page for an AI model release.'}],
         headers={}, turn_contract=contract, session_id='test', owner='test',
         disabled_tools=set(), tool_policy=ToolPolicy(), max_rounds=4,
     )]
@@ -6149,16 +6148,16 @@ async def test_context_overflow_retries_model_request_without_replaying_tool(mon
                 "you requested 768 output tokens and your prompt contains at least "
                 "3900 input tokens, for a total of at least 4668 tokens."}})
         delta = ({'tool_calls': [{'index': 0, 'id': 'page-read', 'function': {
-            'name': 'private_browser', 'arguments': json.dumps({
-                'action': 'open', 'url': 'https://example.org'})}}]}
+            'name': 'web_fetch', 'arguments': json.dumps({
+                'url': 'https://example.org'})}}]}
             if len(requests) == 1 else {'content': 'The page was read.'})
         if recovery_kind != 'none' and len(requests) == 2:
-            args = ({'action': 'click', 'target': '@e2'} if recovery_kind == 'budget'
-                    else {'action': 'find', 'text': 'heading'})
+            args = ({'url': 'https://example.org/next'} if recovery_kind == 'budget'
+                    else {'url': 'https://example.org'})
             delta = {'tool_calls': [{'index': 0, 'id': 'blocked-click', 'function': {
-                'name': 'private_browser', 'arguments': json.dumps(args)}}]}
+                'name': 'web_fetch', 'arguments': json.dumps(args)}}]}
         if recovery_kind == 'duplicate' and len(requests) == 1:
-            delta['tool_calls'][0]['function']['arguments'] = json.dumps({'action': 'find', 'text': 'heading'})
+            delta['tool_calls'][0]['function']['arguments'] = json.dumps({'url': 'https://example.org'})
         return httpx.Response(200, text='data: ' + json.dumps({'choices': [{'delta': delta}]})
                               + '\n\ndata: [DONE]\n\n')
     original_client = httpx.AsyncClient
@@ -6168,7 +6167,7 @@ async def test_context_overflow_retries_model_request_without_replaying_tool(mon
         executions.append(block)
         return 'page', {'output': 'heading current page\n' + '木' * 7900, 'exit_code': 0}
     monkeypatch.setattr(module, 'execute_tool_block', execute)
-    schema = next(s for s in FUNCTION_TOOL_SCHEMAS if s['function']['name'] == 'private_browser')
+    schema = next(s for s in FUNCTION_TOOL_SCHEMAS if s['function']['name'] == 'web_fetch')
     contract = replace(resolve_full_inventory_contract(schemas=[schema], policy=ToolPolicy()),
                        routing_experiment='recent_model_choice')
     prompt = 'Open https://example.org and report the page heading.'
@@ -6275,20 +6274,20 @@ async def test_pre_content_transport_disconnect_is_retried_once(monkeypatch):
 
 @pytest.mark.asyncio
 @pytest.mark.parametrize('transition,transition_result,can_repeat', [
-    ({'action': 'open', 'url': 'https://example.org/next'}, {}, True),
+    ({'action': 'wait', 'timeout_ms': 250}, {}, True),
     ({'action': 'snapshot'}, {}, False),
-    ({'action': 'click', 'target': '@e2'}, {'error': 'Element changed', 'exit_code': 1}, True),
+    ({'action': 'wait', 'timeout_ms': 500}, {'error': 'Element changed', 'exit_code': 1}, True),
     ({'action': 'read'}, {}, False),
-    ({'action': 'open', 'url': 'https://example.org/next'},
+    ({'action': 'wait', 'timeout_ms': 250},
      {'blocked': True, 'error': 'Denied', 'exit_code': 1}, False),
 ])
-async def test_browser_can_repeat_observation_after_navigation(
+async def test_browser_can_repeat_read_after_state_transition(
         monkeypatch, transition, transition_result, can_repeat):
     from dataclasses import replace
     import src.clean_agent_preview as module
-    actions = [{'action': 'find', 'text': 'heading'},
+    actions = [{'action': 'read', 'page': 't1'},
                transition,
-               {'action': 'find', 'text': 'heading'}]
+               {'action': 'read', 'page': 't1'}]
     packets = iter([{'choices': [{'delta': {'tool_calls': [{
         'index': 0, 'id': f'browser-{i}', 'function': {'name': 'private_browser',
         'arguments': json.dumps(args)}}]}}]} for i, args in enumerate(actions)]
@@ -6320,7 +6319,7 @@ async def test_browser_can_repeat_observation_after_navigation(
         routing_experiment='recent_model_choice')
     raw = [chunk async for chunk in stream_preview(
         endpoint_url='http://test', model='test', headers={}, turn_contract=contract,
-        messages=[{'role': 'user', 'content': 'Inspect the heading, open the next page, then inspect its heading.'}],
+        messages=[{'role': 'user', 'content': 'Read the current heading, wait for the page, then read its heading again.'}],
         session_id='test', owner='test', disabled_tools=set(), tool_policy=ToolPolicy())]
     assert executions == (actions if can_repeat else actions[:2])
     if not transition_result.get('blocked'):
@@ -7325,9 +7324,8 @@ async def test_tool_round_leadin_is_replaced_by_terminal_synthesis(monkeypatch):
         {'choices': [{'delta': {
             'content': "I'll browse IKEA and look at their chairs.",
             'tool_calls': [{'index': 0, 'id': 'browse-1', 'function': {
-                'name': 'private_browser',
+                'name': 'web_fetch',
                 'arguments': json.dumps({
-                    'action': 'open',
                     'url': 'https://www.ikea.com/us/en/cat/armchairs-16239/',
                 }),
             }}],
@@ -7354,13 +7352,13 @@ async def test_tool_round_leadin_is_replaced_by_terminal_synthesis(monkeypatch):
         def stream(self, *args, **kwargs): return Response(next(packets))
 
     async def execute(block, **kwargs):
-        return 'private_browser', {'output': 'IKEA chair evidence', 'exit_code': 0}
+        return 'web_fetch', {'output': 'IKEA chair evidence', 'exit_code': 0}
 
     monkeypatch.setattr(module.httpx, 'AsyncClient', Client)
     monkeypatch.setattr(module, 'execute_tool_block', execute)
     schema = next(
         item for item in FUNCTION_TOOL_SCHEMAS
-        if item['function']['name'] == 'private_browser'
+        if item['function']['name'] == 'web_fetch'
     )
     contract = replace(
         resolve_full_inventory_contract(schemas=[schema], policy=ToolPolicy()),

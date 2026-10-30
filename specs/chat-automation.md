@@ -2,6 +2,8 @@
 
 Last updated: dev@1a7c79946 | 2026-10-28
 
+Feature contract updated: 2026-10-30.
+
 ## Scope
 
 `src/chat_automation.py`, the `OwnerChatAutomation`, `ChatAutomationState`, lease,
@@ -18,7 +20,7 @@ Owner settings are SQL-backed, independently of the general JSON preferences. Fi
 | Mode | Tool review after deterministic admission | Extra folders with ceiling off | Extra folders with ceiling on |
 | --- | --- | --- | --- |
 | Always Ask | One exact human decision | None | Explicit per-chat grant within deployment roots |
-| Auto-Approve | Independent Jev review with one selected-conversation-model technical fallback; valid denial/uncertainty or dual failure stops, with no human card | None | Same explicit grant; reviewer cannot elevate |
+| Auto-Approve | Independent Jev review with one selected-conversation-model technical fallback; valid denial/uncertainty, malformed/incomplete response or dual failure stops, with no human card | None | Same explicit grant; reviewer cannot elevate |
 | YOLO | Discretionary review omitted for admitted operations | None | Explicit bounded scope, with process controls retained |
 
 The owner ceiling defaults off. `agent_elevation_enabled` and
@@ -101,7 +103,7 @@ distinct from passing fake-provider and fake-channel regression contracts.
 
 ## Synchronous semantic action assessment
 
-`src/approval_policy.py` owns `odysseus-approval-review/v2`: one independent primary review answers risk, semantic authorization, policy category and effect scope, with one bounded conversation-model fallback after technical failure or missing Jev. `src/approval_review.py` validates complete distributions and known usage, then applies the deterministic matrix and every veto. All four Jev classifications require confidence/probability at least 0.95 for acceptance. The ordinary-model fallback instead requires four categorical labels and explicit uncertainty, without fabricated distributions; uncertainty stops. Low/medium risk can pass with any explicit authorization label; high requires medium/high authorization and narrow scope; critical always denies. Category restrictions and missing material evidence override allowances. Readiness, three user modes, exact grants, cancellation and hard execution authority remain independent.
+`src/approval_policy.py` owns `odysseus-approval-review/v2`: one independent primary review answers risk, semantic authorization, policy category and effect scope, with one bounded conversation-model fallback after HTTP/transport/timeout failure or missing Jev. Malformed/incomplete primary answers and identity/usage failures stop without another reviewer; only an explicit outage may exempt its held usage for an independent fallback. `src/approval_review.py` validates complete distributions and known usage, then applies the deterministic matrix and every veto. All four Jev classifications require confidence/probability at least 0.95 for acceptance. The ordinary-model fallback instead requires four categorical labels and explicit uncertainty, without fabricated distributions; uncertainty stops. Low/medium risk can pass with any explicit authorization label; high requires medium/high authorization and narrow scope; critical always denies. Category restrictions and missing material evidence override allowances. Readiness, three user modes, exact grants, cancellation and hard execution authority remain independent.
 
 `src/approval_context.py` assembles the complete owner-scoped submission chain (4,096 linked submissions/24 KiB of losslessly framed user evidence), exact proposed action, policy/environment/resource facts, and bounded untrusted observations within a 32 KiB state cap. It does not infer consent from mutable chat history or compaction. `ChatAutomationSubmission.approval_evidence` retains exact human allow/deny fingerprints with provenance; private-turn contents remain in memory. Owner-serialized logical admission order survives wall-clock rollback/ties. Every owned row must belong to the validated chain; disconnected, missing, corrupt or over-budget history fails closed. `src/approval_files.py` inspects bounded directly declared native shell scripts inside admitted roots, binding their complete content and identity; complex/transitive/remote dependencies remain unverified. The authorization snapshot and inspected scripts are sealed into pending proposals and rechecked after await and at grant claim. Ordinary filesystem bindings remain object identity checks, not complete content snapshots.
 
@@ -111,7 +113,7 @@ The fallback shares a 60-second deadline, gets at most one selected-model attemp
 
 ## Approval retention and route continuation
 
-Synchronous approval context v2 revalidates the complete owner/chat submission chain in one bounded SQL read. Lossless ordered exact-text framing supports up to 4,096 linked submissions within 24 KiB of user evidence; material overflow requires an explicit owner-authenticated in-chat checkpoint or Always Ask, never a relevance guess. Private asks/decisions stay only in bounded owner/chat/process memory across request-scoped stores; restart/worker changes/eviction/expiry fail explicitly. Deleted/renamed ownership clears the volatile evidence. Registered owner-authorized foreground fallback retires old cards and advances the review-route revision before a new binding; old grants/in-flight answers cannot transfer. A primary technical outage (including malformed responses with unknown usage) may continue distinct exact actions with the selected conversation reviewer or an explicitly authorized registered route handoff while retaining the original unknown hold and call ceiling; unrelated holds, overrun, cancellation and valid denial remain final. See [chat action review](../docs/chat-approval-review.md).
+Synchronous approval context v2 revalidates the complete owner/chat submission chain in one bounded SQL read. Lossless ordered exact-text framing supports up to 4,096 linked submissions within 24 KiB of user evidence; material overflow requires an explicit owner-authenticated in-chat checkpoint or Always Ask, never a relevance guess. Private asks/decisions stay only in bounded owner/chat/process memory across request-scoped stores; restart/worker changes/eviction/expiry fail explicitly. Deleted/renamed ownership clears the volatile evidence. Registered owner-authorized foreground fallback retires old cards and advances the review-route revision before a new binding; old grants/in-flight answers cannot transfer. A primary HTTP/transport/timeout outage may continue distinct exact actions with the selected conversation reviewer or an explicitly authorized registered route handoff while retaining the original unknown hold and call ceiling; unrelated holds, overrun, cancellation and valid denial remain final. See [chat action review](../docs/chat-approval-review.md).
 
 ## Owned evidence recovery and compatibility
 

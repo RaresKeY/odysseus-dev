@@ -2,6 +2,8 @@
 
 Last updated: dev@1a7c79946 | 2026-10-28
 
+Feature contract updated: 2026-10-30.
+
 ## Scope
 
 `src/decision_routing.py`, `src/chat_tool_routing.py`, `src/chat_automation.py`,
@@ -128,7 +130,7 @@ Approval fallback uses the selected conversation provider/model in a separate re
 
 ## Approval retention and route continuation
 
-Synchronous approval context v2 revalidates the complete owner/chat submission chain in one bounded SQL read. Lossless ordered exact-text framing supports up to 4,096 linked submissions within 24 KiB of user evidence; material overflow requires an explicit owner-authenticated in-chat checkpoint or Always Ask, never a relevance guess. Private asks/decisions stay only in bounded owner/chat/process memory across request-scoped stores; restart/worker changes/eviction/expiry fail explicitly. Deleted/renamed ownership clears the volatile evidence. Registered owner-authorized foreground fallback retires old cards and advances the review-route revision before a new binding; old grants/in-flight answers cannot transfer. A primary technical outage (including malformed responses with unknown usage) may continue distinct exact actions with the selected conversation reviewer or an explicitly authorized registered route handoff while retaining the original unknown hold and call ceiling; unrelated holds, overrun, cancellation and valid denial remain final. See [chat action review](../docs/chat-approval-review.md).
+Synchronous approval context v2 revalidates the complete owner/chat submission chain in one bounded SQL read. Lossless ordered exact-text framing supports up to 4,096 linked submissions within 24 KiB of user evidence; material overflow requires an explicit owner-authenticated in-chat checkpoint or Always Ask, never a relevance guess. Private asks/decisions stay only in bounded owner/chat/process memory across request-scoped stores; restart/worker changes/eviction/expiry fail explicitly. Deleted/renamed ownership clears the volatile evidence. Registered owner-authorized foreground fallback retires old cards and advances the review-route revision before a new binding; old grants/in-flight answers cannot transfer. A primary HTTP/transport/timeout outage may continue distinct exact actions with the selected conversation reviewer or an explicitly authorized registered route handoff while retaining the original unknown hold and call ceiling; unrelated holds, overrun, cancellation and valid denial remain final. See [chat action review](../docs/chat-approval-review.md).
 
 ## Owned evidence recovery and compatibility
 

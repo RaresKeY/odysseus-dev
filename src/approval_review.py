@@ -23,6 +23,16 @@ from src.approval_policy import (
     APPROVAL_REVIEW_POLICY, INSTRUCTIONS, QUESTIONS, combine_assessment,
 )
 from src.approval_context import assemble
+from src.decisions.store import OUTAGE_FAILURES
+
+
+# Configuration absence may use the exact selected conversation reviewer. Wire
+# contract failures, unknown exceptions and identity mismatches are final.
+_FALLBACK_FAILURES = OUTAGE_FAILURES | frozenset({
+    "decision_provider_not_configured", "decision_endpoint_unavailable",
+    "decision_endpoint_protocol_unavailable", "decision_model_unavailable",
+    "decision_credentials_missing",
+})
 
 
 @dataclass(frozen=True)
@@ -231,8 +241,7 @@ class ApprovalReviewService:
                         else "decision_deadline_exceeded" if isinstance(primary_error, TimeoutError) else "decision_failed")
                 # Accounting, capture and cancellation failures are not
                 # permission to spend another attempt or discard a restriction.
-                if (fallback_evaluator is None or code == "decision_cancelled"
-                        or any(part in code for part in ("budget", "attempt_store", "capture_", "usage_exceeded", "limit", "endpoint_changed"))
+                if (fallback_evaluator is None or code not in _FALLBACK_FAILURES
                         or await _cancelled(cancelled) or not self._current(pending, policy)):
                     raise
                 source, fallback_reason = "conversation_model", code

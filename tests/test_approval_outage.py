@@ -39,6 +39,11 @@ def outage_runtime(store, dispatch_runtime, monkeypatch, tmp_path):
             raise httpx.ReadTimeout("synthetic timeout")
         if settings["failure"] == "invalid_json":
             return httpx.Response(200, content=b"not-json")
+        if settings["failure"] == "invalid_utf8":
+            return httpx.Response(200, content=b"\xff")
+        if settings["failure"] == "invalid_answers":
+            return httpx.Response(200, json={"model": "decision-model", "answers": {},
+                "usage": {"input_tokens": 12, "output_tokens": 3}})
         if settings["failure"] == "missing_usage":
             return httpx.Response(200, json={"model":"decision-model", "answers":{}})
         return httpx.Response(401, json={"error": "synthetic unauthorized"})
@@ -82,7 +87,7 @@ def outage_runtime(store, dispatch_runtime, monkeypatch, tmp_path):
 
 
 @pytest.mark.asyncio
-@pytest.mark.parametrize("failure", ["http", "transport", "timeout", "invalid_json", "missing_usage"])
+@pytest.mark.parametrize("failure", ["http", "transport", "timeout"])
 async def test_sequential_actions_keep_one_primary_hold_and_separate_reviews(outage_runtime, failure):
     rt = outage_runtime
     rt.settings["failure"] = failure
@@ -105,6 +110,49 @@ async def test_sequential_actions_keep_one_primary_hold_and_separate_reviews(out
         await rt.providers[-1].evaluate(DecisionRequest("advice", {}, {"a": "A", "b": "B"}),
             DecisionContext("alice", "a", bound.run_id), config=bound.configuration["decision_provider"])
     assert len(rt.primary_calls) == 1
+
+
+@pytest.mark.asyncio
+@pytest.mark.parametrize("failure", ["invalid_json", "invalid_utf8", "missing_usage", "invalid_answers"])
+async def test_malformed_real_primary_stops_without_outage_or_fallback(outage_runtime, failure):
+    rt = outage_runtime
+    rt.settings["failure"] = failure
+    bound = await rt.start()
+    first = (await rt.action(bound, 0))[1]
+    assert first["blocked"] and not first.get("approval_required")
+    assert not rt.fallback_calls and not rt.effects
+    records = rt.attempts.records_for_run("alice", "a", bound.run_id)
+    assert len(records) == 1
+    assert records[0]["failure_kind"] == {
+        "invalid_json": "decision_invalid_json", "invalid_utf8": "decision_invalid_json",
+        "missing_usage": "decision_invalid_response", "invalid_answers": "decision_invalid_answers",
+    }[failure]
+    known = failure == "invalid_answers"
+    assert records[0]["status"] == ("rejected" if known else "unresolved")
+    assert records[0]["usage"] == ({"input_tokens": 12, "output_tokens": 3} if known else None)
+    # A later distinct action cannot reinterpret malformed output as an outage.
+    second = (await rt.action(bound, 1))[1]
+    assert second["blocked"] and not rt.fallback_calls and not rt.effects
+    assert len(rt.primary_calls) == (2 if known else 1)
+
+
+@pytest.mark.asyncio
+@pytest.mark.parametrize("failure", ["decision_invalid_json", "decision_incomplete_response"])
+async def test_legacy_malformed_hold_cannot_exempt_another_review(outage_runtime, store, failure):
+    from core import database as d
+    rt = outage_runtime
+    bound = await rt.start()
+    assert (await rt.action(bound, 0))[1]["exit_code"] == 0
+    root = next(r for r in rt.attempts.records_for_run("alice", "a", bound.run_id)
+                if r["status"] == "unresolved")
+    # Simulate persisted pre-repair outage metadata. Its old settled fallback
+    # cannot make a malformed primary eligible for a new budget exemption.
+    with store.transaction() as db:
+        row = db.get(d.DecisionAttempt, root["attempt_id"])
+        row.record = {**row.record, "failure_kind": failure}
+    stopped = (await rt.action(bound, 1))[1]
+    assert stopped["blocked"] and len(rt.primary_calls) == len(rt.fallback_calls) == len(rt.effects) == 1
+    assert stopped["approval_review"]["failure_kind"] == "decision_budget_unavailable"
 
 
 @pytest.mark.asyncio
