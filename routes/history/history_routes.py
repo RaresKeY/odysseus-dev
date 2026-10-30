@@ -912,6 +912,11 @@ def setup_history_routes(session_manager, upload_handler=None) -> APIRouter:
             used = int(estimate_tokens(messages))
             ctx_len = int(get_context_length(session.endpoint_url, session.model) or 0)
             thinking_supported = supports_user_thinking_toggle(session.model)
+            from src.llm_core import temperature_control_status
+            temperature_control = temperature_control_status(
+                session.endpoint_url, session.model, getattr(session, "headers", None),
+                temperature=getattr(session, "temperature_override", None) if getattr(session, "temperature_override", None) is not None else 1.0,
+            )
             pct = round((used / ctx_len) * 100, 1) if ctx_len else 0.0
             pct = max(0.0, min(100.0, pct))
             auto_threshold = auto_compact_threshold_percent()
@@ -943,6 +948,7 @@ def setup_history_routes(session_manager, upload_handler=None) -> APIRouter:
                 "skill_injection_enabled": getattr(session, "skill_injection_enabled", True) is not False,
                 "thinking_mode": (getattr(session, "thinking_mode", "") or "off") if thinking_supported else "off",
                 "thinking_supported": thinking_supported,
+                "temperature_control": temperature_control,
                 "temperature_override": getattr(session, "temperature_override", None),
                 "max_tokens_override": getattr(session, "max_tokens_override", None),
             }

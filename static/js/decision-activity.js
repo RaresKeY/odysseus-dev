@@ -37,7 +37,7 @@ export function decisionExportPath(sessionId, runId, capture = false) {
 }
 
 function mount(container, sessionId, {pane, trigger, closeButton, refreshButton}) {
-    let destroyed = false, timer = null, controller = null, generation = 0;
+    let destroyed = false, timer = null, controller = null, generation = 0, loaded = false;
     const narrow = window.matchMedia('(max-width: 900px)');
     const base = `/api/session/${encodeURIComponent(sessionId)}`;
     const content = document.createElement('div');
@@ -63,7 +63,12 @@ function mount(container, sessionId, {pane, trigger, closeButton, refreshButton}
     const captureControls = document.createElement('div');
     captureControls.className = 'decision-capture-controls';
     captureControls.append(captureButton, deleteButton);
-    content.append(explanation, captureControls, state, taskState, list, handoffList);
+    const tools = document.createElement('details');
+    tools.className = 'decision-activity-tools';
+    const toolsLabel = document.createElement('summary');
+    toolsLabel.textContent = 'Details & capture';
+    tools.append(toolsLabel, explanation, captureControls, taskState);
+    content.append(state, list, handoffList, tools);
     container.replaceChildren(content);
     trigger.disabled = false;
 
@@ -79,6 +84,8 @@ function mount(container, sessionId, {pane, trigger, closeButton, refreshButton}
         anchor.setAttribute('download', '');
         return anchor;
     }
+    const receipts = new Map();
+    const setText = (node, value) => { if (node.textContent !== value) node.textContent = value; };
     function render(items) {
         const retained = new Set(), focused = document.activeElement;
         let cursor = list.firstChild;
@@ -87,24 +94,32 @@ function mount(container, sessionId, {pane, trigger, closeButton, refreshButton}
             retained.add(key);
             let entry = rows.get(key);
             if (!entry) {
-                const row = document.createElement('li'), text = document.createElement('span');
-                const distribution = document.createElement('details');
-                const label = document.createElement('summary');
-                label.textContent = 'Reported distribution';
+                const row = document.createElement('li');
+                const disclosure = document.createElement('details');
+                const heading = document.createElement('summary');
+                const text = document.createElement('span');
+                const model = document.createElement('small');
+                heading.append(text, model);
+                const body = document.createElement('div');
+                body.className = 'decision-entry-body';
                 const values = document.createElement('p');
-                distribution.append(label, values);
-                const capture = link('Download redacted capture', item.run_id, true);
-                row.append(text, document.createTextNode(' '), link('Export metadata', item.run_id), distribution, capture);
-                entry = {row, text, distribution, label, values, capture};
+                const probabilities = document.createElement('p');
+                const capture = link('Download capture', item.run_id, true);
+                body.append(values, probabilities, link('Export metadata', item.run_id), capture);
+                disclosure.append(heading, body); row.append(disclosure);
+                entry = {row, text, model, values, probabilities, capture};
                 rows.set(key, entry);
             }
-            const text = compactDecisionSummary(item);
-            const probabilities = distributionSummary(item.questions || {});
-            const values = item.approval ? `${decisionSummary(item)}${probabilities ? ` · ${probabilities}` : ''}` : probabilities;
-            entry.label.textContent = item.approval ? 'Review details' : 'Reported distribution';
-            if (entry.text.textContent !== text) entry.text.textContent = text;
-            if (entry.values.textContent !== values) entry.values.textContent = values;
-            entry.distribution.hidden = !item.approval && !Object.keys(item.questions || {}).length;
+            const labels = {approval: 'Action review', approval_review: 'Action review', model_auto: 'Model choice',
+                tools: 'Tool choice', effort: 'Effort', approach: 'Approach', followup: 'Follow-up'};
+            const source = item.approval?.decision_source;
+            const reviewer = source === 'jev' ? 'Jev' : source === 'conversation_model' ? 'Conversation model' : '';
+            setText(entry.text, `${labels[item.purpose] || item.purpose.replaceAll('_', ' ')} · ${item.approval?.disposition || item.status}`);
+            setText(entry.model, [reviewer, item.provider?.model].filter(Boolean).join(' · '));
+            entry.model.hidden = !entry.model.textContent;
+            setText(entry.values, decisionSummary(item));
+            setText(entry.probabilities, distributionSummary(item.questions || {}));
+            entry.probabilities.hidden = !entry.probabilities.textContent;
             entry.capture.hidden = !['complete', 'outcome_recorded'].includes(item.capture_state);
             if (entry.row !== cursor) list.insertBefore(entry.row, cursor);
             cursor = entry.row.nextSibling;
@@ -113,16 +128,28 @@ function mount(container, sessionId, {pane, trigger, closeButton, refreshButton}
             if (!retained.has(key)) {entry.row.remove(); rows.delete(key);}
         }
         if (list.contains(focused) && document.activeElement !== focused) focused.focus({preventScroll:true});
-        state.textContent = items.length ? '' : 'No recorded decision attempts.';
+        setText(state, items.length ? '' : 'No decisions recorded for this chat.');
     }
     function renderHandoffs(items) {
-        handoffList.replaceChildren();
+        const retained = new Set();
+        let cursor = handoffList.firstChild;
         for (const item of items) {
-            const row = document.createElement('li');
-            const verdict = item.completion_verified ? 'completion verified by execution evidence' : 'completion unverified';
-            row.textContent = `${item.review_required ? 'Review required' : 'Run receipt'} · ${item.stop_reason} · ${verdict}`
-                + ` · ${item.action_ids.length} action receipts / ${item.check_ids.length} check receipts`;
-            handoffList.append(row);
+            const key = item.id || item.handoff_id || item.run_id;
+            retained.add(key);
+            let entry = receipts.get(key);
+            if (!entry) {
+                const row = document.createElement('li'), details = document.createElement('details');
+                const heading = document.createElement('summary'), body = document.createElement('p');
+                details.append(heading, body); row.append(details);
+                entry = {row, heading, body}; receipts.set(key, entry);
+            }
+            setText(entry.heading, `${item.review_required ? 'Review required' : 'Run'} · ${item.stop_reason.replaceAll('_', ' ')} · ${item.completion_verified ? 'verified' : 'unverified'}`);
+            setText(entry.body, `${item.action_ids.length} actions · ${item.check_ids.length} checks`);
+            if (entry.row !== cursor) handoffList.insertBefore(entry.row, cursor);
+            cursor = entry.row.nextSibling;
+        }
+        for (const [key, entry] of receipts) {
+            if (!retained.has(key)) {entry.row.remove(); receipts.delete(key);}
         }
     }
     function stopPolling() {
@@ -133,14 +160,16 @@ function mount(container, sessionId, {pane, trigger, closeButton, refreshButton}
         refreshButton.disabled = false;
         container.setAttribute('aria-busy', 'false');
     }
-    async function refresh() {
-        if (destroyed || !pane.open || document.hidden) return;
-        stopPolling();
+    async function refresh({manual = false} = {}) {
+        if (destroyed || !pane.open || document.hidden || controller) return;
+        clearTimeout(timer);
         const ticket = generation, current = new AbortController();
         controller = current;
-        refreshButton.disabled = true;
-        container.setAttribute('aria-busy', 'true');
-        state.textContent = 'Loading decision activity…';
+        if (manual) refreshButton.disabled = true;
+        if (!loaded) {
+            container.setAttribute('aria-busy', 'true');
+            setText(state, 'Loading decisions…');
+        }
         try {
             const [data, handoffs, automation] = await Promise.all([
                 request('/decisions/live', {signal: current.signal}),
@@ -150,6 +179,7 @@ function mount(container, sessionId, {pane, trigger, closeButton, refreshButton}
             if (destroyed || ticket !== generation || !pane.open) return;
             render(data.items || []);
             renderHandoffs(handoffs.items || []);
+            loaded = true;
             const task = automation.task || {}, prep = task.preparation, route = task.routing || {};
             const parts = [`Task: ${task.previous_status || 'no recorded task'}`];
             if (prep) parts.push(`Context: ${prep.returned_bytes || 0} bytes returned · ${prep.coverage || 'unknown'} coverage`);
@@ -157,15 +187,15 @@ function mount(container, sessionId, {pane, trigger, closeButton, refreshButton}
             if (route.approach?.readiness) parts.push(`Readiness: ${route.approach.readiness.choice}`);
             if (route.effort?.status) parts.push(`Effort: ${route.effort.choice || route.effort.status}${route.effort.reason ? ' · ' + route.effort.reason.replaceAll('_', ' ') : ''}`);
             for (const [name, value] of Object.entries(route.diagnostics || {})) parts.push(`${name.replaceAll('_', ' ')}: ${value.choice} (advice)`);
-            taskState.textContent = parts.join(' · ');
+            setText(taskState, parts.join(' · '));
         } catch (error) {
-            if (!destroyed && ticket === generation && error.name !== 'AbortError') state.textContent = 'Decision activity unavailable. Refresh to try again.';
+            if (!destroyed && ticket === generation && error.name !== 'AbortError') setText(state, 'Updates unavailable. Reload to try again.');
         } finally {
             if (!destroyed && ticket === generation) {
                 controller = null;
                 refreshButton.disabled = false;
                 container.setAttribute('aria-busy', 'false');
-                if (pane.open && !document.hidden) timer = setTimeout(refresh, 2500);
+                if (pane.open && !document.hidden) timer = setTimeout(refresh, 5000);
             }
         }
     }
@@ -202,7 +232,8 @@ function mount(container, sessionId, {pane, trigger, closeButton, refreshButton}
     const closeClick = () => close();
     trigger.addEventListener('click', toggle);
     closeButton.addEventListener('click', closeClick);
-    refreshButton.addEventListener('click', refresh);
+    const reload = () => refresh({manual:true});
+    refreshButton.addEventListener('click', reload);
     pane.addEventListener('cancel', cancel);
     pane.addEventListener('close', closed);
     document.addEventListener('keydown', escape);
@@ -240,7 +271,7 @@ function mount(container, sessionId, {pane, trigger, closeButton, refreshButton}
         trigger.disabled = true;
         trigger.removeEventListener('click', toggle);
         closeButton.removeEventListener('click', closeClick);
-        refreshButton.removeEventListener('click', refresh);
+        refreshButton.removeEventListener('click', reload);
         pane.removeEventListener('cancel', cancel);
         pane.removeEventListener('close', closed);
         document.removeEventListener('keydown', escape);

@@ -7,7 +7,7 @@
 //   - Other static assets (images/fonts/libs): cache-first with bg refresh.
 //   - API / non-GET: never cached.
 // Bump CACHE_NAME whenever the precache list or SW logic changes.
-const CACHE_NAME = 'odysseus-v1115-pr40-editor-precache';
+const CACHE_NAME = 'odysseus-20261030-quiet-decisions';
 
 // KaTeX resolves these from its own stylesheet, so caching the CSS without them
 // gives offline math fallback glyphs instead of proper typesetting.
@@ -39,6 +39,7 @@ const KATEX_FONTS = [
 // exact URL the browser requests, query string included.
 const PRECACHE = [
   '/static/css/chat-automation.css?v=20260929csssplit',
+  '/static/css/decision-activity.css?v=20261030quiet',
   '/static/js/chatAutomation.js',
   '/static/js/modelPicker.js?v=20260909routeidentity1',
   '/static/js/modelAutoDialog.js',
