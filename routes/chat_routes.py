@@ -5117,7 +5117,8 @@ def setup_chat_routes(
                 _active_streams.pop(session, None)
                 bound = current_turn()
                 if bound is not None:
-                    bound.store.record(bound, "awaiting_input" if bound.pending_input_id else
+                    bound.store.record(bound, "cancelled" if _shutdown.is_shutting_down() else
+                                       "awaiting_input" if bound.pending_input_id else
                                        "awaiting_approval" if bound.pending else "completed")
 
         # Compare panes and explicitly unattended native clients are
