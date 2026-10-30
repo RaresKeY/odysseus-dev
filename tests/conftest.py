@@ -8,13 +8,16 @@ import pytest
 
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
-# Isolate import-time database and filesystem defaults before collection.
-# File-backed databases remain fixture-owned. Cleanup restores the caller.
-# Keep the existing generated environment-reference locations stable.
+# Each process owns a default database shared by its request threads.
 _database_environment = pytest.MonkeyPatch()
-_database_environment.setenv("DATABASE_URL", "sqlite:///:memory:")
 from tests.helpers.worker_runtime import bootstrap_runtime, configure_runtime
 _runtime_environment = bootstrap_runtime()
+_database_environment.setenv(
+    "DATABASE_URL",
+    f"sqlite:///{_runtime_environment.root / 'data' / 'app.db'}"
+    if _runtime_environment is not None else "sqlite:///:memory:",
+)
+_initial_database_engine = None
 
 # Pre-import real heavy modules BEFORE any test file's module-level stubs can
 # replace them with MagicMock. Some test files (e.g. test_llm_core_sanitize_*)
@@ -26,6 +29,7 @@ try:
     import sqlalchemy.orm  # noqa: F401
     import core.database  # noqa: F401
     import src.database
+    _initial_database_engine = core.database.engine
 except ImportError:
     pass  # not installed - the stubs below will handle it
 
@@ -99,8 +103,6 @@ def pytest_configure(config):
     unknown-mark warnings still surface genuine typos outside the taxonomy. This
     only registers marker names; it imports no production module.
     """
-    config.add_cleanup(_database_environment.undo)
-
     import pathlib
     from tests._taxonomy import discover_markers
 
@@ -356,7 +358,13 @@ def context_probe_ledger(_no_context_window_network_probe):
 # Before pytest's tmpdir plugin reads the basetemp this sets.
 @pytest.hookimpl(specname="pytest_configure", tryfirst=True)
 def pytest_configure_worker_runtime(config):
-    configure_runtime(config, _runtime_environment)
+    try:
+        configure_runtime(config, _runtime_environment)
+    finally:
+        config.add_cleanup(_database_environment.undo)
+        if _initial_database_engine is not None:
+            # Close the owned file before worker-runtime cleanup removes it.
+            config.add_cleanup(_initial_database_engine.dispose)
 
 
 @pytest.hookimpl(specname="pytest_collection_modifyitems", tryfirst=True)
