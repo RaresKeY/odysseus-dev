@@ -43,6 +43,8 @@ class _FakeSession:
 
 @pytest.fixture(autouse=True)
 def _stub_api_token_purge(monkeypatch):
+    monkeypatch.setattr("src.chat_automation.retire_automation_owner", lambda *args: None)
+    monkeypatch.setattr("src.decisions.observability.retire_observability_owner", lambda *args: None)
     @contextlib.contextmanager
     def _fake_db_session():
         yield _FakeSession()
