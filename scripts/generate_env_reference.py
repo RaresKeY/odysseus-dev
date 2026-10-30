@@ -342,6 +342,18 @@ def collect(repo_root: Path = REPO_ROOT) -> dict[str, Variable]:
 # development tooling. Internal variables are listed on the page too, in their
 # own section, rather than hidden.
 VARIABLE_NOTES: dict[str, tuple[str, str, str]] = {
+    "ODYSSEUS_BROWSER_PRODUCER_MANIFEST": (
+        "Browser automation", USER,
+        "Path to the qualified browser producer manifest used by the private-browser control routes.",
+    ),
+    "ODYSSEUS_JEV_HOST_LAUNCHER": (
+        "Testing, capture and development tooling", INTERNAL,
+        "Reviewed-launcher sentinel required by the explicitly admitted Jev live campaign; not a general automation permission.",
+    ),
+    "ODYSSEUS_TASK_AUTOMATION_ENABLED": (
+        "Deployment and first run", USER,
+        "Enables automatic scheduled-task and event execution independently of the in-process timer; explicit manual runs keep their own authorization checks.",
+    ),
     # -- Deployment and first run ------------------------------------------
     "ODYSSEUS_ADMIN_USER": (
         "Deployment and first run", USER,
