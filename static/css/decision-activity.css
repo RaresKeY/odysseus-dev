@@ -1,6 +1,23 @@
-.decision-activity { margin: .5rem 0; font-size: .85rem; }
-.decision-activity summary { cursor: pointer; }
-.decision-activity p { margin: .5rem 0; opacity: .8; }
-.decision-activity button { margin: .25rem .5rem .25rem 0; }
-.decision-activity li { margin: .5rem 0; overflow-wrap: anywhere; }
-.decision-activity a { margin-inline-start: .3rem; }
+.decision-activity { margin:0; font-size:.85rem; }
+.decision-activity ol,.decision-activity ul { list-style:none;padding:0;margin:0; }
+.decision-activity li { margin:0;border-bottom:1px solid var(--border);overflow-wrap:anywhere; }
+.decision-activity p { margin:.5rem 0; }
+.decision-activity summary { cursor:pointer; }
+.decision-activity li > details > summary { display:flex;flex-wrap:wrap;align-items:center;gap:4px; }
+.decision-activity li > details > summary::before { content:'›';width:12px;flex:none;color:var(--color-muted-alt); }
+.decision-activity li > details[open] > summary::before { transform:rotate(90deg); }
+.decision-activity li > details > summary > span { flex:1;min-width:0; }
+.decision-activity li > details > summary > small { flex-basis:100%;margin-left:16px;color:var(--color-muted-alt);font:inherit; }
+.decision-entry-body { padding:0 0 8px 16px; }
+.decision-entry-body p { color:var(--color-muted-alt); }
+.decision-activity-tools { margin-top:8px; }
+.decision-activity-tools > p { color:var(--color-muted-alt); }
+.decision-header-actions { display:flex;align-items:center;gap:4px; }
+#chat-decision-pane .decision-header-actions button { display:inline-flex;align-items:center;justify-content:center;box-sizing:border-box;width:32px;height:32px;min-height:32px;padding:0;border-color:transparent; }
+#chat-decision-pane .decision-header-actions button:hover { background:var(--bg);border-color:var(--border); }
+#chat-decision-status:empty { display:none; }
+@media(max-width:900px) { #chat-decision-pane .decision-header-actions button { width:44px;height:44px;min-height:44px; } }
+
+#chat-decision-pane .decision-activity details { background:transparent;border:0;border-radius:0;margin:0;padding:0; }
+#chat-decision-pane .decision-activity summary { list-style:none; }
+#chat-decision-pane .decision-activity summary::-webkit-details-marker { display:none; }

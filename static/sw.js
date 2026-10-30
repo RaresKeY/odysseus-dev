@@ -41,6 +41,7 @@ const PRECACHE = [
   '/static/js/modalVisibility.js',
   '/static/js/compare/sse.js',
   '/static/css/chat-automation.css?v=20260929csssplit',
+  '/static/css/decision-activity.css?v=20261030quiet',
   '/static/js/chatAutomation.js',
   '/static/js/modelPicker.js?v=20260909routeidentity1',
   '/static/js/modelAutoDialog.js',
