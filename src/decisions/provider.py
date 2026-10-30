@@ -186,7 +186,8 @@ class DecisionProvider:
         except TimeoutError:
             # _evaluate settles a reserved call on cancellation. A preflight
             # timeout has no attempt/reservation and definitely made no HTTP.
-            error = DecisionError("decision_transport_failed" if state.get("dispatched") else "decision_deadline_exceeded",
+            error = DecisionError("decision_response_not_finalized" if state.get("response_received") else
+                                  "decision_transport_failed" if state.get("dispatched") else "decision_deadline_exceeded",
                                   attempt_id=state.get("attempt_id"))
             error.dispatched = bool(state.get("dispatched"))
             raise error from None
@@ -195,9 +196,11 @@ class DecisionProvider:
             # Its TimeoutError retains this cause and the actual reservation.
             # Explicit task cancellation always propagates unchanged.
             error.attempt_id = state.get("attempt_id")
+            error.approval_response_received = bool(state.get("response_received"))
             raise
         except DecisionError as error:
             error.dispatched = bool(state.get("dispatched"))
+            error.approval_response_received = bool(state.get("response_received"))
             raise
         except Exception:
             raise DecisionError("decision_admission_failed", attempt_id=state.get("attempt_id")) from None
@@ -395,6 +398,10 @@ class DecisionProvider:
                                 raise DecisionError("decision_response_too_large")
                             chunks.append(chunk)
                         response_wire = b"".join(chunks)
+                        # Receipt precedes decoding and every awaited cleanup /
+                        # revalidation step. A later timeout or transport fault
+                        # must not discard a veto and ask another reviewer.
+                        state["response_received"] = True
                         raw = self._read_response(response_wire, endpoint)
                         # Campaign preserves partial usage before strict answer
                         # interpretation, including malformed/wrong-model answers.
@@ -417,16 +424,20 @@ class DecisionProvider:
                 expired = (state.get("scope") is not None and state["scope"].expired()
                            or context.deadline is not None and self.clock() >= context.deadline)
                 await settle("rejected" if measured is not None else "unresolved" if dispatched else "cancelled",
+                       "decision_response_not_finalized" if expired and state.get("response_received") else
                        "decision_deadline_exceeded" if expired else "decision_cancelled", wait=False)
             raise
         except DecisionError as error:
+            failure = ("decision_response_not_finalized" if state.get("response_received")
+                       and error.code == "decision_deadline_exceeded" else error.code)
             if not settled:
-                await settle("rejected" if measured is not None else "unresolved" if dispatched else "cancelled", error.code)
-            raise DecisionError(error.code, attempt_id=attempt_id) from None
+                await settle("rejected" if measured is not None else "unresolved" if dispatched else "cancelled", failure)
+            raise DecisionError(failure, attempt_id=attempt_id) from None
         except (httpx.TransportError, TimeoutError):
+            failure = "decision_response_not_finalized" if state.get("response_received") else "decision_transport_failed"
             if not settled:
-                await settle("rejected" if measured is not None else "unresolved" if dispatched else "cancelled", "decision_transport_failed")
-            raise DecisionError("decision_transport_failed", attempt_id=attempt_id) from None
+                await settle("rejected" if measured is not None else "unresolved" if dispatched else "cancelled", failure)
+            raise DecisionError(failure, attempt_id=attempt_id) from None
         except Exception:
             # Decoder/adapter faults are not evidence of a network outage.
             # Relabeling them as transport failure would enable approval

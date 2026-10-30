@@ -241,7 +241,10 @@ class ApprovalReviewService:
                         else "decision_deadline_exceeded" if isinstance(primary_error, TimeoutError) else "decision_failed")
                 # Accounting, capture and cancellation failures are not
                 # permission to spend another attempt or discard a restriction.
+                response_received = bool(getattr(primary_error, "approval_response_received", False)
+                    or getattr(primary_error.__cause__, "approval_response_received", False))
                 if (fallback_evaluator is None or code not in _FALLBACK_FAILURES
+                        or response_received
                         or await _cancelled(cancelled) or not self._current(pending, policy)):
                     raise
                 source, fallback_reason = "conversation_model", code

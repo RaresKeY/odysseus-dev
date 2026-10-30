@@ -134,7 +134,9 @@ def resolve_decision_endpoint(config: dict, owner: str | None, *, db=None) -> Re
     except DecisionError:
         raise
     except Exception:
-        raise DecisionError("decision_endpoint_unavailable") from None
+        # Only explicit registration/credential checks establish unavailability.
+        # An inventory or resolver defect must not authorize another reviewer.
+        raise DecisionError("decision_admission_failed") from None
     finally:
         if owns_session:
             db.close()

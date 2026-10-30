@@ -243,7 +243,7 @@ async def test_real_sql_locked_settlement_is_retained_without_delaying_caller(tm
     client, _ = provider(transport, store=store)
     started = time.monotonic()
     try:
-        with pytest.raises(DecisionError, match='decision_transport_failed'):
+        with pytest.raises(DecisionError, match='decision_transport_failed' if ambiguous else 'decision_response_not_finalized'):
             await client.evaluate(REQUEST, replace(CONTEXT, deadline=time.monotonic() + .08), config=CONFIG)
         assert time.monotonic() - started < .5
         assert len(calls) == 1

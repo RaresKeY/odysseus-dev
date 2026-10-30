@@ -11,7 +11,7 @@ import pytest
 from tests.test_chat_automation_state import store
 from tests.test_chat_approval_sql_integration import dispatch_runtime
 from tests.test_approval_fallback import install_fallback, openai_answer
-from tests.test_approval_review import CONFIG
+from tests.test_approval_review import CONFIG, decision
 from tests.test_approval_route_rebind import backup
 from src.agent_runtime.authority import OperationGrant, RequestAuthority
 from src.chat_automation import prepare_chat_turn
@@ -33,6 +33,9 @@ def outage_runtime(store, dispatch_runtime, monkeypatch, tmp_path):
     async def primary(request):
         primary_calls.append(request)
         primary_started.set()
+        if settings.get("answer") is not None:
+            answer = settings["answer"]
+            return httpx.Response(200, json={"model": "decision-model", "answers": answer.answers, "usage": answer.usage})
         if settings["failure"] == "timeout":
             await asyncio.Event().wait()
         if settings["failure"] == "transport":
@@ -58,6 +61,16 @@ def outage_runtime(store, dispatch_runtime, monkeypatch, tmp_path):
     def make_provider(attempts):
         provider = DecisionProvider(attempts, client_factory=lambda **kwargs:
             httpx.AsyncClient(transport=httpx.MockTransport(primary), **kwargs))
+        if settings.get("delay_after_response"):
+            original_resolver = provider.resolver
+            resolutions = 0
+            async def delayed_resolver(*args):
+                nonlocal resolutions
+                resolutions += 1
+                if resolutions == 2:
+                    await asyncio.Event().wait()
+                return await asyncio.to_thread(original_resolver, *args)
+            provider.resolver = delayed_resolver
         providers.append(provider)
         return provider
     monkeypatch.setattr(decisions, "DecisionProvider", make_provider)
@@ -153,6 +166,67 @@ async def test_legacy_malformed_hold_cannot_exempt_another_review(outage_runtime
     stopped = (await rt.action(bound, 1))[1]
     assert stopped["blocked"] and len(rt.primary_calls) == len(rt.fallback_calls) == len(rt.effects) == 1
     assert stopped["approval_review"]["failure_kind"] == "decision_budget_unavailable"
+
+
+@pytest.mark.asyncio
+@pytest.mark.parametrize("failure", ["decision_transport_failed", "decision_deadline_exceeded"])
+async def test_legacy_known_response_cannot_establish_outage(outage_runtime, store, failure):
+    from core import database as d
+    rt = outage_runtime
+    bound = await rt.start()
+    assert (await rt.action(bound, 0))[1]["exit_code"] == 0
+    records = rt.attempts.records_for_run("alice", "a", bound.run_id)
+    root = next(r for r in records if r["status"] == "unresolved")
+    linked = next(r for r in records if r.get("fallback_of"))
+    with store.transaction() as db:
+        row = db.get(d.DecisionAttempt, root["attempt_id"])
+        row.status = "rejected"
+        row.record = {**row.record, "status": "rejected", "failure_kind": failure,
+                      "usage": {"input_tokens": 20, "output_tokens": 5}}
+    # Even a settled old fallback cannot exempt a response-bearing primary.
+    with pytest.raises(DecisionError, match="decision_budget_unavailable"):
+        rt.attempts.reserve({**linked, "attempt_id": "legacy-outage", "fallback_of": None,
+            "approval_outage_of": root["attempt_id"], "approval_action_digest": "f" * 64}, max_calls=32)
+
+
+@pytest.mark.asyncio
+@pytest.mark.parametrize("verdict", ["deny", "review"])
+@pytest.mark.parametrize("deadline_owner", ["provider", "review"])
+async def test_received_primary_veto_cannot_be_replaced_after_timeout(
+        outage_runtime, monkeypatch, verdict, deadline_owner):
+    if deadline_owner == "review":
+        from src.approval_review import ApprovalReviewService
+        original = ApprovalReviewService.review
+        async def bounded_review(self, *args, **kwargs):
+            return await original(self, *args, **kwargs, deadline=time.monotonic() + .5)
+        monkeypatch.setattr(ApprovalReviewService, "review", bounded_review)
+    rt = outage_runtime
+    rt.settings.update(answer=decision(verdict), delay_after_response=True)
+    bound = await rt.start(timeout=.2 if deadline_owner == "provider" else 30)
+    result = (await rt.action(bound, 0))[1]
+    assert result["blocked"] and not rt.fallback_calls and not rt.effects
+    assert len(rt.primary_calls) == 1
+    for provider in rt.providers:
+        while provider._store_tasks:
+            await asyncio.gather(*list(provider._store_tasks), return_exceptions=True)
+    records = rt.attempts.records_for_run("alice", "a", bound.run_id)
+    assert len(records) == 1 and records[0]["status"] == "rejected"
+    assert records[0]["usage"] == {"input_tokens": 20, "output_tokens": 5}
+    assert records[0]["failure_kind"] == "decision_response_not_finalized"
+
+
+@pytest.mark.asyncio
+async def test_canonical_resolver_unknown_fault_is_not_availability(outage_runtime, monkeypatch):
+    import src.endpoint_resolver as resolver
+    rt = outage_runtime
+    bound = await rt.start()
+    def broken_inventory(_row):
+        raise RuntimeError("synthetic inventory failure")
+    monkeypatch.setattr(resolver, "_endpoint_hidden_models", broken_inventory)
+    result = (await rt.action(bound, 0))[1]
+    assert result["blocked"] and not rt.primary_calls and not rt.fallback_calls and not rt.effects
+    assert result["approval_review"]["failure_kind"] == "decision_admission_failed"
+    assert not rt.attempts.records_for_run("alice", "a", bound.run_id)
 
 
 @pytest.mark.asyncio

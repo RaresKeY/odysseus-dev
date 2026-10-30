@@ -34,7 +34,7 @@ FAILURES = frozenset({"decision_admission_failed", "decision_attempt_store_unava
     "decision_deadline_exceeded", "decision_encoding_refused", "decision_endpoint_changed", "decision_endpoint_unavailable",
     "decision_http_error", "decision_incomplete_response", "decision_invalid_context", "decision_invalid_request",
     "decision_invalid_response", "decision_model_mismatch", "decision_redirect_refused", "decision_request_too_large",
-    "decision_response_too_large", "decision_transport_failed", "decision_usage_exceeded_reservation",
+    "decision_response_too_large", "decision_response_not_finalized", "decision_transport_failed", "decision_usage_exceeded_reservation",
     "decision_choice_mismatch", "decision_invalid_answer", "decision_invalid_answers", "decision_invalid_distribution",
     "decision_invalid_json", "decision_usage_unavailable", "decision_capture_capacity_exceeded", "decision_capture_store_unavailable"})
 MAX_RECORD_BYTES = 256 * 1024

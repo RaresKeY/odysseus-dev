@@ -16,8 +16,8 @@ class AttemptStore(Protocol):
     def records_for_run(self, owner: str | None, session_id: str, run_id: str) -> list[dict]: ...
 
 
-# Only absence of a response can establish an outage. Malformed/incomplete
-# assessments must not acquire authorization by asking a second reviewer.
+# Only explicit HTTP/transport/timeout failures can establish an outage.
+# Malformed assessments must not gain authorization from another reviewer.
 OUTAGE_FAILURES = frozenset({"decision_http_error", "decision_transport_failed",
     "decision_deadline_exceeded"})
 _BINDING = ("owner", "session_id", "run_id", "policy_revision", "authority_epoch")
@@ -25,7 +25,10 @@ _BINDING = ("owner", "session_id", "run_id", "policy_revision", "authority_epoch
 
 def _failed_primary(parent):
     failure = parent.get("failure_kind", "") if parent else ""
-    return (parent and parent.get("status") in {"unresolved", "rejected", "cancelled"}
+    # A rejected/known-usage legacy attempt may have received a veto before a
+    # cleanup timeout. Its old outage code cannot establish response absence.
+    return (parent and parent.get("status") in {"unresolved", "cancelled"}
+            and parent.get("usage") is None
             and parent.get("purpose") == "approval"
             and parent.get("provider_identity", {}).get("protocol") in {"systemone", "openai_json"}
             and failure in OUTAGE_FAILURES)
