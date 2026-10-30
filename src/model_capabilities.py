@@ -102,6 +102,7 @@ CAPABILITIES = frozenset(
 SOURCE_ADMIN_OVERRIDE = "admin_override"
 SOURCE_ENDPOINT_CONFIG = "endpoint_config"
 SOURCE_PROVIDER_READER = "provider_reader"
+SOURCE_PROVIDER_CONTRACT = "provider_contract"
 SOURCE_COOKBOOK_HF = "cookbook_hf"
 SOURCE_MODELS_DEV_REGISTRY = "models_dev_registry"
 SOURCE_PROVIDER_DOCS_REGISTRY = "provider_docs_registry"
@@ -114,6 +115,7 @@ SOURCES = frozenset(
         SOURCE_ADMIN_OVERRIDE,
         SOURCE_ENDPOINT_CONFIG,
         SOURCE_PROVIDER_READER,
+        SOURCE_PROVIDER_CONTRACT,
         SOURCE_COOKBOOK_HF,
         SOURCE_MODELS_DEV_REGISTRY,
         SOURCE_PROVIDER_DOCS_REGISTRY,
@@ -166,6 +168,8 @@ PROBE_STATUSES = frozenset(
 )
 
 CONTROL_TEMPERATURE = "temperature"
+CONTROL_REASONING_EFFORT = "reasoning_effort"
+CONTROL_VERBOSITY = "verbosity"
 CONTROL_TOP_P = "top_p"
 CONTROL_TOP_K = "top_k"
 CONTROL_SEED = "seed"
@@ -218,6 +222,8 @@ REASONING_CONTROL_VALUES = frozenset(
 DETERMINISTIC_CONTROLS = frozenset(
     {
         CONTROL_TEMPERATURE,
+        CONTROL_REASONING_EFFORT,
+        CONTROL_VERBOSITY,
         CONTROL_TOP_P,
         CONTROL_TOP_K,
         CONTROL_SEED,
