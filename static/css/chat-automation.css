@@ -24,11 +24,12 @@
 #chat-automation-notice{width:100%;max-width:800px;box-sizing:border-box;margin:4px auto;font-size:12px;color:var(--color-warning);overflow-wrap:anywhere}
 .chat-permissions-control{position:relative;min-width:0;flex-shrink:0}
 .chat-permissions-short{display:none}
-.chat-permissions-trigger{display:inline-flex;align-items:center;gap:5px;min-height:32px;padding:0 6px;font:inherit;font-size:11px;color:var(--fg);background:transparent;border:1px solid transparent;border-radius:6px;cursor:pointer;white-space:nowrap}
-.chat-permissions-trigger:not(:disabled):hover{background:color-mix(in srgb,var(--fg) 6%,transparent)}
-.chat-permissions-trigger[aria-expanded=true]:not(:disabled){background:color-mix(in srgb,var(--fg) 9%,transparent);border-color:var(--border)}
+/* Own trigger surfaces even under the global light-theme button reset. */
+#chat-approval-mode{display:inline-flex;align-items:center;gap:5px;min-height:32px;padding:0 6px;font:inherit;font-size:11px;background:transparent;border:1px solid transparent;border-radius:6px;cursor:pointer;white-space:nowrap}
+#chat-approval-mode:not(:disabled):hover{background:color-mix(in srgb,var(--fg) 6%,transparent)}
+#chat-approval-mode[aria-expanded=true]:not(:disabled){background:color-mix(in srgb,var(--fg) 9%,transparent);border-color:var(--border)}
 .chat-permissions-trigger>svg{flex-shrink:0}
-.chat-permissions-trigger:disabled{opacity:.55;cursor:default;background:transparent;border-color:transparent}
+#chat-approval-mode:disabled{opacity:.55;cursor:default;background:transparent;border-color:transparent}
 .mode-yolo .chat-permissions-trigger{color:var(--color-warning)}
 .mode-unavailable .chat-permissions-trigger{color:var(--color-warning)}
 .chat-permissions-menu{position:fixed;z-index:260;width:310px;max-width:calc(100vw - 32px);max-height:min(430px,65dvh);overflow-y:auto;box-sizing:border-box;padding:6px;background:var(--panel);border:1px solid var(--border);border-radius:8px;box-shadow:0 -4px 20px #0006}
@@ -80,7 +81,7 @@
 #chat-permissions-menu[hidden]{display:none}
 @media(max-width:540px){
   .chat-automation-route{grid-template-columns:1fr}#chat-automation-dialog{padding:14px}
-  .chat-permissions-trigger{min-height:44px;min-width:44px;padding:0;gap:2px}
+  #chat-approval-mode{min-height:44px;min-width:44px;padding:0;gap:2px}
   .chat-input-right .mode-toggle{height:44px}
   .chat-input-right .mode-toggle-btn{padding:0 6px;min-width:44px}
   #chat-permissions-label{display:none}

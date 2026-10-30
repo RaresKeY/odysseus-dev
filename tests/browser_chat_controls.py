@@ -181,12 +181,23 @@ def highlight_checks(browser, width):
         time.sleep(.15)
         disabled[control]=browser.js(f"getComputedStyle(document.getElementById('{control}')).backgroundColor==='rgba(0, 0, 0, 0)'")
         browser.js(f"document.getElementById('{control}').disabled=false")
-    result={'rows':rows,'decisionHeight':rect['height'],'hover':hover,'active':active,'keyboard':keyboard,'focusRestored':restored,'refreshFocusRace':focus_race,'disabledQuiet':disabled}
+    # Exercise the global light-button reset without changing the fixture palette.
+    light_disabled = {}
+    browser.js("document.documentElement.classList.add('light')")
+    for control in ('chat-decision-toggle','chat-approval-mode'):
+        browser.js(f"document.getElementById('{control}').disabled=true")
+        point=browser.js(f"(()=>{{const r=document.getElementById('{control}').getBoundingClientRect();return {{x:r.x+r.width/2,y:r.y+r.height/2}}}})()")
+        browser.call('Input.dispatchMouseEvent', {'type':'mouseMoved',**point})
+        time.sleep(.15)
+        light_disabled[control]=browser.js(f"getComputedStyle(document.getElementById('{control}')).backgroundColor==='rgba(0, 0, 0, 0)'")
+        browser.js(f"document.getElementById('{control}').disabled=false")
+    browser.js("document.documentElement.classList.remove('light')")
+    result={'rows':rows,'decisionHeight':rect['height'],'hover':hover,'active':active,'keyboard':keyboard,'focusRestored':restored,'refreshFocusRace':focus_race,'disabledQuiet':disabled,'lightResetDisabledQuiet':light_disabled}
     if not BASELINE:
         assert all(row['contained'] and row['checkAligned'] for row in rows), result
         assert rect['height']==(44 if width<900 else 32), result
         assert rows[1]['bg']!=rows[0]['bg'] and hover!=active, result
-        assert focus=='auto_approve' and keyboard and restored and focus_race and all(disabled.values()), result
+        assert focus=='auto_approve' and keyboard and restored and focus_race and all(disabled.values()) and all(light_disabled.values()), result
     return result
 
 
