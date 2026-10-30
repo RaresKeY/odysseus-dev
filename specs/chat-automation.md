@@ -40,6 +40,8 @@ and delegated entry points cannot inherit interactive elevation or automatic
 review consent; missing submission bindings stop rather than reconstructing a
 grant from historical transcripts. Control tools do not require action review.
 
+Bound interactive turns retain the ordinary persistent agent workspace when no explicit folder is selected. The admin-only workspace default endpoint returns that vetted directory, which startup creates, unless a deployment explicitly configures another default. An invalid configured default is rejected. Extra-folder grants supplement the selected or built-in root; unavailable or redirected defaults fail closed, and restored empty root tuples never gain new roots.
+
 ## Models and acknowledgement
 
 Each chat stores `auto_categories` in its existing SQL feature settings, with exactly `complex_tasks` (Complex tasks) and `straightforward_tasks` (Straightforward tasks), each assigned one exact registered endpoint/model. Both categories may intentionally use the same model; endpoint identity remains exact. Partial assignments can be saved in Manual, while Auto activation or assignment edits in Auto require both currently available models. Empty, missing, disabled, hidden, unregistered, foreign or stale assignments stop visibly without guessing or model fallback.

@@ -84,11 +84,11 @@ def setup_workspace_routes():
 
     @router.get("/default")
     def default_workspace(request: Request):
-        """Return the explicitly configured backend workspace, if usable.
+        """Return the configured workspace or the persistent built-in scratch directory.
 
-        WebUI has no local launch directory: it runs against this backend's
-        filesystem. An explicit default gives it the same zero-setup behavior
-        as TUI while keeping workspace access opt-in and server-vetted.
+        Startup creates the built-in directory inside persistent data. An
+        explicit deployment default overrides it and must still pass vetting;
+        an invalid override never silently selects another directory.
         """
         owner = get_current_user(request)
         if not owner_is_admin_or_single_user(owner):
@@ -96,7 +96,11 @@ def setup_workspace_routes():
 
         configured = os.environ.get("ODYSSEUS_WORKSPACE_DEFAULT", "").strip()
         if not configured:
-            return {"ok": False, "path": None}
+            from src.tool_execution import default_agent_workspace
+            try:
+                return {"ok": True, "path": default_agent_workspace()}
+            except (OSError, ValueError, RuntimeError):
+                return {"ok": False, "path": None}
 
         from src.tool_execution import vet_workspace
         from src.workspace_paths import backend_workspace_path
