@@ -120,6 +120,9 @@ def outage_runtime(store, dispatch_runtime, monkeypatch, tmp_path):
                 return httpx.Response(302 if fault == "redirect" else 200, headers=headers, stream=Body())
             return httpx.Response(200, json=body)
         if settings["failure"] == "timeout":
+            expire = settings.pop("expire_primary_deadline", None)
+            if expire is not None:
+                expire()
             await asyncio.Event().wait()
         if settings["failure"] == "transport":
             raise httpx.ReadTimeout("synthetic timeout")
@@ -434,15 +437,19 @@ async def test_canonical_resolver_unknown_fault_is_not_availability(outage_runti
 @pytest.mark.asyncio
 async def test_enclosing_review_timeout_keeps_the_original_attempt_for_continuation(outage_runtime, monkeypatch):
     from src.approval_review import ApprovalReviewService
-    original = ApprovalReviewService.review
-    async def bounded_review(self, *args, **kwargs):
-        return await original(self, *args, **kwargs, deadline=time.monotonic() + .4)
-    monkeypatch.setattr(ApprovalReviewService, "review", bounded_review)
     rt = outage_runtime
+    clock = _deadline_at_checkpoint(monkeypatch, rt, "review", checkpoint="primary")
+    original = ApprovalReviewService.review
+
+    async def bounded_review(self, *args, **kwargs):
+        return await original(self, *args, **kwargs, deadline=clock() + .4)
+
+    monkeypatch.setattr(ApprovalReviewService, "review", bounded_review)
     rt.settings["failure"] = "timeout"
     bound = await rt.start()
-    first = (await rt.action(bound, 0))[1]
-    second = (await rt.action(bound, 1))[1]
+    first = (await asyncio.wait_for(rt.action(bound, 0), 10))[1]
+    assert rt.settings["primary_timeout"].expired()
+    second = (await asyncio.wait_for(rt.action(bound, 1), 10))[1]
     assert first["exit_code"] == second["exit_code"] == 0, (first, second)
     assert len(rt.primary_calls) == 1 and len(rt.fallback_calls) == 2
     root = next(r for r in rt.attempts.records_for_run("alice", "a", bound.run_id) if r["status"] == "unresolved")
