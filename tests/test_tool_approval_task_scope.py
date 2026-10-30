@@ -340,8 +340,8 @@ def test_route_context_agent_frontend_and_cache_bust_wire_the_contract():
     assert "_without_latest_matching_user_message(" not in helpers
     assert "selected_tools=approval_selected_tools" in agent
     assert "continuation_query=_retrieval_query or _last_user" in agent
-    assert "approval_gate_bypassed=_tool_approval_gate_bypassed(" in agent
-    assert "['approve', 'approve_task', 'deny']" in frontend
+    assert "_automation_bound_turn is None and _tool_approval_gate_bypassed(exact_approval)" in agent
+    assert "['approve', 'approve_task', 'approve_once', 'deny']" in frontend
     assert "input.value = label" not in frontend
     assert "const msg = approvalForSend ? '' : el('message').value;" in frontend
     assert "const skipBubble = _hideUserBubble || !!approvalForSend;" in frontend
@@ -349,7 +349,10 @@ def test_route_context_agent_frontend_and_cache_bust_wire_the_contract():
     assert "json.type === 'tool_approval_resolved'" in frontend
     assert "if (aq.resolved) return null;" in renderer
     assert "ev.ask_user && !ev.ask_user.resolved" in renderer
-    assert '"label": "Allow once"' not in approvals
+    # Versioned chat policy uses one exact human action; legacy cards below
+    # retain their old wire contract during migration.
+    assert '"label": "Allow once"' in approvals
+    assert "if self.policy_binding is not None:" in approvals
     assert '"label": "Allow for this task"' in approvals
     assert '"label": "Allow for this chat session"' in approvals
     assert "scope_for_decision(normalized_decision)" in approvals

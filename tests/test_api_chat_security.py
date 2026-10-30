@@ -121,6 +121,7 @@ class _Endpoint:
         base_url="https://api.example.com/v1",
         api_key=None,
     ):
+        self.id = "fixture-endpoint"
         self.owner = owner
         self.is_enabled = is_enabled
         self.created_at = created_at
@@ -190,8 +191,9 @@ class _SessionManager:
         self.created = []
         self.save_calls = 0
 
-    def create_session(self, *, session_id, name, endpoint_url, model, owner):
+    def create_session(self, *, session_id, name, endpoint_url, model, owner, endpoint_id=None):
         session = _ChatSession(endpoint_url, model)
+        session.id, session.owner, session.endpoint_id = session_id, owner, endpoint_id
         self.created.append({
             "session_id": session_id,
             "name": name,
@@ -208,6 +210,7 @@ class _SessionManager:
 
 class _Request:
     def __init__(self, *, owner="alice"):
+        self.headers = {}
         self.state = types.SimpleNamespace(
             api_token=True,
             api_token_scopes=["chat"],
@@ -235,7 +238,7 @@ def _install_sync_chat_stubs(monkeypatch):
             self.role = role
             self.content = content
 
-    async def _llm_call_async(endpoint_url, model, messages, headers=None, timeout=None):
+    async def _llm_call_async(endpoint_url, model, messages, headers=None, timeout=None, **kwargs):
         return "mocked response"
 
     endpoint_resolver = types.ModuleType("src.endpoint_resolver")
@@ -252,6 +255,20 @@ def _install_sync_chat_stubs(monkeypatch):
     monkeypatch.setitem(sys.modules, "core.models", core_models)
     monkeypatch.setitem(sys.modules, "src.llm_core", llm_core)
     monkeypatch.setitem(sys.modules, "src.endpoint_resolver", endpoint_resolver)
+
+    # This URL-policy unit fixture isolates the submitted-turn persistence seam.
+    from contextlib import nullcontext
+    from unittest.mock import MagicMock
+    import src.chat_automation as automation
+
+    async def submission(store, owner, session, message, *, entrypoint, submission_id):
+        assert owner == session.owner == "alice" and entrypoint == "delegated"
+        assert message == "hello"
+        return types.SimpleNamespace(store=store, activate=nullcontext,
+            view=lambda value: value, descriptor={"reasoning_effort": ""})
+
+    monkeypatch.setattr(automation, "AutomationStore", MagicMock)
+    monkeypatch.setattr(automation, "prepare_chat_submission", submission)
 
 
 def _sync_chat_endpoint(webhook_routes, session_manager):
@@ -396,7 +413,7 @@ async def test_api_chat_fallback_trusts_configured_local_endpoint(monkeypatch):
         session=None,
     )
 
-    response = await sync_chat(_Request(owner=None), body)
+    response = await sync_chat(_Request(owner="alice"), body)
 
     assert response["response"] == "mocked response"
     assert response["model"] == "local-model"

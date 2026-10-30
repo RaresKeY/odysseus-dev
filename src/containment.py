@@ -1020,6 +1020,7 @@ async def run(
         so a grant that was not produced by :func:`acquire` cannot buy a spawn
         by claiming dimensions it does not have.
     """
+    _validate_chat_dispatch()
     if grant.external:
         raise ValueError(
             "containment: an external-bridge grant describes execution this "
@@ -1135,6 +1136,7 @@ async def run(
             ready = True
             _update_record(grant.id, containment_ready=True, execution_started=True)
             execution_started = True
+            _validate_chat_dispatch()
             proc.stdin.write(expected)
             await proc.stdin.drain()
         readers.append(asyncio.create_task(_drain(proc.stdout, out_buf, out_budget, output_cb)))
@@ -1209,6 +1211,116 @@ async def run(
         grant=live,
         release=outcome,
     )
+
+
+class ContainedChannel:
+    """A private duplex pipe whose process, deadline and teardown we own."""
+    def __init__(self, grant, proc):
+        from src.process_lifecycle import ProcessIdentity
+        self.grant, self._proc = grant, proc
+        self.stdin, self.stdout = proc.stdin, proc.stdout
+        self.identity = ProcessIdentity.capture(proc.pid, pgid=grant.pgid)
+        self._closed = False
+        self._outcome = None
+        self._stderr = asyncio.create_task(_drain(proc.stderr, [], [grant.spec.max_output_bytes]))
+        self._deadline = asyncio.create_task(self._expire())
+
+    async def _expire(self):
+        await asyncio.sleep(self.grant.spec.wall_clock_s)
+        await self.close()
+
+    async def close(self):
+        # One teardown task also serializes simultaneous timeout/cancellation.
+        if not self._closed:
+            self._closed = True
+            self._teardown = asyncio.create_task(_release_awaited(self.grant, self._proc))
+        self._outcome = await _complete_cleanup(asyncio.shield(self._teardown))
+        if self._deadline is not asyncio.current_task():
+            self._deadline.cancel()
+        self._stderr.cancel()
+        await asyncio.gather(self._stderr, return_exceptions=True)
+        return self._outcome
+
+
+async def open_channel(grant: ContainmentGrant, command: list[str]):
+    """Open a registered producer's stdio channel, preserving native containment.
+
+    Only server-selected argv is accepted. The caller owns the protocol, never
+    a shell supplied by a tool/model. The ordinary ready/identity/ack barrier
+    runs before any producer code. No weaker mechanism or fallback is allowed.
+    """
+    if (not isinstance(command, list) or not command or
+            any(not isinstance(p, str) or "\0" in p for p in command)):
+        raise ValueError("Channel requires trusted argv")
+    _validate_chat_dispatch()
+    mechanism = next((m for m in MECHANISMS if m.name == grant.mechanism), None)
+    provided = mechanism.provides(grant.spec) if mechanism else frozenset()
+    if (grant.external or grant.mode != MODE_ENFORCING or grant.mechanism != "bubblewrap"
+            or frozenset(grant.spec.required) - provided or frozenset(grant.enforced) - provided
+            or (_load_records().get(grant.id) or {}).get("released_at")):
+        raise ContainmentUnavailable(grant.spec.required, grant.mechanism)
+    marker = uuid.uuid4().hex
+    info_read, info_write = os.pipe()
+    os.set_blocking(info_read, False)
+    proc = None
+    live = grant
+    try:
+        launch = _launch_argv(grant, command, argv=True, ready_marker=marker, info_fd=info_write)
+        spawning = asyncio.create_task(asyncio.create_subprocess_exec(
+            *launch, stdin=asyncio.subprocess.PIPE, stdout=asyncio.subprocess.PIPE,
+            stderr=asyncio.subprocess.PIPE, cwd=grant.spec.workspace, env=dict(grant.spec.env),
+            pass_fds=(info_write,), **_spawn_kwargs(grant)))
+        try:
+            proc = await asyncio.shield(spawning)
+        except asyncio.CancelledError:
+            proc = await _complete_cleanup(spawning, propagate_cancel=False)
+            raise
+        finally:
+            os.close(info_write)
+            info_write = None
+        proc._ody_info_read = info_read
+        live = replace(grant, pid=proc.pid, pgid=proc.pid)
+        _update_record(grant.id, pid=proc.pid, pgid=proc.pid, started_at=time.time(),
+                       containment_ready=False, execution_started=False)
+        expected = (marker + "\n").encode("ascii")
+        async def ready():
+            if await proc.stdout.readexactly(len(expected)) != expected:
+                raise ContainmentUnavailable(grant.spec.required, grant.mechanism)
+            await _capture_namespace_identity(proc)
+        await asyncio.wait_for(ready(), timeout=min(10, grant.spec.wall_clock_s))
+        live = replace(live, namespace_pid=proc._ody_namespace_pid,
+                       namespace_start_token=proc._ody_namespace_token)
+        _update_record(grant.id, start_token=process_ownership.capture(proc.pid)["start_token"],
+                       namespace_pid=live.namespace_pid, namespace_start_token=live.namespace_start_token)
+        if hasattr(os, "pidfd_open") and hasattr(signal, "pidfd_send_signal"):
+            proc._ody_pidfd = os.pidfd_open(proc.pid)
+        _validate_chat_dispatch()
+        proc.stdin.write(expected)
+        await proc.stdin.drain()
+        _update_record(grant.id, containment_ready=True, execution_started=True)
+        return ContainedChannel(live, proc)
+    except BaseException:
+        if proc is not None:
+            # Namespace capture owns/closes this fd. Never resurrect it after
+            # readiness: its integer may already identify a different handle.
+            if not hasattr(proc, "_ody_info_read"):
+                proc._ody_info_read = info_read
+            live = replace(live, pid=proc.pid, pgid=proc.pid)
+            await _complete_cleanup(_release_awaited(live, proc), propagate_cancel=False)
+        else:
+            os.close(info_read)
+            release(grant, grace_s=0)
+        raise
+    finally:
+        if info_write is not None:
+            os.close(info_write)
+
+
+def _validate_chat_dispatch():
+    from src.chat_automation import current_turn
+    bound = current_turn()
+    if bound is not None and not bound.current():
+        raise ValueError("Chat permissions changed before process dispatch")
 
 
 async def _complete_cleanup(awaitable, *, propagate_cancel: bool = True):

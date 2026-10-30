@@ -58,6 +58,9 @@ def _fork_handler(router):
 
 def test_fork_does_not_corrupt_source_message_metadata(monkeypatch):
     monkeypatch.setattr(mod, "_verify_session_owner", lambda *a, **k: None)
+    from src.chat_automation import AutomationStore
+    forked_policies = []
+    monkeypatch.setattr(AutomationStore, "fork", lambda self, owner, source, target: forked_policies.append((owner, source, target)))
 
     source = _FakeSession(name="Original", owner="alice")
     source.endpoint_id = "chatgpt-account-b"
@@ -81,6 +84,7 @@ def test_fork_does_not_corrupt_source_message_metadata(monkeypatch):
     assert result["status"] == "ok"
     assert result["kept"] == 2
     assert sm.created.endpoint_id == "chatgpt-account-b"
+    assert forked_policies == [("alice", "src-id", result["id"])]
 
     # The forked session got its own metadata dicts...
     new_session = sm.created

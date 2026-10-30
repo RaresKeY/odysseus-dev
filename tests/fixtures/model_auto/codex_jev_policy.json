@@ -1,0 +1,18 @@
+{
+  "version": "2026-10-05-v5",
+  "scope": "Route the immediate requested deliverable. Recording a future investigation is note-taking, not doing that investigation. For mixed requests, consider only the hardest required current action. Use a project brief only where it changes that action; unrelated architecture must not inflate a routine task.",
+  "model": "Luna follows previously established, documented, repeatable flows: notes, copies, exact retrieval, standard metadata checks and routine media edits. It should execute an existing method, not invent the workflow or lay a new implementation/polish foundation. Sol handles foundation design, bespoke implementation, synthesis, nuanced review and interacting contracts. Standard metadata removal is conventional; judging sensitive visible/audio content needs Sol. Missing inputs or a new filename alone do not make an established operation foundation work.",
+  "effort": "Choose effort separately from model strength. Sol low can handle complex execution with a known approach and direct checks. Establishing new architecture, reusable flows or a polish baseline tends toward Sol high: early decisions shape later work. Medium can suffice when those decisions are already fixed; use xhigh for deep unresolved constraints. Raise effort for uncertain methods, competing hypotheses, difficult correctness or likely plan revisions. Length, repetition and runtime are not effort. Unknown referents can warrant provisional medium; do not invent work. Effort does not limit persistence or retries.",
+  "anchors": [
+    ["Record a TODO about a future performance investigation", "gpt-6-luna:low"],
+    ["Copy a video and inspect/remove standard metadata", "gpt-6-luna:low"],
+    ["Crop, resize or compress media; save a copy", "gpt-6-luna:low"],
+    ["Find an exact phrase or repository start/end dates", "gpt-6-luna:low"],
+    ["Implement a known complex protocol with direct checks", "gpt-6.1-sol:low"],
+    ["Polish a bespoke layout within established style conventions", "gpt-6.1-sol:low"],
+    ["Follow an existing documented production workflow", "gpt-6-luna:low"],
+    ["Design a new reusable workflow or implementation foundation", "gpt-6.1-sol:high"],
+    ["Establish the initial visual style and polish baseline", "gpt-6.1-sol:high"],
+    ["Diagnose an unexplained cross-system failure", "gpt-6.1-sol:high"]
+  ]
+}

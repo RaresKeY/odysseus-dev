@@ -1,12 +1,13 @@
 # LLM Models And Endpoints
 
-Last updated: dev@86b886c | 2026-10-15
+Last updated: dev@f8e043e | 2026-10-24
 
 ## Scope
 
 This spec covers model/provider behavior in:
 
 - `src/llm_core.py`;
+- `src/decisions/`, `src/model_auto.py`, `src/approach_routing.py`, and the provider boundary in `src/chat_automation.py`;
 - `src/endpoint_resolver.py`;
 - `src/foreground_model_routing.py`;
 - `src/model_discovery.py`;
@@ -31,6 +32,23 @@ This spec covers model/provider behavior in:
 `src.llm_core` owns provider-call mechanics. It handles OpenAI-compatible calls, Ollama normalization, Anthropic payload conversion, GitHub Copilot and ChatGPT Subscription provider detection/header injection, NVIDIA provider routing, streaming, fallback calls, upstream error formatting, async/streaming host liveness caching, configured model-list cache reads, tool-call sanitization, reasoning/thinking stream routing, and provider-specific parameter rules. GitHub Copilot OAuth/device-flow orchestration lives in `routes/copilot_routes.py` and `src/copilot.py`; ChatGPT Subscription device flow uses `routes/chatgpt_subscription_routes.py`, shared device-flow helpers, and `ProviderAuthSession` rows.
 
 `llm_core` owns payload shape. Route files and chat/agent code should request a call; they should not duplicate provider-specific payload quirks.
+
+### Bound chat approaches and independent decisions
+
+`src/chat_automation.py` binds each accepted ask to committed owner settings and
+an execution descriptor. `src/llm_core.py` rechecks that descriptor before the
+actual asynchronous or streaming transport, including after a local-model wait.
+Automatic approach routes use one admitted execution route without an automatic
+provider fallback or ambiguous-call retry. Manual fallback retains current,
+explicit owner foreground consent and rebinds the committed descriptor after an
+eligible availability failure. Unsupported effective reasoning effort fails
+instead of reporting an effort the request cannot supply.
+
+`src/model_auto.py` owns foreground Auto from two explicit per-chat category assignments: Complex tasks and Straightforward tasks, each one exact registered endpoint/model (same model in both allowed intentionally). The full mapped Codex-Jev policy asset and category request criteria preserve task scope, established versus bespoke/foundation, learning/teaching, mixed deliverables, effort independent from complexity and persistence. Jev chooses category and supported effort; category resolves deterministically to its assigned model, without user model descriptions or quality inference.
+
+The exact ChatGPT runtime catalogue and versioned seven-ID canonical HTTPS Google compatibility table supply non-default efforts. One native models/ prefix is recognized only for capability lookup; selected/bound/HTTP identity remains exact. Unknown IDs/proxies keep default. Existing llm_core top-level reasoning_effort transport is reused. Full policy hash, both category identities, supported sets/versions, current credentials and owner/pin eligibility revalidate before dispatch. Complete finite normalized maximum-consistent vectors/known usage remain required without an absolute routing confidence floor; raw scores remain metadata. Explicit unavailable, incompatible/invalid/stale selections stop without fallback. Action approval remains separate.
+
+Legacy pools/descriptions remain stored and are never used to infer category assignments; old Auto requires explicit assignment, preserving choices and unrelated data. Existing old-map materialization/fork compatibility remains; no schema or default-model rewrite. Saves reuse exact picker inventory/pin checks without credential refresh under a writer lock. `src/approach_routing.py` remains for old experiments only; foreground uses the two categories. See [decision-provider.md](../docs/decision-provider.md).
 
 Kimi Code User-Agent discovery has both sync and async implementations. Async post and stream paths probe `/models` through their existing async client and await each candidate, so header negotiation does not block the event loop; both paths share the accepted-value cache and 403 fallback policy.
 
@@ -147,3 +165,5 @@ Exact registered endpoint authority rejects URL credentials, parameters, and any
 - Endpoint identity and fallback behavior need careful review when new OAuth/subscription providers are added.
 - Owner must continue to be threaded through new utility/research/default endpoint-resolution call sites so provider keys stay isolated.
 - `/api/models` owner-scoped listing/cache behavior, shared/private endpoint dedupe, endpoint-kind refresh policy, fallback-chain owner scope, and image endpoint create/list/update lifecycle need stronger route-level regression coverage.
+
+The existing `/api/models` catalogue now includes endpoint-specific `auto_model_capabilities` from the same pure runtime owner used at dispatch. This metadata is distinct from legacy name-derived `models_metadata`; Auto never promotes that heuristic across providers. The documented Google source contracts are [OpenAI compatibility](https://ai.google.dev/gemini-api/docs/openai#thinking), [thinking controls](https://ai.google.dev/gemini-api/docs/thinking) and [Gemini 3 controls](https://ai.google.dev/gemini-api/docs/generate-content/gemini-3). These establish allowed API controls, not live availability or personal quality assessments.

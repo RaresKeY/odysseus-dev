@@ -2335,8 +2335,12 @@ class YouTubeTool:
 
 
 class PrivateBrowserTool:
-    """Resource-bound session metadata; page/document execution is unavailable."""
-    _ACTIONS = {"session_info"}
+    """Canonical resource-bound browser entry point.
+
+    Legacy agent-browser remains metadata-only. Page operations require the
+    separately enrolled pipe producer and its exact captured document handles.
+    """
+    _ACTIONS = {"session_info", "open", "navigate", "snapshot", "read", "click", "fill", "scroll", "screenshot", "wait", "close", "automate"}
     _AUTO_SCREENSHOT_ACTIONS = set()
 
     async def execute(self, content: str, ctx: dict) -> dict:

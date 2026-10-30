@@ -140,3 +140,9 @@ The standard, AMD and NVIDIA Compose files mount `chromadb-data` at `/data`; nat
 - Startup migrations lack a legacy-schema/idempotence test harness for owner backfills, encrypted-secret rewrites, and repeated runs.
 - JSON-store atomicity is inconsistent across stores, though shared atomic writers, upload metadata recovery, prefs, and strict memory mutations now have focused coverage.
 - New local stores require explicit ownership, backup, and control-plane access decisions; a filesystem root alone does not grant access to server state.
+
+## Exact approval evidence
+
+`ChatAutomationSubmission.approval_evidence` is a nullable JSON column added idempotently by `_migrate_chat_automation_semantics`. `src/approval_context.py` stores ordered human exact-action choices as source, event ID, decision and canonical operation fingerprint, never raw tool arguments or model approvals. Existing asks and previous-submission links retain user restrictions/revocations independently of transcript trimming. Reading evidence is owner/chat scoped and validates each ask digest. Private submissions keep new evidence only on the active bound turn. At most 64 events are usable per submission; a retained overflow marker blocks later Auto instead of dropping evidence silently. This follows the existing submission lifecycle for rename/session/account cleanup and introduces no second approval registry.
+
+Approval attempts may carry an exact-action digest and a server-only fallback_of link. One technically failed primary can retain unknown usage while one same-action selected-model fallback reserves its own budget. Owner/run/policy, uniqueness, call caps and all other unresolved reservations still apply; no existing attempt is rewritten as unspent.

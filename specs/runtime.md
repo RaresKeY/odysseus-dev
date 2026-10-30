@@ -1,6 +1,6 @@
 # Runtime
 
-Last updated: dev@c74f475 | 2026-10-15
+Last updated: dev@1a7c79946 | 2026-10-28
 
 ## Scope
 
@@ -10,6 +10,7 @@ This spec covers current app runtime wiring in:
 - `src/app_initializer.py`;
 - `src/runtime_paths.py`;
 - `src/config.py`;
+- automatic-task deployment admission in `src/task_automation.py`;
 - `core/constants.py`;
 - `src/constants.py`;
 - `src/interactive_gate.py`;
@@ -76,6 +77,8 @@ Startup fire-and-forget work includes upload cleanup, background-job monitoring,
 
 Shutdown cancels upload cleanup, stops the task scheduler, closes the webhook manager, and disconnects MCP servers.
 
+Automatic ScheduledTask admission is separately controlled by `ODYSSEUS_TASK_AUTOMATION_ENABLED` (default on; restrictive profile0). `src.task_automation` is the shared predicate used by app startup, TaskScheduler automatic entrypoints, event bus and token task webhooks. It blocks automatic execution independently of `ODYSSEUS_INPROCESS_TASKS`, whose loop-only/external-worker semantics remain unchanged. Manual owned task runs retain canonical authorization; default seeding and user settings are not rewritten by the deployment flag. See `calendar-tasks-notes.md` for guarded entrypoints and queued-work behavior.
+
 ## Degraded And Platform Behavior
 
 - On Windows, HuggingFace symlink warnings are disabled so model files copy instead of symlink on network/UNC paths.
@@ -107,3 +110,9 @@ Native launch readiness is a bounded functional containment probe plus exact sup
 - Long-running route timeout exemptions are manual and prefix-based; new SSE/proxy/task paths can be missed, while broad prefixes can exempt more routes than intended.
 - Runtime tests cover small helper slices, but not full app import/TestClient behavior for mounted static cache headers, generated-image serving, timeout middleware, middleware order, lifespan startup wiring, or route/static drift.
 - The diagnostics service-health endpoint is not a readiness gate and does not cover every optional subsystem.
+
+## Integrated shutdown and private review admission
+
+The streamed-chat shutdown check precedes Jev event observation; shutdown does not emit a completion tail and records the bound submission as cancelled. Task automation-off admission remains independent of upstream auth-disabled/admin/task endpoint restrictions. Private review state has a process-owned admission nonce, regenerated after fork; configured multi-worker private Auto fails before inference and offers user-controlled renewal or Always Ask. No shared-memory durability or sticky routing is claimed.
+
+Before a new Auto turn supersedes work or performs model/tool preparation, the prior complete review context is validated. This includes legacy private rows lacking a process marker, even if the next request turns incognito off. JSON sensitivity checks normalize exactly the recognized credential labels across case, hyphen and underscore spellings; typed null/boolean placeholders are public data, while string secrets remain blocked. Pending/new chats keep global settings accessible and cannot submit renewal until an owned chat exists.

@@ -8,10 +8,17 @@ from tests.runtime_evidence_helpers import server_authorized_executor
 
 
 @pytest.fixture(autouse=True)
-def standalone_dispatch_authority(monkeypatch):
+def standalone_dispatch_authority(monkeypatch, tmp_path):
     from src import tool_execution
-    monkeypatch.setattr(tool_execution, "execute_tool_block",
-                        server_authorized_executor(tool_execution.execute_tool_block))
+    from core import database
+    from tests.helpers.database import disposable_database
+    # Standalone callers still query persisted-chat admission. Own a file DB
+    # rather than depend on the global in-memory pool surviving other suites.
+    with disposable_database(tmp_path) as factory:
+        monkeypatch.setattr(database, "SessionLocal", factory)
+        monkeypatch.setattr(tool_execution, "execute_tool_block",
+                            server_authorized_executor(tool_execution.execute_tool_block))
+        yield
 
 from src.tool_approvals import ToolApprovalStore, document_content_digest
 from src.tool_capabilities import ToolRunSecurityContext, capabilities_for_action

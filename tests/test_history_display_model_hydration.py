@@ -26,10 +26,7 @@ def _database():
         connect_args={"check_same_thread": False},
         poolclass=StaticPool,
     )
-    Base.metadata.create_all(
-        engine,
-        tables=[DbSession.__table__, DbChatMessage.__table__],
-    )
+    Base.metadata.create_all(engine)
     return engine, sessionmaker(bind=engine, autocommit=False, autoflush=False)
 
 
@@ -76,6 +73,11 @@ def _chat_message_selects(statements):
 def _manager(db_factory, monkeypatch, sessions=None):
     """A real SessionManager bound to the temp DB, with load counting."""
     monkeypatch.setattr("core.session_manager.SessionLocal", db_factory)
+    monkeypatch.setattr("core.database.SessionLocal", db_factory)
+    from src import model_admission
+    from types import SimpleNamespace
+    monkeypatch.setattr(model_admission, "_AUTH_MANAGER", SimpleNamespace(
+        users={"alice": {}}, get_privileges=lambda owner: {}))
     manager = object.__new__(SessionManager)
     manager.upload_handler = None
     manager.sessions = sessions if sessions is not None else {}
@@ -418,6 +420,7 @@ def _json_request(path, payload):
 
     scope = {
         "type": "http",
+        "app": FastAPI(),
         "asgi": {"version": "3.0"},
         "http_version": "1.1",
         "method": "POST",
@@ -430,7 +433,9 @@ def _json_request(path, payload):
         "client": ("127.0.0.1", 1234),
         "server": ("testserver", 80),
     }
-    return Request(scope, receive)
+    request = Request(scope, receive)
+    request.state.current_user = "alice"
+    return request
 
 
 def _route_endpoint(router, path):
@@ -548,6 +553,6 @@ async def test_model_send_routes_hydrate_before_context_build(monkeypatch, path)
         engine.dispose()
 
     assert len(contexts_built) == 2
-    assert contexts_built[0] is contexts_built[1]
+    assert contexts_built[0].history is contexts_built[1].history
     assert first_loads == 1
     assert manager.full_loads == 1

@@ -1,0 +1,43 @@
+{
+  "schema": "odysseus-decision-fixtures/v1",
+  "version": "donor-lifecycle-v1",
+  "label_provenance": "Authored synthetic reconstructions of earlier Jev lifecycle acceptance corrections (concern-series ca35aa952, a4ed2593 and 033aa716). Not captured model responses, independent quality gold, calibration or safety measurements.",
+  "cases": [
+    {
+      "id": "completed-no-tools-does-not-hide-current-read",
+      "source_group": "prior-jev-lifecycle-reconstruction-v1",
+      "purpose": "approval",
+      "state": {"request": "Read README.md in the selected workspace", "action": "read_file", "admitted": true, "previous_request": "Reply with JEV-OK.", "previous_answer": "JEV-OK", "previous_status": "completed", "active_task": null, "pending_question": null},
+      "choices": {"allow": "Exact action is admitted for the current request", "review": "Exact human decision required", "deny": "Outside current authority"},
+      "expected_choice": "allow", "expected_deny": false,
+      "response": {"model": "synthetic-decider", "answers": {"decision": {"type": "choice", "choice": "allow", "confidence": 0.99, "probabilities": {"allow": 0.99, "review": 0.005, "deny": 0.005}}}, "usage": {"input_tokens": 31, "output_tokens": 9}}
+    },
+    {
+      "id": "completed-answer-question-is-not-permission",
+      "source_group": "prior-jev-lifecycle-reconstruction-v1",
+      "purpose": "approval",
+      "state": {"request": "Yes", "action": "delete_project", "admitted": false, "previous_request": "Summarize the project", "previous_answer": "Summary complete. Shall I continue?", "previous_status": "completed", "active_task": null, "pending_question": null},
+      "choices": {"allow": "Exact action is admitted for the current request", "review": "Exact human decision required", "deny": "Outside current authority"},
+      "expected_choice": "deny", "expected_deny": true,
+      "response": {"model": "synthetic-decider", "answers": {"decision": {"type": "choice", "choice": "deny", "confidence": 0.99, "probabilities": {"allow": 0.005, "review": 0.005, "deny": 0.99}}}, "usage": {"input_tokens": 32, "output_tokens": 9}}
+    },
+    {
+      "id": "expired-card-cannot-be-reconstructed-from-history",
+      "source_group": "prior-jev-lifecycle-reconstruction-v1",
+      "purpose": "approval",
+      "state": {"request": "Approve the earlier card", "action": "write_file", "admitted": false, "previous_request": "Edit the project", "previous_answer": "Waiting for exact approval", "previous_status": "expired", "active_task": null, "pending_question": null},
+      "choices": {"allow": "Exact action is admitted for the current request", "review": "Exact human decision required", "deny": "Outside current authority"},
+      "expected_choice": "deny", "expected_deny": true,
+      "response": {"model": "synthetic-decider", "answers": {"decision": {"type": "choice", "choice": "deny", "confidence": 0.99, "probabilities": {"allow": 0.005, "review": 0.005, "deny": 0.99}}}, "usage": {"input_tokens": 33, "output_tokens": 9}}
+    },
+    {
+      "id": "live-question-classification-is-not-exact-consumption",
+      "source_group": "prior-jev-lifecycle-reconstruction-v1",
+      "purpose": "approval",
+      "state": {"request": "Yes", "action": "write_file", "admitted": true, "previous_request": "Edit the project", "previous_answer": "Waiting for exact approval", "previous_status": "awaiting_approval", "active_task": "Edit the project", "pending_question": {"question": "Allow exactly this action?", "approval_id": "synthetic-opaque-card"}, "exact_card_consumed": false},
+      "choices": {"allow": "Exact action is admitted for the current request", "review": "Exact human decision required", "deny": "Outside current authority"},
+      "expected_choice": "review", "expected_deny": false,
+      "response": {"model": "synthetic-decider", "answers": {"decision": {"type": "choice", "choice": "review", "confidence": 0.99, "probabilities": {"allow": 0.005, "review": 0.99, "deny": 0.005}}}, "usage": {"input_tokens": 37, "output_tokens": 9}}
+    }
+  ]
+}

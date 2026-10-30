@@ -300,6 +300,8 @@ from routes.auth_routes import setup_auth_routes, SESSION_COOKIE
 
 auth_manager = AuthManager()
 app.state.auth_manager = auth_manager
+from src.model_admission import configure_auth_manager
+configure_auth_manager(auth_manager)
 AUTH_ENABLED = not auth_disabled()
 LOCALHOST_BYPASS = os.getenv("LOCALHOST_BYPASS", "false").lower() == "true"
 if LOCALHOST_BYPASS:
@@ -782,6 +784,13 @@ from routes.skills_routes import setup_skills_routes
 app.include_router(setup_skills_routes(skills_manager))
 
 # Chat
+from routes.chat_automation_routes import setup_chat_automation_routes
+app.include_router(setup_chat_automation_routes(session_manager))
+from routes.decision_activity import setup_decision_activity_routes
+_decision_activity_router = setup_decision_activity_routes(session_manager)
+app.include_router(_decision_activity_router)
+from routes.browser_control_routes import setup_browser_control_routes
+app.include_router(setup_browser_control_routes())
 from routes.chat_routes import setup_chat_routes
 app.include_router(setup_chat_routes(
     session_manager, chat_handler, chat_processor,
@@ -1191,7 +1200,11 @@ async def _lifespan(app):
     """Modern lifespan context manager replacing deprecated @app.on_event."""
     # ── STARTUP ──
     await _startup_event()
-    yield
+    # This application assigns its lifespan after include_router, so explicitly
+    # enter the decision router's retention owner instead of losing its merged
+    # lifespan during that assignment.
+    async with _decision_activity_router.lifespan_context(app):
+        yield
     # ── SHUTDOWN ──
     await _shutdown_event()
 
@@ -1404,7 +1417,10 @@ async def _startup_event():
     # deployment where an external worker drives task firing. Mirrors
     # `ODYSSEUS_INPROCESS_POLLERS` from the email pollers.
     _tasks_inprocess = os.environ.get("ODYSSEUS_INPROCESS_TASKS", "1").strip().lower()
-    if _tasks_inprocess not in ("0", "false", "no", "off", ""):
+    from src.task_automation import task_automation_enabled
+    if not task_automation_enabled():
+        logger.info("Automatic task scheduler and event execution disabled by deployment")
+    elif _tasks_inprocess not in ("0", "false", "no", "off", ""):
         await task_scheduler.start()
     else:
         logger.info(

@@ -41,6 +41,10 @@ class _FakeQuery:
                 self._include_shared = False
         return self
 
+    def all(self):
+        return [ep for ep in self._endpoints if not self._user
+                or ep.owner == self._user or (self._include_shared and ep.owner is None)]
+
     def first(self):
         """Return first endpoint respecting owner filter"""
         if not self._endpoints:

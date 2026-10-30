@@ -1828,6 +1828,23 @@ def test_api_models_openrouter_uses_pinned_models_not_hidden(monkeypatch):
     assert result["items"][0]["models"] == ["openai/gpt-image-1"]
 
 
+@pytest.mark.parametrize('base,expected', [
+    ('https://generativelanguage.googleapis.com/v1beta/openai',['minimal','low','medium','high']),
+    ('https://proxy.invalid/v1',['default']),
+])
+def test_picker_auto_capabilities_are_exact_provider_scoped_without_probes(monkeypatch,base,expected):
+    row=_route_ep('fixture-provider',base,cached_models=['gemini-2.5-pro'],api_key='fake-key')
+    db=_RouteDb([row]);router=model_routes.setup_model_routes(model_discovery=None)
+    monkeypatch.setattr(model_routes,'ModelEndpoint',_RouteModelEndpoint)
+    monkeypatch.setattr(model_routes,'SessionLocal',lambda:db)
+    monkeypatch.setattr(model_routes,'_auth_disabled',lambda:True)
+    monkeypatch.setattr(threading,'Thread',_NoopThread)
+    def no_probe(*args,**kwargs):raise AssertionError('capability serialization must not probe')
+    monkeypatch.setattr(model_routes,'_probe_endpoint',no_probe)
+    result=_route_endpoint(router,'/api/models')(_route_request())
+    assert result['items'][0]['auto_model_capabilities']['gemini-2.5-pro']['supported_efforts']==expected
+
+
 def test_api_models_openrouter_defaults_cached_models_visible(monkeypatch):
     row = _route_ep(
         "openrouter",

@@ -73,6 +73,7 @@ function _renderEndpointTestResult() {{}}
 async function loadEndpoints() {{}}
 async function _selectAddedModelInChat() {{}}
 let _recentlyAddedEpId = null;
+const localType = el('adm-epLocalType');
 const localTestBtn = {{ disabled: false, textContent: '' }};
 const localAddBtn = {{ disabled: false, textContent: '' }};
 async function fetch() {{
@@ -130,3 +131,10 @@ def test_api_key_omitted_when_blank(marker):
     keys = [k for k, _ in _run_handler(_handler(marker), fields)]
     assert "base_url" in keys
     assert "api_key" not in keys, "blank key must not be appended (avoids empty Bearer)"
+
+
+@pytest.mark.skipif(not _HAS_NODE, reason="node binary not on PATH")
+def test_decision_endpoint_test_does_not_send_chat_probe_or_credentials():
+    fields = {"adm-epLocalUrl": "http://localhost:8002/v1",
+              "adm-epLocalApiKey": "sk-secret", "adm-epLocalType": "decision"}
+    assert _run_handler(_handler(_TEST_MARKER), fields) == []

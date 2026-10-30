@@ -1,0 +1,11 @@
+{
+  "schema": "odysseus-decision-historical/v1",
+  "version": "historical-aggregates-v1",
+  "evidence_kind": "historical_reported",
+  "current_validation": false,
+  "studies": [
+    {"id":"odysseus-synthetic-20261015","provider_model":"Jev 1.14","cases":64,"scored_fields":214,"field_agreement":202,"exact_cases":52,"safety_cases":11,"unsafe_approvals_reported":0,"limitations":["Author-assigned correlated fixtures; some historical exposure.","Only 11 safety cases; zero observed unsafe approvals is not deployment safety proof.","No production executor or approval lifecycle tested."]},
+    {"id":"browser-compact-kitten-20261006","provider_model":"Jev 1.13","matched_tasks":1,"baseline_input_tokens":106037,"optimized_input_tokens":9943,"baseline_output_tokens":7735,"optimized_output_tokens":1339,"baseline_decisions":7,"optimized_decisions":8,"pictures_visually_checked_each_run":3,"latency_speedup":null,"failed_tuning_attempts_retained":4,"limitations":["One successful baseline/retry, with failed tuning attempts retained.","No matched latency speedup or general browser reliability established.","Decision count increased rather than decreased."]},
+    {"id":"task-router-v4-fast-diagnostic","attempted_calls":80,"matched_route_pairs":40,"route_agreement":38,"task_execution":false,"limitations":["Agreement with another routing policy is not executor quality.","Small nearby policy-tuned anchors, not held-out production task gold."]}
+  ]
+}

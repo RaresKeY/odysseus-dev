@@ -247,8 +247,8 @@ def setup_webhook_routes(
         from src.llm_core import llm_call_async
         from src.endpoint_resolver import build_chat_url, build_headers, build_models_url, normalize_base
 
-        message = body.message.strip()
-        if not message:
+        message = body.message
+        if not message.strip():
             raise HTTPException(400, "Message is required")
 
         session_id = body.session
@@ -366,7 +366,7 @@ def setup_webhook_routes(
             sid = str(uuid.uuid4())
             sess = session_manager.create_session(
                 session_id=sid, name="API Chat", endpoint_url=endpoint_url,
-                model=model, owner=token_owner,
+                model=model, owner=token_owner, endpoint_id=ep.id,
             )
             if api_key:
                 sess.headers = build_headers(api_key, base_url)
@@ -374,14 +374,23 @@ def setup_webhook_routes(
             session_id = sid
 
         # --- Send message and get response ---
-        sess.add_message(ChatMessage("user", message))
-
-        messages = [{"role": m.role, "content": m.content} for m in sess.history]
-
-        reply = await llm_call_async(
-            sess.endpoint_url, sess.model, messages,
-            headers=sess.headers, timeout=120,
-        )
+        from src.chat_automation import AutomationStore, prepare_chat_submission
+        bound = await prepare_chat_submission(AutomationStore(), token_owner, sess, message, entrypoint="delegated",
+            submission_id=request.headers.get("X-Chat-Submission-Id"))
+        try:
+            with bound.activate():
+                sess = bound.view(sess)
+                sess.add_message(ChatMessage("user", message))
+                messages = [{"role": m.role, "content": m.content} for m in sess.history]
+                reply = await llm_call_async(
+                    sess.endpoint_url, sess.model, messages, headers=sess.headers, timeout=120,
+                    session_id=session_id, reasoning_effort=bound.descriptor["reasoning_effort"] or None)
+        except BaseException:
+            bound.store.record(bound, "failed")
+            raise
+        else:
+            bound.store.record_answer(bound, reply)
+            bound.store.record(bound, "completed")
         sess.add_message(ChatMessage("assistant", reply))
         session_manager.save_sessions()
 
