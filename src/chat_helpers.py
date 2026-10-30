@@ -488,8 +488,7 @@ def validate_message(message: str) -> str:
     if not message:
         raise HTTPException(status_code=400, detail="Message is required")
 
-    message = message.strip()
-    if len(message) == 0:
+    if len(message.strip()) == 0:
         raise HTTPException(status_code=400, detail="Message cannot be empty")
 
     if len(message) > 50000:

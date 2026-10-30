@@ -40,6 +40,11 @@ const KATEX_FONTS = [
 const PRECACHE = [
   '/static/js/modalVisibility.js',
   '/static/js/compare/sse.js',
+  '/static/css/chat-automation.css?v=20260929csssplit',
+  '/static/js/chatAutomation.js',
+  '/static/js/modelPicker.js?v=20260909routeidentity1',
+  '/static/js/modelAutoDialog.js',
+  '/static/js/decision-activity.js',
   '/',
   '/static/css/00-tokens.css?v=20261021confirmalign1',
   '/static/css/01-agent-chat.css?v=20261021confirmalign1',

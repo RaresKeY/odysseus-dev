@@ -1,8 +1,9 @@
-"""Trusted browser observations. No page execution capability is available.
+"""Trusted browser observations and producer-specific exact page admission.
 
 0.35.0 local-launch CLI drops pin flags on `session info`; live Docker probes
 proved destroyed-target retargeting. Observations are not permission to run a
-page command. The future producer must atomically enforce expected identities.
+page command. A separately enrolled private-pipe producer has captured-world
+operations; it does not add execution methods to the identity-only sidecar.
 """
 from __future__ import annotations
 
@@ -45,7 +46,7 @@ CDP_METHODS = frozenset({"Target.getTargets", "Target.getTargetInfo", "Target.at
                          "Page.getFrameTree", "Target.detachFromTarget"})
 PAGE_ACTIONS = frozenset({"open", "read", "snapshot", "find", "evaluate", "click", "fill",
     "press", "scroll", "wait", "screenshot", "navigate", "reload", "back", "forward",
-    "select_page", "close_page", "network", "console", "new_page", "tabs"})
+    "select_page", "close_page", "network", "console", "new_page", "tabs", "automate"})
 SESSION_ACTIONS = frozenset({"session_info"})
 PAGE_FAILURE = "browser_page_authority_unavailable"
 _ACTIVE = ContextVar("browser_resource_operation", default=None)
@@ -93,7 +94,7 @@ def parse_operation(content):
     if not isinstance(action, str) or action not in PAGE_ACTIONS | SESSION_ACTIONS | {"close"}:
         raise ResourceIdentityError("Unsupported browser action; raw commands and batch are forbidden")
     allowed = {"action", "page", "url", "selector", "target", "ref", "key", "direction", "amount",
-               "timeout_ms", "timeout_s", "text", "value", "script", "path", "find"}
+               "timeout_ms", "timeout_s", "text", "value", "script", "path", "find", "observation", "value_id", "goal", "max_steps"}
     if set(args) - allowed:
         raise ResourceIdentityError("Browser flags, labels, configuration and raw targetIds are forbidden")
     if "page" in args and (not isinstance(args["page"], str) or not re.fullmatch(r"t[1-9][0-9]*", args["page"])):
@@ -261,7 +262,11 @@ async def register_producer(owner, thread_id):
 
 
 def registered(owner, thread_id):
-    return _REGISTRY.get((owner, thread_id))  # Lookup never creates a session.
+    legacy = _REGISTRY.get((owner, thread_id))
+    if legacy is not None:
+        return legacy
+    from src.browser_pipe import get
+    return get(owner, thread_id)  # Lookup never launches or enrols a browser.
 
 
 def daemon_observation(record, info):
@@ -482,6 +487,11 @@ async def _observe_registered_locked(record, alias):
 
 def validate_session(resource):
     record = registered(resource.owner, resource.thread_id)
+    if getattr(resource.observation, 'producer_namespace', '') == 'native:odysseus-cdp-pipe':
+        if record is None or record.session != resource:
+            raise ResourceIdentityError('Pipe browser is stale, replaced or unregistered')
+        record.validate_config()
+        return
     if record is None or record.session != resource or not resource.observation.daemon.owned():
         raise ResourceIdentityError("Browser observation is stale, replaced or unregistered")
     record.validate_config()
@@ -490,6 +500,9 @@ def validate_session(resource):
 def validate_page(resource):
     resource.session.validate()
     record = registered(resource.session.owner, resource.session.thread_id)
+    if resource.session.observation.producer_namespace == 'native:odysseus-cdp-pipe':
+        record.validate_page(resource)
+        return
     if not any(p.target_id == resource.target_id and (resource.scope == "page" or p.loader_id == resource.loader_id) for p in record.pages):
         raise ResourceIdentityError("Browser page/document observation changed")
 
@@ -502,6 +515,21 @@ def seal_browser_resources(authority):
         record.session.validate()
     except ResourceIdentityError:
         return (), ()
+    if record.session.observation.producer_namespace == 'native:odysseus-cdp-pipe':
+        from src.browser_pipe import BrowserTaskGrant
+        from src.chat_automation import current_turn
+        grant, turn = record.task_grant, current_turn()
+        if isinstance(grant, BrowserTaskGrant) and turn is not None:
+            try:
+                grant.check(authority.owner, authority.session_id)
+                if (grant.run_id == turn.run_id and (turn.owner or '').casefold() == authority.owner
+                        and turn.session_id == authority.session_id and turn.current()):
+                    # Only an explicit current task owns this target across
+                    # navigation. Each child still binds a new document/nonce.
+                    return (record.session,), tuple(replace(page, scope='page', loader_id='', context_unique_id='') for page in record.pages)
+            except ResourceIdentityError:
+                pass
+        return (record.session,), record.pages
     return (record.session,), record.pages
 
 
@@ -582,6 +610,10 @@ def resolve_browser_operation(authority, operation, *, approved=None, exact_admi
 async def revalidate_browser_operation(bound):
     bound.validate()
     record = registered(bound.owner, bound.thread_id)
+    if bound.session.observation.producer_namespace == 'native:odysseus-cdp-pipe':
+        record.validate_config()
+        bound.validate()
+        return
     async with record.lock:
         try:
             # The existing capability connects to the captured browser only.
@@ -612,6 +644,31 @@ def bind_browser_operation(bound):
 async def execute_browser(content, ctx):
     try:
         operation, args = parse_operation(content)
+        from src.browser_pipe import get as pipe_record, BrowserPipeError
+        pipe = pipe_record(str(ctx.get('owner') or '').casefold(), str(ctx.get('session_id') or ''))
+        if pipe is not None:
+            from src.agent_runtime.authority import active_request_authority
+            authority, bound = active_request_authority(), _ACTIVE.get()
+            if (authority is None or bound is None or bound.operation != operation
+                    or bound.session != pipe.session
+                    or (authority.owner, authority.request_id, authority.session_id) != (bound.owner, bound.request_id, bound.thread_id)
+                    or (str(ctx.get('owner') or '').casefold(), str(ctx.get('session_id') or '')) != (bound.owner, bound.thread_id)):
+                raise ResourceIdentityError('Pipe browser requires the exact admitted application binding')
+            if not authority.permits(operation):
+                approval = bound.exact_approval
+                if (authority.inherited or approval is None or not approval._claimed
+                        or approval.pending.browser_operation is None or approval.pending.browser_operation.to_dict() != bound.to_dict()):
+                    raise ResourceIdentityError('Pipe browser operation lacks exact admission')
+            if args['action'] == 'session_info':
+                pipe.validate_config()
+                return {'output': json.dumps({'session_incarnation': pipe.session.observation.session_incarnation, 'producer_version': '1', 'producer_namespace': pipe.session.observation.producer_namespace}), 'exit_code': 0, 'executed': True}
+            try:
+                if args['action'] == 'automate':
+                    from src.browser_automation import execute_automation
+                    return await execute_automation(pipe, bound, args, ctx)
+                return await pipe.execute_bound(bound, args)
+            except BrowserPipeError as error:
+                return error.result()
         # Unconditional capability denial, before producer selection, alias
         # lookup, spawning, approval claims or any page-specific data read.
         if args["action"] not in SESSION_ACTIONS:

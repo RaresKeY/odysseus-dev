@@ -140,3 +140,25 @@ def test_tool_success_flags_do_not_terminate_compound_turn():
             assert "_contract_allows_single_action_terminal" in names
             seen.update(names & flags)
     assert seen == flags
+
+
+@pytest.mark.parametrize("url,action,reinspect", [
+    ("file:///workspace/output.html", "open", True),
+    ("file://localhost/workspace/output.html", "navigate", True),
+    ("https://example.test/submit", "open", False),
+    ("file://remote/workspace/output.html", "open", False),
+    ("file:///workspace/../private/output.html", "open", False),
+    ("file:///workspace/%2e%2e/private/output.html", "open", False),
+    ("file:///workspace/output.html", "click", False),
+])
+def test_only_local_artifact_navigation_dedupe_tracks_workspace_revision(url, action, reinspect):
+    import json
+
+    block = SimpleNamespace(tool_type="private_browser", content=json.dumps({"action": action, "url": url}))
+    before = _contract_mutation_signature(block, None, workspace_epoch=1)
+    same = _contract_mutation_signature(block, None, workspace_epoch=1)
+    after = _contract_mutation_signature(block, None, workspace_epoch=2)
+    assert before is not None and before == same
+    assert (before != after) is reinspect
+    if reinspect:
+        assert _contract_mutation_signature(block, None) is None

@@ -67,7 +67,10 @@ def test_every_module_in_the_lazy_editor_graph_is_precached_with_its_exact_url()
 def test_worker_keeps_the_static_scope():
     index = (STATIC / "index.html").read_text(encoding="utf-8")
     registrations = re.findall(r"serviceWorker\.register\(([^)]*)\)", index)
-    assert registrations == ["'/static/sw.js?v=20260916autoscroll1'"]
+    assert len(registrations) == 1
+    url, separator, options = registrations[0].partition(',')
+    assert re.fullmatch(r"'/static/sw\.js\?v=[a-zA-Z0-9_-]+'", url.strip())
+    assert not separator or options.strip() == "{updateViaCache:'none'}"
     assert "Service-Worker-Allowed" not in (ROOT / "app.py").read_text(encoding="utf-8")
 
 

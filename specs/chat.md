@@ -22,6 +22,9 @@ This spec covers current chat behavior in:
 
 ## Session Ownership
 
+Per-chat approval persistence, owner defaults/ceiling, independent review,
+approach routing and browser controls are owned by [Chat automation](chat-automation.md).
+
 `core.session_manager.SessionManager` owns session persistence and message writes. `routes/session_routes.py` owns session list/create/update/archive/delete/folder/importance behavior for the sidebar. `routes.history.history_routes` owns history/topic surfaces, with `routes/history_routes.py` kept as a compatibility shim.
 
 `core.models.Session` and `ChatMessage` are pure data containers. They do not own persistence; `Session.add_message()` delegates to the configured session manager when present.

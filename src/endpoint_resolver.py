@@ -16,6 +16,8 @@ from urllib.parse import urlparse, urlunparse
 from core.database import SessionLocal, ModelEndpoint
 from src.llm_core import _detect_provider, _host_match, _is_kimi_code_url, KIMI_CODE_USER_AGENT, _ollama_api_root
 
+from src.model_admission import endpoint_supports_chat
+
 logger = logging.getLogger(__name__)
 
 # Model-name substrings that are NOT chat/generation models. When an endpoint
@@ -314,6 +316,8 @@ def resolve_owner_registered_endpoint(db, endpoint_url: str, owner: Optional[str
         raise ValueError("Invalid model endpoint URL")
     query = db.query(ModelEndpoint).filter(ModelEndpoint.is_enabled.is_(True))
     for endpoint in owner_filter(query, ModelEndpoint, owner).all():
+        if not endpoint_supports_chat(endpoint):
+            continue
         base = normalize_base(endpoint.base_url)
         base_identity = _registered_endpoint_url_identity(base)
         if base_identity is None:
@@ -323,6 +327,22 @@ def resolve_owner_registered_endpoint(db, endpoint_url: str, owner: Optional[str
         if identity == _registered_endpoint_url_identity(build_chat_url(base)):
             return endpoint
     raise ValueError("Model endpoint must be enabled and registered for the current owner")
+
+
+def reject_decision_only_endpoint_url(db, endpoint_url: str, owner: Optional[str] = None):
+    """Do not let a URL alias turn a registered decision route into chat."""
+    from src.auth_helpers import owner_filter
+    from src.model_admission import endpoint_model_type, endpoint_supports_execution
+    query = db.query(ModelEndpoint).filter(ModelEndpoint.is_enabled == True)
+    requested = _registered_endpoint_url_identity(endpoint_url)
+    def matches_route(row):
+        base = _registered_endpoint_url_identity(normalize_base(row.base_url))
+        return (requested is not None and base is not None and requested[:3] == base[:3]
+                and (requested[3] == base[3] or requested[3].startswith(base[3] + "/")))
+    matches = [row for row in owner_filter(query, ModelEndpoint, owner).all() if matches_route(row)]
+    if (any(endpoint_model_type(row) == "decision" for row in matches)
+            and not any(endpoint_supports_execution(row) for row in matches)):
+        raise ValueError("Selected endpoint does not support chat execution")
 
 
 def resolve_owner_registered_endpoint_url(db, endpoint_url: str, owner: Optional[str] = None) -> str:
@@ -456,6 +476,14 @@ def resolve_endpoint(
     Returns:
         (endpoint_url, model, headers) — resolved or fallback values.
     """
+    if fallback_url:
+        db = SessionLocal()
+        try:
+            reject_decision_only_endpoint_url(db, fallback_url, owner)
+        except ValueError:
+            return None, None, None
+        finally:
+            db.close()
     try:
         from src.settings import get_user_setting, load_settings
         settings = load_settings()
@@ -502,6 +530,8 @@ def resolve_endpoint(
             ep = ep.first()
         if not ep:
             return fallback_url, fallback_model, fallback_headers
+        if not endpoint_supports_chat(ep):
+            return None, None, None
 
         try:
             base, api_key = resolve_endpoint_runtime(ep, owner=owner)
@@ -555,7 +585,7 @@ def _resolve_endpoint_by_id_with_descriptor(
             from src.auth_helpers import owner_filter
             q = owner_filter(q, ModelEndpoint, owner)
         ep = q.first()
-        if not ep:
+        if not ep or not endpoint_supports_chat(ep):
             return None
         try:
             base, api_key = resolve_endpoint_runtime(ep, owner=owner)

@@ -24,6 +24,7 @@ from src.session_image_cleanup import _generated_image_path_for_cleanup, session
 from src.session_actions import is_session_recently_active
 from src.upload_handler import reserve_message_upload_references
 from src.tool_approval_scopes import sanitize_client_message_metadata
+from src.decisions.observability import delete_observability_session
 
 
 def _sanitize_export_filename(name: str) -> str:
@@ -411,6 +412,7 @@ def setup_session_routes(
                     if active_incognito_id and _g.id == active_incognito_id:
                         continue
                     _purge_db.query(_DbMsg).filter(_DbMsg.session_id == _g.id).delete()
+                    delete_observability_session(_purge_db, _g.id)
                     _purge_db.delete(_g)
                     if hasattr(session_manager, "delete_session"):
                         try:
@@ -464,7 +466,10 @@ def setup_session_routes(
             from src.endpoint_resolver import build_chat_url, normalize_base
             endpoint_routes = {}
             endpoint_query = owner_filter(db.query(ModelEndpoint).filter(ModelEndpoint.is_enabled == True), ModelEndpoint, user)
+            from src.model_admission import endpoint_supports_execution
             for endpoint in endpoint_query.all():
+                if not endpoint_supports_execution(endpoint):
+                    continue
                 route_url = build_chat_url(normalize_base(endpoint.base_url or '')).rstrip('/')
                 endpoint_routes.setdefault(route_url, []).append(endpoint)
             sessions = []
@@ -539,6 +544,13 @@ def setup_session_routes(
         endpoint_api_key = ""
         endpoint_base_url = ""
         _reject_raw_endpoint_url_for_non_admin(request, user, endpoint_id, endpoint_url)
+        if endpoint_url and not endpoint_id:
+            from src.endpoint_resolver import reject_decision_only_endpoint_url
+            with SessionLocal() as purpose_db:
+                try:
+                    reject_decision_only_endpoint_url(purpose_db, endpoint_url, user)
+                except ValueError as exc:
+                    raise HTTPException(400, str(exc)) from None
         if endpoint_id and endpoint_id.strip():
             from core.database import ModelEndpoint
             from src.auth_helpers import owner_filter
@@ -554,6 +566,9 @@ def setup_session_routes(
                 endpoint_row = q.first()
                 if not endpoint_row:
                     raise HTTPException(400, "Model endpoint no longer exists")
+                from src.model_admission import endpoint_supports_execution
+                if not endpoint_supports_execution(endpoint_row):
+                    raise HTTPException(400, "Selected endpoint does not support chat execution")
                 endpoint_base_url = endpoint_row.base_url or ""
                 endpoint_api_key = endpoint_row.api_key or ""
                 endpoint_url = build_chat_url(normalize_base(endpoint_base_url))
@@ -704,6 +719,13 @@ def setup_session_routes(
         if model is not None and endpoint_url is not None:
             user = effective_user(request)
             _reject_raw_endpoint_url_for_non_admin(request, user, endpoint_id, endpoint_url)
+            if endpoint_url and not endpoint_id:
+                from src.endpoint_resolver import reject_decision_only_endpoint_url
+                with SessionLocal() as purpose_db:
+                    try:
+                        reject_decision_only_endpoint_url(purpose_db, endpoint_url, user)
+                    except ValueError as exc:
+                        raise HTTPException(400, str(exc)) from None
             endpoint_api_key = ""
             endpoint_base_url = ""
             if endpoint_id:
@@ -721,6 +743,9 @@ def setup_session_routes(
                     ep = q.first()
                     if not ep:
                         raise HTTPException(400, "Model endpoint no longer exists")
+                    from src.model_admission import endpoint_supports_execution
+                    if not endpoint_supports_execution(ep):
+                        raise HTTPException(400, "Selected endpoint does not support chat execution")
                     endpoint_base_url = ep.base_url or ""
                     endpoint_api_key = ep.api_key or ""
                     endpoint_url = build_chat_url(normalize_base(endpoint_base_url))
@@ -757,6 +782,12 @@ def setup_session_routes(
                     db_session.headers = session.headers or {}
                     db_session.thinking_mode = getattr(session, "thinking_mode", "off") or "off"
                     db_session.updated_at = utcnow_naive()
+                    from src.chat_automation import AutomationStore
+                    _, automation = AutomationStore().state(db, user, sid)
+                    if automation.route_mode != "manual":
+                        automation.route_mode = "manual"
+                        automation.policy_revision += 1
+                        automation.elevation_grant = None
                     db.commit()
             finally:
                 db.close()
@@ -825,6 +856,8 @@ def setup_session_routes(
                     db_sess = db.query(DbSession).filter(DbSession.id == sid).first()
                     if db_sess and db_sess.is_important:
                         continue
+                    delete_observability_session(db, sid)
+                    db.commit()
                 finally:
                     db.close()
 
@@ -861,6 +894,8 @@ def setup_session_routes(
                         status_code=403,
                         detail={"error": "SESSION_STARRED", "message": "Unstar the session before deleting it"}
                     )
+                delete_observability_session(db, sid)
+                db.commit()
             finally:
                 db.close()
 
@@ -927,6 +962,8 @@ def setup_session_routes(
             db.query(GalleryImage).filter(GalleryImage.session_id.in_(session_ids)).update(
                 {GalleryImage.session_id: None}, synchronize_session=False
             )
+            for sid in session_ids:
+                delete_observability_session(db, sid)
             db.query(DbChatMessage).delete()
             db.query(DbSession).delete()
             db.commit()
@@ -1356,6 +1393,7 @@ def setup_session_routes(
                     if hasattr(session_manager, 'delete_session'):
                         session_manager.delete_session(row.id)
                     else:
+                        delete_observability_session(db, row.id)
                         db.delete(row)
                     continue
                 if is_session_recently_active(row, now=cleanup_now):
@@ -1369,6 +1407,7 @@ def setup_session_routes(
                     if hasattr(session_manager, 'delete_session'):
                         session_manager.delete_session(row.id)
                     else:
+                        delete_observability_session(db, row.id)
                         db.delete(row)
             if deleted_empty or deleted_throwaway:
                 db.commit()

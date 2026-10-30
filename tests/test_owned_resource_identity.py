@@ -19,6 +19,7 @@ from src.agent_runtime.owned_resources import (
 from src.agent_runtime.remote_resources import active_backend_operation
 from src.agent_runtime.resources import OwnedScope, ResourceIdentityError
 from src.tool_approvals import ToolApprovalStore
+from src.tool_approval_scopes import SINGLE_ACTION_APPROVAL_DECISION
 from src.tool_capabilities import ToolRunSecurityContext, capabilities_for_action
 from src.tool_types import ToolBlock
 
@@ -43,10 +44,18 @@ async def dispatch(authority, tool, content, **kwargs):
 
 def approval(authority, tool, content, **kwargs):
     store = ToolApprovalStore()
-    pending = store.create(owner=authority.owner, session_id=authority.session_id, origin_run_id="run",
+    from src.chat_automation import current_turn
+    turn = current_turn()
+    if turn is not None:
+        kwargs.update(policy_record=turn.store.policy(turn.owner, turn.session_id),
+                      policy_validator=lambda pending: turn.current(),
+                      request_text=turn.raw_ask, submission_id=turn.submission_id, bound_turn=turn)
+    pending = store.create(owner=authority.owner, session_id=authority.session_id,
+        origin_run_id=turn.run_id if turn else "run",
         tool_name=tool, content=content, workspace=None, request_authority=authority,
         external_untrusted_context_seen=True, capabilities=capabilities_for_action(tool, content), **kwargs)
-    return store.consume(pending.approval_id, decision="approve", owner=authority.owner, session_id=authority.session_id)
+    return store.consume(pending.approval_id, decision=SINGLE_ACTION_APPROVAL_DECISION,
+                         owner=authority.owner, session_id=authority.session_id)
 
 
 @pytest.fixture
@@ -74,8 +83,21 @@ def records(monkeypatch):
         connection.add(db.Note(id="note-foreign", owner="bob", title="private", content="private"))
         connection.commit()
     monkeypatch.setattr(document_tools, "_active_document_id", None)
-    yield factory
-    engine.dispose()
+    from src import model_admission
+    from src.chat_automation import AutomationStore
+    monkeypatch.setattr(model_admission, "_AUTH_MANAGER", SimpleNamespace(
+        users={"alice": {}, "bob": {}}, get_privileges=lambda owner: {}))
+    store = AutomationStore(factory)
+    store.update_chat("alice", "s", {"approval_mode": "yolo"}, 0)
+    turn = store.acquire("alice", "s", "Use the explicitly authorized test resources", "interactive")
+    turn.descriptor = {"endpoint_id": None, "model": "test", "reasoning_effort": ""}
+    turn.endpoint_url = "https://model.test"
+    store.record(turn, "bound", turn.descriptor)
+    try:
+        with turn.activate():
+            yield factory
+    finally:
+        engine.dispose()
 
 
 @pytest.mark.parametrize("selector", ["active", "current", "latest"])
@@ -427,3 +449,16 @@ def test_vault_producer_revision_change_invalidates_sealed_item_and_cannot_cross
     observe_vault_records("alice", cfg, [{**item, "revisionDate": "two"}])
     with pytest.raises(ResourceIdentityError):
         bound.validate()
+
+
+async def test_persisted_resource_session_still_requires_current_chat_submission(records, monkeypatch):
+    from contextvars import Context
+    from src import tool_execution as execution
+    implementation = AsyncMock()
+    monkeypatch.setattr(execution, "_execute_tool_block_impl", implementation)
+    _, result = await asyncio.create_task(
+        dispatch(grant("manage_documents"), "manage_documents", '{"action":"read","id":"d1"}'),
+        context=Context(),
+    )
+    assert result["failure_kind"] == "chat_submission_required"
+    implementation.assert_not_awaited()

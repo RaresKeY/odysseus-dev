@@ -134,6 +134,9 @@ def _resolve_model(spec: str, owner: Optional[str] = None, model_type: Optional[
                              (f" matching '{target_endpoint_name}'" if target_endpoint_name else ""))
 
         for ep in endpoints:
+            from src.model_admission import endpoint_supports_execution
+            if not endpoint_supports_execution(ep):
+                continue
             try:
                 base, api_key = resolve_endpoint_runtime(ep, owner=owner)
             except Exception:

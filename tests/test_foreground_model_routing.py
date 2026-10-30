@@ -293,7 +293,10 @@ def _chat_stream_endpoint(
         SimpleNamespace(),
         SimpleNamespace(),
     )
-    return next(route.endpoint for route in router.routes if route.path == "/api/chat_stream")
+    # These fixtures deliberately isolate foreground route behavior with a
+    # metadata-only session double. The transactional ingress is exercised with
+    # real SQL and actual provider transport in test_chat_automation_ingress.py.
+    return next(route.endpoint for route in router.routes if route.path == "/api/chat_stream").__wrapped__
 
 
 @pytest.mark.asyncio
@@ -317,8 +320,23 @@ async def test_chat_stream_route_keeps_selected_model_strict_with_legacy_data(mo
         assert captured == {"agent": {"primary": selected, "fallbacks": [], "thinking_mode": "off"}}
 
 
+@pytest.fixture
+def owned_approval_document(monkeypatch, tmp_path):
+    from tests.helpers.database import disposable_database
+    with disposable_database(tmp_path) as factory:
+        with factory() as db:
+            db.add(database.Session(id="session-1", owner="alice", name="fixture",
+                                    endpoint_url="https://selected.example/v1", model="selected-model"))
+            db.flush()
+            db.add(database.Document(id="document-7", owner="alice", session_id="session-1",
+                                     current_content="original", version_count=4))
+            db.commit()
+        monkeypatch.setattr(database, "SessionLocal", factory)
+        yield
+
+
 @pytest.mark.asyncio
-async def test_chat_stream_consumes_exact_tool_approval_for_own_session(monkeypatch):
+async def test_chat_stream_consumes_exact_tool_approval_for_own_session(monkeypatch, owned_approval_document):
     from src.tool_capabilities import capabilities_for_action
 
     captured = {}
@@ -1217,7 +1235,7 @@ def _chat_endpoint(
         SimpleNamespace(),
     )
     endpoint = next(route.endpoint for route in router.routes if route.path == "/api/chat")
-    return endpoint, saved
+    return endpoint.__wrapped__, saved
 
 
 @pytest.mark.asyncio

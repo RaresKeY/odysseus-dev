@@ -48,7 +48,10 @@ def rename_endpoint(monkeypatch, tmp_path):
     import core.database as cdb
 
     # Neutralize the DB owner-rename loop.
-    monkeypatch.setattr(cdb, "SessionLocal", lambda: MagicMock())
+    database = MagicMock()
+    database.get.return_value = None
+    database.query.return_value.filter_by.return_value.first.return_value = None
+    monkeypatch.setattr(cdb, "SessionLocal", lambda: database)
     monkeypatch.setattr(cdb, "Base", SimpleNamespace(registry=SimpleNamespace(mappers=[])), raising=False)
     # Neutralize the JSON-prefs rename.
     pr = types.ModuleType("routes.prefs_routes")
@@ -377,7 +380,10 @@ def test_rename_research_respects_custom_data_dir(monkeypatch, tmp_path):
     p = custom_dr / "rp-abc.json"
     p.write_text(json.dumps({"query": "q", "owner": "alice", "status": "done"}), encoding="utf-8")
 
-    monkeypatch.setattr(cdb, "SessionLocal", lambda: MagicMock())
+    database = MagicMock()
+    database.get.return_value = None
+    database.query.return_value.filter_by.return_value.first.return_value = None
+    monkeypatch.setattr(cdb, "SessionLocal", lambda: database)
     monkeypatch.setattr(cdb, "Base", SimpleNamespace(registry=SimpleNamespace(mappers=[])), raising=False)
     pr = types.ModuleType("routes.prefs_routes")
     pr._load = lambda: {}

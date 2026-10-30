@@ -35,6 +35,15 @@ class _FakeDB:
     """The endpoint lookup is patched, so only the trailing Comparison insert
     touches this — swallow add/commit/close so the test never hits a real DB."""
 
+    def query(self, *_):
+        return self
+
+    def filter(self, *_):
+        return self
+
+    def all(self):
+        return []
+
     def add(self, *a, **k):
         pass
 

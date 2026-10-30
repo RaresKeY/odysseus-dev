@@ -1,0 +1,6 @@
+.decision-activity { margin: .5rem 0; font-size: .85rem; }
+.decision-activity summary { cursor: pointer; }
+.decision-activity p { margin: .5rem 0; opacity: .8; }
+.decision-activity button { margin: .25rem .5rem .25rem 0; }
+.decision-activity li { margin: .5rem 0; overflow-wrap: anywhere; }
+.decision-activity a { margin-inline-start: .3rem; }

@@ -9,6 +9,15 @@ from src.tool_types import ToolBlock
 from src import tool_execution
 
 
+@pytest.fixture(autouse=True)
+def standalone_chat_database(monkeypatch, tmp_path):
+    from core import database
+    from tests.helpers.database import disposable_database
+    with disposable_database(tmp_path) as factory:
+        monkeypatch.setattr(database, "SessionLocal", factory)
+        yield
+
+
 def test_empty_legacy_browser_flag_does_not_enable_compatibility(monkeypatch):
     monkeypatch.setenv('ODYSSEUS_PRIVATE_BROWSER_LEGACY', '')
     assert not tool_execution._legacy_private_browser_enabled()

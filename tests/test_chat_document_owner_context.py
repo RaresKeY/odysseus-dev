@@ -20,6 +20,8 @@ def document_chat(tmp_path, monkeypatch):
 
     monkeypatch.setenv("AUTH_ENABLED", "true")
     auth = AuthManager(str(tmp_path / "auth.json"))
+    from src import model_admission
+    monkeypatch.setattr(model_admission, "_AUTH_MANAGER", auth)
     for owner in ("alice", "bob"):
         assert auth.create_user(owner, "disposable-test-password")
     captured = []
