@@ -1779,7 +1779,8 @@ def _clear_orphaned_session_endpoint(sess, owner: str | None = None) -> bool:
         if owner:
             from src.auth_helpers import owner_filter
             q = owner_filter(q, ModelEndpoint, owner)
-        endpoints = q.all()
+        from src.model_admission import endpoint_supports_execution
+        endpoints = [row for row in q.all() if endpoint_supports_execution(row)]
         bound_id = getattr(sess, "endpoint_id", None)
         for ep in endpoints:
             if bound_id and ep.id != bound_id:
@@ -1932,7 +1933,8 @@ def _recover_empty_session_model(sess, session_id: str, owner: str | None = None
             if owner:
                 from src.auth_helpers import owner_filter
                 q = owner_filter(q, ModelEndpoint, owner)
-            endpoints = q.all()
+            from src.model_admission import endpoint_supports_execution
+            endpoints = [row for row in q.all() if endpoint_supports_execution(row)]
             # Honour the session's exact endpoint binding first: two endpoints
             # can share a provider URL (e.g. two ChatGPT Subscription accounts).
             bound_id = getattr(sess, "endpoint_id", None) or None
@@ -2037,8 +2039,21 @@ def _reconcile_selected_route_from_request(
     stream request includes the route that was selected at click/send time.
     Trust only registered endpoint ids, or the session's existing endpoint URL.
     """
-    selected_model = str(form_data.get("selected_model") or "").strip()
     selected_endpoint_id = str(form_data.get("selected_endpoint_id") or "").strip()
+    if getattr(sess, "_automation_bound", False):
+        # A bound turn ignores stale route metadata, but must still refuse an
+        # explicit decision-only selection instead of dispatching the old route.
+        if selected_endpoint_id:
+            from src.auth_helpers import owner_filter
+            from src.model_admission import endpoint_supports_execution
+            with SessionLocal() as purpose_db:
+                query = purpose_db.query(ModelEndpoint).filter(
+                    ModelEndpoint.id == selected_endpoint_id, ModelEndpoint.is_enabled == True)
+                selected = owner_filter(query, ModelEndpoint, owner).first()
+                if selected is not None and not endpoint_supports_execution(selected):
+                    raise HTTPException(400, "Selected endpoint does not support chat execution")
+        return False
+    selected_model = str(form_data.get("selected_model") or "").strip()
     selected_endpoint_url = str(form_data.get("selected_endpoint_url") or "").strip()
     if not selected_model:
         return False
@@ -2073,6 +2088,9 @@ def _reconcile_selected_route_from_request(
                     if selected_endpoint_id or _session_url_matches_endpoint(selected_endpoint_url, cand.base_url or ""):
                         ep = cand
                         break
+                from src.model_admission import endpoint_supports_execution
+                if ep is not None and not endpoint_supports_execution(ep):
+                    raise HTTPException(400, "Selected endpoint does not support chat execution")
                 if not ep:
                     return False
                 endpoint_url = build_chat_url(normalize_base(ep.base_url or ""))
@@ -2080,6 +2098,8 @@ def _reconcile_selected_route_from_request(
                 resolved_endpoint_id = ep.id
             finally:
                 db.close()
+        except HTTPException:
+            raise
         except Exception as e:
             logger.warning("Failed to resolve selected endpoint %s/%s for %s: %s", selected_endpoint_id, selected_endpoint_url, session_id, e)
             return False
@@ -2252,7 +2272,10 @@ def setup_chat_routes(
     # ------------------------------------------------------------------ #
     # POST /api/chat (non-streaming)
     # ------------------------------------------------------------------ #
+    from src.chat_automation import automation_ingress
+
     @router.post("/api/chat", response_model=Dict[str, Any])
+    @automation_ingress(session_manager)
     async def chat_endpoint(request: Request, chat_request: ChatRequest) -> Dict[str, Any]:
         require_api_token_scope(request, "chat")
         _set_user_time_from_request(request)
@@ -2281,13 +2304,15 @@ def setup_chat_routes(
         if not supports_user_thinking_toggle(sess.model):
             thinking_mode = "off"
         reasoning_effort = None
-        req_effort = getattr(chat_request, "reasoning_effort", None)
+        from src.chat_automation import current_turn
+        _bound_turn = current_turn()
+        req_effort = _bound_turn.descriptor["reasoning_effort"] if _bound_turn else getattr(chat_request, "reasoning_effort", None)
         if req_effort:
             reasoning_effort = str(req_effort).strip().lower()
         elif session_mode.startswith("effort:"):
             reasoning_effort = session_mode[7:].strip()
         from src.chatgpt_subscription import validate_reasoning_effort
-        reasoning_effort = validate_reasoning_effort(sess.model, reasoning_effort)
+        reasoning_effort = (_bound_turn.descriptor['reasoning_effort'] or None) if _bound_turn else validate_reasoning_effort(sess.model, reasoning_effort)
         owner = effective_user(request)
         _reconcile_selected_route_from_request(request, sess, session, {
             "selected_model": sess.model,
@@ -2380,7 +2405,7 @@ def setup_chat_routes(
             sess.headers,
             owner=owner,
             policy=foreground_policy,
-            selected_endpoint_id=chat_request.selected_endpoint_id or getattr(sess, "endpoint_id", None),
+            selected_endpoint_id=getattr(sess, "endpoint_id", None) if getattr(sess, "_automation_bound", False) else chat_request.selected_endpoint_id or getattr(sess, "endpoint_id", None),
         )
         candidate_request_factory = None
         selected_context_length = getattr(ctx, "context_length", 0)
@@ -2470,6 +2495,7 @@ def setup_chat_routes(
     # POST /api/chat_stream
     # ------------------------------------------------------------------ #
     @router.post("/api/chat_stream")
+    @automation_ingress(session_manager)
     async def chat_stream(request: Request) -> StreamingResponse:
         require_api_token_scope(request, "chat")
         body = None
@@ -2522,7 +2548,7 @@ def setup_chat_routes(
                 raise HTTPException(400, "temperature must be a number between 0 and 2")
         incognito = str(form_data.get("incognito", "")).lower() == "true"
         plan_mode = str(form_data.get("plan_mode") or (body or {}).get("plan_mode") or "").lower() == "true"
-        chat_mode = str(form_data.get("mode", "")).lower()  # 'chat' or 'agent'
+        chat_mode = str(form_data.get("mode") or (body or {}).get("mode") or "").lower()  # 'chat' or 'agent'
         client_runtime_context = None
         raw_client_runtime_context = (
             form_data.get("client_runtime_context")
@@ -2799,10 +2825,14 @@ def setup_chat_routes(
             from src.model_profiles import supports_user_thinking_toggle
             if not supports_user_thinking_toggle(sess.model):
                 thinking_mode = "off"
-            if reasoning_effort is None and session_mode.startswith("effort:"):
+            from src.chat_automation import current_turn
+            _bound_turn = current_turn()
+            if _bound_turn is not None:
+                reasoning_effort = _bound_turn.descriptor["reasoning_effort"] or None
+            elif reasoning_effort is None and session_mode.startswith("effort:"):
                 reasoning_effort = session_mode[7:].strip()
             from src.chatgpt_subscription import validate_reasoning_effort
-            reasoning_effort = validate_reasoning_effort(sess.model, reasoning_effort)
+            reasoning_effort = (_bound_turn.descriptor['reasoning_effort'] or None) if _bound_turn else validate_reasoning_effort(sess.model, reasoning_effort)
             if getattr(sess, "temperature_override", None) is not None:
                 temperature_override = float(sess.temperature_override)
             # A resumed session may omit workspace/cwd from the new request.
@@ -2814,7 +2844,8 @@ def setup_chat_routes(
                 current_workspace=workspace,
                 current_rejected=workspace_rejected,
             )
-            owner = effective_user(request)
+            from src.owner_identity import effective_storage_owner
+            owner = effective_storage_owner(effective_user(request))
             selected_notes = []
             if selected_note_ids:
                 notes_db = SessionLocal()
@@ -2853,7 +2884,8 @@ def setup_chat_routes(
                     external_untrusted_context_seen or pending_taint
                 )
                 decision = str(tool_approval_decision or "").strip().lower()
-                if decision not in {"approve", "approve_task", "deny"}:
+                allowed_decisions = {"approve_once", "deny"} if pending_tool_approval.policy_binding is not None else {"approve", "approve_task", "deny"}
+                if decision not in allowed_decisions:
                     raise HTTPException(400, "Invalid tool approval decision.")
                 if plan_mode:
                     raise HTTPException(
@@ -2868,7 +2900,7 @@ def setup_chat_routes(
                 )
                 tool_approval_continuation = True
                 if (
-                    decision in {"approve", "approve_task"}
+                    decision in {"approve", "approve_task", "approve_once"}
                     and exact_tool_approval is None
                 ):
                     raise HTTPException(
@@ -2920,7 +2952,8 @@ def setup_chat_routes(
                 external_untrusted_context_seen = (
                     external_untrusted_context_seen or retired_tool_approval_taint
                 )
-            _reconcile_selected_route_from_request(request, sess, session, form_data, owner=owner)
+            _reconcile_selected_route_from_request(request, sess, session,
+                {**form_data, "selected_endpoint_id": selected_endpoint_id}, owner=owner)
             if _clear_orphaned_session_endpoint(sess, owner=owner):
                 raise HTTPException(400, "Selected model endpoint was removed. Pick another model in Settings.")
             # Issue #587: picker shows a model from the endpoint cache but
@@ -3060,6 +3093,23 @@ def setup_chat_routes(
             last_user_message=message,
         )
         allow_tool_preprocessing = not pre_context_tool_policy.block_all_tool_calls
+        # Freeze general decision routing before context can fetch/search/read.
+        # Context preprocessing has only a coarse boolean admission surface;
+        # explicit selections therefore leave tool work to the guarded loop.
+        from src.chat_tool_routing import prepare_http_selection
+        from src.decisions import DecisionError
+        try:
+            _general_selection = await prepare_http_selection(
+                request, sess, message, agent_mode=(chat_mode == "agent"),
+                policy=pre_context_tool_policy, allow_bash=allow_bash,
+                web_enabled=_search_enabled, plan_mode=plan_mode, incognito=incognito,
+                compare_mode=compare_mode, workspace=workspace,
+                active_email=bool(active_email_ctx and active_email_ctx.get("uid")))
+        except DecisionError:
+            raise HTTPException(409, "Tool choice could not be verified. Choose existing routing or adjust the request; no automatic retry was made.") from None
+        if _general_selection is not None:
+            allow_tool_preprocessing = False
+            do_research = False
         foreground_policy = resolve_foreground_model_policy(
             owner=owner,
             allowed_models=_allowed_models_for_request(request),
@@ -3772,6 +3822,10 @@ def setup_chat_routes(
                 warm_tools=_warm_tools,
                 message=message, history=getattr(sess, "history", []) or [],
             )
+            from src.chat_automation import current_turn
+            from src.chat_tool_routing import selected_contract, selected_policy
+            _contract_policy = selected_policy(_contract_policy, current_turn())
+            _turn_contract = selected_contract(_turn_contract, current_turn(), _contract_policy)
             _request_authority = _request_authority.restrict(_contract_policy)
             # Resolution already applies user, owner, and global policy. An
             # admitted tool must not later be rejected by the stale
@@ -3858,6 +3912,8 @@ def setup_chat_routes(
                         user_text=message,
                         browser_requested=_explicit_browser_intent,
                     )
+            # Compact/full experiments cannot expand the frozen chat selection.
+            _turn_contract = selected_contract(_turn_contract, current_turn(), _contract_policy)
             # Every recovery path receives the same scope denial. The central
             # dispatcher also checks the immutable contract after rewrites.
             disabled_tools.update(
@@ -4103,7 +4159,7 @@ def setup_chat_routes(
                 sess.headers,
                 owner=_user,
                 policy=_foreground_policy,
-                selected_endpoint_id=selected_endpoint_id or getattr(sess, "endpoint_id", None),
+                selected_endpoint_id=getattr(sess, "endpoint_id", None) if getattr(sess, "_automation_bound", False) else selected_endpoint_id or getattr(sess, "endpoint_id", None),
             )
             _chat_request_factory = None
             _selected_context_length = getattr(ctx, "context_length", 0)
@@ -5043,13 +5099,27 @@ def setup_chat_routes(
         async def _safe_stream() -> AsyncGenerator[str, None]:
             """Wrapper that guarantees _active_streams cleanup even if stream_with_save
             raises before reaching a mode-specific finally block."""
+            from src.chat_automation import current_turn, TurnEventObserver
+            producer_bound = current_turn()
+            producer_observer = TurnEventObserver(producer_bound) if producer_bound is not None else None
             try:
                 async for chunk in stream_with_save():
                     if _shutdown.is_shutting_down():
                         break
-                    yield chunk
+                    observed = producer_observer.feed(chunk) if producer_observer else chunk
+                    if observed:
+                        yield observed
+                if producer_observer and not _shutdown.is_shutting_down():
+                    tail = producer_observer.finish()
+                    if tail:
+                        yield tail
             finally:
                 _active_streams.pop(session, None)
+                bound = current_turn()
+                if bound is not None:
+                    bound.store.record(bound, "cancelled" if _shutdown.is_shutting_down() else
+                                       "awaiting_input" if bound.pending_input_id else
+                                       "awaiting_approval" if bound.pending else "completed")
 
         # Compare panes and explicitly unattended native clients are
         # short-lived, single-shot generations with nobody to resume them.

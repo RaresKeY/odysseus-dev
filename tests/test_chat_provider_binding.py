@@ -1,0 +1,307 @@
+"""Real turn authority, provider payloads and complete mocked HTTP execution."""
+from contextlib import asynccontextmanager
+from dataclasses import replace
+import json
+from types import SimpleNamespace
+
+import httpx
+import pytest
+from fastapi import HTTPException
+from sqlalchemy import create_engine
+from sqlalchemy.orm import sessionmaker
+
+from core import database as d
+from src import llm_core
+from src import model_capabilities as mc
+from src.chat_automation import AutomationStore, prepare_chat_turn
+from src.foreground_model_routing import ForegroundModelPolicy
+
+URL = "https://execution.invalid/v1/chat/completions"
+HEADERS = {"Authorization": "Bearer SYNTHETIC"}
+ASK = "  Preserve these exact edges.\n\tλ 🙂  "
+MESSAGES = [{"role": "user", "content": ASK}]
+
+
+@pytest.fixture
+def store(tmp_path, monkeypatch):
+    from tests.helpers.model_admission import register_model_owners
+    register_model_owners(monkeypatch, {"alice": {"selected", "backup", "gpt-5.2"}})
+    engine = create_engine("sqlite:///" + str(tmp_path / "binding.db"))
+    d.Base.metadata.create_all(engine)
+    factory = sessionmaker(bind=engine)
+    store = AutomationStore(factory)
+    with factory() as db:
+        db.add(d.Session(id="chat", name="chat", owner="alice", model="selected", endpoint_url=URL))
+        db.commit()
+    monkeypatch.setattr(llm_core, "_get_cached_response", lambda *_: None)
+    monkeypatch.setattr(llm_core, "_set_cached_response", lambda *a, **kw: None)
+    monkeypatch.setattr(llm_core, "get_context_length", lambda *_: 32768)
+    monkeypatch.setattr(llm_core, "_is_host_dead", lambda *_: False)
+    monkeypatch.setattr(llm_core, "note_model_activity", lambda *a, **kw: None)
+    monkeypatch.setattr(llm_core, "_clear_host_dead", lambda *_: None)
+    from src import model_auto
+    def snapshot(owner, candidates):
+        return {key:{'identity':c, 'supported_efforts':['low','high'], 'route':(URL,c['model'],HEADERS), 'label':'Fixture'} for key,c in candidates.items()}
+    monkeypatch.setattr(model_auto,'category_snapshot',snapshot)
+    from src import endpoint_resolver
+    store._test_routes={}
+    monkeypatch.setattr(endpoint_resolver,'resolve_endpoint_by_id',lambda ep,model,**kw: store._test_routes.get((ep,model)))
+    yield store
+    engine.dispose()
+
+
+async def bind(store, mode="auto", *, effort="low", url=URL, model="selected"):
+    session = SimpleNamespace(id="chat", model=model, endpoint_url=url, headers=HEADERS,
+                              endpoint_id=None, thinking_mode="effort:" + effort)
+    turn = await prepare_chat_turn(store, "alice", session, ASK)
+    # Classifier-to-route binding is covered separately. These execution tests
+    # pin the actual descriptor while retaining the real persisted CAS/epoch.
+    turn.policy["route_mode"] = mode
+    turn.policy['auto_categories']={key:{'endpoint_id':'fixture-endpoint','model':model} for key in ('complex_tasks','straightforward_tasks')}
+    turn.descriptor['auto_category']='complex_tasks'
+    from src import model_auto
+    turn.descriptor['auto_category_snapshot']=model_auto.public_category_snapshot({key:{'identity':value,'supported_efforts':['low','high']} for key,value in turn.policy['auto_categories'].items()})
+    # This fixture isolates the payload validator from SQL route selection;
+    # full selected-pool registration is covered in test_model_auto.
+    if mode=='auto':
+        turn.descriptor['endpoint_id']='fixture-endpoint'
+        store._test_routes[('fixture-endpoint',model)]=(url,model,HEADERS)
+    from src.approval_fallback import model_snapshot
+    turn.review_model_origin = model_snapshot(turn)
+    turn.review_route_lineage = [turn.review_model_origin]
+    return turn
+
+
+def response(request, *, stream=False):
+    payload = json.loads(request.content)
+    if stream:
+        data = {"model": payload["model"], "choices": [{"delta": {"content": "complete"}}]}
+        return httpx.Response(200, text="data: " + json.dumps(data) + "\n\ndata: [DONE]\n\n")
+    return httpx.Response(200, json={"model": payload["model"],
+                                   "choices": [{"message": {"content": "complete"}}]})
+
+
+@pytest.mark.asyncio
+@pytest.mark.parametrize("stream", [False, True])
+async def test_actual_execution_uses_acknowledged_model_effort_and_exact_ask(store, monkeypatch, stream):
+    turn, calls = await bind(store), []
+    def transport(request):
+        calls.append(request)
+        payload = json.loads(request.content)
+        assert payload["model"] == "selected"
+        assert payload["reasoning_effort"] == "low"
+        assert payload["messages"] == MESSAGES
+        assert request.headers["Authorization"] == HEADERS["Authorization"]
+        return response(request, stream=stream)
+    async with httpx.AsyncClient(transport=httpx.MockTransport(transport)) as client:
+        monkeypatch.setattr(llm_core, "_get_http_client", lambda: client)
+        with turn.activate():
+            if stream:
+                chunks = [chunk async for chunk in llm_core.stream_llm(URL, "selected", MESSAGES,
+                    headers=HEADERS, session_id="chat", reasoning_effort="low", thinking_mode="off")]
+                assert any("complete" in chunk for chunk in chunks)
+            else:
+                assert await llm_core.llm_call_async(URL, "selected", MESSAGES,
+                    headers=HEADERS, session_id="chat", reasoning_effort="low") == "complete"
+    assert len(calls) == 1
+
+
+@pytest.mark.asyncio
+@pytest.mark.parametrize("change", ["model", "headers", "effort", "policy", "preset_utility"])
+async def test_stale_or_mismatched_foreground_binding_never_dispatches(store, monkeypatch, change):
+    turn, calls = await bind(store), []
+    kwargs = {"headers": HEADERS, "session_id": "chat", "reasoning_effort": "low"}
+    model = "selected"
+    if change == "model": model = "injected"
+    if change == "headers": kwargs["headers"] = {"Authorization": "Bearer OTHER"}
+    if change == "effort": kwargs["reasoning_effort"] = "high"
+    if change in {"policy", "preset_utility"}:
+        store.update_configuration("alice", {"elevation_ceiling": True}, 0)
+    if change == "preset_utility": kwargs["prompt_type"] = "utility"
+    async with httpx.AsyncClient(transport=httpx.MockTransport(lambda req: calls.append(req))) as client:
+        monkeypatch.setattr(llm_core, "_get_http_client", lambda: client)
+        with turn.activate(), pytest.raises(HTTPException) as error:
+            await llm_core.llm_call_async(URL, model, MESSAGES, **kwargs)
+    assert error.value.status_code == 409 and error.value.fallback_eligible is False
+    assert calls == []
+
+
+@pytest.mark.asyncio
+@pytest.mark.parametrize("stream", [False, True])
+async def test_revision_change_while_waiting_for_local_slot_is_rechecked(store, monkeypatch, stream):
+    turn, calls = await bind(store), []
+    @asynccontextmanager
+    async def occupied_slot(*args):
+        store.update_configuration("alice", {"elevation_ceiling": True}, 0)
+        yield
+    monkeypatch.setattr(llm_core, "_local_model_slot", occupied_slot)
+    async with httpx.AsyncClient(transport=httpx.MockTransport(lambda req: calls.append(req))) as client:
+        monkeypatch.setattr(llm_core, "_get_http_client", lambda: client)
+        with turn.activate(), pytest.raises(HTTPException) as error:
+            if stream:
+                _ = [chunk async for chunk in llm_core.stream_llm(URL, "selected", MESSAGES,
+                    headers=HEADERS, session_id="chat", reasoning_effort="low")]
+            else:
+                await llm_core.llm_call_async(URL, "selected", MESSAGES,
+                    headers=HEADERS, session_id="chat", reasoning_effort="low")
+    assert error.value.status_code == 409 and calls == []
+
+
+@pytest.mark.asyncio
+@pytest.mark.parametrize("stream", [False, True])
+async def test_auto_route_does_not_retry_or_try_another_execution_provider(store, monkeypatch, stream):
+    turn, calls = await bind(store), []
+    def transport(request):
+        calls.append(request)
+        return httpx.Response(503, text="synthetic unavailable")
+    async with httpx.AsyncClient(transport=httpx.MockTransport(transport)) as client:
+        monkeypatch.setattr(llm_core, "_get_http_client", lambda: client)
+        with turn.activate():
+            candidates = [(URL, "selected", HEADERS), ("https://other.invalid/v1/chat/completions", "other", {})]
+            if stream:
+                chunks = [chunk async for chunk in llm_core.stream_llm_with_fallback(candidates,
+                    MESSAGES, session_id="chat", reasoning_effort="low", fallback_statuses={503})]
+                assert any("error" in chunk for chunk in chunks)
+            else:
+                with pytest.raises(HTTPException):
+                    await llm_core.llm_call_async_with_route_fallback(candidates, MESSAGES,
+                        session_id="chat", reasoning_effort="low", fallback_statuses={503}, max_retries=4)
+    assert len(calls) == 1 and calls[0].url.host == "execution.invalid"
+
+
+@pytest.mark.asyncio
+async def test_unsupported_effective_effort_fails_without_weakening_provider_rules(store, monkeypatch):
+    url = "https://api.openai.com/v1/chat/completions"
+    turn, calls = await bind(store, url=url, model="gpt-5.2", effort="high"), []
+    async with httpx.AsyncClient(transport=httpx.MockTransport(lambda req: calls.append(req))) as client:
+        monkeypatch.setattr(llm_core, "_get_http_client", lambda: client)
+        with turn.activate():
+            chunks = [chunk async for chunk in llm_core.stream_llm(url, "gpt-5.2", MESSAGES,
+                headers=HEADERS, session_id="chat", reasoning_effort="high",
+                tools=[{"type": "function", "function": {"name": "test", "parameters": {}}}])]
+    assert calls == [] and any("error" in chunk for chunk in chunks)
+
+
+@pytest.mark.asyncio
+@pytest.mark.parametrize("consent", [True, False])
+@pytest.mark.parametrize("stream", [False, True])
+async def test_manual_fallback_requires_current_explicit_owner_consent(store, monkeypatch, consent, stream):
+    from src import endpoint_resolver, foreground_model_routing
+    turn, calls = await bind(store, "manual"), []
+    fallback = ("https://fallback.invalid/v1/chat/completions", "backup", HEADERS)
+    policy = ForegroundModelPolicy(enabled=consent, fallback_candidates=(fallback,),
+                                    fallback_descriptors=({"endpoint_id": "backup-endpoint"},))
+    monkeypatch.setattr(foreground_model_routing, "resolve_foreground_model_policy", lambda owner: policy)
+    def resolve(endpoint_id, model, *, owner, require_exact_model):
+        assert (endpoint_id, model, owner, require_exact_model) == ("backup-endpoint", "backup", "alice", True)
+        return fallback
+    monkeypatch.setattr(endpoint_resolver, "resolve_endpoint_by_id", resolve)
+    def transport(request):
+        calls.append(request)
+        if request.url.host == "execution.invalid":
+            return httpx.Response(503, text="synthetic unavailable")
+        return response(request, stream=stream)
+    async with httpx.AsyncClient(transport=httpx.MockTransport(transport)) as client:
+        monkeypatch.setattr(llm_core, "_get_http_client", lambda: client)
+        with turn.activate():
+            if stream:
+                chunks = [chunk async for chunk in llm_core.stream_llm_with_fallback(
+                    [(URL, "selected", HEADERS), fallback], MESSAGES, session_id="chat",
+                    reasoning_effort="low", fallback_statuses={503})]
+                assert any("complete" in chunk for chunk in chunks) is consent
+            elif consent:
+                answer, route, model = await llm_core.llm_call_async_with_route_fallback(
+                    [(URL, "selected", HEADERS), fallback], MESSAGES, session_id="chat",
+                    reasoning_effort="low", fallback_statuses={503}, max_retries=1)
+                assert answer == "complete" and model == "backup" and route == fallback
+            else:
+                with pytest.raises(HTTPException):
+                    await llm_core.llm_call_async_with_route_fallback(
+                        [(URL, "selected", HEADERS), fallback], MESSAGES, session_id="chat",
+                        reasoning_effort="low", fallback_statuses={503}, max_retries=1)
+    assert len(calls) == (2 if consent else 1)
+    assert (turn.descriptor.get("source") == "explicit_fallback") is consent
+
+
+@pytest.mark.asyncio
+@pytest.mark.parametrize("status,allowed_values,effort,permitted", [
+    pytest.param(mc.ASSERTION_UNSUPPORTED, None, "low", False,
+                 id="explicitly-unsupported"),
+    pytest.param(mc.ASSERTION_CLAIMED, ["high"], "low", False,
+                 id="acknowledged-value-excluded"),
+    pytest.param(mc.ASSERTION_CLAIMED, ["low"], "low", True,
+                 id="acknowledged-value-supported"),
+    pytest.param(mc.ASSERTION_CLAIMED, ["high"], "", True,
+                 id="empty-binding-removes-stale-request-effort"),
+])
+async def test_preview_checks_canonical_effort_after_binding(
+        store, monkeypatch, status, allowed_values, effort, permitted):
+    from src import clean_agent_preview
+    from src import model_capability_cache as cache
+    from src.model_capability_readers import records_from_payload
+
+    base = "https://openrouter.ai/api/v1"
+    url = base + "/chat/completions"
+    turn = await bind(store, "auto" if effort else "manual",
+                      url=url, effort=effort)
+    if effort:
+        # Jev's acknowledged supported set admits low. Canonical evidence
+        # available at dispatch must still constrain the actual wire value.
+        turn.descriptor["supported_efforts"] = ["low", "high"]
+
+    scope = cache.scope_for_endpoint(base, HEADERS)
+    record, = records_from_payload(
+        {"data": [{"id": "selected"}]},
+        base_url=base, endpoint_id=scope, vendor="openrouter",
+    )
+    control = mc.DeterministicControl.build(
+        control=mc.CONTROL_REASONING_EFFORT,
+        status=status,
+        source=mc.SOURCE_PROVIDER_READER,
+        confidence=mc.CONFIDENCE_PROVIDER_REPORTED,
+        evidence=({"allowed_values": allowed_values}
+                  if allowed_values is not None else {}),
+    )
+    record = replace(record, deterministic_controls=(control,))
+    original_lookup = cache.cached_model_record
+
+    def lookup(model, *, base_url, headers=None, vendor=None):
+        if model == "selected" and cache.scope_for_endpoint(base_url, headers) == scope:
+            return record
+        return original_lookup(model, base_url=base_url, headers=headers, vendor=vendor)
+
+    monkeypatch.setattr(cache, "cached_model_record", lookup)
+    calls = []
+
+    def transport(request):
+        calls.append(request)
+        return response(request, stream=True)
+
+    request = {
+        "model": "selected", "messages": MESSAGES, "max_tokens": 64,
+        "stream": True, "reasoning_effort": "high",
+    }
+    async with httpx.AsyncClient(transport=httpx.MockTransport(transport)) as client:
+        with turn.activate():
+            if permitted:
+                async with clean_agent_preview.preview_model_response(
+                        client, url, HEADERS, request, {}) as result:
+                    assert result.status_code == 200
+            else:
+                with pytest.raises(RuntimeError, match="acknowledged turn binding"):
+                    async with clean_agent_preview.preview_model_response(
+                            client, url, HEADERS, request, {}):
+                        pass
+
+    assert request["reasoning_effort"] == "high"
+    if not permitted:
+        assert calls == []
+    else:
+        assert len(calls) == 1
+        payload = json.loads(calls[0].content)
+        assert payload["model"] == "selected"
+        assert payload["messages"] == MESSAGES
+        if effort:
+            assert payload["reasoning_effort"] == effort
+        else:
+            assert "reasoning_effort" not in payload

@@ -94,7 +94,7 @@ from src.text_scanning import (
     iter_markdown_links,
     replace_markdown_links_with_labels,
 )
-from src.turn_contract import selected_tools_for_request, with_turn_contract
+from src.turn_contract import selected_tools_for_request, with_turn_contract, canonical_tool
 from src.agent_runtime.journal import propose_action, execute_action
 from src.agent_runtime.completion import with_completion_gate
 from src.agent_runtime.runtime_selection import is_compact_preview_contract
@@ -465,14 +465,11 @@ def _request_forbids_execution_retry(text: str) -> bool:
     )
 
 
-def _contract_mutation_signature(block, contract):
-    """Deduplicate an exact successful mutation for the rest of this turn.
-
-    A model may continue after a successful write in order to verify or summarize
-    it.  That continuation must never execute the same state-changing call again,
-    regardless of whether the turn contract names one capability or several.
-    """
+def _contract_mutation_signature(block, contract, *, workspace_epoch=None):
+    """Deduplicate effects, tying local artifact previews to workspace revisions."""
+    from posixpath import normpath
     from src.tool_capabilities import ToolEffect, capabilities_for_action
+
     effects = capabilities_for_action(block.tool_type, block.content).effects
     if not effects & {ToolEffect.WRITE_PRIVATE, ToolEffect.WRITE_WORKSPACE,
                       ToolEffect.EXTERNAL_SIDE_EFFECT, ToolEffect.ADMIN_CHANGE,
@@ -480,7 +477,17 @@ def _contract_mutation_signature(block, contract):
         return None
     content = block.content or ""
     try:
-        content = json.dumps(json.loads(content), sort_keys=True, separators=(",", ":"))
+        payload = json.loads(content)
+        content = json.dumps(payload, sort_keys=True, separators=(",", ":"))
+        if (block.tool_type == "private_browser" and isinstance(payload, dict)
+                and payload.get("action") in {"open", "navigate"}):
+            target = urlparse(str(payload.get("url") or ""))
+            if (target.scheme == "file" and target.netloc.lower() in {"", "localhost"}
+                    and normpath(unquote(target.path)).startswith("/workspace/")):
+                # Resolve preview dedupe after earlier actions in the batch execute.
+                if workspace_epoch is None:
+                    return None
+                content = json.dumps([workspace_epoch, payload], sort_keys=True, separators=(",", ":"))
     except (TypeError, ValueError):
         pass
     return block.tool_type, content
@@ -801,9 +808,10 @@ _QWEN38_TOOL_ROUTER_PROMPT = (
     "manage_settings: app settings. manage_endpoints: configured API endpoints; list_models: available models. "
     "manage_mcp: MCP servers. manage_skills: skills. manage_webhooks: webhooks. manage_bg_jobs: running/background jobs. "
     "search_chats: past chats. web_search: public web lookup, URLs, links; web_fetch: fetch a concrete URL/domain. "
-    "private_browser: rendered site interaction; start with one batch containing open then snapshot, "
-    "and only click/fill element refs returned by snapshot (for example @e12), never guessed labels. "
-    "If a global/landing page lacks the requested control, follow its shopping/store link; do not repeat find. "
+    "private_browser: when an admitted private-pipe producer is enrolled, use single actions with page t1, "
+    "a fresh snapshot observation token and its exact nN target ref. Fill uses a prepared value_id, never raw values. "
+    "automate runs only within a separately granted task scope. No batches, selectors, raw scripts or guessed refs. "
+    "Without that producer, only registered session metadata is available; use web_search/web_fetch. "
     "youtube_tool: YouTube comments, transcripts, metadata, and latest channel video. "
     "read_file: workspace text, PDF, or Office document path; edit_file: exact replacement in an existing "
     "workspace file; write_file: create or fully rewrite a workspace file; "
@@ -7948,7 +7956,7 @@ Get current conditions and a three-day forecast using Open-Meteo. Use this for w
 ```private_browser
 {"action": "session_info"}
 ```
-Registered browser session metadata only: session_info. Page/document reads and effects are unavailable because the configured local producer cannot guarantee captured-target binding. Do not send batches, raw commands, flags, URLs or guessed page handles. Use web_search/web_fetch for supported web access.""",
+Use session_info to inspect the registered producer. Only an enrolled private-pipe producer with a current user task scope supports page actions. For that producer, send one action at a time with page "t1". snapshot returns an observation token and nN target refs; click/fill must echo that exact observation and ref. Fill accepts a prepared value_id rather than raw text. automate takes a goal within the already granted page/origin/effect scope. Never use batches, raw commands, selectors, scripts, legacy @e refs or guessed handles. The legacy producer still supports session metadata only; when unavailable use web_search/web_fetch or report the prerequisite.""",
 
     "youtube_tool": """\
 ```youtube_tool
@@ -21293,6 +21301,20 @@ async def stream_agent_loop(
       - data: [DONE]                                        (end)
     """
 
+    # Decision routing is explicit even when its selected set is empty. Apply
+    # it before compact delegation, shortcuts, RAG and any recovery machinery.
+    from src.chat_automation import current_turn
+    from src.chat_tool_routing import selection_for, selected_policy, selected_contract
+    _decision_bound = current_turn()
+    _decision_selection = selection_for(_decision_bound)
+    if _decision_selection is not None:
+        tool_policy = selected_policy(tool_policy or build_effective_tool_policy(), _decision_bound)
+        disabled_tools = set(disabled_tools or ()) | tool_policy.all_disabled_names()
+        relevant_tools = set(_decision_selection.selected_names)
+        turn_contract = selected_contract(turn_contract, _decision_bound, tool_policy)
+        if forced_tools is not None:
+            forced_tools = set(forced_tools) & relevant_tools
+
     # Caller and credential denials remain absolute across contract routing.
     disabled_tools = set(disabled_tools or ())
     if delegated_credential:
@@ -21344,7 +21366,7 @@ async def stream_agent_loop(
         yield 'data: [DONE]\n\n'
         return
 
-    if is_compact_preview_contract(turn_contract):
+    if is_compact_preview_contract(turn_contract) and exact_approval is None:
         from src.clean_agent_preview import stream_preview
         async for chunk in stream_preview(
             endpoint_url=endpoint_url, model=model, messages=messages, headers=headers,
@@ -21441,6 +21463,11 @@ async def stream_agent_loop(
                 client_runtime_context.pop(_key, None)
         logger.info("[agent-intent] SFT fixture owner=%s disabled workspace/TUI tool routing", owner)
 
+    from src.tool_execution import _bound_chat_turn
+    _automation_bound_turn = _bound_chat_turn()
+    if (_automation_bound_turn is not None and exact_approval is not None
+            and exact_approval.pending.policy_binding is None):
+        exact_approval = None
     run_security = ToolRunSecurityContext(
         external_untrusted_context_seen=(
             bool(external_untrusted_context_seen)
@@ -21451,7 +21478,7 @@ async def stream_agent_loop(
             or messages_contain_external_untrusted_context(messages)
         ),
         approval_gate_bypassed=bool(
-            exact_approval and exact_approval.allow_remaining_actions
+            _automation_bound_turn is None and exact_approval and exact_approval.allow_remaining_actions
         ),
         delegated_credential=bool(delegated_credential),
     )
@@ -25334,7 +25361,10 @@ async def stream_agent_loop(
         # visibility is not authority: both the loop and dispatcher still gate
         # execution, and only a one-use server record can cross that boundary.
         return [schema for schema in schemas or ()
-                if schema.get("function", {}).get("name", schema.get("name")) not in _caller_hard_denials
+                if (_decision_selection is None or canonical_tool(
+                    schema.get("function", {}).get("name", schema.get("name")))
+                    in {canonical_tool(n) for n in _decision_selection.selected_names})
+                and schema.get("function", {}).get("name", schema.get("name")) not in _caller_hard_denials
                 and not (tool_policy and tool_policy.block_all_tool_calls)
                 and not (delegated_credential and delegated_tool_is_blocked(
                     schema.get("function", {}).get("name", schema.get("name"))))]
@@ -28057,6 +28087,7 @@ async def stream_agent_loop(
                 from src.llm_core import llm_call_async
 
                 _malformed_raw_body = await llm_call_async(
+                    session_id=session_id, reasoning_effort=reasoning_effort,
                     url=endpoint_url,
                     model=model,
                     messages=_malformed_synthesis_messages,
@@ -30188,6 +30219,7 @@ async def stream_agent_loop(
                             ),
                         }]
                         _raw = await llm_call_async(
+                            session_id=session_id, reasoning_effort=reasoning_effort,
                             url=endpoint_url, model=model, messages=_synth_messages,
                             headers=headers,
                             temperature=0.3,
@@ -32288,6 +32320,7 @@ async def stream_agent_loop(
                             from src.llm_core import llm_call_async
 
                             _raw_artifact_body = await llm_call_async(
+                                session_id=session_id, reasoning_effort=reasoning_effort,
                                 url=endpoint_url,
                                 model=model,
                                 messages=_synthesis_messages,
@@ -33442,7 +33475,7 @@ async def stream_agent_loop(
             # Check again after normalization so changing the model's raw
             # wording cannot repeat the same effective side effect.
             _effective_mutation_signature = _contract_mutation_signature(
-                block, turn_contract
+                block, turn_contract, workspace_epoch=_workspace_mutation_epoch
             )
             _blocked_repeated_successful_mutation = bool(
                 _effective_mutation_signature
@@ -33728,7 +33761,7 @@ async def stream_agent_loop(
                     "Tool blocked before approval by current policy: %s",
                     block.tool_type,
                 )
-            elif not security_decision.allowed:
+            elif not security_decision.allowed and _automation_bound_turn is None:
                 approval_document = (
                     active_document
                     if block.tool_type
@@ -33908,7 +33941,9 @@ async def stream_agent_loop(
                 result,
             )
             if tool_result_is_successful(result):
-                _contract_write_signature = _contract_mutation_signature(block, turn_contract)
+                _contract_write_signature = _contract_mutation_signature(
+                    block, turn_contract, workspace_epoch=_workspace_mutation_epoch
+                )
                 if _contract_write_signature is not None:
                     _successful_mutation_signatures.add(_contract_write_signature)
                 _failed_call_history.pop(_call_signature, None)
@@ -34501,9 +34536,10 @@ async def stream_agent_loop(
                 if k in result:
                     tool_output_data[k] = result[k]
             # Forward screenshots from browser tools (base64 images)
-            if result.get("images"):
-                img = result["images"][0]
-                tool_output_data["screenshot"] = f"data:{img['mimeType']};base64,{img['data']}"
+            from src.browser_visual_evidence import screenshot_for_display
+            _display_screenshot = screenshot_for_display(result)
+            if _display_screenshot:
+                tool_output_data["screenshot"] = _display_screenshot
             if block.tool_type == "manage_calendar":
                 if result.get("uid"):
                     tool_output_data["uid"] = result.get("uid")
@@ -35376,10 +35412,9 @@ async def stream_agent_loop(
                 for ik in ("image_url", "image_prompt", "image_model", "image_size", "image_quality"):
                     if result.get(ik):
                         tool_event[ik] = result[ik]
-            if result.get("images"):
-                img = result["images"][0]
-                if isinstance(img, dict) and img.get("data") and img.get("mimeType"):
-                    tool_event["screenshot"] = f"data:{img['mimeType']};base64,{img['data']}"
+            _display_screenshot = screenshot_for_display(result)
+            if _display_screenshot:
+                tool_event["screenshot"] = _display_screenshot
             if result.get("doc_id"):
                 tool_event["doc_id"] = result["doc_id"]
                 tool_event["doc_title"] = result.get("title", "")
@@ -37652,6 +37687,7 @@ async def stream_agent_loop(
                 "content": _exhaustion_content,
             }]
             _exhaustion_raw = await llm_call_async(
+                session_id=session_id, reasoning_effort=reasoning_effort,
                 url=endpoint_url,
                 model=model,
                 messages=_exhaustion_synthesis_messages,
@@ -37938,6 +37974,7 @@ async def stream_agent_loop(
                 ),
             }]
             _raw = await llm_call_async(
+                session_id=session_id, reasoning_effort=reasoning_effort,
                 url=endpoint_url,
                 model=model,
                 messages=_synth_messages,
@@ -38002,6 +38039,7 @@ async def stream_agent_loop(
                 from src.llm_core import llm_call_async
 
                 _email_synth_raw = await llm_call_async(
+                    session_id=session_id, reasoning_effort=reasoning_effort,
                     url=endpoint_url,
                     model=model,
                     messages=[

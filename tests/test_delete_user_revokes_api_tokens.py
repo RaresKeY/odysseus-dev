@@ -86,6 +86,14 @@ def manager(tmp_path, monkeypatch):
 @pytest.fixture
 def db_calls(monkeypatch):
     calls = []
+    monkeypatch.setattr(
+        "src.chat_automation.retire_automation_owner",
+        lambda db, owner: calls.append(("automation", owner)),
+    )
+    monkeypatch.setattr(
+        "src.decisions.observability.retire_observability_owner",
+        lambda db, owner: calls.append(("observability", owner)),
+    )
 
     @contextlib.contextmanager
     def _fake_db_session():
@@ -102,7 +110,7 @@ def test_delete_user_revokes_api_tokens(manager, db_calls):
     assert manager.delete_user("bob", "admin") is True
     assert "bob" not in manager.users
     assert db_calls, "delete_user never purged ApiToken rows for the deleted user"
-    assert [("owner ==", "bob")] in db_calls
+    assert db_calls == [[("owner ==", "bob")], ("automation", "bob"), ("observability", "bob")]
 
 
 def test_refused_delete_leaves_tokens_alone(manager, db_calls):
@@ -132,3 +140,16 @@ def test_delete_user_fails_closed_when_api_token_purge_fails(manager, monkeypatc
     assert manager.delete_user("bob", "admin") is False
     assert "bob" in manager.users
     assert manager.validate_token(token) is True
+
+
+def test_delete_user_retains_auth_when_automation_cleanup_fails(manager, db_calls, monkeypatch):
+    token = manager.create_session("bob", "secret-bob-pw")
+
+    def fail_retirement(db, owner):
+        raise RuntimeError("cleanup unavailable")
+
+    monkeypatch.setattr("src.chat_automation.retire_automation_owner", fail_retirement)
+    assert manager.delete_user("bob", "admin") is False
+    assert "bob" in manager.users
+    assert manager.validate_token(token) is True
+    assert ("observability", "bob") not in db_calls

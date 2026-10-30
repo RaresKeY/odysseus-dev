@@ -465,7 +465,8 @@ class SessionManager:
         # Update last_accessed
         self._touch_session(session_id)
 
-        return self.sessions[session_id]
+        from src.chat_automation import bound_session_view
+        return bound_session_view(self.sessions[session_id])
 
     def sync_session_metadata(self, session_id: str) -> bool:
         """Refresh non-message session fields from the DB into the cached object.
@@ -588,6 +589,12 @@ class SessionManager:
                 updated_at=datetime.now(timezone.utc)
             )
             db.add(db_session)
+            db.flush()
+            from src.chat_automation import AutomationStore
+            from src.owner_identity import effective_storage_owner
+            automation_owner = effective_storage_owner(owner)
+            if automation_owner is not None:
+                AutomationStore().state(db, automation_owner, session_id, new=True)
             db.commit()
 
             session = Session(
@@ -636,6 +643,8 @@ class SessionManager:
             # Delete session
             db_session = db.query(DbSession).filter(DbSession.id == session_id).first()
             if db_session:
+                from src.decisions.observability import delete_observability_session
+                delete_observability_session(db, session_id)
                 db.delete(db_session)
 
             # Drop the in-memory copy even when there is no DB row. A "ghost"
@@ -788,6 +797,8 @@ class SessionManager:
                             continue  # Too young to delete
                     if db_session.id in self.sessions:
                         del self.sessions[db_session.id]
+                    from src.decisions.observability import delete_observability_session
+                    delete_observability_session(db, db_session.id)
                     db.delete(db_session)
                     stats['deleted_empty'] += 1
 

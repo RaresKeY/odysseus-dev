@@ -1,6 +1,7 @@
 import pytest
 
 from src.clean_agent_preview import browser_transport_recovery
+from tests.test_chat_automation_state import store
 
 
 URL = 'https://example.com/catalog/'
@@ -44,7 +45,7 @@ def test_no_transport_recovery_for_security_or_success(output):
 
 @pytest.mark.asyncio
 @pytest.mark.parametrize('fetch_succeeds', [False, True])
-async def test_stream_recovers_navigation_then_fetch_without_email_classifier(monkeypatch, fetch_succeeds):
+async def test_stream_recovers_navigation_then_fetch_without_email_classifier(monkeypatch, fetch_succeeds, store):
     import json
     from types import SimpleNamespace
     from dataclasses import replace
@@ -97,15 +98,20 @@ async def test_stream_recovers_navigation_then_fetch_without_email_classifier(mo
     schemas = [s for s in FUNCTION_TOOL_SCHEMAS if s['function']['name'] in {'private_browser', 'web_fetch', 'web_search'}]
     contract = replace(resolve_full_inventory_contract(schemas=schemas, policy=policy),
                        required=frozenset({'private_browser'}))
-    chunks = [chunk async for chunk in module.stream_preview(
-        endpoint_url='http://fixture', model='Ajax', headers={}, turn_contract=contract,
-        history_session=SimpleNamespace(history=[
-            {'role': 'user', 'content': 'Browse https://wrong.example/catalog/ and find a wardrobe'},
-            {'role': 'assistant', 'content': 'Navigation failed.'}]),
-        messages=[{'role': 'user', 'content': 'Browse https://wrong.example/catalog/ and find a wardrobe'},
-                  {'role': 'assistant', 'content': 'Navigation failed.'},
-                  {'role': 'user', 'content': URL}],
-        session_id='fixture-browser', owner='test', disabled_tools=set(), tool_policy=policy)]
+    from src.chat_automation import prepare_chat_turn
+    turn = await prepare_chat_turn(store, 'alice', SimpleNamespace(
+        id='a', model='Ajax', endpoint_id=None, endpoint_url='http://fixture', headers={}),
+        'Browse ' + URL + ' and find a wardrobe')
+    with turn.activate():
+        chunks = [chunk async for chunk in module.stream_preview(
+            endpoint_url='http://fixture', model='Ajax', headers={}, turn_contract=contract,
+            history_session=SimpleNamespace(history=[
+                {'role': 'user', 'content': 'Browse https://wrong.example/catalog/ and find a wardrobe'},
+                {'role': 'assistant', 'content': 'Navigation failed.'}]),
+            messages=[{'role': 'user', 'content': 'Browse https://wrong.example/catalog/ and find a wardrobe'},
+                      {'role': 'assistant', 'content': 'Navigation failed.'},
+                      {'role': 'user', 'content': URL}],
+            session_id='a', owner='alice', disabled_tools=set(), tool_policy=policy)]
     assert calls == ['private_browser', 'web_fetch', 'web_search'], '\n'.join(chunks)
     assert requests[1]['tool_choice'] == 'auto'
     assert [s['function']['name'] for s in requests[1]['tools']] == ['web_fetch']
@@ -123,3 +129,35 @@ def test_provider_history_requires_object_tool_arguments(arguments):
     calls = [{'function': {'name': 'web_fetch', 'arguments': arguments}}]
     assert protocol_safe_tool_calls(calls)[0]['function']['arguments'] == '{}'
     assert calls[0]['function']['arguments'] == arguments
+
+
+@pytest.mark.asyncio
+async def test_browser_preflight_needs_a_current_submission_but_grants_no_execution(store, monkeypatch):
+    from types import SimpleNamespace
+    from unittest.mock import AsyncMock
+    from src.chat_automation import prepare_chat_turn
+    from src.clean_agent_preview import evaluate_preview_call
+    from src import tool_execution
+    from src.tool_types import ToolBlock
+    from src.agent_runtime.authority import OperationGrant, RequestAuthority
+
+    args = {"action": "open", "url": URL}
+    assert not evaluate_preview_call("private_browser", args).allowed
+    turn = await prepare_chat_turn(store, "alice", SimpleNamespace(
+        id="a", model="manual", endpoint_id=None, endpoint_url="http://fixture", headers={}),
+        "Browse " + URL)
+    implementation = AsyncMock()
+    monkeypatch.setattr(tool_execution, "_execute_tool_block_impl", implementation)
+    with turn.activate():
+        assert evaluate_preview_call("private_browser", args).reason == "canonical_browser_admission"
+        _, result = await tool_execution.execute_tool_block(
+            ToolBlock("private_browser", '{"action":"open","url":"https://example.com/catalog/"}'),
+            owner="alice", session_id="a",
+            request_authority=RequestAuthority("browser-test", "alice", "a", "",
+                (OperationGrant("private_browser"),)),
+            security_context=tool_execution.NO_TOOL_SECURITY_CONTEXT,
+        )
+        assert result.get("exit_code") != 0
+        implementation.assert_not_awaited()
+        store.record(turn, "cancelled")
+        assert not evaluate_preview_call("private_browser", args).allowed

@@ -307,6 +307,10 @@ class AuthManager:
                 from core.database import get_db_session, ApiToken
                 with get_db_session() as db:
                     removed_tokens = db.query(ApiToken).filter(ApiToken.owner == username).delete()
+                    from src.chat_automation import retire_automation_owner
+                    retire_automation_owner(db, username)
+                    from src.decisions.observability import retire_observability_owner
+                    retire_observability_owner(db, username)
                 if removed_tokens:
                     logger.info(
                         f"Revoked {removed_tokens} API token(s) owned by deleted user '{username}'"

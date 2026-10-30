@@ -365,6 +365,8 @@ def setup_auth_routes(auth_manager: AuthManager) -> APIRouter:
         ok = auth_manager.set_privileges(username, body)
         if not ok:
             raise HTTPException(404, "User not found or is admin")
+        from src.chat_automation import AutomationStore
+        AutomationStore().revoke_owner(username)
         return {"ok": True, "privileges": auth_manager.get_privileges(username)}
 
     @router.put("/users/{username}/rename")
@@ -473,6 +475,10 @@ def setup_auth_routes(auth_manager: AuthManager) -> APIRouter:
                         .filter(func.lower(model.owner) == old_username)
                         .update({"owner": new_username}, synchronize_session=False)
                     )
+                from src.chat_automation import rename_automation_owner
+                rename_automation_owner(db, old_username, new_username)
+                from src.decisions.observability import rename_observability_owner
+                rename_observability_owner(db, old_username, new_username)
                 db.commit()
             except Exception:
                 db.rollback()
@@ -640,6 +646,8 @@ def setup_auth_routes(auth_manager: AuthManager) -> APIRouter:
         invalidator = getattr(request.app.state, "invalidate_token_cache", None)
         if callable(invalidator):
             invalidator()
+        from routes.browser_control_routes import close_owner_browsers
+        await close_owner_browsers(old_username)
         return {"ok": True, "username": new_username, "renamed_self": old_username == user}
 
     @router.put("/users/{username}/admin")
@@ -722,6 +730,8 @@ def setup_auth_routes(auth_manager: AuthManager) -> APIRouter:
         # cached token keeps authenticating until some other token op or a
         # restart clears the cache. Mirror what the token routes do.
         _invalidate_api_token_cache()
+        from routes.browser_control_routes import close_owner_browsers
+        await close_owner_browsers(body.username)
         return {"ok": True}
 
     # ---- Feature visibility (admin-managed) ----

@@ -21,7 +21,7 @@ described as a switch that turns something off, the read rejects `0`, `false`,
 `no` and `off` and treats everything else as on. The `Default` column is the
 value the code falls back to when the variable is unset, quoted from the source.
 
-The source tree reads **154** `ODYSSEUS_*` variables: 95 an operator may want to set, and 59 that are internal - sentinels, fixture switches, capture hooks and development tooling. The internal ones are listed too, in their own section, so this page can be checked against the source mechanically.
+The source tree reads **157** `ODYSSEUS_*` variables: 97 an operator may want to set, and 60 that are internal - sentinels, fixture switches, capture hooks and development tooling. The internal ones are listed too, in their own section, so this page can be checked against the source mechanically.
 
 > This page is generated. Edit `scripts/generate_env_reference.py` and
 > re-run it; `tests/test_env_reference.py` enforces that the committed page
@@ -39,19 +39,20 @@ The source tree reads **154** `ODYSSEUS_*` variables: 95 an operator may want to
 | `ODYSSEUS_CONTAINER_NETWORK_MODE` | `''` | `app.py` (+1 more) | Declares the container's Docker network mode. Set to `host` to skip host-gateway probing when discovering local model endpoints. |
 | `ODYSSEUS_ENABLE_HOST_DOCKER` | `''` | `src/host_docker_access.py` | Security-relevant. Must be exactly `true` before tools may use a mounted host Docker socket, and the socket itself must exist. |
 | `ODYSSEUS_INPROCESS_POLLERS` | `'1'` | `routes/email/email_pollers.py` | The same off switch for the in-process email pollers, when `odysseus-mail poll-scheduled` is the sole external driver. |
-| `ODYSSEUS_INPROCESS_TASKS` | `'1'` | `app.py` | Set to 0, false, no or off to stop the in-process scheduled-task runner, for deployments where an external worker drives task firing. |
+| `ODYSSEUS_INPROCESS_TASKS` | `'1'` | `app.py` (+1 more) | Set to 0, false, no or off to stop the in-process scheduled-task runner, for deployments where an external worker drives task firing. |
 | `ODYSSEUS_MODEL_KEEPALIVE` | `''` | `app.py` | Opt-in periodic model keep-alive pings. Off by default: the ping path runs model discovery, so stale LAN endpoints add background pressure. |
 | `ODYSSEUS_REQUIRE_TOOL_INDEX_READY` | `''` | `src/readiness.py` | Set truthy to make semantic tool-index readiness gate startup. Off by default so an install stays available on deterministic tool selection. |
 | `ODYSSEUS_SKIP_ADMIN_PROMPT` | *unset* | `setup.py` | Any non-empty value suppresses the interactive admin-credential prompt even on a TTY, for unattended installs. |
 | `ODYSSEUS_SLOW_REQUEST_LOG_SECONDS` | `'0.75'` | `app.py` | Request duration in seconds above which the middleware logs a slow-request warning. |
 | `ODYSSEUS_STARTUP_WARMUPS` | `''` | `app.py` | Opt-in startup pings of the configured model endpoints. Off by default because they compete with the first seconds of UI use. |
+| `ODYSSEUS_TASK_AUTOMATION_ENABLED` | `'1'` | `src/task_automation.py` (+1 more) | Enables automatic scheduled-task and event execution independently of the in-process timer; explicit manual runs keep their own authorization checks. |
 | `ODYSSEUS_TOOL_INDEX_PREWARM` | `'1'` | `src/tool_index.py` | Set to 0, false, no or off to skip background initialization of semantic tool retrieval at startup. |
 
 ### Data directories and paths
 
 | Variable | Default | Read in | What it does |
 |---|---|---|---|
-| `ODYSSEUS_DATA_DIR` | `get_default_data_dir()` | `src/constants.py` (+1 more) | Root directory for every persisted file. Prefer this over the per-path overrides; the rest of `src/constants.py` derives from it. |
+| `ODYSSEUS_DATA_DIR` | `get_default_data_dir()` | `src/constants.py` (+2 more) | Root directory for every persisted file. Prefer this over the per-path overrides; the rest of `src/constants.py` derives from it. |
 | `ODYSSEUS_MAIL_ATTACHMENTS_DIR` | `os.path.join(DATA_DIR, 'mail-attachments')` | `src/constants.py` | Dedicated override for the mail attachment store, which otherwise lives under the data directory. |
 
 ### Model routing and providers
@@ -95,6 +96,7 @@ The source tree reads **154** `ODYSSEUS_*` variables: 95 an operator may want to
 | `ODYSSEUS_BROWSER_MCP_REQUIRE_CACHE` | `''` | `src/builtin_mcp.py` | Truthy refuses to start the browser MCP server unless its npm package is already in the npx cache, instead of installing it at startup. |
 | `ODYSSEUS_BROWSER_NAMESPACE` | `'odysseus-ui'` | `src/agent_tools/web_tools.py` (+1 more) | Namespace for the detached agent-browser daemon's pid files, so two runtimes on one machine do not terminate each other's browsers. |
 | `ODYSSEUS_BROWSER_NO_SANDBOX` | `'1'` | `src/builtin_mcp.py` | Security-relevant. On by default, adding `--no-sandbox` because the Docker image cannot use the Chromium sandbox. Set 0, false or no to keep it. |
+| `ODYSSEUS_BROWSER_PRODUCER_MANIFEST` | `'/etc/odysseus/browser-pipe-producer.json'` | `routes/browser_control_routes.py` | Path to the qualified browser producer manifest used by the private-browser control routes. |
 | `ODYSSEUS_BROWSER_SCREENSHOT_DIR` | *unset* | `src/agent_tools/web_tools.py` (+1 more) | Where private-browser screenshots are written. Falls back to the container path, then the system temp directory. |
 
 ### Container and workspace mounts
@@ -260,6 +262,7 @@ Listed for completeness. Setting one of these on a real install is either a no-o
 | `ODYSSEUS_EDITOR_TEST_ENDPOINT` | *unset* | `tests/tools/editor_writing_smoke.py` (+1 more) | Chat-completions URL the opt-in editor-writing and organizer smoke tools drive. Both tools require it. |
 | `ODYSSEUS_EDITOR_TRACE` | *unset* | `tests/tools/editor_writing_smoke.py` | Any non-empty value prints every stream event after each editor-writing smoke action. |
 | `ODYSSEUS_GRANITE_SMOKE_AUDIO` | *unset* | `tests/test_granite_stt.py` | Opt-in speech fixture for the Transformers CPU smoke test. |
+| `ODYSSEUS_JEV_HOST_LAUNCHER` | *unset* | `scripts/jev_live_campaign.py` | Reviewed-launcher sentinel required by the explicitly admitted Jev live campaign; not a general automation permission. |
 | `ODYSSEUS_LLAMA_SERVER` | `'llama-server'` | `scripts/odysseus_related_flow_audit.py` | Binary name or path to llama-server used by the related-flow audit script. |
 | `ODYSSEUS_NATIVE_GRANITE_SMOKE_AUDIO` | *unset* | `tests/test_transcribe_cpp_stt.py` | Opt-in speech fixture for the native transcribe.cpp smoke test. |
 | `ODYSSEUS_ORGANIZER_AUTO_CHOICE` | *unset* | `tests/tools/organizer_smoke.py` | With organizer tracing on, any non-empty value replaces forced tool choice with auto on traced requests. |
@@ -307,7 +310,7 @@ reads three ways, because no single pattern covers the codebase:
   lines, so one read lives inside a string literal.
 
 The three passes are not redundancy. A line-based grep for a direct
-`os.environ.get("ODYSSEUS_...` call finds 124 of the 154 variables on this
+`os.environ.get("ODYSSEUS_...` call finds 127 of the 157 variables on this
 page. What it misses is reads through an env-reader helper, reads whose call
 spans more than one line, reads whose variable name is held in a module
 constant, and reads through a mapping passed in as an argument - which is the

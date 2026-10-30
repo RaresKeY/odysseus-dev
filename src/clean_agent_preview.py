@@ -66,6 +66,10 @@ class ProviderStreamError(Exception):
     """A provider reported failure inside an otherwise successful SSE response."""
 
 
+class _PreviewApprovalPause(Exception):
+    """End this turn at a canonical approval card, then emit final metrics."""
+
+
 # Only these audited, fixed domain messages may cross the exception boundary.
 # Return the canonical constants rather than arbitrary exception text.
 _PUBLIC_PREVIEW_TOOL_ERRORS = {message: message for message in (
@@ -685,9 +689,11 @@ def private_browser_state_transition(args, current_url=None, result=None):
         ):
             return False, current_url
     action = str(args.get('action') or '').strip().lower()
-    if action in {'open', 'read'} and args.get('url'):
+    if action in {'open', 'navigate'} and args.get('url'):
         next_url = str(args['url']).strip()
-        return next_url != (current_url or ''), next_url
+        # A reload at the same URL still replaces the captured document. This
+        # is only evidence deduplication; the producer owns nonce validation.
+        return True, next_url
     if action in {'snapshot', 'read', 'find', 'screenshot'}:
         return False, current_url
     if action == 'batch':
@@ -4011,6 +4017,12 @@ def evaluate_preview_call(name, args, user_text='', *, allow_execute_code=False,
         return decision(False, 'unknown_capability')
     if not capability.effects:
         return decision(False, 'capability_has_no_effects')
+    if bare == 'private_browser':
+        from src.chat_automation import current_turn
+        turn = current_turn()
+        if turn is not None and turn.current():
+            # Preflight defers to canonical browser authority and approval checks.
+            return decision(True, 'canonical_browser_admission')
     blocked = capability.effects & blocked_effects
     if blocked:
         return decision(False, 'blocked_effect:' + ','.join(sorted(effect.value for effect in blocked)))
@@ -5546,12 +5558,25 @@ async def preview_model_response(client, endpoint_url, headers, request, recover
             'messages': provider_wire_messages(request['messages']),
         }
         from src.llm_core import _apply_openai_request_controls, _detect_provider
-        _apply_openai_request_controls(
-            provider_request, endpoint_url, str(request.get('model') or ''),
-            headers, _detect_provider(endpoint_url),
-        )
         response_started = False
         try:
+            from src.chat_automation import current_turn, validate_provider_binding
+            bound = current_turn()
+            if bound is not None:
+                effort = bound.descriptor["reasoning_effort"] or None
+                if effort is not None:
+                    provider_request["reasoning_effort"] = effort
+                else:
+                    provider_request.pop("reasoning_effort", None)
+            _apply_openai_request_controls(
+                provider_request, endpoint_url, str(request.get('model') or ''),
+                headers, _detect_provider(endpoint_url),
+            )
+            if bound is not None:
+                # Canonical restrictions cannot silently change the effort
+                # acknowledged for this turn, or be undone after validation.
+                validate_provider_binding(endpoint_url, provider_request["model"], headers,
+                    bound.session_id, provider_request.get("reasoning_effort"))
             async with client.stream(
                 'POST', endpoint_url, headers=headers or {}, json=provider_request,
             ) as response:
@@ -5872,6 +5897,38 @@ async def stream_preview(*, endpoint_url, model, messages, headers, turn_contrac
     )
     security.observe_messages(messages)
     executions, policy_decisions, calls, first_token = [], [], 0, None
+    def approval_pause_events(block, arguments, description, result, round_number):
+        card = result.get('ask_user')
+        question = (str(card.get('question') or '').strip()
+                    if isinstance(card, dict) else '') or 'This action needs your approval.'
+        tool_event = {
+            'type': 'tool_output', 'tool': block.tool_type, 'command': arguments,
+            'output': str(result.get('output') or 'Waiting for your decision.'),
+            'exit_code': None, 'error': False, 'executed': False,
+            'approval_required': True, 'desc': description, 'round': round_number,
+        }
+        if isinstance(card, dict):
+            tool_event['ask_user'] = card
+        record_tool_execution(executions, tool_event)
+        # Complete every outstanding provider protocol call with an explicit
+        # non-execution result, including later calls from the same batch.
+        # None may run or be represented as successful while a card is open.
+        for index in range(len(history) - 1, -1, -1):
+            item = history[index]
+            if item.get('role') != 'assistant' or not item.get('tool_calls'):
+                continue
+            answered = {entry.get('tool_call_id') for entry in history[index + 1:]
+                        if entry.get('role') == 'tool'}
+            for call in item['tool_calls']:
+                if call.get('id') and call['id'] not in answered:
+                    history.append({'role': 'tool', 'tool_call_id': call['id'],
+                                    'content': 'Not executed. Waiting for human approval.'})
+            break
+        history.append({'role': 'assistant', 'content': question})
+        result_events = [tool_event, {'type': 'final_response', 'content': question}]
+        if isinstance(card, dict):
+            result_events.append({'type': 'ask_user', 'data': card})
+        return result_events
     successful_call_signatures = set()
     successful_call_counts = {}
     attempted_required_tools = set()
@@ -5940,7 +5997,6 @@ async def stream_preview(*, endpoint_url, model, messages, headers, turn_contrac
         not active_editor_target and broad_current_web_request(direct_user_text)
     )
     force_web_search_next_round = web_briefing_target and not native_workspace_enabled
-    force_private_browser_next_round = False
     force_web_fetch_next_round = False
     suggestion_retry_required = False
     suggestion_retry_attempted = False
@@ -6451,20 +6507,6 @@ async def stream_preview(*, endpoint_url, model, messages, headers, turn_contrac
                                                 if s['function']['name'] == fetch_name]
                             request['tool_choice'] = 'required'
                         force_web_fetch_next_round = False
-                    if force_private_browser_next_round:
-                        private_browser_name = next(
-                            (
-                                schema['function']['name'] for schema in round_offered
-                                if canonical(schema['function']['name']) == 'private_browser'
-                            ),
-                            None,
-                        )
-                        if private_browser_name:
-                            request['tool_choice'] = {
-                                'type': 'function',
-                                'function': {'name': private_browser_name},
-                            }
-                        force_private_browser_next_round = False
                 # A declared source dependency must be attempted successfully before
                 # an answer is visible. Listing accounts alone is not evidence.
                 from src.email_task_intent import _DEPENDENCIES
@@ -7195,6 +7237,11 @@ async def stream_preview(*, endpoint_url, model, messages, headers, turn_contrac
                                     workspace=workspace,
                                     client_runtime_context=client_runtime_context,
                                 )
+                                if result.get('approval_required'):
+                                    for paused_event in approval_pause_events(
+                                            block, arguments, desc, result, round_number):
+                                        yield event(paused_event)
+                                    raise _PreviewApprovalPause
                                 failed = bool(
                                     result.get('error')
                                     or result.get('exit_code') not in (None, 0)
@@ -7899,6 +7946,11 @@ async def stream_preview(*, endpoint_url, model, messages, headers, turn_contrac
                                     active_document_id=getattr(active_document, 'id', None),
                                     workspace=workspace,
                                     client_runtime_context=client_runtime_context)
+                                if result.get('approval_required'):
+                                    for paused_event in approval_pause_events(
+                                            block, arguments, desc, result, round_number):
+                                        yield event(paused_event)
+                                    raise _PreviewApprovalPause
                                 if (
                                     canonical(block.tool_type) == 'ui_control'
                                     and str(args.get('action') or '').casefold() == 'get_toggles'
@@ -7912,6 +7964,7 @@ async def stream_preview(*, endpoint_url, model, messages, headers, turn_contrac
                                 note_fixture_scope.reset(fixture_token)
                                 if (tool_type == 'private_browser'
                                         and not (result or {}).get('blocked')
+                                        and not (result or {}).get('approval_required')
                                         and (result or {}).get('failure_kind') != 'turn_contract_denied'):
                                     # Even a failed interaction can refresh the DOM.
                                     # Validation/policy rejections never reach here.
@@ -8118,13 +8171,12 @@ async def stream_preview(*, endpoint_url, model, messages, headers, turn_contrac
                     ):
                         recovery = (
                             'The static fetch returned repeated navigation or site chrome without '
-                            'substantive page content. Treat it as unreadable and use the rendered '
-                            'private browser for the same URL.'
+                            'substantive page content. Treat it as unreadable and retrieve another '
+                            'relevant source, or explain the access limitation.'
                         )
                         result = {**result, 'error': recovery, 'exit_code': 1}
                         output = recovery
                         failed = True
-                        force_private_browser_next_round = True
                         yield event({
                             'type': 'tool_loop_recovery',
                             'reason': 'web_fetch_boilerplate_fallback',
@@ -8308,20 +8360,19 @@ async def stream_preview(*, endpoint_url, model, messages, headers, turn_contrac
                             for url in retrieved_source_urls(args)
                         )
                     ):
-                        # Static fetchers are routinely rejected by publisher
-                        # bot protection.  That is a transport failure, not
-                        # evidence that the source is unavailable.  Offer one
-                        # rendered-browser attempt at the same evidenced URL.
-                        suppressed_tool_until_round['web_fetch'] = round_number + 1
                         for fetch_url in retrieved_source_urls(args):
                             static_fetch_failed_urls.add(fetch_url.rstrip('/'))
-                        force_private_browser_next_round = True
+                        # Inventory membership cannot authorize navigation.
+                        # The compact runtime currently withholds its effects;
+                        # forcing it would terminate a recoverable source read.
                         round_recovery_messages.append(
-                            'The static page fetch failed or returned no readable content. Use '
-                            'private_browser once to open the strongest known URL and inspect the '
-                            'rendered page; if that also fails, report the limitation without '
-                            'inventing page content.'
+                            'The static page fetch failed or returned no readable content. '
+                            'Use another relevant source with an offered retrieval tool, or '
+                            'report the access limitation without inventing page content. '
+                            'Browser inventory membership alone does not authorize navigation.'
                         )
+                        yield event({'type': 'tool_loop_recovery',
+                                     'reason': 'static_fetch_failed_alternative_source'})
                     if canonical(actual_tool) == 'suggest_document':
                         if failed:
                             if not suggestion_retry_attempted:
@@ -8520,7 +8571,10 @@ async def stream_preview(*, endpoint_url, model, messages, headers, turn_contrac
                     # session with one base64 page image per interaction.
                     visual_blocks = bounded_visual_result_blocks(result, max_images=3)
                     if visual_blocks:
-                        tool_event['screenshot'] = visual_blocks[0]['image_url']['url']
+                        from src.browser_visual_evidence import screenshot_for_display
+                        screenshot_url = screenshot_for_display(result)
+                        if screenshot_url:
+                            tool_event['screenshot'] = screenshot_url
                         round_visual_blocks.extend(visual_blocks)
                     record_tool_execution(executions, tool_event)
                     yield event(tool_event)
@@ -8994,6 +9048,10 @@ async def stream_preview(*, endpoint_url, model, messages, headers, turn_contrac
                         'for review. Please continue the editing request to finish.')})
                 else:
                     yield event({'delta': '\nThe preview reached its round limit. Please narrow the request.'})
+    except _PreviewApprovalPause:
+        # The card is a turn boundary. Keep shared usage/tool metadata below,
+        # but never ask the provider to synthesize or retry the pending action.
+        pass
     except ProviderStreamError as exc:
         detail = 'The selected model provider failed while generating. Retry or choose another model.'
         logging.getLogger(__name__).warning('Clean v3 provider stream failed: %s', exc, exc_info=True)

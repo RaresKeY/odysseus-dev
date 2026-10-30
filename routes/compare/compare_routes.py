@@ -150,6 +150,14 @@ def setup_compare_routes(session_manager: SessionManager):
                     # comparison can't borrow another user's private endpoint key.
                     base = normalize_base(endpoint)
                     ep = _owned_endpoint_by_url(db, base, user)
+                from src.model_admission import endpoint_supports_chat
+                from src.endpoint_resolver import reject_decision_only_endpoint_url
+                if ep is not None and not endpoint_supports_chat(ep):
+                    raise HTTPException(400, "Selected endpoint does not support chat execution")
+                try:
+                    reject_decision_only_endpoint_url(db, endpoint, user)
+                except ValueError as exc:
+                    raise HTTPException(400, str(exc)) from None
                 # Reject *unregistered* raw URLs for signed-in non-admins; a
                 # matched registered endpoint supplies an id so the caller can
                 # still compare endpoints they own. Blanket-rejecting here (the

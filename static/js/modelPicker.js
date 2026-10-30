@@ -6,6 +6,7 @@ import uiModule from './ui.js?v=20260916largetoolscroll1';
 import settingsModule from './settings.js?v=20260912writingstyle3';
 import { sortModelObjects } from './modelSort.js';
 import spinnerModule from './spinner.js';
+import {AUTO_CATEGORIES, categoriesAvailable, createAutoCategoryDialog} from './modelAutoDialog.js';
 
 const API_BASE = window.location.origin;
 
@@ -82,6 +83,11 @@ function _handlePickerKeydown(e, listEl, itemSelector, closeFn) {
 
 // Dependencies injected via initModelPicker()
 let _deps = null;
+let _automationPolicy = null;
+window.addEventListener('odysseus:automation-policy',event=>{
+  _automationPolicy=event.detail;
+  updateModelPicker();
+});
 let _autoSelectingDefault = false;
 let _defaultChatPickInFlight = false;
 let _defaultPendingSeq = 0;
@@ -191,6 +197,9 @@ async function _ensureDefaultPendingChat() {
  */
 export function initModelPicker(deps) {
   _deps = deps;
+  // Settings may finish loading before this module. Read the acknowledged
+  // snapshot as well as subscribing to future changes so reload shows Auto.
+  _automationPolicy=window.ChatAutomation?.getPolicy?.() || _automationPolicy;
   _initModelPickerDropdown();
 }
 
@@ -206,27 +215,74 @@ function _initModelPickerDropdown() {
   if (!wrap || !btn || !menu || !search || !listEl) return;
   if (wrap.dataset.modelPickerBound === '1') return;
   wrap.dataset.modelPickerBound = '1';
+  let autoSaving=false, pickerCloseGeneration=0, pickerCloseTimer=null, pickerCloseListener=null;
+  const autoSelect=document.getElementById('model-auto-select');
+  const autoEdit=document.getElementById('model-auto-edit');
+  const autoFeedback=document.getElementById('model-auto-feedback');
+  const categoryDialog=createAutoCategoryDialog({
+    getModels:()=>_getAllModels(),
+    refreshModels:()=>_refreshPickerModels({force:true,showLoading:false}),
+    returnFocus:()=>btn.focus(),
+    onSaved:()=>{renderAutoControls();updateModelPicker();},
+  });
+  function renderAutoControls(){
+    const policy=window.ChatAutomation?.getPolicy();
+    const categories=policy?.auto_categories || {};
+    const count=AUTO_CATEGORIES.filter(([id])=>categories[id]).length;
+    const valid=categoriesAvailable(categories,_getAllModels());
+    autoSelect.setAttribute('aria-checked',String(policy?.route_mode==='auto'));
+    autoSelect.disabled=autoSaving || _pickerLoading || !window.ChatAutomation;
+    autoEdit.disabled=autoSaving || !window.ChatAutomation;
+    autoEdit.textContent=count?'Edit categories':'Set up Auto';
+    document.getElementById('model-auto-count').textContent=`${count}/2 assigned`;
+    document.getElementById('model-auto-eligibility').textContent=count && !valid && !_pickerLoading
+      ?'Assign an available model to both categories to use Auto.':'';
+  }
+  function editAutoModels(){_close();categoryDialog.open();}
+  autoEdit.addEventListener('click',event=>{event.stopPropagation();editAutoModels();});
+  window.addEventListener('odysseus:edit-auto-models',editAutoModels);
+  autoSelect.addEventListener('click',async event=>{
+    event.stopPropagation();if(autoSaving)return;
+    if(!categoriesAvailable(window.ChatAutomation?.getPolicy()?.auto_categories,_getAllModels())){editAutoModels();return;}
+    autoSaving=true;renderAutoControls();autoFeedback.textContent='Applying Auto…';
+    try{await window.ChatAutomation.enableAuto();autoFeedback.textContent='';renderAutoControls();updateModelPicker();_close();}
+    catch(error){autoFeedback.textContent=error.message;}
+    finally{autoSaving=false;renderAutoControls();}
+  });
+  window.addEventListener('odysseus:automation-policy',()=>{
+    renderAutoControls();
+    if(!menu.classList.contains('hidden'))_populate(search.value || '');
+  });
+  window.addEventListener('odysseus:session-changed',event=>{
+    if(event.detail?.materialized && autoSaving)return;
+    autoFeedback.textContent='';_close();
+  });
+  menu.addEventListener('keydown',event=>{
+    if(event.key==='Escape'){event.preventDefault();_close();btn.focus();}
+  });
+  btn.setAttribute('aria-haspopup','menu');btn.setAttribute('aria-expanded','false');
 
+  function cancelPickerClose() {
+    ++pickerCloseGeneration;
+    if(pickerCloseTimer!==null){clearTimeout(pickerCloseTimer);pickerCloseTimer=null;}
+    if(pickerCloseListener){menu.removeEventListener('animationend',pickerCloseListener);pickerCloseListener=null;}
+  }
   function _close() {
-    if (menu.classList.contains('hidden')) return;
-    // Restore scroll button
-    const _scrollBtn = document.getElementById('scroll-bottom-btn');
-    if (_scrollBtn) _scrollBtn.style.display = '';
+    if(menu.classList.contains('hidden'))return;
+    cancelPickerClose();
+    const generation=pickerCloseGeneration;
+    btn.setAttribute('aria-expanded','false');
+    const scrollButton=document.getElementById('scroll-bottom-btn');
+    if(scrollButton)scrollButton.style.display='';
     menu.classList.add('closing');
-    menu.addEventListener('animationend', function _onDone() {
-      menu.removeEventListener('animationend', _onDone);
-      menu.classList.remove('closing');
-      menu.classList.add('hidden');
-      search.value = '';
-    }, { once: true });
-    // Fallback if animationend doesn't fire
-    setTimeout(() => {
-      if (!menu.classList.contains('hidden')) {
-        menu.classList.remove('closing');
-        menu.classList.add('hidden');
-        search.value = '';
-      }
-    }, 200);
+    const finish=()=>{
+      if(generation!==pickerCloseGeneration)return;
+      cancelPickerClose();
+      menu.classList.remove('closing');menu.classList.add('hidden');search.value='';
+    };
+    pickerCloseListener=event=>{if(event.target===menu)finish();};
+    menu.addEventListener('animationend',pickerCloseListener);
+    pickerCloseTimer=setTimeout(finish,200);
   }
 
   function _openPickerShortcut(kind) {
@@ -309,6 +365,8 @@ function _initModelPickerDropdown() {
           epName: item.endpoint_name || '',
           category: item.category || '',
           modelsMetadata: item.models_metadata || {},
+          modelType: item.model_type || 'llm',
+          autoCapabilities: item.auto_model_capabilities?.[mid] || {supported_efforts:['default'],capability_revision:'default-only/v1'},
           providerText: [
             item.endpoint_name || '',
             item.category || '',
@@ -335,6 +393,7 @@ function _initModelPickerDropdown() {
   }
 
   function _renderLoading(text = 'Loading models…') {
+    positionPicker();
     listEl.innerHTML = '';
     listEl.classList.remove('is-empty');
     listEl.classList.add('is-loading');
@@ -356,18 +415,31 @@ function _initModelPickerDropdown() {
     if (!window.modelsModule || typeof window.modelsModule.refreshModels !== 'function') return false;
     const seq = ++_pickerLoadSeq;
     _pickerLoading = true;
+    renderAutoControls();
     if (showLoading) _renderLoading(force ? 'Refreshing models…' : 'Loading models…');
     try {
       await window.modelsModule.refreshModels(force, { waitForRefresh: force });
       await _refreshLocalProbe();
+      if(autoFeedback.textContent.startsWith('Models could not be loaded'))autoFeedback.textContent='';
     } finally {
       if (seq === _pickerLoadSeq) {
         _pickerLoading = false;
+        renderAutoControls();
         listEl.classList.remove('is-loading');
       }
     }
     return seq === _pickerLoadSeq;
   }
+
+  function positionPicker(){
+    if(menu.classList.contains('hidden'))return;
+    menu.style.maxHeight=`${Math.max(80,Math.min(window.innerHeight*.7,wrap.getBoundingClientRect().top-28))}px`;
+  }
+  function pickerLoadFailed(){
+    _populate(search.value || '');
+    autoFeedback.textContent='Models could not be loaded. Refresh to try again.';
+  }
+  window.addEventListener('resize',positionPicker);
 
   // ── Provider display names and grouping ──
   const _PROVIDER_NAMES = {
@@ -438,8 +510,10 @@ function _initModelPickerDropdown() {
   let _justExpandedProvider = null;
 
   function _populate(filter) {
+    positionPicker();
     listEl.innerHTML = '';
     listEl.classList.remove('is-loading');
+    renderAutoControls();
     const all = _getAllModels();
     const q = (filter || '').trim().toLowerCase();
     const hasAnyModel = all.length > 0;
@@ -452,7 +526,7 @@ function _initModelPickerDropdown() {
       searchRow.classList.toggle('searching', !!q);
     }
 
-    if (!hasAnyModel) return; // collapsed empty list — nothing to render
+    if (!hasAnyModel) {const empty=document.createElement('p');empty.className='model-switch-empty';empty.textContent='No registered models available. Add an endpoint or refresh.';listEl.append(empty);return;}
 
     // Unique lookup so Recent/Favorites (stored as bare model IDs) can be
     // resolved back to full model objects; drops anything no longer offered.
@@ -548,6 +622,8 @@ function _initModelPickerDropdown() {
       });
       row.appendChild(favDot);
 
+      row.tabIndex=0;row.setAttribute('role','menuitem');
+      row.addEventListener('keydown',event=>{if(event.key==='Enter' || event.key===' '){event.preventDefault();_pick(m);}});
       row.addEventListener('click', () => _pick(m));
       listEl.appendChild(row);
     }
@@ -722,8 +798,7 @@ async function _pick(m) {
       // Existing session with no model — PATCH it
       const sessions = _deps.getSessions();
       const s = sessions.find(x => x.id === currentSessionId);
-      if (s) { s.model = m.mid; s.endpoint_url = m.url; s.endpoint_id = m.endpointId || ''; s.endpoint_name = m.epName || ''; }
-      updateModelPicker();
+
       const fd = new FormData();
       fd.append('model', m.mid);
       fd.append('endpoint_url', m.url);
@@ -735,7 +810,10 @@ async function _pick(m) {
           finishSwitch();
           return;
         }
+        if (s) { s.model = m.mid; s.endpoint_url = m.url; s.endpoint_id = m.endpointId || ''; s.endpoint_name = m.epName || ''; }
+        _automationPolicy=null;
         // Header stays as session name — model info shown in picker only
+        window.dispatchEvent(new CustomEvent('odysseus:automation-changed'));
       } catch (e) {
         uiModule.showError('Failed to set model: ' + e);
         finishSwitch();
@@ -801,8 +879,10 @@ async function _pick(m) {
   btn.addEventListener('click', (e) => {
     e.stopPropagation();
     if (menu.classList.contains('hidden') || menu.classList.contains('closing')) {
+      cancelPickerClose();
       // Force-clear any in-progress close animation
       menu.classList.remove('closing', 'hidden');
+      btn.setAttribute('aria-expanded','true');renderAutoControls();
       const hasCache = _hasModelCache();
       if (hasCache) {
         _populate('');
@@ -816,7 +896,7 @@ async function _pick(m) {
         _refreshPickerModels({ force: false, showLoading: !hasCache }).then(isLatest => {
           if (isLatest && !menu.classList.contains('hidden')) _populate(search.value || '');
           updateModelPicker();
-        }).catch(() => {});
+        }).catch(pickerLoadFailed);
       }
       if (window.innerWidth >= 768) search.focus();
       // Hide scroll button so it doesn't overlap
@@ -842,7 +922,7 @@ async function _pick(m) {
         if (!menu.classList.contains('hidden')) _populate(search.value || '');
         updateModelPicker();
       } catch (_) {
-        uiModule.showToast('Model refresh failed');
+        pickerLoadFailed();
       } finally {
         refreshBtn.disabled = false;
         refreshBtn.classList.remove('spinning');
@@ -964,6 +1044,13 @@ export function updateModelPicker() {
     _ensureDefaultPendingChat();
   }
 
+  if(_automationPolicy?.session_id===currentSessionId && _automationPolicy.route_mode==='auto'){
+    const count=Object.keys(_automationPolicy.auto_categories || {}).length;
+    label.textContent=count===2?'Auto · Jev':'Auto · assign categories';
+    label.title=`Choose model and effort for each message. ${count} selected API models. Reasoning effort · chosen automatically`;
+    const effortWrap=document.getElementById('reasoning-effort-wrap');if(effortWrap)effortWrap.style.display='none';
+    return;
+  }
   let displayName = modelId ? modelId.split('/').pop() : 'Select model';
   const routeItems = window.modelsModule?.getCachedItems?.() || [];
   const candidates = routeItems.filter(item => (item.models || []).concat(item.models_extra || []).includes(modelId));
@@ -1001,6 +1088,7 @@ let _reasoningEffortBound = false;
 let _pendingReasoningEffort = null;
 
 export function getSelectedReasoningEffort() {
+  if(_automationPolicy?.route_mode==='auto' && _automationPolicy.session_id===_deps?.getCurrentSessionId())return null;
   if (!_deps) return _pendingReasoningEffort;
   const currentSessionId = _deps.getCurrentSessionId ? _deps.getCurrentSessionId() : null;
   if (!currentSessionId) return _pendingReasoningEffort;

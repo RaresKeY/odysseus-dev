@@ -26,10 +26,18 @@ def test_private_browser_preview_uses_sanitized_screenshot_src():
 
 
 def test_browser_screenshot_is_persisted_for_history_reload():
-    loop = (_REPO / "src" / "agent_loop.py").read_text(encoding="utf-8")
+    from src.browser_visual_evidence import screenshot_for_display
 
-    assert 'tool_output_data["screenshot"] = f"data:{img[\'mimeType\']};base64,{img[\'data\']}"' in loop
-    assert 'tool_event["screenshot"] = f"data:{img[\'mimeType\']};base64,{img[\'data\']}"' in loop
+    loop = (_REPO / "src" / "agent_loop.py").read_text(encoding="utf-8")
+    for target in ("tool_output_data", "tool_event"):
+        assert f'{target}["screenshot"] = _display_screenshot' in loop
+    assert loop.count('_display_screenshot = screenshot_for_display(result)') == 2
+    receipt = "/api/session/example/browser/image/frame"
+    result = {"browser_handoff": {"screenshot": {"url": receipt}},
+              "images": [{"mimeType": "image/png", "data": "private-pixels"}]}
+    assert screenshot_for_display(result) == receipt
+    assert screenshot_for_display({"browser_handoff": {}, "images": result["images"]}) is None
+    assert screenshot_for_display({"images": result["images"]}) == "data:image/png;base64,private-pixels"
 
 
 def test_restored_private_browser_preview_uses_module_escape():

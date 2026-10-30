@@ -26,6 +26,8 @@ from src.turn_contract import (
 
 
 def _owner(value):
+    from src.owner_identity import effective_storage_owner
+    value = effective_storage_owner(value) or value
     return str(value or "").strip().casefold()
 
 
@@ -404,11 +406,24 @@ def create_request_authority(request_text, *, owner=None, session_id=None, works
             if re.search(r"\b(?:browser|browse|private_browser)\b", request_text, re.I):
                 actions |= frozenset(action for action in ("click", "fill", "type", "press", "evaluate", "select")
                                      if re.search(r"\b" + action + r"\b", request_text, re.I))
+            from src.chat_automation import current_browser_grant
+            browser_grant = current_browser_grant(owner, session_id)
+            if browser_grant is not None:
+                # The human scope was consumed for this exact submission.
+                # Orchestration grants no child operation by itself.
+                actions |= frozenset({"automate"}) | (browser_grant.allowed_effects & {"click", "fill"})
         if operation is not None and name == canonical_tool(operation.tool):
             inputs = frozenset({ExactOperation.normalize(name, _json(dict(operation.args))).input})
         grants.append(OperationGrant(name, actions, inputs))
+    from src.chat_automation import current_turn, effective_elevation_roots
+    bound = current_turn()
+    roots = None
+    if bound is not None and (bound.owner or "").casefold() == _owner(owner) and bound.session_id == str(session_id or ""):
+        roots = tuple(FilesystemRoot.from_dict(item["identity"]) for item in effective_elevation_roots())
+        if workspace:
+            roots = (FilesystemRoot.seal(workspace, owner=_owner(owner)), *roots)
     authority = RequestAuthority(uuid4().hex, _owner(owner), str(session_id or ""),
-                                 str(workspace or ""), tuple(grants))
+                                 str(workspace or ""), tuple(grants), resource_roots=roots)
     if client_runtime_context is not None:
         from src.agent_runtime.remote_resources import seal_backends
         authority = replace(authority, backend_resources=seal_backends(

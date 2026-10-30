@@ -274,6 +274,87 @@ class Session(TimestampMixin, Base):
             'crew_member_id': self.crew_member_id,
         }
 
+class OwnerChatAutomation(TimestampMixin, Base):
+    """Canonical owner preferences coupled transactionally to chat policy."""
+    __tablename__ = "owner_chat_automation"
+    owner_key = Column(String, primary_key=True)
+    last_explicit_mode = Column(String, nullable=False, default="always_ask")
+    elevation_ceiling = Column(Boolean, nullable=False, default=False)
+    authority_epoch = Column(Integer, nullable=False, default=0)
+    revision = Column(Integer, nullable=False, default=0)
+    configuration = Column(JSON, nullable=False, default=dict)
+
+
+class ChatAutomationState(TimestampMixin, Base):
+    __tablename__ = "chat_automation_state"
+    session_id = Column(String, ForeignKey("sessions.id", ondelete="CASCADE"), primary_key=True)
+    owner_key = Column(String, nullable=False, index=True)
+    approval_mode = Column(String, nullable=False, default="always_ask")
+    policy_revision = Column(Integer, nullable=False, default=0)
+    route_mode = Column(String, nullable=False, default="manual")
+    elevation_grant = Column(JSON, nullable=True)
+    feature_settings = Column(JSON, nullable=False, default=dict)
+
+
+class ChatAutomationLease(Base):
+    """Admission only; agent_runs remains the stream/run lifecycle owner."""
+    __tablename__ = "chat_automation_leases"
+    session_id = Column(String, ForeignKey("sessions.id", ondelete="CASCADE"), primary_key=True)
+    owner_key = Column(String, nullable=False)
+    token = Column(String, nullable=False)
+    submission_id = Column(String, nullable=False)
+    expires_at = Column(Float, nullable=False)
+
+
+class ChatAutomationSubmission(Base):
+    __tablename__ = "chat_automation_submissions"
+    submission_id = Column(String, primary_key=True)
+    owner_key = Column(String, nullable=False, index=True)
+    session_id = Column(String, nullable=False, index=True)
+    policy_revision = Column(Integer, nullable=False)
+    authority_epoch = Column(Integer, nullable=False)
+    intent_digest = Column(String, nullable=False)
+    descriptor = Column(JSON, nullable=False, default=dict)
+    status = Column(String, nullable=False, default="preparing")
+    created_at = Column(Float, nullable=False)
+    current_ask = Column(Text, nullable=True)
+    approval_evidence = Column(JSON, nullable=True)
+    task_lineage_id = Column(String, nullable=True)
+    original_submission_id = Column(String, nullable=True)
+    previous_submission_id = Column(String, nullable=True)
+    prior_task = Column(JSON, nullable=True)
+    previous_answer = Column(Text, nullable=True)
+    answer_message_id = Column(String, nullable=True)
+    preparation = Column(JSON, nullable=True)
+    routing = Column(JSON, nullable=True)
+
+
+class ChatAutomationInputCard(Base):
+    """Ordinary clarification only; never an exact-action approval."""
+    __tablename__ = "chat_automation_input_cards"
+    card_id = Column(String, primary_key=True)
+    owner_key = Column(String, nullable=False, index=True)
+    session_id = Column(String, nullable=False, index=True)
+    submission_id = Column(String, nullable=False, index=True)
+    question = Column(Text, nullable=False)
+    payload = Column(JSON, nullable=False, default=dict)
+    status = Column(String, nullable=False, default="pending")
+    created_at = Column(Float, nullable=False)
+    expires_at = Column(Float, nullable=False)
+    resolved_by_submission_id = Column(String, nullable=True)
+    answer = Column(Text, nullable=True)
+
+
+class DecisionAttempt(Base):
+    __tablename__ = "decision_attempts"
+    attempt_id = Column(String, primary_key=True)
+    owner_key = Column(String, nullable=False, index=True)
+    session_id = Column(String, nullable=False, index=True)
+    run_id = Column(String, nullable=False, index=True)
+    status = Column(String, nullable=False)
+    record = Column(JSON, nullable=False)
+
+
 class ChatMessage(Base):
     """
     SQLAlchemy model for ChatMessage table.
@@ -568,7 +649,7 @@ class ModelEndpoint(TimestampMixin, Base):
     hidden_models = Column(Text, nullable=True)    # JSON list of model IDs that failed probing
     cached_models = Column(Text, nullable=True)    # JSON list of last-known model IDs (avoids probe on list)
     pinned_models = Column(Text, nullable=True)    # JSON list of admin-pinned model IDs (manual, may not appear in /v1/models)
-    model_type = Column(String, nullable=True, default="llm")  # "llm" or "image"
+    model_type = Column(String, nullable=True, default="llm")  # "llm", "image", or decision-only "decision"
     # auto = classify by URL; local = self-hosted server; api/proxy = external
     # OpenAI-compatible API even when reachable through a private/tailnet IP.
     endpoint_kind = Column(String, nullable=True, default="auto")
@@ -1837,6 +1918,27 @@ def _migrate_add_calendar_source_email_cols():
     except Exception as e:
         logging.getLogger(__name__).warning(f"calendar source-email migration: {e}")
 
+def _migrate_chat_automation_semantics():
+    """Add nullable legacy semantic facts without reconstructing transcript authority."""
+    additions = {
+        "chat_automation_state": {"feature_settings": "JSON"},
+        "chat_automation_submissions": {
+            "current_ask": "TEXT", "approval_evidence": "JSON", "task_lineage_id": "VARCHAR",
+            "original_submission_id": "VARCHAR", "previous_submission_id": "VARCHAR",
+            "prior_task": "JSON", "previous_answer": "TEXT", "answer_message_id": "VARCHAR",
+            "preparation": "JSON", "routing": "JSON"},
+    }
+    with engine.begin() as conn:
+        inspector = inspect(conn)
+        for table, columns in additions.items():
+            if not inspector.has_table(table):
+                continue
+            existing = {item["name"] for item in inspector.get_columns(table)}
+            for column, kind in columns.items():
+                if column not in existing:
+                    conn.execute(text(f"ALTER TABLE {table} ADD COLUMN {column} {kind}"))
+
+
 def _migrate_add_task_automation_columns():
     """Add automation columns to scheduled_tasks table if missing."""
     new_cols = {
@@ -2421,6 +2523,7 @@ def init_db():
     _migrate_add_calendar_source_email_cols()
     _migrate_add_oauth_config()
     _migrate_add_email_oauth_columns()
+    _migrate_chat_automation_semantics()
     _migrate_add_task_automation_columns()
     _migrate_add_task_authority_column()
     _migrate_add_disabled_tools()

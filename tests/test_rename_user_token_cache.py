@@ -28,7 +28,10 @@ def rename_endpoint(monkeypatch):
     import core.database as cdb
 
     # Neutralize the DB owner-rename loop (no real DB needed for this test).
-    monkeypatch.setattr(cdb, "SessionLocal", lambda: MagicMock())
+    database = MagicMock()
+    database.get.return_value = None
+    database.query.return_value.filter_by.return_value.first.return_value = None
+    monkeypatch.setattr(cdb, "SessionLocal", lambda: database)
     monkeypatch.setattr(cdb, "Base", SimpleNamespace(registry=SimpleNamespace(mappers=[])), raising=False)
     # Neutralize the JSON-prefs rename.
     pr = types.ModuleType("routes.prefs_routes")

@@ -16,6 +16,8 @@ logger = logging.getLogger(__name__)
 TASK_APPROVAL_DECISION = "approve_task"
 CHAT_SESSION_APPROVAL_DECISION = "approve"
 DENY_APPROVAL_DECISION = "deny"
+# New-contract cards intentionally never grant a task/chat-wide bypass.
+SINGLE_ACTION_APPROVAL_DECISION = "approve_once"
 
 # Session.get_context_messages() adds this server-owned marker only when the
 # session history contains a matching, resolved chat-session approval.
@@ -104,6 +106,9 @@ def stamp_chat_session_grant(
     """
     if not isinstance(ask_user, dict):
         return
+    if ask_user.get("automation_contract_version") == 1:
+        ask_user.pop(CHAT_SESSION_APPROVAL_SIGNATURE_FIELD, None)
+        return
     if str(decision or "").strip().lower() != CHAT_SESSION_APPROVAL_DECISION:
         ask_user.pop(CHAT_SESSION_APPROVAL_SIGNATURE_FIELD, None)
         return
@@ -153,6 +158,8 @@ class ToolApprovalScope(str, Enum):
 
 def scope_for_decision(decision: object) -> ToolApprovalScope | None:
     normalized = str(decision or "").strip().lower()
+    if normalized == SINGLE_ACTION_APPROVAL_DECISION:
+        return ToolApprovalScope.SINGLE_ACTION
     if normalized == TASK_APPROVAL_DECISION:
         return ToolApprovalScope.TASK
     if normalized == CHAT_SESSION_APPROVAL_DECISION:

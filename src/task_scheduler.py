@@ -13,6 +13,7 @@ from typing import Any, Awaitable, Callable, Dict, Tuple
 
 from core.auth import RESERVED_USERNAMES
 from src.owner_identity import REQUEST_SENTINEL_OWNERS, auth_disabled
+from src.task_automation import task_automation_enabled
 from src.task_action_policy import (
     is_admin_only_task_action,
     owner_has_admin_task_privileges,
@@ -573,6 +574,9 @@ class TaskScheduler:
         return take
 
     async def start(self):
+        if not task_automation_enabled():
+            logger.info("Automatic task execution disabled by deployment")
+            return
         # On startup, mark any leftover "running" task_runs as errored. Without
         # this, a server crash leaves rows stuck running indefinitely and the
         # _executing in-memory set forgets them, so the UI shows phantoms.
@@ -730,11 +734,17 @@ class TaskScheduler:
         cache entries for notes not in the current scan's seen_ids) doesn't
         cross-delete other users' entries (review C4).
         """
+        if not task_automation_enabled():
+            return
         await asyncio.sleep(30)
+        if not task_automation_enabled():
+            return
         from src.builtin_actions import action_ping_notes, TaskNoop
-        while self._running:
+        while self._running and task_automation_enabled():
             owners = self._known_task_owners()
             for ow in (owners or [""]):
+                if not task_automation_enabled():
+                    return
                 try:
                     await action_ping_notes(owner=ow)
                 except TaskNoop:
@@ -750,11 +760,17 @@ class TaskScheduler:
         (passing owner="" globally would email User B's events to User A's
         configured SMTP "from" address — see review C3).
         """
+        if not task_automation_enabled():
+            return
         await asyncio.sleep(90)
+        if not task_automation_enabled():
+            return
         from src.builtin_actions import action_ping_events, TaskNoop
-        while self._running:
+        while self._running and task_automation_enabled():
             owners = self._known_task_owners()
             for ow in (owners or [""]):
+                if not task_automation_enabled():
+                    return
                 try:
                     await action_ping_events(owner=ow)
                 except TaskNoop:
@@ -793,12 +809,16 @@ class TaskScheduler:
             db.close()
 
     async def _loop(self):
+        if not task_automation_enabled():
+            return
         await asyncio.sleep(10)
-        while self._running:
+        while self._running and task_automation_enabled():
             try:
                 await self._check_due_tasks()
             except Exception:
                 logger.exception("Error in task scheduler loop")
+            if not task_automation_enabled():
+                return
             # Sleep until the next scheduled run, capped at 60s. A `* * * * *`
             # cron task previously fired up to ~60s late because we always
             # slept the full minute; now the loop wakes near the boundary.
@@ -822,6 +842,8 @@ class TaskScheduler:
             await asyncio.sleep(sleep_for)
 
     async def _check_due_tasks(self):
+        if not task_automation_enabled():
+            return
         from core.database import SessionLocal, ScheduledTask
         db = SessionLocal()
         try:
@@ -833,6 +855,8 @@ class TaskScheduler:
             except Exception:
                 foreground_active = False
             async with self._executing_guard():
+                if not task_automation_enabled():
+                    return
                 # Snapshot under the lock so we don't race with mid-iteration adds.
                 executing_snapshot = set(self._executing)
                 # Scheduled tasks and deferred event tasks both use next_run.
@@ -854,11 +878,16 @@ class TaskScheduler:
                 if foreground_active and due:
                     db.commit()
             for task_id in to_dispatch:
-                asyncio.create_task(self._execute_task(task_id))
+                asyncio.create_task(self._execute_task(task_id, automatic=True))
         finally:
             db.close()
 
-    async def _execute_task(self, task_id: str, *, bypass_model_slot: bool = False, release_executing: bool = True):
+    async def _execute_task(self, task_id: str, *, bypass_model_slot: bool = False, release_executing: bool = True, automatic: bool = False):
+        if automatic and not task_automation_enabled():
+            if release_executing:
+                async with self._executing_guard():
+                    self._executing.discard(task_id)
+            return
         # Create the run record with status="queued" BEFORE waiting on the
         # semaphore so the UI can show that a manually-triggered task is in
         # line behind another. Once we acquire the slot, flip to "running"
@@ -891,6 +920,7 @@ class TaskScheduler:
                     run_id,
                     release_executing=release_executing,
                     gate_foreground=not bypass_model_slot,
+                    automatic=automatic,
                 )
                 return
 
@@ -900,6 +930,7 @@ class TaskScheduler:
                     run_id,
                     release_executing=release_executing,
                     gate_foreground=True,
+                    automatic=automatic,
                 )
         except asyncio.CancelledError:
             # If cancellation happens while queued behind the semaphore,
@@ -946,7 +977,14 @@ class TaskScheduler:
         *,
         release_executing: bool = True,
         gate_foreground: bool = True,
+        automatic: bool = False,
     ):
+        if automatic and not task_automation_enabled():
+            # A receipt may have been queued before admission was disabled.
+            # Retire it without loading task authority or entering a handler.
+            await asyncio.to_thread(self._mark_run_aborted, task_id, run_id,
+                                    "Automatic tasks disabled by deployment")
+            return
         from core.database import SessionLocal, ScheduledTask, TaskRun
 
         db = SessionLocal()
@@ -992,6 +1030,15 @@ class TaskScheduler:
                     db.commit()
                 from src.interactive_gate import wait_for_interactive_quiet
                 await wait_for_interactive_quiet(f"scheduled task {task.name}")
+
+            if automatic and not task_automation_enabled():
+                waiting = db.query(TaskRun).filter(TaskRun.id == run_id).first()
+                if waiting and waiting.status == "queued":
+                    waiting.status = "aborted"
+                    waiting.error = "Automatic tasks disabled by deployment"
+                    waiting.finished_at = _utcnow()
+                    db.commit()
+                return
 
             # Flip the run from queued → running. Reset started_at to the
             # actual execution start so queue wait time is visible from
@@ -1185,7 +1232,7 @@ class TaskScheduler:
                 self._log_to_assistant(db, task, run.result or "[success]")
 
             # Task chaining — trigger the next task on success
-            if run.status == "success" and task.then_task_id:
+            if run.status == "success" and task.then_task_id and task_automation_enabled():
                 chain_id = task.then_task_id
                 chain_task = db.query(ScheduledTask).filter(ScheduledTask.id == chain_id).first()
                 if not chain_task or chain_task.owner != task.owner:
@@ -2324,11 +2371,15 @@ class TaskScheduler:
         """Run a chained task. Acquires _executing membership the same way
         run_task_now does so an overlapping scheduler tick can't double-dispatch
         the same task while the chain run is in flight."""
+        if not task_automation_enabled():
+            return
         async with self._executing_guard():
+            if not task_automation_enabled():
+                return
             if task_id in self._executing:
                 return  # already in flight (manual trigger, scheduler tick, or another chain)
             self._executing.add(task_id)
-        await self._execute_task(task_id)
+        await self._execute_task(task_id, automatic=True)
 
     def _has_chain_cycle(self, db, start_id: str, max_depth: int = 10, owner: str | None = None) -> bool:
         """Detect cycles in task chains."""
@@ -2441,11 +2492,23 @@ class TaskScheduler:
         if force:
             asyncio.create_task(self._execute_task(task_id, bypass_model_slot=True, release_executing=False))
             return True
+        return await self._queue_task(task_id, automatic=False)
+
+    async def run_automatic_task(self, task_id: str):
+        """Automatic event admission, independent of explicit user run-now."""
+        if not task_automation_enabled():
+            return False
+        return await self._queue_task(task_id, automatic=True)
+
+    async def _queue_task(self, task_id: str, *, automatic: bool):
         async with self._executing_guard():
+            if automatic and not task_automation_enabled():
+                return False
             if task_id in self._executing:
                 return False
             self._executing.add(task_id)
-        asyncio.create_task(self._execute_task(task_id))
+        execution = self._execute_task(task_id, automatic=True) if automatic else self._execute_task(task_id)
+        asyncio.create_task(execution)
         return True
 
     async def stop_task(self, task_id: str) -> bool:

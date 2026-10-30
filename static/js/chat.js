@@ -6,6 +6,7 @@
 // ES6 module — IIFE removed
 
 import Storage from './storage.js';
+import { whenAutomationSettingsReady } from './chatAutomation.js';
 import uiModule from './ui.js?v=20260916largetoolscroll1';
 import sessionModule from './sessions.js';
 import chatRenderer, { renderToolIcon } from './chatRenderer.js?v=20260914metricssummary1';
@@ -342,6 +343,11 @@ import { invalidateSettings } from './appConfig.js';
   let _contextHeaderAnchorEl = null;
   let _contextHeaderPopupCleanup = null;
   let _pendingToolApproval = null;
+  let _pendingInputCard = null;
+  document.addEventListener('odysseus:input-card-answer',event=>{
+    const value=event.detail;
+    if(value?.input_card_id && value.session_id===sessionModule.getCurrentSessionId?.()) _pendingInputCard={...value};
+  });
   const _selectedNoteIdsBySession = new Map();
   let _pendingSelectedNoteIds = [];
   let _lastPrivateBrowserUrl = '';
@@ -510,7 +516,7 @@ import { invalidateSettings } from './appConfig.js';
   document.addEventListener('odysseus:tool-approval', (event) => {
     const detail = event && event.detail ? event.detail : {};
     const decision = String(detail.decision || '').toLowerCase();
-    if (!detail.approval_id || !['approve', 'approve_task', 'deny'].includes(decision)) return;
+    if (!detail.approval_id || !['approve', 'approve_task', 'approve_once', 'deny'].includes(decision)) return;
     _pendingToolApproval = {
       approval_id: String(detail.approval_id),
       decision,
@@ -539,6 +545,7 @@ import { invalidateSettings } from './appConfig.js';
   });
 
   window.addEventListener('odysseus:session-changed', (event) => {
+    _pendingInputCard = null;
     const sessionId = event.detail?.sessionId;
     if (sessionId && event.detail?.materialized && _pendingSelectedNoteIds.length) {
       _selectedNoteIdsBySession.set(sessionId, _pendingSelectedNoteIds);
@@ -1812,8 +1819,8 @@ import { invalidateSettings } from './appConfig.js';
     const saved = _readPersistedQueuedRequests()[sid];
     if (!Array.isArray(saved) || !saved.length) return;
     for (const raw of saved) {
-      const message = String(raw?.message || '').trim();
-      if (!message) continue;
+      const message = String(raw?.message || '');
+      if (!message.trim()) continue;
       const item = {
         id: String(raw?.id || `q${++_queuedRequestSeq}`),
         message,
@@ -1995,7 +2002,7 @@ import { invalidateSettings } from './appConfig.js';
     _persistQueuedRequests();
     return {
       id: items.map(item => item.id).join(','),
-      message: items.map(item => String(item.message || '').trim()).filter(Boolean).join('\n\n'),
+      message: items.map(item => String(item.message || '')).filter(text => text.trim()).join('\n\n'),
       createdAt: items[0]?.createdAt || Date.now(),
     };
   }
@@ -2049,8 +2056,8 @@ import { invalidateSettings } from './appConfig.js';
   }
 
   function _queueAgentRequest(message) {
-    const msg = String(message || '').trim();
-    if (!msg) return false;
+    const msg = String(message || '');
+    if (!msg.trim()) return false;
     const item = { id: `q${++_queuedRequestSeq}`, message: msg, createdAt: Date.now(), sessionId: _queuedSessionId(), el: null };
     item.el = _createQueuedBubble(item);
     _queuedAgentRequests.push(item);
@@ -2062,8 +2069,8 @@ import { invalidateSettings } from './appConfig.js';
   export function queueStreamingComposerRequest() {
     if (!isStreaming) return false;
     const queuedInput = uiModule.el('message');
-    const queuedText = (queuedInput && queuedInput.value || '').trim();
-    if (!queuedText) return false;
+    const queuedText = (queuedInput && queuedInput.value || '');
+    if (!queuedText.trim()) return false;
     if (fileHandlerModule.getPendingCount && fileHandlerModule.getPendingCount()) {
       try { uiModule.showError && uiModule.showError('Finish the current response before queueing messages with attachments.'); } catch (_) {}
       return true;
@@ -2096,7 +2103,11 @@ import { invalidateSettings } from './appConfig.js';
    * Handle chat form submission
    */
   export async function handleChatSubmit(e) {
-    e.preventDefault();
+    if (e) e.preventDefault();
+    if (!await whenAutomationSettingsReady()) {
+      uiModule.showError('Chat settings were not saved. Check the displayed choice before sending again.');
+      return;
+    }
     // Cancel research clarification timeout if active
     if (window._researchTimeoutTimer) {
       clearTimeout(window._researchTimeoutTimer);
@@ -2836,6 +2847,10 @@ import { invalidateSettings } from './appConfig.js';
       const fd = new FormData();
       fd.append('message', approvalForSend ? '' : _finalMsgWithInject);
       fd.append('session', streamSessionId);
+      if(!approvalForSend && _pendingInputCard?.session_id===streamSessionId && _pendingInputCard.answer===msg){
+        fd.append('input_card_id',_pendingInputCard.input_card_id);
+        _pendingInputCard=null;
+      }
 
       const selectedNoteIds = _selectedNoteIdsBySession.get(streamSessionId) || [];
       if(selectedNoteIds.length){

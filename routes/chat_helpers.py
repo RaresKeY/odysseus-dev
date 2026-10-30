@@ -930,7 +930,9 @@ def _select_session_endpoint(sess, target_url: str, endpoints) -> tuple:
     Returns ``(endpoint, bound_by_fallback)``; ``bound_by_fallback`` is True
     when the choice came from URL matching and may be persisted as a binding.
     """
-    matching = [ep for ep in endpoints if _session_url_matches_endpoint(target_url, getattr(ep, "base_url", "") or "")]
+    from src.model_admission import endpoint_supports_execution
+    matching = [ep for ep in endpoints if endpoint_supports_execution(ep)
+                and _session_url_matches_endpoint(target_url, getattr(ep, "base_url", "") or "")]
     if not matching:
         return None, False
     bound_id = getattr(sess, "endpoint_id", None) or None
@@ -965,6 +967,10 @@ def _has_auth_keys(headers) -> bool:
 
 def resolve_session_auth(sess, session_id: str, owner: Optional[str] = None):
     """Ensure session has auth headers — resolve from endpoint DB if missing."""
+    if getattr(sess, "_automation_bound", False):
+        # The admission barrier resolved this exact registered credential and
+        # descriptor. Do not persist an automatic route as the manual default.
+        return
     owner = owner or getattr(sess, "owner", None)
     try:
         from src.chatgpt_subscription import is_chatgpt_subscription_base
@@ -1336,6 +1342,11 @@ async def build_chat_context(
     # Build messages. In Nobody/incognito mode, never read saved session
     # history: the session id may be a temporary wrapper or, in buggy clients, a
     # stale normal session id. Only the ephemeral incognito transcript is safe.
+    from src.chat_automation import current_turn
+    from src.decision_routing import followup_context
+    relation = followup_context(current_turn()) if not incognito else None
+    if relation is not None:
+        preface.append(untrusted_context_message('task relationship (intent only)', json.dumps(relation, ensure_ascii=False)))
     history = _incognito_messages(session_id) if incognito else sess.get_context_messages()
     messages = [item for item in preface if item.get("role") == "system"] + list(history)
     transient_context = [item for item in preface if item.get("role") != "system"]
@@ -1676,6 +1687,16 @@ def save_assistant_response(
     private enough.
     """
     md = dict(last_metrics) if last_metrics else {}
+    from src.chat_automation import current_turn
+    semantic_turn = current_turn()
+    if semantic_turn is not None and semantic_turn.session_id == session_id and not incognito:
+        # Persist the canonical card ID with real tool events, so history
+        # reload renders the same structured clarification as live SSE.
+        for event in (md.get('tool_events') or tool_events or []):
+            payload = event.get('ask_user') if isinstance(event, dict) else None
+            identifier = semantic_turn.store.record_input(semantic_turn, payload)
+            if identifier:
+                payload.update(input_card_id=identifier, session_id=session_id)
     def _model_value(value) -> str:
         if value is None:
             return ""
@@ -1728,6 +1749,15 @@ def save_assistant_response(
         _append_incognito_message(session_id, "assistant", _content, md)
         return None
     sess.add_message(ChatMessage("assistant", _content, metadata=md))
+
+    # The producer may continue after a subscriber disconnects. Record the
+    # actual gated/saved answer here as well as in the subscriber's SSE view;
+    # stream completion or prose alone never creates a pending control card.
+    from src.chat_automation import current_turn
+    automation_turn = current_turn()
+    if automation_turn is not None and automation_turn.session_id == session_id:
+        automation_turn.store.record_answer(automation_turn, _content)
+        automation_turn._canonical_answer_saved = True
 
     from core.database import update_session_last_accessed
     update_session_last_accessed(session_id)
