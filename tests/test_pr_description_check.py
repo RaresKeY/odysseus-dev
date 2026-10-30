@@ -62,6 +62,8 @@ def _run_checker(
     draft=False,
     owner="odysseus-dev",
     repo="odysseus",
+    author=None,
+    head_repo=None,
 ):
     harness = r"""
 const checkPrDescription = require(process.argv[1]);
@@ -102,6 +104,8 @@ const context = {
       number: 42,
       body: input.body,
       draft: input.draft,
+      user: { login: input.author },
+      head: { repo: { full_name: input.headRepo } },
     },
   },
   repo: { owner: input.owner, repo: input.repo },
@@ -126,6 +130,8 @@ checkPrDescription({ github, context, core })
             "draft": draft,
             "owner": owner,
             "repo": repo,
+            "author": author,
+            "headRepo": head_repo,
         }
     )
     proc = subprocess.run(
@@ -379,3 +385,37 @@ def test_privileged_pr_workflow_executes_only_base_code():
     assert "ref: ${{ github.base_ref }}" in workflow
     assert "persist-credentials: false" in workflow
     assert "github.event.pull_request.head" not in workflow
+
+
+_FORK_OWNER = "RaresKeY"
+_FORK_REPOSITORY = f"{_FORK_OWNER}/odysseus-dev"
+
+
+@pytest.mark.parametrize("owner,repo,author,head_repo,accepted", [
+    (_FORK_OWNER, "odysseus-dev", _FORK_OWNER, _FORK_REPOSITORY, True),
+    (_FORK_OWNER, "odysseus-dev", "contributor", _FORK_REPOSITORY, False),
+    (_FORK_OWNER, "odysseus-dev", _FORK_OWNER, "contributor/odysseus", False),
+    (_FORK_OWNER, "odysseus-dev", None, _FORK_REPOSITORY, False),
+    (_FORK_OWNER, "odysseus-dev", _FORK_OWNER, None, False),
+    ("odysseus-dev", "odysseus", _FORK_OWNER, _FORK_REPOSITORY, False),
+    ("another", "odysseus-dev", "another", "another/odysseus-dev", False),
+])
+def test_explicit_na_is_limited_to_owner_authored_same_fork_integrations(owner, repo, author, head_repo, accepted):
+    calls = _run_checker(["tests/example.py"], _body(linked_issue="N/A: fork integration"),
+                         owner=owner, repo=repo, author=author, head_repo=head_repo)
+    assert (not any(call["method"] == "setFailed" for call in calls)) is accepted
+
+
+def test_fork_na_does_not_replace_runtime_evidence():
+    calls = _run_checker(["src/example.py"], _body(linked_issue="N/A: fork integration", app_not_run=True),
+                         owner=_FORK_OWNER, repo="odysseus-dev", author=_FORK_OWNER,
+                         head_repo=_FORK_REPOSITORY)
+    assert not any(call["method"] == "setFailed" for call in calls)
+    assert _added_labels(calls) == {"needs runtime validation"}
+
+
+def test_fork_integration_still_requires_explicit_issue_disposition():
+    calls = _run_checker(["tests/example.py"], _body(linked_issue=""),
+                         owner=_FORK_OWNER, repo="odysseus-dev", author=_FORK_OWNER,
+                         head_repo=_FORK_REPOSITORY)
+    assert any(call["method"] == "setFailed" for call in calls)

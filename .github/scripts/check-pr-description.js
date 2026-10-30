@@ -11,6 +11,10 @@ module.exports = async ({ github, context, core }) => {
   const isMaintainerPreview =
     owner === 'pewdiepie-archdaemon'
     && repo === 'odysseus-maintainer-preview';
+  const isOwnForkIntegration =
+    owner === 'RaresKeY' && repo === 'odysseus-dev'
+    && context.payload.pull_request.user?.login === owner
+    && context.payload.pull_request.head?.repo?.full_name === `${owner}/${repo}`;
 
   // Strip HTML comments so placeholder text does not count as content.
   function strip(text) {
@@ -31,9 +35,7 @@ module.exports = async ({ github, context, core }) => {
     descriptionProblems.push('**Summary** is empty or too short — describe what changed and why.');
   }
 
-  // 2. Public contributor PRs must reference a real issue. The private
-  //    maintainer-preview repository may explicitly opt out for fast maintainer
-  //    integration work while still requiring the section to state that intent.
+  // Contributor PRs need an issue; eligible maintainer integrations may state N/A.
   const linkedSection = section('Linked Issue');
   const hasIssueRef = /#\d+\b/.test(linkedSection) || /\/issues\/\d+/.test(linkedSection);
   const hasMaintainerNA = /^N\/A\b/i.test(linkedSection);
@@ -43,11 +45,11 @@ module.exports = async ({ github, context, core }) => {
       '**Linked Issue** — fill this section. Public PRs require an issue reference; ' +
       'maintainer-preview PRs may use `N/A — maintainer integration work`.'
     );
-  } else if (isMaintainerPreview) {
+  } else if (isMaintainerPreview || isOwnForkIntegration) {
     if (!hasIssueRef && !hasMaintainerNA) {
       descriptionProblems.push(
         '**Linked Issue** — use an issue reference or `N/A — maintainer integration work` ' +
-        'in the private maintainer-preview repository.'
+        'for an eligible maintainer integration.'
       );
     }
   } else if (!hasIssueRef) {
