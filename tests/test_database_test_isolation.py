@@ -84,10 +84,9 @@ def test_actual_tests_restore_process_state_and_ignore_inherited_database(tmp_pa
     script = textwrap.dedent('''
         import os
         import sys
-        import pytest
-        import tempfile
         from pathlib import Path
-        from sqlalchemy.engine import make_url
+        import tempfile
+        import pytest
 
         def snapshot():
             import core
@@ -110,11 +109,33 @@ def test_actual_tests_restore_process_state_and_ignore_inherited_database(tmp_pa
         class StateGuard:
             def pytest_sessionstart(self):
                 self.initial = snapshot()
+                from concurrent.futures import ThreadPoolExecutor
+                from threading import Barrier
+                from sqlalchemy import text
+                import core.database as db
                 assert self.initial[0] != inherited_url
-                self.default_path = Path(make_url(self.initial[0]).database)
-                assert self.default_path.is_file()
-                assert self.default_path.name == "collection.db"
-                assert self.default_path.parent == Path(tempfile.gettempdir()).parent
+                self.database_path = Path(db.engine.url.database)
+                assert self.database_path.parent == Path(tempfile.gettempdir()).parent
+                assert self.database_path.name == "collection.db"
+                assert self.database_path.is_file()
+
+                def counts():
+                    with db.engine.connect() as connection:
+                        return tuple(connection.scalar(text(f"SELECT count(*) FROM {table}"))
+                                     for table in ("model_endpoints", "mcp_servers", "documents"))
+
+                expected = counts()
+                barrier = Barrier(2)
+
+                def threaded_counts():
+                    barrier.wait(timeout=10)
+                    return counts()
+
+                with ThreadPoolExecutor(max_workers=2) as workers:
+                    futures = [workers.submit(threaded_counts) for _ in range(2)]
+                    assert [future.result() for future in futures] == [expected, expected]
+                db.engine.dispose()
+                assert counts() == expected, "reconnecting discarded the test schema"
 
             def pytest_collection_finish(self):
                 assert snapshot() == self.initial, "collection changed database bindings"
@@ -129,7 +150,7 @@ def test_actual_tests_restore_process_state_and_ignore_inherited_database(tmp_pa
         result = pytest.main(["-q", "-p", "no:cacheprovider", *sys.argv[1:]],
                              plugins=[guard])
         assert os.environ["DATABASE_URL"] == inherited_url
-        assert not guard.default_path.exists(), "collection database outlived its runtime"
+        assert not guard.database_path.parent.exists()
         raise SystemExit(result)
     ''')
     result = subprocess.run(
@@ -142,3 +163,28 @@ def test_actual_tests_restore_process_state_and_ignore_inherited_database(tmp_pa
     assert "3 passed" in result.stdout
     assert inherited_db.read_bytes() == sentinel
     assert sorted(path.name for path in tmp_path.iterdir()) == ["developer.db"]
+
+
+def test_configuration_error_cleans_default_database_and_restores_environment(tmp_path):
+    sentinel = tmp_path / "developer.db"
+    sentinel.write_bytes(b"untouched")
+    script = textwrap.dedent('''
+        import os
+        from pathlib import Path
+        import pytest
+
+        inherited = os.environ["DATABASE_URL"]
+        result = pytest.main(["-q", "--shard", "invalid", "tests/test_database_utcnow.py"])
+        import core.database as db
+        assert result == pytest.ExitCode.USAGE_ERROR
+        assert os.environ["DATABASE_URL"] == inherited
+        assert not Path(db.engine.url.database).parent.exists()
+    ''')
+    result = subprocess.run(
+        [sys.executable, "-c", script],
+        cwd=Path(__file__).resolve().parents[1],
+        env={**os.environ, "DATABASE_URL": f"sqlite:///{sentinel}"},
+        capture_output=True, text=True, timeout=30,
+    )
+    assert result.returncode == 0, result.stdout + result.stderr
+    assert sentinel.read_bytes() == b"untouched"
