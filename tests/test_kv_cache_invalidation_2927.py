@@ -518,3 +518,39 @@ async def test_cache_friendly_context_keeps_incognito_history_ephemeral(monkeypa
     assert ctx.messages[2]["content"] == "fresh context"
     assert ctx.messages[2]["metadata"] == {"trusted": False}
     assert ephemeral == [{"role": "assistant", "content": "ephemeral history"}, {"role": "user", "content": "new turn"}]
+
+
+@pytest.mark.asyncio
+async def test_jev_relationship_keeps_cached_history_prefix_and_stays_untrusted(monkeypatch):
+    chat_helpers = _install_chat_helpers_stubs(monkeypatch)
+    from src import chat_automation, decision_routing
+
+    history = [{'role': 'user', 'content': 'Original local task.'},
+               {'role': 'assistant', 'content': 'Earlier answer.'}]
+    sess, request, handler, processor = _build_context_harness(monkeypatch, chat_helpers, history)
+    bound = object()
+    monkeypatch.setattr(chat_automation, 'current_turn', lambda: bound)
+    relationship = {'relation': 'follow_up', 'task': 'first relationship'}
+    monkeypatch.setattr(decision_routing, 'followup_context',
+                        lambda turn: dict(relationship) if turn is bound else None)
+
+    first = await chat_helpers.build_chat_context(
+        sess=sess, request=request, chat_handler=handler, chat_processor=processor,
+        message='First follow-up.', session_id='jev-cache', agent_mode=True)
+    sess.messages.append({'role': 'assistant', 'content': 'Follow-up answer.'})
+    relationship['task'] = 'changed relationship'
+    second = await chat_helpers.build_chat_context(
+        sess=sess, request=request, chat_handler=handler, chat_processor=processor,
+        message='Second follow-up.', session_id='jev-cache', agent_mode=True)
+
+    assert first.messages[:4] == second.messages[:4]
+    assert first.messages[2:4] == history
+    assert _consolidated_system_text(first.messages) == _consolidated_system_text(second.messages)
+    for ctx, task in ((first, 'first relationship'), (second, 'changed relationship')):
+        relationship_message = ctx.messages[-2]
+        assert relationship_message['role'] != 'system'
+        assert 'task relationship (intent only)' in relationship_message['content']
+        assert 'UNTRUSTED' in relationship_message['content']
+        assert task in relationship_message['content']
+        assert ctx.messages[-1]['content'].endswith('follow-up.')
+    assert all('relationship' not in m['content'] for m in sess.messages)

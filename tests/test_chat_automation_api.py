@@ -71,6 +71,30 @@ async def test_settings_cannot_be_changed_by_api_token_or_unknown_user(api):
 
 
 @pytest.mark.asyncio
+async def test_owner_can_clear_configured_reviewer_without_network(api, configured_reviewer, monkeypatch):
+    import socket
+
+    def unexpected_network(*args, **kwargs):
+        pytest.fail("Removing Jev must not perform DNS or inference")
+
+    monkeypatch.setattr(socket, 'getaddrinfo', unexpected_network)
+    async with httpx.AsyncClient(transport=httpx.ASGITransport(app=api), base_url='http://test',
+                                 headers={'test-owner': 'alice'}) as c:
+        previous = (await c.get('/api/chat-settings')).json()
+        assert previous['decision_provider']['endpoint_id'] == 'reviewer'
+        result = await c.put('/api/chat-settings', json={
+            'revision': previous['revision'], 'changes': {'decision_provider': None}})
+        assert result.status_code == 200
+        assert result.json()['decision_provider'] is None
+        saved = (await c.get('/api/chat-settings')).json()
+        assert saved['decision_provider'] is None
+        assert saved['revision'] == previous['revision'] + 1
+        stale = await c.put('/api/chat-settings', json={
+            'revision': previous['revision'], 'changes': {'decision_provider': None}})
+        assert stale.status_code == 409
+
+
+@pytest.mark.asyncio
 async def test_ceiling_not_a_deployment_override(api):
     async with httpx.AsyncClient(transport=httpx.ASGITransport(app=api), base_url='http://test', headers={'test-owner':'alice'}) as c:
         assert (await c.get('/api/chat-settings')).json()['elevation_ceiling'] is False

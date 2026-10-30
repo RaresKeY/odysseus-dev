@@ -92,7 +92,8 @@ def setup_chat_automation_routes(session_manager):
         validate_configuration(body["changes"])
         try:
             from src.model_admission import require_owner_model
-            if "decision_provider" in body["changes"]:
+            # Null explicitly removes Jev and leaves selected-model fallback available.
+            if body["changes"].get("decision_provider") is not None:
                 resolve_decision_endpoint(body["changes"]["decision_provider"], owner)
             for mapping in body["changes"].get("approaches", {}).values():
                 require_owner_model(owner, mapping["model"])

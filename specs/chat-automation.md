@@ -63,7 +63,7 @@ distributions. Missing or ambiguous usage remains reserved/unresolved, not zero.
 No SDK, model download, provisioning or inference probe is needed. See
 `docs/decision-provider.md` and `docs/chat-approval-review.md`.
 
-The composer permission menu shows Always Ask / Auto-Approve / YOLO. Auto-Approve readiness accepts either an admitted configured Jev reviewer or the selected conversation model; automatic routing binds fallback to the originating turn's resolved model. Checks are local registration/owner/model checks, never live inference or health probes. Both paths unavailable disables activation without changing a saved mode; Always Ask and reviewer settings remain accessible. Auto-Approve shows an activation disclosure; cancel or failed save retains the
+The composer permission menu shows Always Ask / Auto-Approve / YOLO. Auto-Approve readiness accepts either an admitted configured Jev reviewer or the selected conversation model; automatic routing binds fallback to the originating turn's resolved model. Checks are local registration/owner/model checks, never live inference or health probes. Clearing the configured Jev reviewer with `decision_provider: null` preserves selected-conversation-model fallback; the owner settings API resolves only non-null provider registrations and retains revision checks. Both paths unavailable disables activation without changing a saved mode; Always Ask and reviewer settings remain accessible. Auto-Approve shows an activation disclosure; cancel or failed save retains the
 last acknowledged mode. Enabled Auto-Approve retires unsuccessful action reviews
 and emits a blocked error, never an individual approval card. Explicitly changing
 mode and issuing a new request remains available. Tools and options live in More
