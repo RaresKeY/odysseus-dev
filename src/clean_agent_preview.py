@@ -4014,6 +4014,12 @@ def evaluate_preview_call(name, args, user_text='', *, allow_execute_code=False,
         return decision(False, 'unknown_capability')
     if not capability.effects:
         return decision(False, 'capability_has_no_effects')
+    if bare == 'private_browser':
+        from src.chat_automation import current_turn
+        turn = current_turn()
+        if turn is not None and turn.current():
+            # Preflight defers to canonical browser authority and approval checks.
+            return decision(True, 'canonical_browser_admission')
     blocked = capability.effects & blocked_effects
     if blocked:
         return decision(False, 'blocked_effect:' + ','.join(sorted(effect.value for effect in blocked)))
