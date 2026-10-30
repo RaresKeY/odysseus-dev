@@ -215,6 +215,8 @@ def test_atomic_reservation_prevents_two_parallel_dispatches():
 
 
 def test_registered_resolver_owner_disabled_and_exact_model_gates(monkeypatch):
+    from tests.helpers.model_admission import register_model_owners
+    register_model_owners(monkeypatch, {"alice": {"decision-model", "unknown"}})
     from sqlalchemy import create_engine
     from sqlalchemy.orm import sessionmaker
     import core.database as database
