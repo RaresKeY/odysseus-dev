@@ -29,18 +29,45 @@ const browser = await chromium.launch({ headless: true });
 const servers = [];
 try {
   const parser = await browser.newPage();
-  async function shell(root, theme) {
+  async function shell(root, theme, viewport) {
     const source = await fs.readFile(path.join(root, 'static/index.html'), 'utf8');
-    return parser.evaluate(({ source, theme }) => {
+    return parser.evaluate(({ source, theme, width }) => {
       const doc = new DOMParser().parseFromString(source, 'text/html');
       doc.querySelectorAll('script, link[rel="modulepreload"], link[rel="manifest"]').forEach(el => el.remove());
       doc.querySelectorAll('[autofocus]').forEach(el => el.removeAttribute('autofocus'));
       doc.documentElement.className = theme === 'light' ? 'light' : '';
+      // Mirror the shipped shell's completed startup state; app.js is intentionally inert here.
+      const toolbar = doc.querySelector('.chat-input-bottom');
+      if (!toolbar) throw new Error('Missing native composer toolbar');
+      toolbar.style.visibility = '';
+      if (width <= 768) {
+        doc.documentElement.classList.add('ody-sidebar-off');
+        doc.documentElement.classList.remove('ody-sidebar-mini', 'ody-mobile-startup-sidebar-hidden');
+        doc.getElementById('sidebar')?.classList.add('hidden');
+        const rail = doc.getElementById('icon-rail');
+        rail?.classList.add('rail-hidden');
+        rail?.classList.remove('mobile-mini');
+        doc.body.classList.add('sidebar-collapsed', 'hamburger-only', 'hamburger-left');
+        doc.body.classList.remove('hamburger-right');
+        doc.getElementById('sidebar-backdrop')?.classList.remove('visible');
+        for (const id of ['hamburger-btn', 'sidebar-toggle-btn']) {
+          doc.getElementById(id)?.setAttribute('aria-expanded', 'false');
+        }
+      }
       doc.getElementById('app-loader')?.remove();
       doc.getElementById('welcome-screen')?.remove();
       doc.getElementById('chat-container')?.classList.remove('welcome-active');
       return '<!doctype html>' + doc.documentElement.outerHTML;
-    }, { source, theme });
+    }, { source, theme, width: viewport.width });
+  }
+  async function settle(page) {
+    await page.evaluate(async () => {
+      const missing = [...document.querySelectorAll('link[rel="stylesheet"]')]
+        .filter(link => !link.sheet).map(link => link.getAttribute('href'));
+      if (missing.length) throw new Error('Stylesheets not loaded: ' + missing.join(', '));
+      await document.fonts.ready;
+      await new Promise(resolve => requestAnimationFrame(() => requestAnimationFrame(resolve)));
+    });
   }
   async function pageFor(root, server, size, theme, label) {
     const context = await browser.newContext({ viewport: size, deviceScaleFactor: 1, colorScheme: theme, hasTouch: size.width < 540, isMobile: false, reducedMotion: 'reduce' });
@@ -49,13 +76,28 @@ try {
     page.on('pageerror', error => report.pageErrors.push({ label, message: error.message }));
     const cdp = await context.newCDPSession(page);
     await cdp.send('Page.setFontFamilies', { fontFamilies: { standard: 'Times New Roman' } });
-    const html = await shell(root, theme);
+    const html = await shell(root, theme, size);
     await page.route('**/*', route => new URL(route.request().url()).origin === server.origin ? route.continue() : route.abort());
     await page.route('**/static/index.html', route => route.fulfill({ contentType: 'text/html', body: html }));
     await page.goto(server.origin + '/static/index.html', { waitUntil: 'networkidle' });
+    await settle(page);
+    await page.locator('.chat-input-bottom').waitFor({ state: 'visible' });
+    const controlsVisible = await page.evaluate(() => {
+      return ['mode-agent-btn', 'mode-chat-btn'].every(id => {
+        const element = document.getElementById(id);
+        const rect = element.getBoundingClientRect();
+        const style = getComputedStyle(element);
+        const x = rect.left + rect.width / 2, y = rect.top + rect.height / 2;
+        return style.visibility === 'visible' && rect.width > 0 && rect.height > 0
+          && x >= 0 && x < innerWidth && y >= 0 && y < innerHeight
+          && element.contains(document.elementFromPoint(x, y));
+      });
+    });
+    check(label + ': native composer controls visible and unobscured', controlsVisible);
     return { page, context };
   }
   async function screenshot(page, name) {
+    await settle(page);
     await page.screenshot({ path: path.join(output, name + '.png'), fullPage: false, animations: 'disabled' });
     report.screenshots.push(name + '.png');
   }
