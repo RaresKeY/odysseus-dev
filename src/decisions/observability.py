@@ -47,7 +47,6 @@ MAX_OWNER_HISTORY = 2048
 MAX_RETENTION = 24 * 60 * 60
 _REF = re.compile(r"^[A-Za-z0-9_.:-]{1,160}$")
 _HASH = re.compile(r"^[a-f0-9]{64}$")
-_model_lock = threading.Lock()
 
 
 def _reference(value):
@@ -70,56 +69,12 @@ def _owner_key(owner):
     return owner_key(admitted)
 
 
-@lru_cache(maxsize=1)
-def _register_observation_models():
-    """Register additive tables lazily; offline replay does not import a DB."""
-    from sqlalchemy import Column, Float, ForeignKey, Integer, JSON, String
-    from core.database import Base
-
-    class DecisionActivity(Base):
-        __tablename__ = "decision_activity"
-        sequence = Column(Integer, primary_key=True, autoincrement=True)
-        attempt_id = Column(String, nullable=False, unique=True)
-        owner_key = Column(String, nullable=False, index=True)
-        session_id = Column(String, ForeignKey("sessions.id", ondelete="CASCADE"), nullable=False, index=True)
-        run_id = Column(String, nullable=False, index=True)
-        created_at = Column(Float, nullable=False)
-        projection = Column(JSON, nullable=False)
-
-    class DecisionCaptureConsent(Base):
-        __tablename__ = "decision_capture_consents"
-        session_id = Column(String, ForeignKey("sessions.id", ondelete="CASCADE"), primary_key=True)
-        owner_key = Column(String, nullable=False, index=True)
-        policy = Column(JSON, nullable=False)
-
-    class DecisionCaptureRun(Base):
-        __tablename__ = "decision_capture_runs"
-        id = Column(String, primary_key=True)
-        owner_key = Column(String, nullable=False, index=True)
-        session_id = Column(String, ForeignKey("sessions.id", ondelete="CASCADE"), nullable=False, index=True)
-        run_id = Column(String, nullable=False, unique=True)
-        policy = Column(JSON, nullable=False)
-        captures = Column(JSON, nullable=False, default=list)
-        bytes_used = Column(Integer, nullable=False, default=0)
-        expires_at = Column(Float, nullable=False, index=True)
-
-    class DecisionHandoff(Base):
-        __tablename__ = "decision_handoffs"
-        id = Column(String, primary_key=True)
-        owner_key = Column(String, nullable=False, index=True)
-        session_id = Column(String, ForeignKey("sessions.id", ondelete="CASCADE"), nullable=False, index=True)
-        run_id = Column(String, nullable=False, index=True)
-        created_at = Column(Float, nullable=False)
-        receipt = Column(JSON, nullable=False)
-
-    return SimpleNamespace(activity=DecisionActivity, consent=DecisionCaptureConsent,
-        capture=DecisionCaptureRun, handoff=DecisionHandoff)
-
-
 def observation_models():
-    # functools caching alone does not serialize concurrent first calls.
-    with _model_lock:
-        return _register_observation_models()
+    """Import the canonical schema only when persistence is requested."""
+    from core.database import (DecisionActivity, DecisionCaptureConsent,
+                               DecisionCaptureRun, DecisionHandoff)
+    return SimpleNamespace(activity=DecisionActivity, consent=DecisionCaptureConsent,
+                           capture=DecisionCaptureRun, handoff=DecisionHandoff)
 
 
 def _public_observation(value):
