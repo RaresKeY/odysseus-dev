@@ -333,3 +333,118 @@ def test_memo_identity_uses_a_process_key_without_retaining_credentials(store, d
         assert first[0] is second[0] and first[1] != second[1]
         assert len(first[1]) == len(second[1]) == 64
         assert "fixture" not in repr((first, second))
+
+
+@pytest.mark.asyncio
+@pytest.mark.parametrize("surface,legacy", [
+    ("tool_result", False), ("history", False), ("capture", False),
+    ("history", True), ("capture", True),
+])
+async def test_secret_route_fingerprint_stays_internal(
+        store, dispatch_runtime, monkeypatch, surface, legacy):
+    import copy
+    import hashlib
+    from src.chat_automation import digest
+    from src.decisions.config import ResolvedDecisionEndpoint
+    from src.decisions.contracts import encode
+    from src.decisions.observability import (
+        DecisionObservability, default_observability, validate_capture,
+    )
+
+    rt = dispatch_runtime
+    secret = "pin-0420"
+    headers = {"Authorization": "Bearer " + secret}
+    rt.session.headers = dict(headers)
+    with store.transaction() as db:
+        row = db.get(d.Session, "a")
+        row.endpoint_url = rt.session.endpoint_url
+        row.headers = dict(headers)
+        saved = {key: getattr(row, key) for key in (
+            "model", "endpoint_id", "endpoint_url", "headers",
+        )}
+    store.update_configuration("alice", {"decision_provider": None}, 1)
+    store.update_chat("alice", "a", {"approval_mode": "auto_approve"}, 0)
+    observer = default_observability(store.session_factory)
+    observer.consent("alice", "a", {"purposes": ["approval"]})
+    install_fallback(monkeypatch, lambda _request: httpx.Response(200, json=openai_answer()))
+    bound = await prepare_chat_turn(store, "alice", rt.session, "Write the fixture.",
+                                    submission_id="known-submission")
+    _, result = await rt.dispatch(bound)
+    assert result["exit_code"] == 0 and len(rt.effects) == 1
+    [record] = rt.attempts.records_for_run("alice", "a", bound.run_id)
+    identity = record["provider_identity"]
+    fingerprint = identity["configuration_digest"]
+    assert record["approval_route_origin"] == fallback.model_snapshot(bound)
+    target, _, protocol, _ = fallback._conversation_route(bound.endpoint_url, {})
+
+    def guess_fingerprint(candidate):
+        guessed_headers = {"Authorization": "Bearer " + candidate}
+        origin = digest({"saved": {**saved, "headers": guessed_headers},
+            "resolved": bound.descriptor, "url": bound.endpoint_url,
+            "headers": guessed_headers, "route_revision": bound.review_route_revision})
+        endpoint = ResolvedDecisionEndpoint(identity["endpoint_id"], identity["model"],
+            protocol, target, {}, registration_revision=origin)
+        return endpoint.public_identity()["configuration_digest"]
+
+    assert [candidate for candidate in ("pin-0000", secret, "pin-1234")
+            if guess_fingerprint(candidate) == fingerprint] == [secret]
+
+    if legacy:
+        # Reproduce already-persisted observations from before boundary redaction.
+        with observer._transaction(write=True) as db:
+            activity = db.query(observer.models.activity).filter_by(
+                attempt_id=record["attempt_id"]).one()
+            projection = copy.deepcopy(activity.projection)
+            projection["provider"]["configuration_digest"] = fingerprint
+            activity.projection = projection
+            captured = db.query(observer.models.capture).filter_by(run_id=bound.run_id).one()
+            entries = copy.deepcopy(captured.captures)
+            for entry in entries:
+                entry["packet"]["observation"]["provider"]["configuration_digest"] = fingerprint
+                entry["sanitized_sha256"] = hashlib.sha256(encode(entry["packet"])).hexdigest()
+            captured.captures = entries
+
+    # Reopening reads the persisted observations; no live ticket is needed.
+    reopened = DecisionObservability(store.session_factory)
+    if surface == "tool_result":
+        public = result["approval_review"]
+        provider = public["provider_identity"]
+        assert provider["model"] == "manual" and provider["reviewed_model"] == "manual"
+    elif surface == "history":
+        [public] = reopened.history("alice", "a")["items"]
+        provider = public["provider"]
+        assert provider["model"] == "manual" and provider["reviewed_model"] == "manual"
+    else:
+        public = reopened.capture("alice", "a", bound.run_id)
+        assert validate_capture(encode(public))["valid"]
+        [entry] = public["records"]
+        provider = entry["packet"]["observation"]["provider"]
+    assert provider["protocol"] == "approval_openai"
+    assert "configuration_digest" not in provider
+    assert fingerprint.encode() not in encode(public)
+    assert secret.encode() not in encode(public)
+    # Redaction does not rewrite the durable authority/accounting record.
+    assert rt.attempts.records_for_run("alice", "a", bound.run_id) == [record]
+    assert fallback.model_snapshot(bound) == record["approval_route_origin"]
+
+
+def test_non_secret_decision_fingerprint_remains_public():
+    from dataclasses import replace
+    from src.decisions.config import ResolvedDecisionEndpoint
+    from src.decisions.contracts import DecisionRequest
+    from src.decisions.observability import _packet, _projection
+
+    endpoint = ResolvedDecisionEndpoint("reviewer", "decision", "systemone",
+        "https://review.invalid/v1/systemone", {"Authorization": "Bearer first"},
+        registration_revision="2026-10-30T00:00:00")
+    identity = endpoint.public_identity()
+    assert replace(endpoint, headers={"Authorization": "Bearer second"}).public_identity() == identity
+    request = DecisionRequest("tools", {}, {"yes": "Allow", "no": "Deny"})
+    record = {"attempt_id": "public-attempt", "run_id": "public-run",
+              "provider_identity": identity}
+    public, _, offers = _projection(request, record)
+    assert public["provider"]["protocol"] == "systemone"
+    assert public["provider"]["configuration_digest"] == identity["configuration_digest"]
+    packet = _packet(public, offers)
+    assert packet["packet"]["observation"]["provider"]["configuration_digest"] == identity["configuration_digest"]
+    assert identity == endpoint.public_identity()

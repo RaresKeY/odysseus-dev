@@ -20,6 +20,7 @@ from types import SimpleNamespace
 
 from fastapi import HTTPException
 from src.decisions.contracts import DecisionError, SCHEMA_VERSION, decode, encode, probability, valid_usage
+from src.decisions.config import public_provider_projection
 
 CAPTURE_SCHEMA = "odysseus-redacted-decision/v1"
 REDACTION_POLICY = "omit-all-content/v1"
@@ -121,6 +122,14 @@ def observation_models():
         return _register_observation_models()
 
 
+def _public_observation(value):
+    public = copy.deepcopy(value)
+    provider = public.get("provider")
+    if isinstance(provider, dict):
+        public["provider"] = public_provider_projection(provider)
+    return public
+
+
 def _projection(request, record):
     questions = request.questions()
     offer = {(name if name in QUESTION_IDS else f"q{i + 1:03d}"): {f"c{j + 1:03d}": original
@@ -149,7 +158,7 @@ def _projection(request, record):
         "confidence_meaning": "model_reported_not_task_success",
         "policy_revision": record.get("policy_revision", 0), "authority_epoch": record.get("authority_epoch", 0)}
     # Only the detached, opaque projection is persisted; maps remain local.
-    return public, mapping, offer
+    return _public_observation(public), mapping, offer
 
 
 def _answers(result, mapping, offers):
@@ -170,7 +179,7 @@ def _answers(result, mapping, offers):
 
 
 def _packet(public, offers):
-    observation = copy.deepcopy(public)
+    observation = _public_observation(public)
     for key in ("model", "endpoint_id", "name", "canonical_model", "reviewed_model", "identity_contract", "output_contract"):
         observation.get("provider", {}).pop(key, None)
     body = {"schema": CAPTURE_SCHEMA, "source_kind": "captured_live_redacted",
@@ -493,7 +502,7 @@ class DecisionObservability:
             if run_id is not None:
                 query = query.filter_by(run_id=run_id)
             rows = query.order_by(self.models.activity.sequence.desc()).limit(limit + 1).all()
-            items = [dict(copy.deepcopy(r.projection), created_at=r.created_at) for r in rows[:limit]]
+            items = [dict(_public_observation(r.projection), created_at=r.created_at) for r in rows[:limit]]
             cursor = base64.urlsafe_b64encode(str(rows[limit - 1].sequence).encode()).decode() if len(rows) > limit else None
             return {"schema": "odysseus-decision-activity/v1", "items": items, "next_before": cursor}
 
@@ -504,8 +513,18 @@ class DecisionObservability:
             row = db.query(self.models.capture).filter_by(owner_key=key, session_id=session_id, run_id=run_id).first()
             if row is None:
                 raise HTTPException(404, "Capture not found or expired")
+            records = copy.deepcopy(row.captures)
+            for entry in records:
+                packet = entry["packet"]
+                observation = _public_observation(packet["observation"])
+                if observation != packet["observation"]:
+                    # Do not turn a corrupt stored packet into a valid export.
+                    if hashlib.sha256(encode(packet)).hexdigest() != entry["sanitized_sha256"]:
+                        raise HTTPException(500, "Stored capture failed integrity validation")
+                    packet["observation"] = observation
+                    entry["sanitized_sha256"] = hashlib.sha256(encode(packet)).hexdigest()
             return {"schema": CAPTURE_SCHEMA, "exact_original_replay": False,
-                "expires_at": row.expires_at, "records": copy.deepcopy(row.captures)}
+                "expires_at": row.expires_at, "records": records}
 
     def delete_capture(self, owner, session_id, run_id=None):
         with self._transaction(write=True) as db:

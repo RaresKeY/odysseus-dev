@@ -406,3 +406,19 @@ def test_actual_session_route_deletes_observations_without_foreign_keys(observat
     with observations.session_factory() as db:
         assert db.query(observations.models.activity).count() == 0
         assert db.query(observations.models.capture).count() == 0
+
+
+def test_legacy_capture_redaction_does_not_reseal_corruption(observations):
+    observations.consent("alice", "a", {"purposes": ["browser"]})
+    observations.bind_turn("alice", "a", "run")
+    attempt(observations)
+    with observations._transaction(write=True) as db:
+        row = db.query(observations.models.capture).filter_by(run_id="run").one()
+        records = copy.deepcopy(row.captures)
+        records[0]["packet"]["observation"]["provider"].update(
+            protocol="approval_openai", configuration_digest="a" * 64)
+        records[0]["sanitized_sha256"] = "0" * 64
+        row.captures = records
+    with pytest.raises(HTTPException) as invalid:
+        observations.capture("alice", "a", "run")
+    assert invalid.value.status_code == 500

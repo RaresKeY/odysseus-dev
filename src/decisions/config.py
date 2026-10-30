@@ -38,6 +38,16 @@ class ResolvedDecisionEndpoint:
                 "distribution_source": "provider_reported" if self.protocol == "systemone" else "model_reported"}
 
 
+def public_provider_projection(identity: dict) -> dict:
+    """Detach display metadata while retaining internal accounting identities."""
+    public = dict(identity)
+    # Conversation-route revisions include authentication headers; ordinary
+    # registered decision revisions contain only the registration timestamp.
+    if str(public.get("protocol") or "").startswith("approval_"):
+        public.pop("configuration_digest", None)
+    return public
+
+
 def validate_config(config: dict) -> dict:
     permitted = {"endpoint_id", "model", "protocol", "timeout_seconds", "max_calls"}
     if (not isinstance(config, dict) or set(config) - permitted

@@ -16,6 +16,7 @@ from typing import Any, Awaitable, Callable, Mapping
 from src.chat_policy import ChatPolicy, PolicyError, ReviewRequirement, review_requirement
 from src.decisions import DecisionContext, DecisionError, DecisionRequest, DecisionResult
 from src.decisions.contracts import validate_answers, valid_usage
+from src.decisions.config import public_provider_projection
 from src.tool_approvals import ExactToolApproval, PendingToolApproval, ToolApprovalStore
 
 
@@ -87,7 +88,7 @@ def _decision_projection(result: Any, request: DecisionRequest) -> dict[str, Any
                 "decision_source": "conversation_model", "confidence": None, "probabilities": None,
                 "assessment_contract": "categorical_uncertainty/v1",
                 "prompt_sha256": FALLBACK_PROMPT_SHA256,
-                "attempt_id": result.attempt_id, "provider_identity": result.provider_identity,
+                "attempt_id": result.attempt_id, "provider_identity": public_provider_projection(result.provider_identity),
                 "usage": valid_usage(result.usage),
                 "evidence": {"user_items": len(request.state["server_context"]["user_evidence"]),
                              "omissions": len(request.state["omissions"]), "script_items": len(request.state["declared_scripts"])}}
