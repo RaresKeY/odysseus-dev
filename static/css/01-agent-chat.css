@@ -7929,3 +7929,12 @@ pre { background: var(--code-bg, var(--hl-bg, #282c34)) !important; }
       font-size: 12px; white-space: nowrap; transition: all 0.15s;
       font-family: inherit; width: 100%;
     }
+
+/* Keep action hit areas stable regardless of SVG, text glyph or recent use. */
+.msg-user .msg-actions > button { display:inline-flex;align-items:center;justify-content:center;box-sizing:border-box;width:28px;height:28px;min-width:28px;padding:0;flex:none;position:static; }
+.msg-user .msg-actions > .msg-action-btn[data-action] { top:auto; }
+.msg-user .msg-actions > button > svg { display:block;width:14px;height:14px;flex:none; }
+.msg-user .msg-actions > button:focus-visible { outline:2px solid var(--fg);outline-offset:1px; }
+@media (pointer:coarse) { .msg-user .msg-actions > button { width:44px;height:44px;min-width:44px; } }
+.generation-control-unavailable { opacity:.45; }
+.generation-control-unavailable input { filter:grayscale(1);cursor:not-allowed; }

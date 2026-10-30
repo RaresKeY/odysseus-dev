@@ -250,6 +250,7 @@
   <link rel="stylesheet" href="/static/css/00-tokens.css?v=20260929csssplit">
   <link rel="stylesheet" href="/static/css/01-agent-chat.css?v=20260929csssplit">
   <link rel="stylesheet" href="/static/css/chat-automation.css?v=20260929csssplit">
+  <link rel="stylesheet" href="/static/css/decision-activity.css?v=20261030quiet">
   <link rel="stylesheet" href="/static/css/02-compare.css?v=20260929csssplit">
   <link rel="stylesheet" href="/static/css/03-agent-chat.css?v=20260929csssplit">
   <link rel="stylesheet" href="/static/css/04-memory.css?v=20260929csssplit">
@@ -1428,8 +1429,7 @@
 
   </main>
   <dialog id="chat-decision-pane" aria-labelledby="chat-decision-title">
-    <div class="modal-header"><h2 id="chat-decision-title">Decision activity</h2><button type="button" id="chat-decision-close" aria-label="Close decision activity">Close</button></div>
-    <div class="decision-activity-toolbar"><button type="button" id="chat-decision-refresh">Refresh</button></div>
+    <div class="modal-header"><h2 id="chat-decision-title">Decisions</h2><div class="decision-header-actions"><button type="button" id="chat-decision-refresh" aria-label="Reload decisions" title="Reload decisions"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true"><path d="M20 7v5h-5M4 17v-5h5"/><path d="M6 7a7 7 0 0 1 12-1l2 6M4 12l2 6a7 7 0 0 0 12-1"/></svg></button><button type="button" id="chat-decision-close" aria-label="Close decisions" title="Close decisions"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true"><path d="m6 6 12 12M18 6 6 18"/></svg></button></div></div>
     <div id="chat-decision-activity" aria-busy="false"></div>
   </dialog>
   <button id="scroll-bottom-btn" class="scroll-nav-btn" title="Scroll to bottom"><span class="scroll-nav-caret" aria-hidden="true">&#9662;</span></button>
