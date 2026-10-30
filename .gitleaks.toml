@@ -1,10 +1,4 @@
-# Gitleaks configuration: the built-in default rules plus one narrow exception.
-#
-# THIRD_PARTY_PROVENANCE.json keys its transitive npm notices by
-# "<package>_<version>" ("key": "inherits_2.0.4"). Four of those identifiers
-# trip the default generic-api-key rule. They are package names, not secrets.
-# The exception below applies only to that rule, only in that file, and only
-# to those four exact values; every other rule and file is scanned as usual.
+# Default scanning with exact, file-scoped non-secret exclusions.
 
 [extend]
 useDefault = true
@@ -47,3 +41,11 @@ regexTarget = "secret"
 regexes = [
   '''^sk-123456789$''',
 ]
+
+[[allowlists]]
+description = "Exact nonfunctional model-routing credential fixture"
+targetRules = ["generic-api-key"]
+condition = "AND"
+paths = ['''(?:^|/)tests/test_model_auto\.py$''']
+regexTarget = "line"
+regexes = ['''^\s*if mutation=='credential':row\.api_key='CHANGED_SYNTHETIC'\s*$''']
