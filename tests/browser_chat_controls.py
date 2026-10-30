@@ -163,11 +163,12 @@ def highlight_checks(browser, width):
       await new Promise(resolve=>setTimeout(resolve,100));
       const selected=document.activeElement.dataset.approvalMode==='auto_approve';
       trigger.click();trigger.click();
+      trigger.dispatchEvent(new KeyboardEvent('keydown',{key:'Escape',bubbles:true}));
+      const pendingDismissed=menu.hidden;
       document.getElementById('message').focus();
-      document.body.dispatchEvent(new PointerEvent('pointerdown',{bubbles:true}));
       answers[2](new Response(JSON.stringify(config)));
       await new Promise(resolve=>setTimeout(resolve,100));window.fetch=actual;
-      return oldIgnored && selected && menu.hidden && document.activeElement.id==='message';
+      return oldIgnored && selected && pendingDismissed && menu.hidden && document.activeElement.id==='message';
     })()""")
     browser.js(f"{trigger}.click()")
     time.sleep(.15)
