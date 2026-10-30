@@ -465,14 +465,11 @@ def _request_forbids_execution_retry(text: str) -> bool:
     )
 
 
-def _contract_mutation_signature(block, contract):
-    """Deduplicate an exact successful mutation for the rest of this turn.
-
-    A model may continue after a successful write in order to verify or summarize
-    it.  That continuation must never execute the same state-changing call again,
-    regardless of whether the turn contract names one capability or several.
-    """
+def _contract_mutation_signature(block, contract, *, workspace_epoch=None):
+    """Deduplicate effects, tying local artifact previews to workspace revisions."""
+    from posixpath import normpath
     from src.tool_capabilities import ToolEffect, capabilities_for_action
+
     effects = capabilities_for_action(block.tool_type, block.content).effects
     if not effects & {ToolEffect.WRITE_PRIVATE, ToolEffect.WRITE_WORKSPACE,
                       ToolEffect.EXTERNAL_SIDE_EFFECT, ToolEffect.ADMIN_CHANGE,
@@ -480,7 +477,17 @@ def _contract_mutation_signature(block, contract):
         return None
     content = block.content or ""
     try:
-        content = json.dumps(json.loads(content), sort_keys=True, separators=(",", ":"))
+        payload = json.loads(content)
+        content = json.dumps(payload, sort_keys=True, separators=(",", ":"))
+        if (block.tool_type == "private_browser" and isinstance(payload, dict)
+                and payload.get("action") in {"open", "navigate"}):
+            target = urlparse(str(payload.get("url") or ""))
+            if (target.scheme == "file" and target.netloc.lower() in {"", "localhost"}
+                    and normpath(unquote(target.path)).startswith("/workspace/")):
+                # Resolve preview dedupe after earlier actions in the batch execute.
+                if workspace_epoch is None:
+                    return None
+                content = json.dumps([workspace_epoch, payload], sort_keys=True, separators=(",", ":"))
     except (TypeError, ValueError):
         pass
     return block.tool_type, content
@@ -33468,7 +33475,7 @@ async def stream_agent_loop(
             # Check again after normalization so changing the model's raw
             # wording cannot repeat the same effective side effect.
             _effective_mutation_signature = _contract_mutation_signature(
-                block, turn_contract
+                block, turn_contract, workspace_epoch=_workspace_mutation_epoch
             )
             _blocked_repeated_successful_mutation = bool(
                 _effective_mutation_signature
@@ -33934,7 +33941,9 @@ async def stream_agent_loop(
                 result,
             )
             if tool_result_is_successful(result):
-                _contract_write_signature = _contract_mutation_signature(block, turn_contract)
+                _contract_write_signature = _contract_mutation_signature(
+                    block, turn_contract, workspace_epoch=_workspace_mutation_epoch
+                )
                 if _contract_write_signature is not None:
                     _successful_mutation_signatures.add(_contract_write_signature)
                 _failed_call_history.pop(_call_signature, None)
