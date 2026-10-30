@@ -157,6 +157,7 @@ function changeChat(changes, context) {
   });
 }
 function routeFields(key, title, value={}) {
+  value ??= {};
   const row = document.createElement('div'); row.className='chat-automation-route'; row.dataset.route=key;
   const heading=document.createElement('strong'); heading.textContent=title; row.append(heading);
   function label(text,element){const l=document.createElement('label');l.append(document.createTextNode(text),element);row.append(l);}
@@ -317,7 +318,7 @@ async function initialize(){
       for(const name of ['followup','preparation','completion-advice']) chatChanges[name.replaceAll('-','_')+'_enabled']=$(`chat-${name}-enabled`).checked;
       const changes={elevation_ceiling:$('chat-elevation-ceiling').checked};
       const decision=readRoute('decision');
-      if(decision.endpoint_id||decision.model) changes.decision_provider={...decision,protocol:$('chat-decision-protocol').value,timeout_seconds:30,max_calls:32};
+      changes.decision_provider=decision.endpoint_id||decision.model ? {...decision,protocol:$('chat-decision-protocol').value,timeout_seconds:30,max_calls:32} : null;
       const revision=configuration.revision;
       await changeChat(chatChanges);
       configuration=await writeSettings(()=>api('/api/chat-settings','PUT',{revision,changes}));

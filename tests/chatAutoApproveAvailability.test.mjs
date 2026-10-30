@@ -18,13 +18,18 @@ function deferred() {
   return { promise, resolve };
 }
 
-function fixture({ availability = missing, mode = 'always_ask', omitAvailability = false } = {}) {
+function fixture({ availability = missing, mode = 'always_ask', omitAvailability = false, decisionProvider } = {}) {
   const all = [], nodes = new Map();
   let document;
   class Element {
     constructor(tag = 'div', attrs = {}) {
       this.tag = tag; this.attrs = attrs; this.children = []; this.listeners = new Map();
-      this.dataset = {}; this.style = {}; this.disabled = 'disabled' in attrs;
+      this.dataset = new Proxy({}, {set: (target, key, value) => {
+        target[key] = String(value);
+        this.attrs['data-' + key.replace(/[A-Z]/g, letter => '-' + letter.toLowerCase())] = String(value);
+        return true;
+      }});
+      this.style = {}; this.disabled = 'disabled' in attrs;
       this.hidden = 'hidden' in attrs; this.open = false; this.textContent = ''; this.value = '';
       this.classList = { toggle() {} }; this.offsetWidth = 310; this.offsetHeight = 360;
       for (const [key, value] of Object.entries(attrs)) this.setAttribute(key, value);
@@ -94,7 +99,7 @@ function fixture({ availability = missing, mode = 'always_ask', omitAvailability
   });
   document.body.append(control);
   const window = Object.assign(new Element(), { innerWidth: 1200, innerHeight: 800 });
-  const state = { availability, mode, revision: 0, sessionId: 'chat', omitAvailability,
+  const state = { availability, mode, revision: 0, configurationRevision: 0, decisionProvider, sessionId: 'chat', omitAvailability,
     policyGate: null, failRefresh: false, rejectActivation: false, checkpointGate:null };
   const requests = [];
   const projection = () => state.omitAvailability ? {} : { auto_approve_availability: structuredClone(state.availability) };
@@ -111,7 +116,14 @@ function fixture({ availability = missing, mode = 'always_ask', omitAvailability
       requests.push({ path, method: options.method, body });
       if (path === '/api/chat-settings/models') return respond({ endpoints: [], decision_endpoints: [] });
       if (options.method === 'GET' && state.failRefresh) throw new Error('Settings temporarily unavailable');
-      if (path === '/api/chat-settings') return respond({ revision: 0, ...projection() });
+      if (path === '/api/chat-settings') {
+        if (options.method === 'PUT') {
+          assert.equal(body.revision, state.configurationRevision);
+          if (Object.hasOwn(body.changes, 'decision_provider')) state.decisionProvider = body.changes.decision_provider;
+          state.configurationRevision++;
+        }
+        return respond({ revision: state.configurationRevision, decision_provider: state.decisionProvider, ...projection() });
+      }
       if (path === '/api/session/chat/approval-context') {
         if(options.method==='POST'){
           if(state.checkpointGate)await state.checkpointGate.promise;
@@ -297,4 +309,34 @@ test('new or pending chats can open settings without requesting a null chat cont
   assert.equal(h.nodes.get('chat-review-context-save').disabled,true);
   assert.equal(h.requests.some(r=>r.path.includes('/session/null/')),false);
   assert.equal(h.writes().length,0);
+});
+
+
+test('a cleared Jev provider keeps chat settings available', async () => {
+  const h = fixture({availability: ready, decisionProvider: null}); await h.initialized;
+  await h.nodes.get('chat-automation-settings').click();
+  assert.equal(h.nodes.get('chat-automation-dialog').open, true);
+  const route = h.nodes.get('chat-decision-route').children[0];
+  assert.equal(route.querySelector('[data-field="endpoint_id"]').value, '');
+  assert.equal(route.querySelector('[data-field="model"]').value, '');
+  assert.equal(h.writes().length, 0);
+});
+
+test('clearing both Jev fields removes the provider and settings can reopen', async () => {
+  const h = fixture({availability: ready, mode: 'auto_approve', decisionProvider: {
+    endpoint_id: 'jev-endpoint', model: 'jev-model', protocol: 'systemone',
+  }});
+  await h.initialized;
+  await h.nodes.get('chat-automation-settings').click();
+  const route = h.nodes.get('chat-decision-route').children[0];
+  route.querySelector('[data-field="endpoint_id"]').value = '';
+  route.querySelector('[data-field="model"]').value = '';
+  await h.nodes.get('chat-automation-form').dispatchEvent({type: 'submit'});
+  const saved = h.writes().find(request => request.path === '/api/chat-settings');
+  assert.equal(saved.body.changes.decision_provider, null);
+  assert.equal(h.state.decisionProvider, null);
+  assert.equal(h.state.mode, 'auto_approve');
+  h.nodes.get('chat-automation-dialog').close();
+  await h.nodes.get('chat-automation-settings').click();
+  assert.equal(h.nodes.get('chat-automation-dialog').open, true);
 });
