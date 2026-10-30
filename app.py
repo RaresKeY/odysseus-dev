@@ -188,6 +188,8 @@ from starlette.requests import ClientDisconnect as _ClientDisconnect
 _STREAM_CLIENT_EXC = (_anyio.EndOfStream, _ClientDisconnect)
 
 REQUEST_HARD_TIMEOUT = float(os.getenv("REQUEST_HARD_TIMEOUT", "45"))
+# Native speech allows 60s decoding and 300s inference, plus initialization.
+_STT_REQUEST_TIMEOUT = REQUEST_HARD_TIMEOUT if "REQUEST_HARD_TIMEOUT" in os.environ else 420.0
 _TIMEOUT_EXEMPT_PREFIXES = (
     "/api/chat",            # streaming
     "/api/shell/stream",    # SSE
@@ -208,11 +210,14 @@ class _RequestTimeoutMiddleware(_BaseHTTPMiddleware):
         path = request.url.path or ""
         if any(path.startswith(p) for p in _TIMEOUT_EXEMPT_PREFIXES):
             return await call_next(request)
+        timeout = REQUEST_HARD_TIMEOUT
+        if request.method == "POST" and get_application_route_path(request.scope) == "/api/stt/transcribe":
+            timeout = _STT_REQUEST_TIMEOUT
         try:
-            return await _asyncio.wait_for(call_next(request), timeout=REQUEST_HARD_TIMEOUT)
+            return await _asyncio.wait_for(call_next(request), timeout=timeout)
         except _asyncio.TimeoutError:
             return _JSONResponse(
-                {"detail": f"Request exceeded {REQUEST_HARD_TIMEOUT:.0f}s timeout"},
+                {"detail": f"Request exceeded {timeout:.0f}s timeout"},
                 status_code=504,
             )
 
