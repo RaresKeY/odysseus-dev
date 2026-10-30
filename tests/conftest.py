@@ -108,12 +108,6 @@ def pytest_configure(config):
     unknown-mark warnings still surface genuine typos outside the taxonomy. This
     only registers marker names; it imports no production module.
     """
-    config.add_cleanup(_database_environment.undo)
-    if _collection_database_engine is not None:
-        # Registered after runtime cleanup, so connections close before the
-        # owned file is removed (also required on Windows).
-        config.add_cleanup(_collection_database_engine.dispose)
-
     import pathlib
     from tests._taxonomy import discover_markers
 
@@ -369,7 +363,13 @@ def context_probe_ledger(_no_context_window_network_probe):
 # Before pytest's tmpdir plugin reads the basetemp this sets.
 @pytest.hookimpl(specname="pytest_configure", tryfirst=True)
 def pytest_configure_worker_runtime(config):
-    configure_runtime(config, _runtime_environment)
+    try:
+        configure_runtime(config, _runtime_environment)
+    finally:
+        config.add_cleanup(_database_environment.undo)
+        if _collection_database_engine is not None:
+            # Close the owned database before runtime cleanup, including setup failure.
+            config.add_cleanup(_collection_database_engine.dispose)
 
 
 @pytest.hookimpl(specname="pytest_collection_modifyitems", tryfirst=True)
