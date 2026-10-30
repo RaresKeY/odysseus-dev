@@ -21,8 +21,8 @@ from src.decisions.provider import DecisionProvider
 from src.tool_capabilities import ToolRunSecurityContext
 
 
-def _deadline_on_cleanup(monkeypatch, rt, owner):
-    """Expire a real timeout only after the response reaches cleanup."""
+def _deadline_at_checkpoint(monkeypatch, rt, owner, *, checkpoint="cleanup"):
+    """Expire a real timeout at the selected response checkpoint."""
     import src.approval_review as review_module
     import src.decisions.provider as provider_module
 
@@ -65,10 +65,10 @@ def _deadline_on_cleanup(monkeypatch, rt, owner):
         # The first review scope is assess()'s primary invocation scope.
         scope, deadline = scopes[owner][0]
         now = deadline
-        rt.settings["cleanup_timeout"] = scope
+        rt.settings[f"{checkpoint}_timeout"] = scope
         scope.reschedule(asyncio.get_running_loop().time())
 
-    rt.settings["expire_cleanup_deadline"] = expire
+    rt.settings[f"expire_{checkpoint}_deadline"] = expire
     return clock
 
 
@@ -151,6 +151,10 @@ def outage_runtime(store, dispatch_runtime, monkeypatch, tmp_path):
                 nonlocal resolutions
                 resolutions += 1
                 if resolutions == 2:
+                    settings["revalidation_started"] = True
+                    expire = settings.pop("expire_revalidation_deadline", None)
+                    if expire is not None:
+                        expire()
                     await asyncio.Event().wait()
                 return await asyncio.to_thread(original_resolver, *args)
             provider.resolver = delayed_resolver
@@ -277,16 +281,20 @@ async def test_legacy_known_response_cannot_establish_outage(outage_runtime, sto
 @pytest.mark.parametrize("deadline_owner", ["provider", "review"])
 async def test_received_primary_veto_cannot_be_replaced_after_timeout(
         outage_runtime, monkeypatch, verdict, deadline_owner):
+    rt = outage_runtime
+    clock = _deadline_at_checkpoint(
+        monkeypatch, rt, deadline_owner, checkpoint="revalidation")
     if deadline_owner == "review":
         from src.approval_review import ApprovalReviewService
         original = ApprovalReviewService.review
         async def bounded_review(self, *args, **kwargs):
-            return await original(self, *args, **kwargs, deadline=time.monotonic() + .5)
+            return await original(self, *args, **kwargs, deadline=clock() + .5)
         monkeypatch.setattr(ApprovalReviewService, "review", bounded_review)
-    rt = outage_runtime
     rt.settings.update(answer=decision(verdict), delay_after_response=True)
     bound = await rt.start(timeout=.2 if deadline_owner == "provider" else 30)
-    result = (await rt.action(bound, 0))[1]
+    result = (await asyncio.wait_for(rt.action(bound, 0), 10))[1]
+    assert rt.settings.get("revalidation_started")
+    assert rt.settings["revalidation_timeout"].expired()
     assert result["blocked"] and not rt.fallback_calls and not rt.effects
     assert len(rt.primary_calls) == 1
     for provider in rt.providers:
@@ -306,7 +314,7 @@ async def test_complete_stream_cleanup_cannot_override_response(
     rt = outage_runtime
     clock = time.monotonic
     if deadline_owner in {"provider", "review"}:
-        clock = _deadline_on_cleanup(monkeypatch, rt, deadline_owner)
+        clock = _deadline_at_checkpoint(monkeypatch, rt, deadline_owner)
     if deadline_owner == "review":
         from src.approval_review import ApprovalReviewService
         original = ApprovalReviewService.review
@@ -361,18 +369,23 @@ async def test_explicit_cancel_during_complete_stream_cleanup_stays_cancelled(ou
 @pytest.mark.parametrize("deadline_owner", ["provider", "review", "read_timeout"])
 async def test_terminal_response_rejection_survives_cleanup_before_eof(
         outage_runtime, monkeypatch, fault, expected, deadline_owner):
+    rt = outage_runtime
+    clock = time.monotonic
+    if deadline_owner in {"provider", "review"}:
+        clock = _deadline_at_checkpoint(monkeypatch, rt, deadline_owner)
     if deadline_owner == "review":
         from src.approval_review import ApprovalReviewService
         original = ApprovalReviewService.review
         async def bounded_review(self, *args, **kwargs):
-            return await original(self, *args, **kwargs, deadline=time.monotonic() + .5)
+            return await original(self, *args, **kwargs, deadline=clock() + .5)
         monkeypatch.setattr(ApprovalReviewService, "review", bounded_review)
-    rt = outage_runtime
     rt.settings.update(answer=decision("deny"), response_fault=fault, cleanup_started=asyncio.Event(),
         stream_cleanup="read_timeout" if deadline_owner == "read_timeout" else "hang")
     bound = await rt.start(timeout=.2 if deadline_owner == "provider" else 30)
-    result = (await rt.action(bound, 0))[1]
+    result = (await asyncio.wait_for(rt.action(bound, 0), 10))[1]
     assert not rt.settings.get("body_eof") and rt.settings["cleanup_started"].is_set()
+    if deadline_owner in {"provider", "review"}:
+        assert rt.settings["cleanup_timeout"].expired()
     assert result.get("blocked") and not rt.fallback_calls and not rt.effects, result
     for provider in rt.providers:
         while provider._store_tasks:
