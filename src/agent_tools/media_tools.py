@@ -17,6 +17,9 @@ import shutil
 import subprocess
 import tempfile
 
+from services.stt.granite import get_granite_stt, is_granite_model
+from src.constants import GRANITE_STT_MODEL
+
 
 _IMAGE_SUFFIXES = {".jpg", ".jpeg", ".png", ".webp", ".gif"}
 _SVG_SUFFIXES = {".svg"}
@@ -2122,7 +2125,7 @@ class InspectMediaTool:
 
 
 class TranscribeMediaTool:
-    """Transcribe local audio/video with Odysseus's local Whisper backend."""
+    """Transcribe local audio/video with Whisper or optional Granite TurboCTC."""
 
     async def execute(self, content: str, _ctx: dict) -> dict:
         try:
@@ -2197,8 +2200,13 @@ class TranscribeMediaTool:
             model_name = "small"
         else:
             model_name = "base"
-        if model_name not in {"tiny", "base", "small"}:
-            return {"error": "transcribe_media model must be tiny, base, or small", "exit_code": 1}
+        granite = is_granite_model(model_name)
+        if not granite and model_name not in {"tiny", "base", "small"}:
+            return {"error": f"transcribe_media model must be tiny, base, small, or {GRANITE_STT_MODEL}", "exit_code": 1}
+        if granite and output_format != "txt":
+            return {"error": "Granite TurboCTC has no timestamps; use .txt output or select Whisper for subtitles/JSONL", "exit_code": 1}
+        if granite and args.get("force_language") is True:
+            return {"error": "Granite TurboCTC cannot force a language; omit force_language or select Whisper", "exit_code": 1}
 
         if output_path is None:
             from src.tool_execution import get_active_workspace
@@ -2247,6 +2255,29 @@ class TranscribeMediaTool:
                         "format": output_format,
                         "exit_code": 0,
                     }
+
+        if granite:
+            try:
+                transcript = await asyncio.to_thread(
+                    get_granite_stt().transcribe, path, language_hint or "", start=start, end=end,
+                )
+            except Exception as exc:
+                return {"error": f"Granite transcription failed: {exc}", "exit_code": 1}
+            output_path.write_text(transcript + ("\n" if transcript else ""), encoding="utf-8")
+            preview = transcript[:_MAX_INLINE_TRANSCRIPT_CHARS]
+            if len(transcript) > len(preview):
+                preview += "\n[Preview truncated; read the saved transcript for the complete text.]"
+            return {
+                "output": f"Saved plain-text transcript: {output_raw}\nGranite TurboCTC does not provide timestamps or detected-language metadata.\n" + (preview or "No speech detected."),
+                "transcript": preview,
+                "language": "unknown",
+                "model": model_name,
+                "segments": None,
+                "timestamps": False,
+                "output_path": output_raw,
+                "format": "txt",
+                "exit_code": 0,
+            }
 
         def _transcribe() -> tuple[list, object]:
             model = _WHISPER_MODELS.get(model_name)

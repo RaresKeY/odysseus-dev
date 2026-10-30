@@ -132,6 +132,10 @@ Core (`requirements.txt`) and optional (`requirements-optional.txt`):
 | markitdown (optional — Office/EPUB text extraction) | MIT |
 | **PyMuPDF** *(optional — form-filling only)* | **AGPL-3.0** — see note below |
 
+## Optional Granite speech model
+
+[IBM Granite Speech 5.0 TurboCTC](https://huggingface.co/ibm-granite/granite-speech-5.0-470m-turboctc) is an optional Apache-2.0 model downloaded on first use. Its model and processor revision is pinned in `src/constants.py`; weights are not bundled. The separate noncommercial `-nc` checkpoint is not used. Inference uses Transformers (Apache-2.0), PyTorch and TorchAudio (BSD-style, including their third-party notices), installed separately through `requirements-stt-granite.txt`. Redistributors must retain applicable license and NOTICE files. The optional native [transcribe.cpp](https://github.com/handy-computer/transcribe.cpp) engine uses the MIT License and is installed independently; no native weights or library are bundled.
+
 ## Companion services (interoperated with, not bundled)
 
 Odysseus talks to these over the network/API. They are **not** distributed

@@ -1,12 +1,16 @@
 # services/stt/stt_service.py
-"""Multi-provider Speech-to-Text service — dispatches to local Whisper, OpenAI-compatible API, or browser."""
+"""Multi-provider Speech-to-Text service — dispatches to local models, OpenAI-compatible API, or browser."""
 
 import io
 import logging
 import httpx
 import tempfile
+import threading
 from pathlib import Path
 from typing import Optional, Dict, Any
+
+from services.stt.granite import dependency_error, get_granite_stt, granite_engine, is_granite_model
+from src.constants import GRANITE_STT_MODEL_ID, GRANITE_STT_REVISION
 
 logger = logging.getLogger(__name__)
 
@@ -18,12 +22,13 @@ class STTService:
     Providers:
       "disabled"        — no STT
       "browser"         — client-side Web Speech API (no server transcription)
-      "local"           — faster-whisper on CPU/GPU
+      "local"           — faster-whisper or optional Granite TurboCTC on CPU/GPU
       "endpoint:<id>"   — OpenAI-compatible /audio/transcriptions via ModelEndpoint
     """
 
     def __init__(self):
         self._whisper_model = None  # lazy-init
+        self._whisper_lock = threading.Lock()
 
     # ── Settings ──
 
@@ -48,6 +53,8 @@ class STTService:
         if provider == "browser":
             return True  # handled client-side
         if provider == "local":
+            if is_granite_model(settings["stt_model"]):
+                return dependency_error() is None
             return self._get_whisper() is not None
         if provider.startswith("endpoint:"):
             return True  # assume reachable
@@ -56,6 +63,10 @@ class STTService:
     # ── Local Whisper ──
 
     def _get_whisper(self):
+        with self._whisper_lock:
+            return self._load_whisper()
+
+    def _load_whisper(self):
         if self._whisper_model is None:
             try:
                 from faster_whisper import WhisperModel
@@ -88,6 +99,12 @@ class STTService:
         return self._whisper_model
 
     def _transcribe_local(self, audio_bytes: bytes, language: str = "") -> Optional[str]:
+        if is_granite_model(self._load_settings()["stt_model"]):
+            try:
+                return get_granite_stt().transcribe(audio_bytes, language)
+            except Exception:
+                logger.exception("Granite STT transcription failed")
+                return None
         model = self._get_whisper()
         if not model:
             return None
@@ -188,8 +205,19 @@ class STTService:
         }
 
         if provider == "local":
-            whisper = self._get_whisper()
-            stats["model_loaded"] = whisper is not None
+            if is_granite_model(settings["stt_model"]):
+                stats.update({
+                    "model": GRANITE_STT_MODEL_ID,
+                    "revision": GRANITE_STT_REVISION,
+                    "engine": granite_engine(),
+                    "model_loaded": get_granite_stt().loaded,
+                    "timestamps": False,
+                    "force_language": False,
+                })
+                if stt_enabled and (error := dependency_error()):
+                    stats["error"] = error
+            else:
+                stats["model_loaded"] = self._whisper_model is not None
         elif provider == "browser":
             stats["model"] = "Browser (Web Speech API)"
         elif provider.startswith("endpoint:"):
