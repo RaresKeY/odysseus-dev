@@ -221,6 +221,7 @@ async function initialize(){
     if($('chat-permissions-menu').hidden)openPermissions();else closePermissions(true);
   });
   $('chat-approval-mode').addEventListener('keydown',e=>{
+    if(e.key==='Escape' && !$('chat-permissions-menu').hidden){e.preventDefault();closePermissions(true);return;}
     if(['ArrowDown','ArrowUp'].includes(e.key)){e.preventDefault();openPermissions();}
   });
   $('chat-permissions-menu').addEventListener('keydown',e=>{
