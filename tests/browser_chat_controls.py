@@ -37,6 +37,7 @@ class Chrome:
             stdout=self.log, stderr=self.log)
         os.close(incoming)
         os.close(outgoing)
+        self.events = []
         self.sequence = 0
         self.buffer = b''
         self.session = None
@@ -63,6 +64,8 @@ class Chrome:
             while b'\0' in self.buffer:
                 packet, self.buffer = self.buffer.split(b'\0', 1)
                 result = json.loads(packet)
+                if result.get('method', '').startswith('Page.frame'):
+                    self.events.append(result)
                 if result.get('id') == self.sequence:
                     if 'error' in result:
                         raise RuntimeError(result['error'])

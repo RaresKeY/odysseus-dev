@@ -2941,30 +2941,6 @@ body.bg-pattern-ascii-fireflies {
       color: var(--red);
       background: color-mix(in srgb, var(--red) 12%, transparent);
     }
-    #workspace-indicator-btn.active {
-      opacity: 1;
-      color: var(--fg);
-      background: color-mix(in srgb, var(--fg) 9%, transparent);
-    }
-    #workspace-indicator-btn.active:hover {
-      opacity: 1;
-      background: color-mix(in srgb, var(--fg) 9%, transparent);
-    }
-    #workspace-indicator-btn.active > svg:not(.tool-indicator-x),
-    #workspace-indicator-btn.active > span {
-      opacity: 1;
-    }
-    #workspace-indicator-btn .workspace-indicator-icon {
-      opacity: 1 !important;
-      color: currentColor !important;
-      stroke: currentColor !important;
-      flex-shrink: 0;
-    }
-    #workspace-indicator-btn > svg:first-of-type {
-      opacity: 1 !important;
-      color: currentColor !important;
-      stroke: currentColor !important;
-    }
     /* Research button glow while actively running */
     #research-toggle-btn.research-running {
       opacity: 1 !important;
