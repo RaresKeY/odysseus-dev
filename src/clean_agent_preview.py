@@ -2898,14 +2898,17 @@ def compact_schemas(schemas, *, model=None):
             )
         elif function.get('name') == 'transcribe_media':
             function['description'] = (
-                'Transcribe speech from local audio or video into timestamped '
-                'text. This does not inspect pixels or create media clips; use '
-                'inspect_media with start/end/output_path for a clip.'
+                'Transcribe speech from local audio or video. Whisper returns timestamped '
+                'text; optional Granite TurboCTC returns plain text without timestamps '
+                'or forced-language decoding, with a five-minute limit. This does not '
+                'inspect pixels or create media clips; use inspect_media with '
+                'start/end/output_path for a clip.'
             )
             if isinstance(properties.get('output_path'), dict):
                 properties['output_path']['description'] = (
-                    'Optional transcript destination ending in .txt, .jsonl, '
-                    '.srt, or .vtt; never use an image or video extension.'
+                    'Optional transcript destination. Granite supports .txt only; '
+                    'Whisper supports .txt, .jsonl, .srt, or .vtt. Never use an '
+                    'image or video extension.'
                 )
         elif function.get('name') == 'read_file':
             if isinstance(properties.get('offset'), dict):
