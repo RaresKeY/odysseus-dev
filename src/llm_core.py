@@ -236,6 +236,12 @@ def _get_cache_key(url: str, model: str, messages: List[Dict],
                    thinking_mode: Optional[str] = None,
                    reasoning_effort: Optional[str] = None) -> str:
     """Generate a cache key partitioned by endpoint and credential identity."""
+    from src.model_capability_cache import cached_model_record
+    record = cached_model_record(model, base_url=url, headers=headers)
+    control_evidence = (
+        [control.to_dict() for control in record.deterministic_controls]
+        if record is not None else []
+    )
     hashable_messages = []
     for msg in messages:
         sorted_items = tuple(sorted(msg.items()))
@@ -249,6 +255,7 @@ def _get_cache_key(url: str, model: str, messages: List[Dict],
         'max_tokens': max_tokens,
         'thinking_mode': _normalize_thinking_mode(thinking_mode),
         'reasoning_effort': str(reasoning_effort or "").strip().lower(),
+        'control_evidence': control_evidence,
         # Never put credentials in a cache key or loggable cache payload.  The
         # digest only prevents responses from one configured account/route
         # being returned under another route with the same URL and model.
@@ -1507,6 +1514,45 @@ CHATGPT_FORBIDDEN_PAYLOAD_KEYS = frozenset({
 })
 
 
+def _request_controls_for(url, model, headers, *, provider, dialect):
+    """Bind cached evidence to the route already selected by this transport."""
+    from src.model_capability_cache import cached_model_record, scope_for_endpoint
+    from src.model_request_controls import RequestControls
+    from src.provider_capability_schemas import resolve_provider
+
+    # The legacy detector calls every compatible custom endpoint "openai".
+    # That is a dialect fallback, not vendor identity. Prefer canonical host
+    # identity, then native evidence from this exact endpoint snapshot.
+    vendor = resolve_provider(base_url=url).provider_id
+    if provider == "chatgpt-subscription":
+        vendor = "chatgpt_subscription"
+    record = cached_model_record(model, base_url=url, headers=headers)
+    if vendor in {"unknown", "generic_openai"} and record is not None and not record.fallback:
+        vendor = record.vendor
+    if record is not None and record.vendor != vendor:
+        record = None
+    return RequestControls(
+        vendor=vendor,
+        dialect=dialect,
+        model=model,
+        endpoint_scope=scope_for_endpoint(url, headers),
+        record=record,
+    )
+
+
+def _apply_openai_request_controls(payload, url, model, headers, provider):
+    """Apply explicit canonical constraints after compatible payload shaping."""
+    from src import model_capabilities as mc
+    from src.model_request_controls import DIALECT_OPENAI_CHAT
+
+    controls = _request_controls_for(
+        url, model, headers, provider=provider, dialect=DIALECT_OPENAI_CHAT
+    )
+    for key in (mc.CONTROL_TEMPERATURE, mc.CONTROL_REASONING_EFFORT):
+        if key in payload and not controls.permits(key, payload[key]):
+            payload.pop(key)
+
+
 def _build_chatgpt_responses_payload(
     model: str,
     messages: List[Dict],
@@ -1516,6 +1562,7 @@ def _build_chatgpt_responses_payload(
     stream: bool = False,
     tools: Optional[List[Dict]] = None,
     reasoning_effort: Optional[str] = None,
+    request_controls=None,
     **_ignored,
 ) -> Dict:
     """Build the ChatGPT/Codex Responses request: model inference only.
@@ -1525,7 +1572,19 @@ def _build_chatgpt_responses_payload(
     discarded. See :data:`CHATGPT_FORBIDDEN_PAYLOAD_KEYS`.
     """
     from src.chatgpt_subscription import build_responses_input
+    from src import model_capabilities as mc
+    from src.model_capability_readers.base import VENDOR_CHATGPT_SUBSCRIPTION
+    from src.model_request_controls import DIALECT_CODEX_RESPONSES, RequestControls
 
+    # The builder owns its dialect. Supplied model evidence cannot select a
+    # different transport or override the subscription endpoint's contract.
+    controls = RequestControls(
+        vendor=VENDOR_CHATGPT_SUBSCRIPTION,
+        dialect=DIALECT_CODEX_RESPONSES,
+        model=model,
+        endpoint_scope=request_controls.endpoint_scope if request_controls else "",
+        record=request_controls.record if request_controls else None,
+    )
     del tools, _ignored
     conversation = [msg for msg in (messages or []) if (msg.get("role") or "") != "system"]
     payload: Dict = {
@@ -1535,19 +1594,19 @@ def _build_chatgpt_responses_payload(
         "stream": stream,
         "store": False,
     }
-    # ChatGPT plan Responses requests reject temperature for every model.
-    # The common caller still passes its preset value, but this provider must
-    # omit the field even for model names outside the known reasoning families.
+    if controls.permits(mc.CONTROL_TEMPERATURE, temperature):
+        payload["temperature"] = temperature
     # ChatGPT Subscription Codex API does not support max_output_tokens —
     # passing it returns HTTP 400 "Unsupported parameter: max_output_tokens".
     # Do not include it in the payload.
-    if reasoning_effort and str(reasoning_effort).strip().lower() not in {"", "default"}:
-        payload["reasoning"] = {"effort": str(reasoning_effort).strip().lower()}
+    effort = str(reasoning_effort or "").strip().lower()
+    if effort and effort != "default" and controls.permits(mc.CONTROL_REASONING_EFFORT, effort):
+        payload["reasoning"] = {"effort": effort}
     return _strip_chatgpt_native_tool_surfaces(payload)
 
 
 CHATGPT_ALLOWED_PAYLOAD_KEYS = frozenset({
-    "model", "instructions", "input", "stream", "store", "temperature", "reasoning",
+    "model", "instructions", "input", "stream", "store", "reasoning",
 })
 
 
@@ -2266,6 +2325,8 @@ def list_model_ids(
         r = httpx_get_kimi_aware(models_url, h, timeout=timeout)
         r.raise_for_status()
         data = r.json()
+        from src.model_capability_cache import remember_catalog
+        remember_catalog(data, base_url=base_chat_url, headers=headers)
         # Some OpenAI-compatible APIs (e.g. Together) return a bare list here.
         items = data if isinstance(data, list) else (data.get("data") or [])
         model_ids = [m.get("id") for m in items if isinstance(m, dict) and m.get("id")]
@@ -2399,6 +2460,7 @@ def llm_call(url: str, model: str, messages: List[Dict], temperature: float = LL
         if provider == "mistral" and _supports_thinking(model):
             payload["reasoning_effort"] = _MISTRAL_REASONING_EFFORT
         _apply_explicit_nonstream_reasoning_effort(payload, reasoning_effort)
+        _apply_openai_request_controls(payload, url, model, headers, provider)
     try:
         note_model_activity(target_url, model)
         r = httpx_post_kimi_aware(target_url, h, json=payload, timeout=timeout)
@@ -2767,6 +2829,7 @@ async def llm_call_async(
         _set_cached_response(cache_key, response, actual_model=actual_model)
         return (response, actual_model) if return_model_metadata else response
 
+    unfiltered_compatible_payload = None
     if provider == "anthropic":
         target_url = _normalize_anthropic_url(url)
         h = _build_anthropic_headers(headers)
@@ -2813,6 +2876,8 @@ async def llm_call_async(
             payload, target_url, model, thinking_mode
         )
         _apply_explicit_nonstream_reasoning_effort(payload, reasoning_effort)
+        unfiltered_compatible_payload = copy.deepcopy(payload)
+        _apply_openai_request_controls(payload, url, model, headers, provider)
 
     if _is_host_dead(target_url):
         raise HTTPException(503, f"Upstream {_host_key(target_url)} marked unreachable (cooldown active)")
@@ -2821,6 +2886,13 @@ async def llm_call_async(
     attempt = 0
     while attempt < max_retries:
         attempt += 1
+        if unfiltered_compatible_payload is not None:
+            payload = copy.deepcopy(unfiltered_compatible_payload)
+            _apply_openai_request_controls(payload, url, model, headers, provider)
+            cache_key = _get_cache_key(
+                url, model, messages_copy, temperature, max_tokens, headers=headers,
+                thinking_mode=thinking_mode, reasoning_effort=reasoning_effort,
+            )
         start = time.time()
         try:
             async with _local_model_slot(target_url, model, workload):
@@ -3044,9 +3116,13 @@ async def _stream_llm_inner(url: str, model: str, messages: List[Dict], temperat
     elif provider == "chatgpt-subscription":
         target_url = _normalize_chatgpt_subscription_url(url)
         h = _provider_headers(provider, headers)
+        from src.model_request_controls import DIALECT_CODEX_RESPONSES
         payload = _build_chatgpt_responses_payload(
             model, messages_copy, temperature, max_tokens, stream=True,
             reasoning_effort=reasoning_effort,
+            request_controls=_request_controls_for(
+                url, model, headers, provider=provider, dialect=DIALECT_CODEX_RESPONSES
+            ),
         )
     else:
         target_url = _normalize_openai_chat_url(url)
@@ -3090,6 +3166,7 @@ async def _stream_llm_inner(url: str, model: str, messages: List[Dict], temperat
             payload, target_url, model, thinking_mode
         )
         _scrub_openai_chat_tool_reasoning(payload, target_url, model)
+        _apply_openai_request_controls(payload, url, model, headers, provider)
         h = _provider_headers(provider, headers)
         if provider == "copilot":
             from src.copilot import apply_request_headers
