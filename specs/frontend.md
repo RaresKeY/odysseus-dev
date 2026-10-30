@@ -214,3 +214,5 @@ Workspace choices remain browser preferences, cleared on authenticated user swit
 ## Chat control highlights
 
 Permission menu radio rows size to their wrapped descriptions rather than the global fixed button height; the selected border/background contains the whole row and the checkmark aligns with its label. Hover, selected and keyboard-focus states stay distinct. The Decisions trigger uses a compact 32px desktop target and 44px narrow target, with separate hover/open styles. Disabled permission and Decisions triggers stay transparent on hover. Menu focus follows the selected available mode after refresh and ignores stale, closed or already-navigated menu requests. Approval and decision execution policies are unchanged.
+
+Frontend cache revisions retain the established odysseus-vN-pr40-editor-precache family; current revision is 1116. The Decisions stylesheet uses the same cache-bust token as the other app stylesheets and app.js, with exact URL agreement between index.html and service-worker precache.
