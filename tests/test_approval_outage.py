@@ -4,6 +4,7 @@ from collections import namedtuple
 from copy import deepcopy
 import json
 import time
+from types import SimpleNamespace
 
 import httpx
 import pytest
@@ -18,6 +19,57 @@ from src.chat_automation import prepare_chat_turn
 from src.decisions import DecisionContext, DecisionError, DecisionRequest, MemoryAttemptStore
 from src.decisions.provider import DecisionProvider
 from src.tool_capabilities import ToolRunSecurityContext
+
+
+def _deadline_on_cleanup(monkeypatch, rt, owner):
+    """Expire a real timeout only after the response reaches cleanup."""
+    import src.approval_review as review_module
+    import src.decisions.provider as provider_module
+
+    now = time.monotonic()
+    scopes = {"provider": [], "review": []}
+
+    def clock():
+        return now
+
+    def capture_timeout(scope_owner):
+        def timeout(delay):
+            scope = asyncio.timeout(None)
+            scopes[scope_owner].append((scope, clock() + delay))
+            return scope
+        return timeout
+
+    # Replace module bindings, not the shared asyncio/time modules: the event
+    # loop and test synchronization must continue to use their real clocks.
+    for module, scope_owner in (
+        (provider_module, "provider"), (review_module, "review")
+    ):
+        monkeypatch.setattr(module, "asyncio", SimpleNamespace(
+            **{**vars(asyncio), "timeout": capture_timeout(scope_owner)}))
+    monkeypatch.setattr(review_module, "time", SimpleNamespace(
+        **{**vars(time), "monotonic": clock}))
+
+    # Include the conversation fallback so it can still run if production
+    # incorrectly treats a received response as an availability failure.
+    original_init = DecisionProvider.__init__
+
+    def initialize_with_clock(self, *args, **kwargs):
+        kwargs["clock"] = clock
+        original_init(self, *args, **kwargs)
+
+    monkeypatch.setattr(DecisionProvider, "__init__", initialize_with_clock)
+
+    def expire():
+        nonlocal now
+        # The first provider scope is evaluate()'s outer accounting scope.
+        # The first review scope is assess()'s primary invocation scope.
+        scope, deadline = scopes[owner][0]
+        now = deadline
+        rt.settings["cleanup_timeout"] = scope
+        scope.reschedule(asyncio.get_running_loop().time())
+
+    rt.settings["expire_cleanup_deadline"] = expire
+    return clock
 
 
 @pytest.fixture
@@ -49,6 +101,9 @@ def outage_runtime(store, dispatch_runtime, monkeypatch, tmp_path):
                         settings["body_eof"] = True
                     async def aclose(self):
                         settings["cleanup_started"].set()
+                        expire = settings.pop("expire_cleanup_deadline", None)
+                        if expire is not None:
+                            expire()
                         if settings["stream_cleanup"] == "read_timeout":
                             raise httpx.ReadTimeout("synthetic cleanup timeout")
                         try:
@@ -248,19 +303,24 @@ async def test_received_primary_veto_cannot_be_replaced_after_timeout(
 @pytest.mark.parametrize("deadline_owner", ["provider", "review", "read_timeout"])
 async def test_complete_stream_cleanup_cannot_override_response(
         outage_runtime, monkeypatch, verdict, deadline_owner):
+    rt = outage_runtime
+    clock = time.monotonic
+    if deadline_owner in {"provider", "review"}:
+        clock = _deadline_on_cleanup(monkeypatch, rt, deadline_owner)
     if deadline_owner == "review":
         from src.approval_review import ApprovalReviewService
         original = ApprovalReviewService.review
         async def bounded_review(self, *args, **kwargs):
-            return await original(self, *args, **kwargs, deadline=time.monotonic() + 2)
+            return await original(self, *args, **kwargs, deadline=clock() + 2)
         monkeypatch.setattr(ApprovalReviewService, "review", bounded_review)
-    rt = outage_runtime
     rt.settings.update(answer=decision("review" if verdict == "review" else "deny"),
         malformed_stream=verdict == "malformed", cleanup_started=asyncio.Event(),
         stream_cleanup="read_timeout" if deadline_owner == "read_timeout" else "hang")
     bound = await rt.start(timeout=.2 if deadline_owner == "provider" else 30)
-    result = (await rt.action(bound, 0))[1]
+    result = (await asyncio.wait_for(rt.action(bound, 0), 10))[1]
     assert rt.settings.get("body_eof") and rt.settings["cleanup_started"].is_set()
+    if deadline_owner in {"provider", "review"}:
+        assert rt.settings["cleanup_timeout"].expired()
     assert result.get("blocked") and not rt.fallback_calls and not rt.effects, result
     for provider in rt.providers:
         while provider._store_tasks:
