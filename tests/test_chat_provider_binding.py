@@ -1,5 +1,6 @@
 """Real turn authority, provider payloads and complete mocked HTTP execution."""
 from contextlib import asynccontextmanager
+from dataclasses import replace
 import json
 from types import SimpleNamespace
 
@@ -11,6 +12,7 @@ from sqlalchemy.orm import sessionmaker
 
 from core import database as d
 from src import llm_core
+from src import model_capabilities as mc
 from src.chat_automation import AutomationStore, prepare_chat_turn
 from src.foreground_model_routing import ForegroundModelPolicy
 
@@ -219,3 +221,87 @@ async def test_manual_fallback_requires_current_explicit_owner_consent(store, mo
                         reasoning_effort="low", fallback_statuses={503}, max_retries=1)
     assert len(calls) == (2 if consent else 1)
     assert (turn.descriptor.get("source") == "explicit_fallback") is consent
+
+
+@pytest.mark.asyncio
+@pytest.mark.parametrize("status,allowed_values,effort,permitted", [
+    pytest.param(mc.ASSERTION_UNSUPPORTED, None, "low", False,
+                 id="explicitly-unsupported"),
+    pytest.param(mc.ASSERTION_CLAIMED, ["high"], "low", False,
+                 id="acknowledged-value-excluded"),
+    pytest.param(mc.ASSERTION_CLAIMED, ["low"], "low", True,
+                 id="acknowledged-value-supported"),
+    pytest.param(mc.ASSERTION_CLAIMED, ["high"], "", True,
+                 id="empty-binding-removes-stale-request-effort"),
+])
+async def test_preview_checks_canonical_effort_after_binding(
+        store, monkeypatch, status, allowed_values, effort, permitted):
+    from src import clean_agent_preview
+    from src import model_capability_cache as cache
+    from src.model_capability_readers import records_from_payload
+
+    base = "https://openrouter.ai/api/v1"
+    url = base + "/chat/completions"
+    turn = await bind(store, "auto" if effort else "manual",
+                      url=url, effort=effort)
+    if effort:
+        # Jev's acknowledged supported set admits low. Canonical evidence
+        # available at dispatch must still constrain the actual wire value.
+        turn.descriptor["supported_efforts"] = ["low", "high"]
+
+    scope = cache.scope_for_endpoint(base, HEADERS)
+    record, = records_from_payload(
+        {"data": [{"id": "selected"}]},
+        base_url=base, endpoint_id=scope, vendor="openrouter",
+    )
+    control = mc.DeterministicControl.build(
+        control=mc.CONTROL_REASONING_EFFORT,
+        status=status,
+        source=mc.SOURCE_PROVIDER_READER,
+        confidence=mc.CONFIDENCE_PROVIDER_REPORTED,
+        evidence=({"allowed_values": allowed_values}
+                  if allowed_values is not None else {}),
+    )
+    record = replace(record, deterministic_controls=(control,))
+    original_lookup = cache.cached_model_record
+
+    def lookup(model, *, base_url, headers=None, vendor=None):
+        if model == "selected" and cache.scope_for_endpoint(base_url, headers) == scope:
+            return record
+        return original_lookup(model, base_url=base_url, headers=headers, vendor=vendor)
+
+    monkeypatch.setattr(cache, "cached_model_record", lookup)
+    calls = []
+
+    def transport(request):
+        calls.append(request)
+        return response(request, stream=True)
+
+    request = {
+        "model": "selected", "messages": MESSAGES, "max_tokens": 64,
+        "stream": True, "reasoning_effort": "high",
+    }
+    async with httpx.AsyncClient(transport=httpx.MockTransport(transport)) as client:
+        with turn.activate():
+            if permitted:
+                async with clean_agent_preview.preview_model_response(
+                        client, url, HEADERS, request, {}) as result:
+                    assert result.status_code == 200
+            else:
+                with pytest.raises(RuntimeError, match="acknowledged turn binding"):
+                    async with clean_agent_preview.preview_model_response(
+                            client, url, HEADERS, request, {}):
+                        pass
+
+    assert request["reasoning_effort"] == "high"
+    if not permitted:
+        assert calls == []
+    else:
+        assert len(calls) == 1
+        payload = json.loads(calls[0].content)
+        assert payload["model"] == "selected"
+        assert payload["messages"] == MESSAGES
+        if effort:
+            assert payload["reasoning_effort"] == effort
+        else:
+            assert "reasoning_effort" not in payload

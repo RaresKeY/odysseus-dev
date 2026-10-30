@@ -5558,10 +5558,6 @@ async def preview_model_response(client, endpoint_url, headers, request, recover
             'messages': provider_wire_messages(request['messages']),
         }
         from src.llm_core import _apply_openai_request_controls, _detect_provider
-        _apply_openai_request_controls(
-            provider_request, endpoint_url, str(request.get('model') or ''),
-            headers, _detect_provider(endpoint_url),
-        )
         response_started = False
         try:
             from src.chat_automation import current_turn, validate_provider_binding
@@ -5570,8 +5566,17 @@ async def preview_model_response(client, endpoint_url, headers, request, recover
                 effort = bound.descriptor["reasoning_effort"] or None
                 if effort is not None:
                     provider_request["reasoning_effort"] = effort
+                else:
+                    provider_request.pop("reasoning_effort", None)
+            _apply_openai_request_controls(
+                provider_request, endpoint_url, str(request.get('model') or ''),
+                headers, _detect_provider(endpoint_url),
+            )
+            if bound is not None:
+                # Canonical restrictions cannot silently change the effort
+                # acknowledged for this turn, or be undone after validation.
                 validate_provider_binding(endpoint_url, provider_request["model"], headers,
-                    bound.session_id, effort)
+                    bound.session_id, provider_request.get("reasoning_effort"))
             async with client.stream(
                 'POST', endpoint_url, headers=headers or {}, json=provider_request,
             ) as response:
