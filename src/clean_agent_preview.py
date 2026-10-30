@@ -5542,6 +5542,11 @@ async def preview_model_response(client, endpoint_url, headers, request, recover
             **request,
             'messages': provider_wire_messages(request['messages']),
         }
+        from src.llm_core import _apply_openai_request_controls, _detect_provider
+        _apply_openai_request_controls(
+            provider_request, endpoint_url, str(request.get('model') or ''),
+            headers, _detect_provider(endpoint_url),
+        )
         response_started = False
         try:
             async with client.stream(
