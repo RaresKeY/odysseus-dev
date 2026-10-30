@@ -354,6 +354,13 @@ VARIABLE_NOTES: dict[str, tuple[str, str, str]] = {
         "Deployment and first run", USER,
         "Enables automatic scheduled-task and event execution independently of the in-process timer; explicit manual runs keep their own authorization checks.",
     ),
+    "ODYSSEUS_GRANITE_ENGINE": ('Speech and vision models', USER, 'Select the Granite speech engine: transformers (default) or transcribe.cpp.'),
+    "ODYSSEUS_GRANITE_GGUF": ('Speech and vision models', USER, 'Absolute path to prepared multilingual Granite GGUF weights for transcribe.cpp.'),
+    "ODYSSEUS_TRANSCRIBE_CPP_BIN": ('Speech and vision models', USER, 'Path or command for the optional transcribe.cpp CLI.'),
+    "ODYSSEUS_TRANSCRIBE_CPP_BACKEND": ('Speech and vision models', USER, 'Native inference backend: auto, CPU, CUDA, Metal, Vulkan or ROCm.'),
+    "ODYSSEUS_TRANSCRIBE_CPP_THREADS": ('Speech and vision models', USER, 'Native transcribe.cpp CPU thread count.'),
+    "ODYSSEUS_GRANITE_SMOKE_AUDIO": ('Testing, capture and development tooling', INTERNAL, 'Opt-in speech fixture for the Transformers CPU smoke test.'),
+    "ODYSSEUS_NATIVE_GRANITE_SMOKE_AUDIO": ('Testing, capture and development tooling', INTERNAL, 'Opt-in speech fixture for the native transcribe.cpp smoke test.'),
     # -- Deployment and first run ------------------------------------------
     "ODYSSEUS_ADMIN_USER": (
         "Deployment and first run", USER,

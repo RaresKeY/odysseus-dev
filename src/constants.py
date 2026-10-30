@@ -6,6 +6,12 @@ import subprocess
 from src.runtime_paths import get_app_root, get_default_data_dir
 
 APP_VERSION = "1.0.3"
+GRANITE_STT_MODEL = "granite-speech-5.0-470m-turboctc"
+GRANITE_STT_MODEL_ID = f"ibm-granite/{GRANITE_STT_MODEL}"
+GRANITE_STT_REVISION = "1dd23f46f6d4e6eae2531982ba2e33220086dd97"
+GRANITE_STT_LANGUAGES = ("en", "fr", "de", "es", "pt", "it", "ja")
+GRANITE_STT_SAMPLE_RATE = 16000
+GRANITE_STT_MAX_AUDIO_SECONDS = 300
 BUILTIN_SKILLS_DIR = os.path.join(get_app_root(), "resources", "skills")
 # Identifies the private maintainer-preview build without changing the public
 # application semver used by release and readiness checks. Keep the API/UI

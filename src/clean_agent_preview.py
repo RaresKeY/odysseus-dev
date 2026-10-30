@@ -2904,14 +2904,17 @@ def compact_schemas(schemas, *, model=None):
             )
         elif function.get('name') == 'transcribe_media':
             function['description'] = (
-                'Transcribe speech from local audio or video into timestamped '
-                'text. This does not inspect pixels or create media clips; use '
-                'inspect_media with start/end/output_path for a clip.'
+                'Transcribe speech from local audio or video. Whisper returns timestamped '
+                'text; optional Granite TurboCTC returns plain text without timestamps '
+                'or forced-language decoding, with a five-minute limit. This does not '
+                'inspect pixels or create media clips; use inspect_media with '
+                'start/end/output_path for a clip.'
             )
             if isinstance(properties.get('output_path'), dict):
                 properties['output_path']['description'] = (
-                    'Optional transcript destination ending in .txt, .jsonl, '
-                    '.srt, or .vtt; never use an image or video extension.'
+                    'Optional transcript destination. Granite supports .txt only; '
+                    'Whisper supports .txt, .jsonl, .srt, or .vtt. Never use an '
+                    'image or video extension.'
                 )
         elif function.get('name') == 'read_file':
             if isinstance(properties.get('offset'), dict):
@@ -5554,6 +5557,11 @@ async def preview_model_response(client, endpoint_url, headers, request, recover
             **request,
             'messages': provider_wire_messages(request['messages']),
         }
+        from src.llm_core import _apply_openai_request_controls, _detect_provider
+        _apply_openai_request_controls(
+            provider_request, endpoint_url, str(request.get('model') or ''),
+            headers, _detect_provider(endpoint_url),
+        )
         response_started = False
         try:
             from src.chat_automation import current_turn, validate_provider_binding

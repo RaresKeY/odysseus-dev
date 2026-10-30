@@ -1069,6 +1069,8 @@ def _probe_endpoint(base_url: str, api_key: str = None, timeout: int = 5) -> Lis
         r = httpx_get_kimi_aware(url, headers, timeout=timeout, verify=llm_verify())
         r.raise_for_status()
         data = r.json()
+        from src.model_capability_cache import remember_catalog
+        remember_catalog(data, base_url=base, headers=headers)
         # OpenAI format: {"data": [{"id": "model-name"}]}
         models = _openai_model_ids(data)
         # Ollama format: {"models": [{"name": "model-name"}]}
