@@ -1,20 +1,4 @@
-"""Editor agent/planner model resolution.
-
-The image-editor Quick Edit planner (`/api/editor/plan`, `/api/editor/agent`)
-runs on an explicitly configured local vision model when one is reachable,
-with the configured chat model as a fallback. This module owns:
-
-  * the local model base URLs / model id (settings-overridable),
-  * an ordered candidate list (per-request ``agent_model`` override, then the
-    local Qwen3.5-9B, then the hosted default/utility chat model),
-  * a vision fallback chain: local model WITH the canvas screenshot, else a
-    text-only call whose image is described by a separate VL caption model,
-  * a lightweight reachability probe for the configured local bases.
-
-Everything is best-effort: when no local server is reachable the planner
-transparently falls back to the previously-used hosted chat model, so the
-editor agent never regresses to "no plan".
-"""
+"""Resolve editor planner models and keep request/fallback identity scoped."""
 
 from __future__ import annotations
 
@@ -194,11 +178,22 @@ async def _post_chat(
         "max_tokens": max_tokens,
         "stream": False,
     }
-    # Constrain the planner to a strict JSON ops schema (structured outputs /
-    # grammar) so the model can only emit valid editor ops. Unknown servers
-    # ignore the field; the server-side schema validation is the real enforcer.
     if isinstance(response_format, dict):
         payload["response_format"] = response_format
+    from src.llm_core import (
+        _apply_openai_request_controls, _detect_provider, llm_call_async,
+    )
+    provider = _detect_provider(base)
+    if provider in {"anthropic", "ollama", "chatgpt-subscription"}:
+        try:
+            return await llm_call_async(
+                base, model, messages, temperature=0.2, max_tokens=max_tokens,
+                headers=headers, timeout=timeout,
+            )
+        except Exception:
+            logger.debug("editor native provider request failed", exc_info=True)
+            return None
+    _apply_openai_request_controls(payload, base, model, headers, provider)
     try:
         async with httpx.AsyncClient(timeout=timeout) as client:
             resp = await client.post(_chat_url(base), json=payload, headers=headers or {})
