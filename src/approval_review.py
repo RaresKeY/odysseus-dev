@@ -237,6 +237,11 @@ class ApprovalReviewService:
                                     if fallback_evaluator else shared_deadline)
                 projection = await assess(evaluator, replace(context, deadline=primary_deadline))
             except Exception as primary_error:
+                terminal_failure = (getattr(primary_error, "approval_terminal_failure", None)
+                                    or getattr(primary_error.__cause__, "approval_terminal_failure", None))
+                if terminal_failure:
+                    raise DecisionError(terminal_failure, attempt_id=(getattr(primary_error, "attempt_id", None)
+                        or getattr(primary_error.__cause__, "attempt_id", None))) from primary_error
                 code = (primary_error.code if isinstance(primary_error, DecisionError)
                         else "decision_deadline_exceeded" if isinstance(primary_error, TimeoutError) else "decision_failed")
                 # Accounting, capture and cancellation failures are not

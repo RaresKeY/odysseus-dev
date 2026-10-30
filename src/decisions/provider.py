@@ -9,6 +9,7 @@ import ssl
 import time
 import uuid
 from dataclasses import replace
+from contextlib import asynccontextmanager
 
 import httpx
 
@@ -16,7 +17,42 @@ from .config import ResolvedDecisionEndpoint, resolve_decision_endpoint, validat
 from .contracts import (DecisionContext, DecisionError, DecisionRequest, DecisionResult,
                         MAX_REQUEST_BYTES, MAX_RESPONSE_BYTES, SCHEMA_VERSION,
                         decode, encode, valid_usage, validate_answers)
-from .store import AttemptStore, approval_outage
+from .store import AttemptStore, approval_outage, OUTAGE_FAILURES
+
+
+@asynccontextmanager
+async def _preserve_terminal_failure(manager, state):
+    """Seal body failures before awaited teardown can replace their exception."""
+    interrupted = None
+    task = asyncio.current_task()
+    cancellation_count = task.cancelling() if task is not None else 0
+    try:
+        async with manager as resource:
+            try:
+                yield resource
+            except asyncio.CancelledError as error:
+                interrupted = error
+                raise
+            except DecisionError as error:
+                if error.code not in OUTAGE_FAILURES:
+                    state.setdefault("terminal_failure", error.code)
+                raise
+            except (httpx.TransportError, TimeoutError):
+                raise
+            except Exception:
+                state.setdefault("terminal_failure", "decision_invalid_response" if state.get("dispatched")
+                                 else "decision_admission_failed")
+                raise
+    except BaseException:
+        # Explicit and deadline-owned cancellation keep their original owner,
+        # even if response/client cleanup raises a different exception.
+        if interrupted is not None:
+            raise interrupted from None
+        # A cleanup implementation may itself catch CancelledError and raise a
+        # transport error. The task's new cancellation request still wins.
+        if task is not None and task.cancelling() > cancellation_count:
+            raise asyncio.CancelledError() from None
+        raise
 
 
 def _openai_payload(request, questions, model):
@@ -186,9 +222,10 @@ class DecisionProvider:
         except TimeoutError:
             # _evaluate settles a reserved call on cancellation. A preflight
             # timeout has no attempt/reservation and definitely made no HTTP.
-            error = DecisionError("decision_response_not_finalized" if state.get("response_received") else
-                                  "decision_transport_failed" if state.get("dispatched") else "decision_deadline_exceeded",
-                                  attempt_id=state.get("attempt_id"))
+            failure = state.get("terminal_failure") or ("decision_response_not_finalized"
+                      if state.get("response_received") else "decision_transport_failed"
+                      if state.get("dispatched") else "decision_deadline_exceeded")
+            error = DecisionError(failure, attempt_id=state.get("attempt_id"))
             error.dispatched = bool(state.get("dispatched"))
             raise error from None
         except asyncio.CancelledError as error:
@@ -197,10 +234,12 @@ class DecisionProvider:
             # Explicit task cancellation always propagates unchanged.
             error.attempt_id = state.get("attempt_id")
             error.approval_response_received = bool(state.get("response_received"))
+            error.approval_terminal_failure = state.get("terminal_failure")
             raise
         except DecisionError as error:
             error.dispatched = bool(state.get("dispatched"))
             error.approval_response_received = bool(state.get("response_received"))
+            error.approval_terminal_failure = state.get("terminal_failure")
             raise
         except Exception:
             raise DecisionError("decision_admission_failed", attempt_id=state.get("attempt_id")) from None
@@ -366,8 +405,9 @@ class DecisionProvider:
             if not isinstance(verification, ssl.SSLContext):
                 raise DecisionError('decision_tls_configuration_invalid')
             async with asyncio.timeout(timeout):
-                async with self.client_factory(verify=verification, follow_redirects=False, trust_env=False,
-                                               timeout=httpx.Timeout(timeout)) as client:
+                async with _preserve_terminal_failure(self.client_factory(
+                        verify=verification, follow_redirects=False, trust_env=False,
+                        timeout=httpx.Timeout(timeout)), state) as client:
                     headers = {**endpoint.headers, "Content-Type": "application/json",
                                "Accept": "application/json, text/event-stream" if endpoint.protocol == "approval_responses" else "application/json",
                                "Accept-Encoding": "identity"}
@@ -376,8 +416,9 @@ class DecisionProvider:
                         await govern(self.campaign.dispatch, attempt_id, endpoint, wire)
                     dispatched = True  # Even connect/timeout failures may have reached the provider.
                     state["dispatched"] = True
-                    async with client.stream("POST", endpoint.url, content=wire, headers=headers,
-                                             follow_redirects=False) as response:
+                    async with _preserve_terminal_failure(client.stream(
+                            "POST", endpoint.url, content=wire, headers=headers,
+                            follow_redirects=False), state) as response:
                         if 300 <= response.status_code < 400:
                             raise DecisionError("decision_redirect_refused")
                         if not 200 <= response.status_code < 300:
@@ -428,18 +469,21 @@ class DecisionProvider:
             if not settled:
                 expired = (state.get("scope") is not None and state["scope"].expired()
                            or context.deadline is not None and self.clock() >= context.deadline)
+                failure = ((state.get("terminal_failure") or ("decision_response_not_finalized"
+                            if state.get("response_received") else "decision_deadline_exceeded"))
+                           if expired else "decision_cancelled")
                 await settle("rejected" if measured is not None else "unresolved" if dispatched else "cancelled",
-                       "decision_response_not_finalized" if expired and state.get("response_received") else
-                       "decision_deadline_exceeded" if expired else "decision_cancelled", wait=False)
+                             failure, wait=False)
             raise
         except DecisionError as error:
-            failure = ("decision_response_not_finalized" if state.get("response_received")
+            failure = state.get("terminal_failure") or ("decision_response_not_finalized" if state.get("response_received")
                        and error.code == "decision_deadline_exceeded" else error.code)
             if not settled:
                 await settle("rejected" if measured is not None else "unresolved" if dispatched else "cancelled", failure)
             raise DecisionError(failure, attempt_id=attempt_id) from None
         except (httpx.TransportError, TimeoutError):
-            failure = "decision_response_not_finalized" if state.get("response_received") else "decision_transport_failed"
+            failure = state.get("terminal_failure") or ("decision_response_not_finalized"
+                       if state.get("response_received") else "decision_transport_failed")
             if not settled:
                 await settle("rejected" if measured is not None else "unresolved" if dispatched else "cancelled", failure)
             raise DecisionError(failure, attempt_id=attempt_id) from None
@@ -447,7 +491,7 @@ class DecisionProvider:
             # Decoder/adapter faults are not evidence of a network outage.
             # Relabeling them as transport failure would enable approval
             # fallback after an unreadable or incomplete assessment.
-            failure = "decision_invalid_response" if dispatched else "decision_admission_failed"
+            failure = state.get("terminal_failure") or ("decision_invalid_response" if dispatched else "decision_admission_failed")
             if not settled:
                 await settle("rejected" if measured is not None else "unresolved" if dispatched else "cancelled", failure)
             raise DecisionError(failure, attempt_id=attempt_id) from None

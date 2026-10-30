@@ -41,14 +41,28 @@ def outage_runtime(store, dispatch_runtime, monkeypatch, tmp_path):
             if settings.get("stream_cleanup"):
                 class Body(httpx.AsyncByteStream):
                     async def __aiter__(self):
-                        yield json.dumps(body).encode()
+                        if settings.get("response_fault") == "actual_size":
+                            from src.decisions.contracts import MAX_RESPONSE_BYTES
+                            yield b"x" * (MAX_RESPONSE_BYTES + 1)
+                        else:
+                            yield json.dumps(body).encode()
                         settings["body_eof"] = True
                     async def aclose(self):
                         settings["cleanup_started"].set()
                         if settings["stream_cleanup"] == "read_timeout":
                             raise httpx.ReadTimeout("synthetic cleanup timeout")
-                        await asyncio.Event().wait()
-                return httpx.Response(200, stream=Body())
+                        try:
+                            await asyncio.Event().wait()
+                        except asyncio.CancelledError:
+                            if settings["stream_cleanup"] == "mask_cancel":
+                                raise httpx.ReadTimeout("synthetic cleanup masked cancellation")
+                            raise
+                from src.decisions.contracts import MAX_RESPONSE_BYTES
+                fault = settings.get("response_fault")
+                headers = ({"content-encoding": "gzip"} if fault == "encoding" else
+                           {"content-length": str(MAX_RESPONSE_BYTES + 1)} if fault == "declared_size" else
+                           {"content-length": "invalid"} if fault == "invalid_length" else {})
+                return httpx.Response(302 if fault == "redirect" else 200, headers=headers, stream=Body())
             return httpx.Response(200, json=body)
         if settings["failure"] == "timeout":
             await asyncio.Event().wait()
@@ -253,13 +267,15 @@ async def test_complete_stream_cleanup_cannot_override_response(
             await asyncio.gather(*list(provider._store_tasks), return_exceptions=True)
     [record] = rt.attempts.records_for_run("alice", "a", bound.run_id)
     assert record["status"] == "rejected" and record["usage"] == {"input_tokens": 20, "output_tokens": 5}
-    assert record["failure_kind"] == "decision_response_not_finalized"
+    assert record["failure_kind"] == ("decision_invalid_answers" if verdict == "malformed"
+                                      else "decision_response_not_finalized")
 
 
 @pytest.mark.asyncio
-async def test_explicit_cancel_during_complete_stream_cleanup_stays_cancelled(outage_runtime):
+@pytest.mark.parametrize("cleanup", ["hang", "mask_cancel"])
+async def test_explicit_cancel_during_complete_stream_cleanup_stays_cancelled(outage_runtime, cleanup):
     rt = outage_runtime
-    rt.settings.update(answer=decision("deny"), stream_cleanup="hang", cleanup_started=asyncio.Event())
+    rt.settings.update(answer=decision("deny"), stream_cleanup=cleanup, cleanup_started=asyncio.Event())
     bound = await rt.start()
     task = asyncio.create_task(rt.action(bound, 0))
     await asyncio.wait_for(rt.settings["cleanup_started"].wait(), 2)
@@ -272,6 +288,58 @@ async def test_explicit_cancel_during_complete_stream_cleanup_stays_cancelled(ou
             await asyncio.gather(*list(provider._store_tasks), return_exceptions=True)
     [record] = rt.attempts.records_for_run("alice", "a", bound.run_id)
     assert record["status"] == "rejected" and record["usage"] == {"input_tokens": 20, "output_tokens": 5}
+    assert record["failure_kind"] == "decision_cancelled"
+    assert not rt.fallback_calls and not rt.effects
+
+
+@pytest.mark.asyncio
+@pytest.mark.parametrize("fault,expected", [
+    ("encoding", "decision_encoding_refused"), ("declared_size", "decision_response_too_large"),
+    ("actual_size", "decision_response_too_large"), ("invalid_length", "decision_invalid_response"),
+    ("redirect", "decision_redirect_refused"),
+])
+@pytest.mark.parametrize("deadline_owner", ["provider", "review", "read_timeout"])
+async def test_terminal_response_rejection_survives_cleanup_before_eof(
+        outage_runtime, monkeypatch, fault, expected, deadline_owner):
+    if deadline_owner == "review":
+        from src.approval_review import ApprovalReviewService
+        original = ApprovalReviewService.review
+        async def bounded_review(self, *args, **kwargs):
+            return await original(self, *args, **kwargs, deadline=time.monotonic() + .5)
+        monkeypatch.setattr(ApprovalReviewService, "review", bounded_review)
+    rt = outage_runtime
+    rt.settings.update(answer=decision("deny"), response_fault=fault, cleanup_started=asyncio.Event(),
+        stream_cleanup="read_timeout" if deadline_owner == "read_timeout" else "hang")
+    bound = await rt.start(timeout=.2 if deadline_owner == "provider" else 30)
+    result = (await rt.action(bound, 0))[1]
+    assert not rt.settings.get("body_eof") and rt.settings["cleanup_started"].is_set()
+    assert result.get("blocked") and not rt.fallback_calls and not rt.effects, result
+    for provider in rt.providers:
+        while provider._store_tasks:
+            await asyncio.gather(*list(provider._store_tasks), return_exceptions=True)
+    [record] = rt.attempts.records_for_run("alice", "a", bound.run_id)
+    assert record["status"] == "unresolved" and record["usage"] is None
+    assert record["failure_kind"] == expected
+    assert result["approval_review"]["failure_kind"] == expected
+
+
+@pytest.mark.asyncio
+@pytest.mark.parametrize("cleanup", ["hang", "mask_cancel"])
+async def test_explicit_cancel_during_terminal_rejection_cleanup_stays_cancelled(outage_runtime, cleanup):
+    rt = outage_runtime
+    rt.settings.update(answer=decision("deny"), response_fault="encoding",
+                       stream_cleanup=cleanup, cleanup_started=asyncio.Event())
+    bound = await rt.start()
+    task = asyncio.create_task(rt.action(bound, 0))
+    await asyncio.wait_for(rt.settings["cleanup_started"].wait(), 2)
+    task.cancel()
+    with pytest.raises(asyncio.CancelledError):
+        await task
+    for provider in rt.providers:
+        while provider._store_tasks:
+            await asyncio.gather(*list(provider._store_tasks), return_exceptions=True)
+    [record] = rt.attempts.records_for_run("alice", "a", bound.run_id)
+    assert record["status"] == "unresolved" and record["usage"] is None
     assert record["failure_kind"] == "decision_cancelled"
     assert not rt.fallback_calls and not rt.effects
 
