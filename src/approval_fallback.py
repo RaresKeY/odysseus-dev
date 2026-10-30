@@ -7,6 +7,8 @@ they never pretend to be Jev distributions. No tools, approval cache or route re
 from dataclasses import dataclass, field
 from collections import OrderedDict
 import hashlib
+import hmac
+import secrets
 from threading import RLock
 import time
 
@@ -23,6 +25,7 @@ FALLBACK_PROMPT_SHA256 = hashlib.sha256(FALLBACK_INSTRUCTIONS.encode()).hexdiges
 # Observed wire-contract failures only, scoped to the current saved selection,
 # exact resolved model/registration, owner, chat and database. No answer or
 # approval is cached. Expiry permits recovery without probing or a hidden retry.
+_BINDING_KEY = secrets.token_bytes(32)
 _INCOMPATIBLE_SECONDS = 300
 _INCOMPATIBLE_LIMIT = 256
 _incompatible = OrderedDict()
@@ -43,7 +46,7 @@ def _binding_key(db, row, owner, model, identifier):
             "model": model, "endpoint_id": identifier, "registration": revision,
             "auth_revision": str(getattr(auth, "updated_at", "") or ""),
             "contract": CONTRACT_REVISION}
-    return db.get_bind(), hashlib.sha256(encode(seal)).hexdigest()
+    return db.get_bind(), hmac.new(_BINDING_KEY, encode(seal), hashlib.sha256).hexdigest()
 
 
 def _incompatibility(key, *, remember=None):

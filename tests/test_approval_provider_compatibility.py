@@ -320,3 +320,16 @@ def test_context_recovery_observation_has_only_an_allowlisted_renewal_reason(sto
     assert item["approval"]["reason"] == (REASONS["insufficient_evidence"] if failure == "unknown_untrusted_reason"
                                            else "Renew review context in Chat settings.")
     assert "UNTRUSTED" not in json.dumps(item)
+
+
+def test_memo_identity_uses_a_process_key_without_retaining_credentials(store, dispatch_runtime, monkeypatch):
+    with store.transaction() as db:
+        row = db.get(d.Session, "a")
+        row.headers = {"Authorization": "Bearer fixture"}
+        first = fallback._binding_key(db, row, "alice", "manual", "reviewer")
+        assert first == fallback._binding_key(db, row, "alice", "manual", "reviewer")
+        monkeypatch.setattr(fallback, "_BINDING_KEY", b"different-process-key" * 2)
+        second = fallback._binding_key(db, row, "alice", "manual", "reviewer")
+        assert first[0] is second[0] and first[1] != second[1]
+        assert len(first[1]) == len(second[1]) == 64
+        assert "fixture" not in repr((first, second))
