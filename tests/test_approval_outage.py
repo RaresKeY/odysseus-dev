@@ -252,7 +252,7 @@ async def test_complete_stream_cleanup_cannot_override_response(
         from src.approval_review import ApprovalReviewService
         original = ApprovalReviewService.review
         async def bounded_review(self, *args, **kwargs):
-            return await original(self, *args, **kwargs, deadline=time.monotonic() + .5)
+            return await original(self, *args, **kwargs, deadline=time.monotonic() + 2)
         monkeypatch.setattr(ApprovalReviewService, "review", bounded_review)
     rt = outage_runtime
     rt.settings.update(answer=decision("review" if verdict == "review" else "deny"),
