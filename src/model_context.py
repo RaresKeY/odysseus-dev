@@ -5,7 +5,12 @@ Query and cache model context window sizes from OpenAI-compatible APIs.
 Provides token estimation for context usage tracking.
 """
 
+from collections import OrderedDict
+from collections.abc import Mapping
 import ipaddress
+import math
+import threading
+import time
 import logging
 import sys
 from typing import Dict, List, Optional, Tuple
@@ -65,7 +70,10 @@ def _configured_endpoint_kind(url: str) -> Optional[str]:
         db = SessionLocal()
         try:
             rows = db.query(ModelEndpoint).filter(ModelEndpoint.is_enabled == True).all()
-            for ep in rows:
+            matches = [ep for ep in rows if _normalize_base_for_compare(getattr(ep, "base_url", "") or "") == target]
+            if len(matches) != 1:
+                return None
+            for ep in matches:
                 base = _normalize_base_for_compare(getattr(ep, "base_url", "") or "")
                 if not base:
                     continue
@@ -237,73 +245,144 @@ KNOWN_CONTEXT_WINDOWS = {
     'solar': 32768,
 }
 
-# ---------------------------------------------------------------------------
-# Cache
-# ---------------------------------------------------------------------------
-_context_cache: Dict[Tuple[str, str], Tuple[int, bool]] = {}
-_ollama_runtime_endpoints: set[str] = set()
+_CACHE_TTL_SECONDS = 300.0
+_MAX_CACHE_SCOPES = 128
+_cache_lock = threading.RLock()
+_context_cache = OrderedDict()
+_ollama_runtime_endpoints = OrderedDict()
 
 
-def _get_context_length_cached(endpoint_url: str, model: str) -> Tuple[int, bool]:
-    """Return (context_length, known). ``known`` is False only when the value is a
-    bare DEFAULT_CONTEXT fallback (no endpoint report and not in the known table)."""
-    configured_kind = _configured_endpoint_kind(endpoint_url)
-    is_local = is_local_endpoint(endpoint_url)
-    has_dynamic_runtime_context = (
-        endpoint_url in _ollama_runtime_endpoints
-        or _ollama_ps_url(endpoint_url, configured_kind) is not None
-    )
-    # Key on (endpoint_url, model): the same model id can be served by two
-    # different remote endpoints with different real context windows (e.g. a
-    # capped proxy vs. the full provider), so caching by model id alone would
-    # serve one endpoint's window for the other (issue #2603).
-    cache_key = (endpoint_url, model)
-    if not is_local and not has_dynamic_runtime_context and cache_key in _context_cache:
-        return _context_cache[cache_key]
-
-    ctx, known = _query_context_length(endpoint_url, model)
-    # Only cache non-default values to allow retry on next request.
-    # Local endpoints can restart with a different --max-model-len while keeping
-    # the same model id, so always re-query them instead of serving stale cache.
-    if not is_local and not has_dynamic_runtime_context and (
-        ctx != DEFAULT_CONTEXT or configured_kind in ("api", "proxy")
-    ):
-        _context_cache[cache_key] = (ctx, known)
-    logger.info(f"Context length for {model}: {ctx}")
-    return ctx, known
+def _cache_read(cache, key):
+    with _cache_lock:
+        entry = cache.get(key)
+        if entry is None:
+            return None
+        expires, value = entry
+        if expires <= time.monotonic():
+            cache.pop(key, None)
+            return None
+        cache.move_to_end(key)
+        return value
 
 
-def get_context_length(endpoint_url: str, model: str) -> int:
-    """Get the context window size for a model.
-
-    Queries /v1/models on the endpoint and looks for context_length
-    or context_window fields. Caches result per (endpoint, model).
-    Falls back to DEFAULT_CONTEXT if unavailable.
-    """
-    return _get_context_length_cached(endpoint_url, model)[0]
+def _cache_store(cache, key, value):
+    with _cache_lock:
+        cache[key] = (time.monotonic() + _CACHE_TTL_SECONDS, value)
+        cache.move_to_end(key)
+        while len(cache) > _MAX_CACHE_SCOPES:
+            cache.popitem(last=False)
 
 
-def get_context_length_known(endpoint_url: str, model: str) -> Tuple[int, bool]:
-    """Like ``get_context_length`` but also returns whether the window was actually
-    discovered (endpoint-reported or in the known-models table) rather than the bare
-    DEFAULT_CONTEXT fallback. Callers that *scale* a budget off the window must not
-    trust an unknown value — a fallback 128K isn't proof the model holds 128K
-    (review on #4122)."""
-    return _get_context_length_cached(endpoint_url, model)
+def _request_kind(endpoint_url, headers, endpoint_kind):
+    if endpoint_kind is not None:
+        return endpoint_kind if endpoint_kind in {"auto", "local", "api", "proxy"} else None
+    # An admitted route must not acquire another registration's classification.
+    return _configured_endpoint_kind(endpoint_url) if headers is None else None
 
 
-def budget_context_for_model(endpoint_url: str, model: str, *, fallback: int = 0) -> int:
-    """Context window to scale the agent input budget against.
+def _scope(endpoint_url, headers, kind):
+    from src.model_capability_cache import scope_for_endpoint
+    value = scope_for_endpoint(endpoint_url, headers)
+    return (value, kind or "auto") if value else None
 
-    Returns the *freshly discovered* window when it was actually proven
-    (endpoint-reported / known table), else 0 so auto-scaling stays conservative.
-    Crucially this binds the ``known`` flag to the value it proves — callers must
-    not pair this flag with a context length from a *different* lookup (a stale
-    local re-query, or a caller that didn't pass one), which would budget off an
-    unproven number (review on #4122). On probe error, returns ``fallback`` (the
-    caller's best-known value) to preserve prior behaviour."""
+
+def _local_for_kind(endpoint_url, kind):
+    if kind in {"api", "proxy"}:
+        return False
+    if kind == "local":
+        return True
     try:
-        ctx, known = get_context_length_known(endpoint_url, model)
+        host = (urlparse(endpoint_url).hostname or "").lower()
+        return host in _LOCAL_HOSTS or _is_private_ip_literal(host) or _in_tailscale_range(host)
+    except (TypeError, ValueError):
+        return False
+
+
+def _probe_get(endpoint_url, target_url, headers):
+    """Use only caller-selected credentials, without redirects or origin changes."""
+    if not target_url:
+        return None
+    source, target = urlparse(endpoint_url), urlparse(target_url)
+
+    def origin(parsed):
+        if parsed.scheme not in {"http", "https"} or not parsed.hostname:
+            return None
+        if parsed.username is not None or parsed.password is not None:
+            return None
+        return parsed.scheme, parsed.hostname.lower(), parsed.port or (443 if parsed.scheme == "https" else 80)
+
+    if origin(source) is None or origin(source) != origin(target):
+        return None
+    kwargs = {"timeout": REQUEST_TIMEOUT}
+    if headers is not None:
+        if not isinstance(headers, Mapping) or any(not isinstance(k, str) or not isinstance(v, str) for k, v in headers.items()):
+            return None
+        from src.tls_overrides import llm_verify
+        kwargs.update(headers=dict(headers), follow_redirects=False, verify=llm_verify())
+    return httpx.get(target_url, **kwargs)
+
+
+def _get_context_length_cached(endpoint_url, model, *, headers=None, endpoint_kind=None):
+    kind = _request_kind(endpoint_url, headers, endpoint_kind)
+    scope = _scope(endpoint_url, headers, kind)
+    if scope is None:
+        return DEFAULT_CONTEXT, False
+    local = _local_for_kind(endpoint_url, kind)
+    dynamic = _cache_read(_ollama_runtime_endpoints, scope) or _ollama_ps_url(endpoint_url, kind) is not None
+    key = (scope, model)
+    cached = _cache_read(_context_cache, key) if not local and not dynamic else None
+    if cached is not None:
+        return cached
+    value = _query_context_length(endpoint_url, model, headers=headers, endpoint_kind=kind)
+    if not local and not dynamic and (value[0] != DEFAULT_CONTEXT or kind in {"api", "proxy"}):
+        _cache_store(_context_cache, key, value)
+    return value
+
+
+def get_context_length(endpoint_url: str, model: str, *, headers=None, endpoint_kind=None) -> int:
+    """Resolve a window for one already-selected route and credential identity."""
+    return _get_context_length_cached(endpoint_url, model, headers=headers, endpoint_kind=endpoint_kind)[0]
+
+
+def get_session_context_length(session, *, owner) -> int:
+    """Refresh the owned registration before UI reads use any stored credential."""
+    model = getattr(session, "model", "")
+    url = getattr(session, "endpoint_url", "")
+    endpoint_id = getattr(session, "endpoint_id", None)
+    if not endpoint_id:
+        return get_context_length(url, model, headers={})
+    from src.owner_identity import effective_storage_owner
+    admitted = effective_storage_owner(owner)
+    if admitted is None:
+        return DEFAULT_CONTEXT
+    try:
+        from src.model_admission import require_owner_model
+        from src.endpoint_resolver import resolve_endpoint_by_id
+        require_owner_model(admitted, model)
+        route = resolve_endpoint_by_id(endpoint_id, model, owner=admitted, require_exact_model=True)
+        if route is None:
+            return DEFAULT_CONTEXT
+        return get_context_length(route[0], route[1], headers=route[2])
+    except Exception as exc:
+        logger.debug("Session context admission failed: %s", type(exc).__name__)
+        return DEFAULT_CONTEXT
+
+
+def get_context_length_known(endpoint_url: str, model: str, *, headers=None, endpoint_kind=None) -> Tuple[int, bool]:
+    """Return the window and its evidence flag from the same scoped lookup."""
+    return _get_context_length_cached(endpoint_url, model, headers=headers, endpoint_kind=endpoint_kind)
+
+
+def budget_context_for_model(endpoint_url: str, model: str, *, fallback: int = 0,
+                             headers=None, endpoint_kind=None) -> int:
+    """Use proven context evidence; retain the caller's fallback on probe errors."""
+    try:
+        options = {}
+        if headers is not None:
+            options["headers"] = headers
+        if endpoint_kind is not None:
+            options["endpoint_kind"] = endpoint_kind
+        ctx, known = get_context_length_known(endpoint_url, model, **options)
         return ctx if known else 0
     except Exception:
         return fallback
@@ -328,6 +407,14 @@ def _lookup_known(model: str) -> Optional[int]:
     return best_ctx
 
 
+def _positive_window(value):
+    if type(value) is int:
+        return value if 0 < value <= 2**53 else None
+    if type(value) is float and math.isfinite(value) and value.is_integer() and 0 < value <= 2**53:
+        return int(value)
+    return None
+
+
 def _model_ctx_from_entry(m: dict) -> Optional[int]:
     """Extract a positive context window from one /models catalog entry.
 
@@ -344,65 +431,58 @@ def _model_ctx_from_entry(m: dict) -> Optional[int]:
         "max_seq_len",
     ):
         val = m.get(field)
-        if val and isinstance(val, (int, float)) and val > 0:
-            return int(val)
+        if (window := _positive_window(val)) is not None:
+            return window
     meta = m.get("meta") or m.get("model_extra") or {}
     if isinstance(meta, dict):
         # n_ctx is the actual serving context (set via -c flag in llama.cpp)
         for field in ("n_ctx", "context_length", "context_window", "max_model_len"):
             val = meta.get(field)
-            if val and isinstance(val, (int, float)) and val > 0:
-                return int(val)
+            if (window := _positive_window(val)) is not None:
+                return window
     return None
 
 
-# Per-endpoint cache of the {model_id: context_length} map parsed from a
-# proxy/api catalog. api/proxy endpoints skip the /models download on every
-# lookup because a large catalog is expensive; caching the whole map lets us
-# pay that download at most once per endpoint instead of once per model.
-_catalog_ctx_cache: Dict[str, Dict[str, int]] = {}
+_catalog_ctx_cache = OrderedDict()
 
 
-def _proxy_catalog_context(endpoint_url: str, model: str) -> Optional[int]:
-    """Context window for a model read from the endpoint's /models catalog.
+def _catalog_context(payload, model):
+    rows = payload if isinstance(payload, list) else payload.get("data", []) if isinstance(payload, dict) else []
+    if not isinstance(rows, list):
+        return None
+    values = [(row.get("id"), _model_ctx_from_entry(row)) for row in rows if isinstance(row, dict)]
+    exact = [ctx for mid, ctx in values if mid == model and ctx is not None]
+    if exact:
+        return exact[0] if len(set(exact)) == 1 else None
+    aliases = [ctx for mid, ctx in values if isinstance(mid, str) and mid.rsplit("/", 1)[-1] == model.rsplit("/", 1)[-1] and ctx is not None]
+    return aliases[0] if len(aliases) == 1 else None
 
-    Fetches the catalog once per endpoint and caches the full id->context map,
-    so an api/proxy endpoint serving a model that isn't in KNOWN_CONTEXT_WINDOWS
-    (e.g. a new OpenRouter model) still reports its real window instead of the
-    bare default. Returns None when the catalog can't be read or doesn't list a
-    positive window for the model.
-    """
-    cat = _catalog_ctx_cache.get(endpoint_url)
-    if cat is None:
+
+def _proxy_catalog_context(endpoint_url, model, *, headers=None, endpoint_kind=None):
+    """Cache catalog evidence only within its route, account and lifetime."""
+    scope = _scope(endpoint_url, headers, endpoint_kind)
+    if scope is None:
+        return None
+    payload = _cache_read(_catalog_ctx_cache, scope)
+    if payload is None:
         from src.endpoint_resolver import build_models_url
         try:
-            r = httpx.get(build_models_url(endpoint_url), timeout=REQUEST_TIMEOUT)
-        except Exception as e:
-            logger.debug(f"Failed to fetch proxy catalog for context length: {e}")
+            response = _probe_get(endpoint_url, build_models_url(endpoint_url), headers)
+            if response is None or not response.is_success:
+                return None
+            payload = response.json()
+            rows = payload if isinstance(payload, list) else payload.get("data") if isinstance(payload, dict) else None
+            if not isinstance(rows, list):
+                return None
+            # Retain only model IDs and windows, not raw provider payloads.
+            payload = {"data": [{"id": row["id"], "context_length": window}
+                                for row in rows if isinstance(row, dict) and isinstance(row.get("id"), str)
+                                if (window := _model_ctx_from_entry(row)) is not None]}
+            _cache_store(_catalog_ctx_cache, scope, payload)
+        except Exception as exc:
+            logger.debug("Context catalog probe failed: %s", type(exc).__name__)
             return None
-        if not r.is_success:
-            return None
-        cat = {}
-        try:
-            for m in (r.json().get("data") or []):
-                mid = m.get("id") if isinstance(m, dict) else None
-                ctx = _model_ctx_from_entry(m) if mid else None
-                if mid and ctx:
-                    cat[mid] = ctx
-        except Exception as e:
-            logger.debug(f"Failed to parse proxy catalog for context length: {e}")
-            return None
-        _catalog_ctx_cache[endpoint_url] = cat
-
-    if model in cat:
-        return cat[model]
-    # Catalog ids may carry a provider prefix (e.g. "openai/gpt-4o") while the
-    # session stores the bare id; match on the trailing segment as a fallback.
-    base = model.split("/")[-1]
-    for mid, ctx in cat.items():
-        if mid.split("/")[-1] == base:
-            return ctx
-    return None
+    return _catalog_context(payload, model)
 
 
 def _ollama_ps_url(endpoint_url: str, configured_kind: Optional[str]) -> Optional[str]:
@@ -474,6 +554,7 @@ def _probe_ollama_runtime_context(
     model: str,
     *,
     configured_kind: Optional[str],
+    headers=None,
 ) -> Optional[int]:
     """Ask Ollama for the allocation of a currently loaded model."""
 
@@ -481,15 +562,15 @@ def _probe_ollama_runtime_context(
     if not ps_url:
         return None
     try:
-        response = httpx.get(ps_url, timeout=REQUEST_TIMEOUT)
-        if not response.is_success:
+        response = _probe_get(endpoint_url, ps_url, headers)
+        if response is None or not response.is_success:
             return None
         payload = response.json()
         if not isinstance(payload, dict) or not isinstance(payload.get("models"), list):
             return None
 
         # A valid /api/ps response prevents caching static runtime assumptions.
-        _ollama_runtime_endpoints.add(endpoint_url)
+        _cache_store(_ollama_runtime_endpoints, _scope(endpoint_url, headers, configured_kind), True)
 
         from src.model_capability_readers import ollama
 
@@ -500,23 +581,24 @@ def _probe_ollama_runtime_context(
         )
         return runtime.allocated_context_tokens if runtime is not None else None
     except Exception as exc:
-        logger.debug("Ollama runtime context probe failed for %s: %s", model, exc)
+        logger.debug("Ollama context probe failed: %s", type(exc).__name__)
         return None
 
 
-def _query_context_length(endpoint_url: str, model: str) -> Tuple[int, bool]:
+def _query_context_length(endpoint_url: str, model: str, *, headers=None, endpoint_kind=None) -> Tuple[int, bool]:
     """Query the model API for context length. Returns (context_length, known) where
     ``known`` is False only for the bare DEFAULT_CONTEXT fallback."""
     known = _lookup_known(model)
     api_ctx = None
-    configured_kind = _configured_endpoint_kind(endpoint_url)
+    configured_kind = _request_kind(endpoint_url, headers, endpoint_kind)
+    scope = _scope(endpoint_url, headers, configured_kind)
 
     # Probe actual Ollama allocation before API-kind static fallback.
     if configured_kind == "api":
         runtime_ctx = _probe_ollama_runtime_context(
             endpoint_url,
             model,
-            configured_kind=configured_kind,
+            configured_kind=configured_kind, headers=headers,
         )
         if runtime_ctx:
             logger.info(
@@ -525,7 +607,7 @@ def _query_context_length(endpoint_url: str, model: str) -> Tuple[int, bool]:
                 runtime_ctx,
             )
             return runtime_ctx, True
-        if endpoint_url in _ollama_runtime_endpoints:
+        if _cache_read(_ollama_runtime_endpoints, scope):
             # An unloaded model has no effective runtime allocation.
             return DEFAULT_CONTEXT, False
 
@@ -540,22 +622,24 @@ def _query_context_length(endpoint_url: str, model: str) -> Tuple[int, bool]:
         # once per endpoint) instead of capping every unknown model at the
         # default — that under-reported large windows on aggregators like
         # OpenRouter (issue #4886).
-        api_ctx = _proxy_catalog_context(endpoint_url, model)
+        api_ctx = _proxy_catalog_context(endpoint_url, model, headers=headers, endpoint_kind=configured_kind)
         if api_ctx:
             logger.info(f"Proxy catalog reports context window for {model}: {api_ctx}")
             return api_ctx, True
         return DEFAULT_CONTEXT, False
 
     # Try llama.cpp /slots endpoint first — reports actual serving context
-    if is_local_endpoint(endpoint_url):
-        base = endpoint_url.split("/v1")[0] if "/v1" in endpoint_url else endpoint_url.rsplit("/", 1)[0]
+    if _local_for_kind(endpoint_url, configured_kind):
+        base = _normalize_base_for_compare(endpoint_url)
+        if base.endswith("/v1"):
+            base = base[:-3]
         try:
-            r = httpx.get(f"{base}/slots", timeout=REQUEST_TIMEOUT)
-            if r.is_success:
+            r = _probe_get(endpoint_url, f"{base}/slots", headers)
+            if r is not None and r.is_success:
                 slots = r.json()
                 if isinstance(slots, list) and slots:
                     n_ctx = slots[0].get("n_ctx")
-                    if n_ctx and isinstance(n_ctx, int) and n_ctx > 0:
+                    if type(n_ctx) is int and n_ctx > 0:
                         logger.info(f"llama.cpp /slots reports n_ctx={n_ctx} for {model}")
                         return n_ctx, True
         except Exception:
@@ -564,12 +648,12 @@ def _query_context_length(endpoint_url: str, model: str) -> Tuple[int, bool]:
         # /props endpoint still reports the active serving context, and is the
         # authoritative value for single-slot servers.
         try:
-            r = httpx.get(f"{base}/props", timeout=REQUEST_TIMEOUT)
-            if r.is_success:
+            r = _probe_get(endpoint_url, f"{base}/props", headers)
+            if r is not None and r.is_success:
                 props = r.json()
                 generation = props.get("default_generation_settings") if isinstance(props, dict) else None
                 n_ctx = generation.get("n_ctx") if isinstance(generation, dict) else None
-                if n_ctx and isinstance(n_ctx, (int, float)) and n_ctx > 0:
+                if type(n_ctx) in (int, float) and math.isfinite(n_ctx) and n_ctx > 0:
                     logger.info(f"llama.cpp /props reports n_ctx={int(n_ctx)} for {model}")
                     return int(n_ctx), True
         except Exception:
@@ -579,7 +663,7 @@ def _query_context_length(endpoint_url: str, model: str) -> Tuple[int, bool]:
         runtime_ctx = _probe_ollama_runtime_context(
             endpoint_url,
             model,
-            configured_kind=configured_kind,
+            configured_kind=configured_kind, headers=headers,
         )
         if runtime_ctx:
             logger.info(
@@ -588,7 +672,7 @@ def _query_context_length(endpoint_url: str, model: str) -> Tuple[int, bool]:
                 runtime_ctx,
             )
             return runtime_ctx, True
-        if endpoint_url in _ollama_runtime_endpoints:
+        if _cache_read(_ollama_runtime_endpoints, scope):
             return DEFAULT_CONTEXT, False
 
     # GitHub Copilot's /models requires auth + X-GitHub-Api-Version headers that
@@ -606,23 +690,16 @@ def _query_context_length(endpoint_url: str, model: str) -> Tuple[int, bool]:
 
     models_url = build_models_url(endpoint_url)
     try:
-        r = httpx.get(models_url, timeout=REQUEST_TIMEOUT)
-        if r.is_success:
-            data = r.json()
-            models_list = data.get("data") or []
-
-            for m in models_list:
-                mid = m.get("id", "")
-                if mid == model or mid.split("/")[-1] == model.split("/")[-1]:
-                    api_ctx = _model_ctx_from_entry(m)
-                    break
+        r = _probe_get(endpoint_url, models_url, headers)
+        if r is not None and r.is_success:
+            api_ctx = _catalog_context(r.json(), model)
     except Exception as e:
-        logger.debug(f"Failed to query context length for {model}: {e}")
+        logger.debug("Context probe failed: %s", type(e).__name__)
 
     # For local/self-hosted endpoints, trust the API value (user set --max-model-len)
     # For cloud APIs, use the larger value (API can report low defaults)
     if api_ctx and known:
-        _is_local = is_local_endpoint(endpoint_url)
+        _is_local = _local_for_kind(endpoint_url, configured_kind)
         if _is_local and api_ctx < known:
             logger.info(f"Local endpoint reports {api_ctx} for {model} (known max: {known}) — using API value")
             return api_ctx, True

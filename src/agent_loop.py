@@ -24172,12 +24172,17 @@ async def stream_agent_loop(
 
     _t2 = time.time()
     _route_context_lengths = {}
+
+    def _route_context_key(url, selected_model, selected_headers):
+        from src.model_capability_cache import scope_for_endpoint
+        return scope_for_endpoint(url, selected_headers), selected_model
+
     _deterministic_compaction = bool(
         isinstance(client_runtime_context, dict)
         and client_runtime_context.get("deterministic_compaction") is True
     )
 
-    def _trim_route_request_messages(candidate_url, candidate_model, route_messages):
+    def _trim_route_request_messages(candidate_url, candidate_model, route_messages, candidate_headers=None):
         """Apply the candidate route's own context budget to its request."""
 
         def _without_protection(items):
@@ -24200,6 +24205,7 @@ async def stream_agent_loop(
                 candidate_url,
                 candidate_model,
                 fallback=context_length,
+                headers=candidate_headers,
             )
             # A proxy can serve a model under a familiar family name while
             # enforcing a smaller context window than the family default.
@@ -24217,7 +24223,7 @@ async def stream_agent_loop(
                     if candidate_context > 0
                     else runtime_context_window
                 )
-            _route_context_lengths[(candidate_url, candidate_model)] = candidate_context
+            _route_context_lengths[_route_context_key(candidate_url, candidate_model, candidate_headers)] = candidate_context
             soft_budget = int(get_setting("agent_input_token_budget", DEFAULT_BUDGET) or 0)
             if soft_budget <= 0:
                 return _without_protection(route_messages)
@@ -24955,9 +24961,10 @@ async def stream_agent_loop(
         endpoint_url,
         model,
         messages,
+        headers,
     )
     _initial_route_context_length = _route_context_lengths.get(
-        (endpoint_url, model),
+        _route_context_key(endpoint_url, model, headers),
         context_length,
     )
     prep_timings["context_trim"] = time.time() - _t3
@@ -26518,6 +26525,7 @@ async def stream_agent_loop(
                     candidate_url,
                     candidate_model,
                     state["messages"],
+                    candidate_headers,
                 )
             deepseek_visual_messages = None
             if _is_deepseek_flash_vision_model(candidate_model):
@@ -26534,7 +26542,7 @@ async def stream_agent_loop(
             state["request_messages"] = request_messages
             _last_route_request_messages = request_messages
             state["context_length"] = _route_context_lengths.get(
-                (candidate_url, candidate_model),
+                _route_context_key(candidate_url, candidate_model, candidate_headers),
                 context_length,
             )
             _last_route_context_length = state["context_length"]
@@ -26622,11 +26630,12 @@ async def stream_agent_loop(
                 candidate_url,
                 candidate_model,
                 state["messages"],
+                candidate_headers,
             )
             state["request_messages"] = request_messages
             state["tools"] = []
             state["context_length"] = _route_context_lengths.get(
-                (candidate_url, candidate_model),
+                _route_context_key(candidate_url, candidate_model, candidate_headers),
                 context_length,
             )
             _candidate_request_states[index] = state
@@ -27751,9 +27760,10 @@ async def stream_agent_loop(
                                     endpoint_url,
                                     model,
                                     answering_state["messages"],
+                                    headers,
                                 )
                                 answering_state["context_length"] = _route_context_lengths.get(
-                                    (endpoint_url, model),
+                                    _route_context_key(endpoint_url, model, headers),
                                     context_length,
                                 )
                             messages = answering_state["messages"]
