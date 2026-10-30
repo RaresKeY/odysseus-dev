@@ -316,6 +316,16 @@ def test_granite_model_is_advertised_by_tool_schema():
     assert "Granite TurboCTC" in BUILTIN_TOOL_DESCRIPTIONS["transcribe_media"]
     assert "plain text without timestamps" in BUILTIN_TOOL_DESCRIPTIONS["transcribe_media"]
 
+    from src.clean_agent_preview import compact_schemas
+
+    compact = next(item['function'] for item in compact_schemas(FUNCTION_TOOL_SCHEMAS)
+                   if item['function']['name'] == 'transcribe_media')
+    assert GRANITE_STT_MODEL in compact['parameters']['properties']['model']['enum']
+    assert 'plain text without timestamps' in compact['description']
+    assert 'forced-language' in compact['description']
+    assert 'five-minute limit' in compact['description']
+    assert 'Granite supports .txt only' in compact['parameters']['properties']['output_path']['description']
+
 
 @pytest.mark.skipif(not os.environ.get("ODYSSEUS_GRANITE_SMOKE_AUDIO"), reason="opt-in real model download")
 def test_granite_real_cpu_transcription_through_route(monkeypatch, tmp_path):
