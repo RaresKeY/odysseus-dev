@@ -13,6 +13,7 @@ from src.model_capability_readers.base import (
     as_mapping,
     build_capability,
     compact_str,
+    identity_str,
     int_limit,
     merge_unique,
     model_id_from,
@@ -59,17 +60,8 @@ def _family_from_ollama_capabilities(values: Any) -> str:
 
 
 def _parameters_mapping(value: Any) -> Mapping[str, Any]:
-    if isinstance(value, Mapping):
-        return value
-    text = compact_str(value)
-    if not text:
-        return {}
-    parsed: dict[str, str] = {}
-    for line in text.splitlines():
-        parts = line.strip().split(None, 1)
-        if len(parts) == 2:
-            parsed[parts[0]] = parts[1]
-    return parsed
+    # Only structured parameters count; Modelfile text is not capability evidence.
+    return value if isinstance(value, Mapping) else {}
 
 
 def _modalities_for_family(family: str, capabilities: tuple[str, ...]) -> tuple[tuple[str, ...], tuple[str, ...]]:
@@ -122,7 +114,7 @@ def record_from_show_payload(
     endpoint_id: Any = "",
     base_url: Any = "",
 ) -> ModelCapabilityRecord | None:
-    model_id = compact_str(model_id) or model_id_from(payload, "model", "name")
+    model_id = identity_str(model_id) or model_id_from(payload, "model", "name")
     if not model_id:
         return None
     capability_values = payload.get("capabilities")
