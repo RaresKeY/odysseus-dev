@@ -606,9 +606,10 @@ def validate_configuration(changes):
 
 
 def validate_elevation_roots(owner, roots):
-    from pathlib import Path
+    import os
     from src.settings import get_setting
     from src.tool_execution import vet_workspace
+    from src.agent_runtime.resources import FilesystemRoot
     allowed = get_setting("agent_elevation_roots", [])
     if not isinstance(roots, list) or len(roots) > 8:
         raise HTTPException(422, "Choose at most eight additional folders")
@@ -618,14 +619,30 @@ def validate_elevation_roots(owner, roots):
         raise HTTPException(403, "Elevation is disabled by the deployment")
     result = []
     for entry in roots:
-        if not isinstance(entry, dict) or set(entry) != {"path", "access"} or entry["access"] not in {"read", "write"}:
+        if (not isinstance(entry, dict) or set(entry) != {"path", "access"}
+                or not isinstance(entry["path"], str) or not entry["path"].strip() or "\x00" in entry["path"]
+                or not isinstance(entry["access"], str) or entry["access"] not in {"read", "write"}):
             raise HTTPException(422, "Invalid folder permission")
-        path = vet_workspace(entry["path"])
-        if not path or not any(Path(path).is_relative_to(Path(p).resolve()) for p in allowed if isinstance(p, str)):
+        try:
+            candidate = os.path.realpath(os.path.expanduser(entry["path"].strip()))
+        except (OSError, ValueError):
+            raise HTTPException(422, "Invalid folder permission") from None
+        for configured in allowed:
+            if not isinstance(configured, str) or not configured.strip():
+                continue
+            root = os.path.realpath(os.path.expanduser(configured))
+            if candidate != root and not candidate.startswith(root.rstrip(os.sep) + os.sep):
+                continue
+            # Check deployment scope before metadata probes or identity sealing.
+            if vet_workspace(candidate) != candidate:
+                raise HTTPException(403, "Folder is outside the deployment elevation scope")
+            sealed = FilesystemRoot.seal(candidate, owner=str(owner or "").strip().casefold())
+            if sealed.path != candidate:
+                raise HTTPException(403, "Folder changed during elevation admission")
+            result.append({"path": candidate, "access": entry["access"], "identity": sealed.to_dict()})
+            break
+        else:
             raise HTTPException(403, "Folder is outside the deployment elevation scope")
-        from src.agent_runtime.resources import FilesystemRoot
-        sealed = FilesystemRoot.seal(path, owner=str(owner or "").strip().casefold())
-        result.append({"path": path, "access": entry["access"], "identity": sealed.to_dict()})
     return result
 
 
