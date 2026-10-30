@@ -82,13 +82,20 @@ def test_dav_client_does_not_follow_redirect_to_internal_host():
         assert public_methods in (["PROPFIND"], ["PROPFIND", "GET"]), public_methods
         assert sink_hits == [], "redirect toward an internal host must not be followed"
 
-        # Positive control: demonstrate that the sink would see the redirect
-        # if the session's redirect protection were removed.
-        client.session.max_redirects = 30
+        # Test our session guard independently of CalDAV's origin checks.
+        public_methods.clear()
         try:
-            client.request(public_url, "PROPFIND", "")
+            client.session.request("PROPFIND", public_url, timeout=5, allow_redirects=True)
         except Exception:
-            pass  # The sink's response is intentionally not a valid DAV body.
+            pass
+        assert public_methods == ["PROPFIND"]
+        assert sink_hits == [], "the session guard must reject redirects"
+
+        client.session.max_redirects = 30
+        response = client.session.request(
+            "PROPFIND", public_url, timeout=5, allow_redirects=True,
+        )
+        response.close()
         assert sink_hits == ["/leak"], "the test must detect a followed redirect"
     finally:
         internal.shutdown()
