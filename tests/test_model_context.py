@@ -300,6 +300,29 @@ class TestGetContextLength:
         assert model_context.get_context_length(endpoint, "qwen3") == 65536
         assert fetches == ["http://127.0.0.1:11434/api/ps"]
 
+    @pytest.mark.parametrize("failure", ["http", "connection", "malformed"])
+    def test_configured_api_ollama_retries_after_initial_probe_failure(self, monkeypatch, failure):
+        self._api_db(monkeypatch)
+        fetches = []
+
+        def fake_get(url, *args, **kwargs):
+            fetches.append(url)
+            assert url == "http://127.0.0.1:11434/api/ps"
+            if len(fetches) == 1:
+                if failure == "connection":
+                    raise model_context.httpx.ConnectError("Ollama is starting")
+                return _FakeResp({}, ok=failure != "http")
+            return _FakeResp({
+                "models": [{"model": "gpt-4o", "context_length": 65536}],
+            })
+
+        monkeypatch.setattr(model_context.httpx, "get", fake_get)
+        endpoint = "http://127.0.0.1:11434/v1/chat/completions"
+
+        assert model_context.get_context_length_known(endpoint, "gpt-4o") == (128000, True)
+        assert model_context.get_context_length_known(endpoint, "gpt-4o") == (65536, True)
+        assert len(fetches) == 2
+
     def test_configured_api_ollama_retries_after_model_load(self, monkeypatch):
         self._api_db(monkeypatch)
         responses = [

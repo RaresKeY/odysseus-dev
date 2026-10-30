@@ -249,7 +249,10 @@ def _get_context_length_cached(endpoint_url: str, model: str) -> Tuple[int, bool
     bare DEFAULT_CONTEXT fallback (no endpoint report and not in the known table)."""
     configured_kind = _configured_endpoint_kind(endpoint_url)
     is_local = is_local_endpoint(endpoint_url)
-    has_dynamic_runtime_context = endpoint_url in _ollama_runtime_endpoints
+    has_dynamic_runtime_context = (
+        endpoint_url in _ollama_runtime_endpoints
+        or _ollama_ps_url(endpoint_url, configured_kind) is not None
+    )
     # Key on (endpoint_url, model): the same model id can be served by two
     # different remote endpoints with different real context windows (e.g. a
     # capped proxy vs. the full provider), so caching by model id alone would
@@ -262,7 +265,6 @@ def _get_context_length_cached(endpoint_url: str, model: str) -> Tuple[int, bool
     # Only cache non-default values to allow retry on next request.
     # Local endpoints can restart with a different --max-model-len while keeping
     # the same model id, so always re-query them instead of serving stale cache.
-    has_dynamic_runtime_context = endpoint_url in _ollama_runtime_endpoints
     if not is_local and not has_dynamic_runtime_context and (
         ctx != DEFAULT_CONTEXT or configured_kind in ("api", "proxy")
     ):
