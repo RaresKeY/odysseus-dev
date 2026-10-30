@@ -282,6 +282,15 @@ LMSTUDIO_MODELS_V0_SHAPE = ProviderCatalogShape(
     item_types=(("type", (str,)),),
     detection_priority=0,
 )
+LLAMASWAP_MODELS_SHAPE = ProviderCatalogShape(
+    shape_id="llamaswap.models.native.v1",
+    provider_id="llamaswap",
+    envelope=ENVELOPE_DATA,
+    identity_paths=("id",),
+    required_item_paths=("meta.llamaswap",),
+    item_types=(("meta.llamaswap", (Mapping,)),),
+    detection_priority=95,
+)
 LLAMACPP_PROPS_SHAPE = ProviderCatalogShape(
     shape_id="llamacpp.props.v1",
     provider_id="llamacpp",
@@ -474,6 +483,11 @@ PROVIDER_SCHEMAS = {
         "llamacpp",
         aliases=("llama.cpp", "llama_cpp", "llama_server"),
         shapes=(LLAMACPP_PROPS_SHAPE, LLAMACPP_MODELS_SHAPE),
+    ),
+    "llamaswap": _provider(
+        "llamaswap",
+        aliases=("llama_swap", "llama-swap"),
+        shapes=(LLAMASWAP_MODELS_SHAPE,),
     ),
     "mistral": _provider(
         "mistral",
