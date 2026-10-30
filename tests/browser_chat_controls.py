@@ -88,6 +88,7 @@ FIXTURE = r"""(async () => {
     window.fixtureContext = {session_id:'ui-fixture',model:'gpt-5',endpoint_url:'https://api.openai.com/v1',used_tokens:83,
       context_length:100000,context_percent:.1,messages:4,context_messages:4,auto_compact_threshold:85,
       temperature_control:{enabled:false,reason:'This provider and model do not receive the temperature setting.'}};
+    window.fixturePolicy = {session_id:'ui-fixture',approval_mode:'auto_approve',policy_revision:1,auto_approve_availability:{available:true},task:{previous_status:'completed'}};
     window.fixtureAttempts = [{attempt_id:'one',run_id:'run-one',purpose:'approval',status:'completed',usage_provenance:'native',
       usage:{input_tokens:140,output_tokens:12},questions:{approval:{choice:'allow',confidence:.98,probabilities:{allow:.98,deny:.02}}},
       provider:{name:'Jev',model:'jev-1.14.0',protocol:'systemone',distribution_source:'native'},
@@ -97,7 +98,7 @@ FIXTURE = r"""(async () => {
       let data;
       if (path.endsWith('/ui-fixture/decisions/live')) data={items:window.fixtureAttempts};
       else if(path.endsWith('/ui-fixture/decision-handoffs')) data={items:[{id:'receipt-one',run_id:'run-one',stop_reason:'completed',completion_verified:true,action_ids:['write','delete'],check_ids:['read']}]};
-      else if(path.endsWith('/ui-fixture/automation')) data={task:{previous_status:'completed'}};
+      else if(path.endsWith('/ui-fixture/automation')) data=window.fixturePolicy;
       else if(path.endsWith('/ui-fixture/context')) data=window.fixtureContext;
       else return realFetch(url, options);
       return new Response(JSON.stringify(data), {status:200,headers:{'Content-Type':'application/json'}});
@@ -117,9 +118,81 @@ FIXTURE = r"""(async () => {
 })()"""
 
 
+
+def highlight_checks(browser, width):
+    # Read-only fixtures drive the real menu; no approval choice is submitted.
+    if browser.js("Boolean(document.querySelector('.chat-context-popup'))"):
+        browser.call('Input.dispatchKeyEvent', {'type':'keyDown','key':'Escape','code':'Escape','windowsVirtualKeyCode':27})
+        browser.call('Input.dispatchKeyEvent', {'type':'keyUp','key':'Escape','code':'Escape','windowsVirtualKeyCode':27})
+    browser.js("document.getElementById('chat-approval-mode').click()")
+    for _ in range(50):
+        if browser.js("!document.getElementById('chat-permissions-menu').hidden && document.querySelector('[data-approval-mode=auto_approve]').getAttribute('aria-checked')==='true'"):
+            break
+        time.sleep(.1)
+    time.sleep(.2)
+    rows = browser.js("""[...document.querySelectorAll('#chat-permissions-menu>[data-approval-mode]')].map(row=>{
+      const r=row.getBoundingClientRect(),title=row.querySelector('strong').getBoundingClientRect(),text=row.querySelector('small').getBoundingClientRect(),check=row.querySelector('.chat-mode-check').getBoundingClientRect();
+      return {mode:row.dataset.approvalMode,height:r.height,contained:title.top>=r.top+7 && text.bottom<=r.bottom-7,checkAligned:Math.abs(check.top-title.top)<2,bg:getComputedStyle(row).backgroundColor};
+    })""")
+    trigger = "document.getElementById('chat-decision-toggle')"
+    rect = browser.js(f"(()=>{{const r={trigger}.getBoundingClientRect();return {{x:r.x+r.width/2,y:r.y+r.height/2,height:r.height}}}})()")
+    browser.call('Input.dispatchMouseEvent', {'type':'mouseMoved','x':rect['x'],'y':rect['y']})
+    time.sleep(.15)
+    hover = browser.js(f"getComputedStyle({trigger}).backgroundColor")
+    browser.capture(f'control-highlights-{width}.png')
+    browser.js("document.getElementById('chat-approval-mode').click()")
+    browser.call('Input.dispatchMouseEvent', {'type':'mouseMoved','x':1,'y':400})
+    browser.js("document.getElementById('chat-approval-mode').focus()")
+    browser.call('Input.dispatchKeyEvent', {'type':'keyDown','key':'ArrowDown','code':'ArrowDown','windowsVirtualKeyCode':40})
+    time.sleep(.2)
+    focus = browser.js("document.activeElement.dataset.approvalMode")
+    browser.call('Input.dispatchKeyEvent', {'type':'keyDown','key':'ArrowDown','code':'ArrowDown','windowsVirtualKeyCode':40})
+    keyboard = browser.js("document.activeElement.dataset.approvalMode==='yolo' && getComputedStyle(document.activeElement).outlineStyle==='solid'")
+    browser.call('Input.dispatchKeyEvent', {'type':'keyDown','key':'Escape','code':'Escape','windowsVirtualKeyCode':27})
+    restored = browser.js("document.getElementById('chat-permissions-menu').hidden && document.activeElement.id==='chat-approval-mode'")
+    focus_race = browser.js("""(async()=>{
+      const actual=window.fetch,config=await actual('/api/chat-settings').then(r=>r.json()),answers=[];
+      window.fetch=(url,options)=>String(url).endsWith('/api/chat-settings')
+        ?new Promise(resolve=>answers.push(resolve)):actual(url,options);
+      const trigger=document.getElementById('chat-approval-mode'),menu=document.getElementById('chat-permissions-menu');
+      trigger.focus();trigger.click();trigger.click();trigger.click();
+      answers[0](new Response(JSON.stringify(config)));
+      await new Promise(resolve=>setTimeout(resolve,100));
+      const oldIgnored=document.activeElement===trigger;
+      answers[1](new Response(JSON.stringify(config)));
+      await new Promise(resolve=>setTimeout(resolve,100));
+      const selected=document.activeElement.dataset.approvalMode==='auto_approve';
+      trigger.click();trigger.click();
+      document.getElementById('message').focus();
+      document.body.dispatchEvent(new PointerEvent('pointerdown',{bubbles:true}));
+      answers[2](new Response(JSON.stringify(config)));
+      await new Promise(resolve=>setTimeout(resolve,100));window.fetch=actual;
+      return oldIgnored && selected && menu.hidden && document.activeElement.id==='message';
+    })()""")
+    browser.js(f"{trigger}.click()")
+    time.sleep(.15)
+    active = browser.js(f"({trigger}.getAttribute('aria-expanded')==='true' && getComputedStyle({trigger}).backgroundColor)")
+    browser.js("document.getElementById('chat-decision-close').click()")
+    disabled = {}
+    for control in ('chat-decision-toggle','chat-approval-mode'):
+        browser.js(f"document.getElementById('{control}').disabled=true")
+        point=browser.js(f"(()=>{{const r=document.getElementById('{control}').getBoundingClientRect();return {{x:r.x+r.width/2,y:r.y+r.height/2}}}})()")
+        browser.call('Input.dispatchMouseEvent', {'type':'mouseMoved',**point})
+        time.sleep(.15)
+        disabled[control]=browser.js(f"getComputedStyle(document.getElementById('{control}')).backgroundColor==='rgba(0, 0, 0, 0)'")
+        browser.js(f"document.getElementById('{control}').disabled=false")
+    result={'rows':rows,'decisionHeight':rect['height'],'hover':hover,'active':active,'keyboard':keyboard,'focusRestored':restored,'refreshFocusRace':focus_race,'disabledQuiet':disabled}
+    if not BASELINE:
+        assert all(row['contained'] and row['checkAligned'] for row in rows), result
+        assert rect['height']==(44 if width<900 else 32), result
+        assert rows[1]['bg']!=rows[0]['bg'] and hover!=active, result
+        assert focus=='auto_approve' and keyboard and restored and focus_race and all(disabled.values()), result
+    return result
+
+
 def main():
     env = dict(os.environ)
-    env.update(AUTH_ENABLED='false', LOCALHOST_BYPASS='false', HOME='/state/home',
+    env.update(AUTH_ENABLED='true', LOCALHOST_BYPASS='false', HOME='/state/home',
         ODYSSEUS_DATA_DIR='/app/data', DATABASE_URL='sqlite:////app/data/app.db',
         ODYSSEUS_DISABLE_MCP='1', ODYSSEUS_STARTUP_WARMUPS='0', ODYSSEUS_MODEL_KEEPALIVE='0',
         ODYSSEUS_INPROCESS_TASKS='0', ODYSSEUS_INPROCESS_POLLERS='0', ODYSSEUS_TOOL_INDEX_PREWARM='0',
@@ -140,13 +213,24 @@ def main():
                     raise RuntimeError('application startup failed')
                 time.sleep(.25)
         browser = Chrome()
+        browser.call('Page.navigate', {'url':'http://127.0.0.1:7000/login'})
+        for _ in range(100):
+            if browser.js("location.origin==='http://127.0.0.1:7000' && document.readyState==='complete'"):
+                break
+            time.sleep(.1)
+        assert browser.js("""(async()=>{
+          const options={method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({username:'control-review',password:'browser-control-review-only'})};
+          await fetch('/api/auth/setup',options);
+          return (await fetch('/api/auth/login',options)).ok;
+        })()""")
         results = []
         for width, height in [(1440, 1000), (390, 844)]:
             browser.call('Emulation.setDeviceMetricsOverride', {'width':width,'height':height,'deviceScaleFactor':1,'mobile':width<900})
             browser.call('Emulation.setTouchEmulationEnabled', {'enabled':width<900, 'maxTouchPoints':1})
+            browser.js('window.controlNavigation=true')
             browser.call('Page.navigate', {'url':'http://127.0.0.1:7000/'})
             for _ in range(120):
-                if browser.js('Boolean(window.chatModule && window.DecisionActivity)'):
+                if browser.js("!window.controlNavigation && document.readyState==='complete' && Boolean(window.chatModule && window.DecisionActivity)"):
                     break
                 time.sleep(.25)
             result = browser.js(FIXTURE)
@@ -178,6 +262,7 @@ def main():
             browser.js("window.fixtureContext.temperature_control={enabled:true,reason:''};window.fixtureContext.model='gemini-2.5-flash';window.refreshChatContextHeader('review-model-change')")
             result['temperatureReenabled'] = browser.js("!document.querySelector('.generation-control-unavailable') && !(document.querySelector('input[aria-label=Temperature]') || document.querySelector('.chat-context-threshold-slider')).disabled")
             assert result['temperatureReenabled'], result
+            result['highlights']=highlight_checks(browser,width)
             results.append(result)
         (OUT / 'browser-results.json').write_text(json.dumps(results, indent=2))
         print(json.dumps(results, indent=2), flush=True)
