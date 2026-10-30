@@ -11,6 +11,7 @@ baseline, and only after confirming the change is intended - see
 ``tests/css_snapshot/README.md``.
 """
 import os
+import json
 
 import pytest
 
@@ -109,6 +110,18 @@ def test_computed_styles_match_the_committed_baseline():
 
     summary = snapshot.summarize(captured["snapshot"])
     drift = snapshot.compare(snapshot.load_baseline(), summary)
+    if drift["elements"] or drift["variants"] or drift["digest_changed"]:
+        print("CSS_BASELINE_CANDIDATE=" + json.dumps(summary, sort_keys=True))
+        properties = {"display", "height", "min-height", "max-height", "width", "min-width",
+                      "max-width", "padding-top", "padding-right", "padding-bottom", "padding-left",
+                      "overflow-y", "box-sizing", "flex-direction"}
+        changed = {}
+        for page, variants in captured["snapshot"].items():
+            for variant, elements in variants.items():
+                for element, values in elements.items():
+                    if f"{page}/{element}" in drift["elements"]:
+                        changed[f"{page}/{variant}/{element}"] = {key: value for key, value in values.items() if key in properties}
+        print("CSS_CHANGED_LAYOUT=" + json.dumps(changed, sort_keys=True))
     assert not drift["elements"] and not drift["variants"] and not drift["digest_changed"], (
         "computed styles moved against tests/css_snapshot/baseline.json.\n"
         f"elements: {drift['elements']}\n"
