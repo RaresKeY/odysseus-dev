@@ -12,6 +12,12 @@ runner = importlib.util.module_from_spec(SPEC)
 SPEC.loader.exec_module(runner)
 
 
+@pytest.fixture(autouse=True)
+def registered_campaign_owner(monkeypatch):
+    from tests.helpers.model_admission import register_model_owners
+    register_model_owners(monkeypatch, {runner.OWNER: {runner.MODEL}})
+
+
 @pytest.mark.asyncio
 async def test_full_offline_registered_resolver_sql_capture_replay(tmp_path, monkeypatch):
     import httpx

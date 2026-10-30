@@ -18,7 +18,9 @@ from src.decisions.observability import (CAPTURE_SCHEMA, DecisionObservability, 
 
 
 @pytest.fixture
-def observations(tmp_path):
+def observations(tmp_path, monkeypatch):
+    from tests.helpers.model_admission import register_model_owners
+    register_model_owners(monkeypatch, {owner: {"manual", "decision"} for owner in ("alice", "bob")})
     observation_models()
     engine = create_engine('sqlite:///' + str(tmp_path / 'observations.db'))
     d.Base.metadata.create_all(engine)
@@ -384,6 +386,8 @@ def test_actual_auth_deletion_retires_observations_atomically(observations, monk
 
 def test_actual_session_route_deletes_observations_without_foreign_keys(observations, monkeypatch):
     import routes.session_routes as routes
+    from fastapi import APIRouter
+    monkeypatch.setattr(routes, "router", APIRouter())
     monkeypatch.setattr(routes, 'SessionLocal', observations.session_factory)
     observations.consent('alice', 'a', {'purposes': ['browser']})
     observations.bind_turn('alice', 'a', 'run')

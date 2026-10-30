@@ -15,6 +15,14 @@ MAPPINGS = {key: {"endpoint_id": "endpoint-" + str(i), "model": "user-selected-"
             for i, key in enumerate(APPROACHES)}
 
 
+@pytest.fixture(autouse=True)
+def registered_model_owner(monkeypatch):
+    from tests.helpers.model_admission import register_model_owners
+    register_model_owners(monkeypatch, {
+        "alice": {"neutral-decider", *(item["model"] for item in MAPPINGS.values())},
+    })
+
+
 def route_resolver(endpoint_id, model, *, owner, require_exact_model):
     assert owner == "alice" and require_exact_model is True
     return (("https://execution.invalid/v1/chat/completions", model, {"Authorization": "SYNTHETIC"}),

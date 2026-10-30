@@ -10,7 +10,9 @@ from src.decision_routing import prepare_tool_routing, preparation_receipt
 
 
 @pytest.fixture
-def store(tmp_path):
+def store(tmp_path, monkeypatch):
+    from tests.helpers.model_admission import register_model_owners
+    register_model_owners(monkeypatch, {"alice": {"manual", "model-0", "model-1", "neutral-decider"}})
     engine = create_engine('sqlite:///' + str(tmp_path / 'routing.db'))
     d.Base.metadata.create_all(engine)
     factory = sessionmaker(bind=engine)
@@ -187,3 +189,16 @@ async def test_preparation_diagnostics_consumed_by_actual_admission_without_tool
     assert bound.diagnostics['project_context']['choice'] == 'yes'
     await prepare_tool_routing(bound, schemas(), provider=provider)
     assert len(provider.requests) == 1 and bound.tool_selection.kind == 'existing'
+
+
+@pytest.mark.asyncio
+async def test_fixture_owner_model_restrictions_still_stop_preparation_before_spend(store, monkeypatch):
+    from fastapi import HTTPException
+    from tests.helpers.model_admission import register_model_owners
+
+    register_model_owners(monkeypatch, {"alice": {"another-model"}})
+    provider = Provider({})
+    with pytest.raises(HTTPException) as denied:
+        await prepare_chat_turn(store, "alice", session(), "hello", decision_provider=provider)
+    assert denied.value.status_code == 403
+    assert provider.requests == []

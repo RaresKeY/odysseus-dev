@@ -22,6 +22,8 @@ MESSAGES = [{"role": "user", "content": ASK}]
 
 @pytest.fixture
 def store(tmp_path, monkeypatch):
+    from tests.helpers.model_admission import register_model_owners
+    register_model_owners(monkeypatch, {"alice": {"selected", "backup", "gpt-5.2"}})
     engine = create_engine("sqlite:///" + str(tmp_path / "binding.db"))
     d.Base.metadata.create_all(engine)
     factory = sessionmaker(bind=engine)
