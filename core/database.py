@@ -355,6 +355,46 @@ class DecisionAttempt(Base):
     record = Column(JSON, nullable=False)
 
 
+class DecisionActivity(Base):
+    __tablename__ = "decision_activity"
+    sequence = Column(Integer, primary_key=True, autoincrement=True)
+    attempt_id = Column(String, nullable=False, unique=True)
+    owner_key = Column(String, nullable=False, index=True)
+    session_id = Column(String, ForeignKey("sessions.id", ondelete="CASCADE"), nullable=False, index=True)
+    run_id = Column(String, nullable=False, index=True)
+    created_at = Column(Float, nullable=False)
+    projection = Column(JSON, nullable=False)
+
+
+class DecisionCaptureConsent(Base):
+    __tablename__ = "decision_capture_consents"
+    session_id = Column(String, ForeignKey("sessions.id", ondelete="CASCADE"), primary_key=True)
+    owner_key = Column(String, nullable=False, index=True)
+    policy = Column(JSON, nullable=False)
+
+
+class DecisionCaptureRun(Base):
+    __tablename__ = "decision_capture_runs"
+    id = Column(String, primary_key=True)
+    owner_key = Column(String, nullable=False, index=True)
+    session_id = Column(String, ForeignKey("sessions.id", ondelete="CASCADE"), nullable=False, index=True)
+    run_id = Column(String, nullable=False, unique=True)
+    policy = Column(JSON, nullable=False)
+    captures = Column(JSON, nullable=False, default=list)
+    bytes_used = Column(Integer, nullable=False, default=0)
+    expires_at = Column(Float, nullable=False, index=True)
+
+
+class DecisionHandoff(Base):
+    __tablename__ = "decision_handoffs"
+    id = Column(String, primary_key=True)
+    owner_key = Column(String, nullable=False, index=True)
+    session_id = Column(String, ForeignKey("sessions.id", ondelete="CASCADE"), nullable=False, index=True)
+    run_id = Column(String, nullable=False, index=True)
+    created_at = Column(Float, nullable=False)
+    receipt = Column(JSON, nullable=False)
+
+
 class ChatMessage(Base):
     """
     SQLAlchemy model for ChatMessage table.
