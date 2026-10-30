@@ -10,7 +10,10 @@ from src.chat_automation import AutomationStore, SqlAttemptStore, prepare_chat_t
 
 
 @pytest.fixture
-def store(tmp_path):
+def store(tmp_path, monkeypatch):
+    from src import model_admission
+    monkeypatch.setattr(model_admission, '_AUTH_MANAGER', SimpleNamespace(
+        users={'alice': {}, 'bob': {}}, get_privileges=lambda _owner: {}))
     engine = create_engine('sqlite:///' + str(tmp_path / 'state.db'), connect_args={"timeout": 10})
     d.Base.metadata.create_all(engine)
     factory = sessionmaker(bind=engine)

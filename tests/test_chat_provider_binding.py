@@ -62,6 +62,9 @@ async def bind(store, mode="auto", *, effort="low", url=URL, model="selected"):
     if mode=='auto':
         turn.descriptor['endpoint_id']='fixture-endpoint'
         store._test_routes[('fixture-endpoint',model)]=(url,model,HEADERS)
+    from src.approval_fallback import model_snapshot
+    turn.review_model_origin = model_snapshot(turn)
+    turn.review_route_lineage = [turn.review_model_origin]
     return turn
 
 

@@ -49,7 +49,8 @@ async def test_safety_real_http_memo_is_separate_from_independent_review(proposa
     assert not pending._review_started.is_set()
     assert approvals.consume_reviewed(pending,owner='alice',session_id='chat',decision_attempt_id=first['attempt_id']) is None
     grant=approvals.consume(pending.approval_id,owner='alice',session_id='chat',decision='approve_once')
-    assert grant is not None
+    assert grant is None
+    assert approvals.peek(pending.approval_id) is pending
 
 
 @pytest.mark.asyncio
