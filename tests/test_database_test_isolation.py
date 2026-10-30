@@ -112,8 +112,9 @@ def test_actual_tests_restore_process_state_and_ignore_inherited_database(tmp_pa
                 from threading import Barrier
                 from sqlalchemy import text
                 import core.database as db
+                from src.constants import DATA_DIR
                 self.database_path = Path(db.engine.url.database)
-                assert self.database_path.is_relative_to(Path(os.environ["ODYSSEUS_DATA_DIR"]))
+                assert self.database_path.is_relative_to(Path(DATA_DIR))
                 assert self.database_path.is_file()
 
                 def counts():
