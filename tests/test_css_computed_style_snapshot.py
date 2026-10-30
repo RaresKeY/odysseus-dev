@@ -99,7 +99,7 @@ def test_capture_does_not_execute_script_markup_or_handlers(tmp_path):
 
 
 @_requires_browser
-def test_computed_styles_match_the_committed_baseline():
+def test_computed_styles_match_the_committed_baseline(capsys):
     captured = snapshot.capture(static_origin())
 
     assert captured["missing"] == {}, (
@@ -109,6 +109,9 @@ def test_computed_styles_match_the_committed_baseline():
 
     summary = snapshot.summarize(captured["snapshot"])
     drift = snapshot.compare(snapshot.load_baseline(), summary)
+    from scripts.review_jev_ui import capture_evidence
+    with capsys.disabled():
+        capture_evidence(captured["snapshot"], summary)
     assert not drift["elements"] and not drift["variants"] and not drift["digest_changed"], (
         "computed styles moved against tests/css_snapshot/baseline.json.\n"
         f"elements: {drift['elements']}\n"
