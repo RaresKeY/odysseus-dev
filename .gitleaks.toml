@@ -49,3 +49,11 @@ condition = "AND"
 paths = ['''(?:^|/)tests/test_model_auto\.py$''']
 regexTarget = "line"
 regexes = ['''^\s*if mutation=='credential':row\.api_key='CHANGED_SYNTHETIC'\s*$''']
+
+[[allowlists]]
+description = "Reviewed icon integration stylesheet SHA-256 digest"
+targetRules = ["generic-api-key"]
+condition = "AND"
+paths = ['''(?:^|/)docs/icon-suite/integration/source-hashes\.json$''']
+regexTarget = "secret"
+regexes = ['''^c9032147a099c2de9088063b1a1d0a41cb9048acd17723ba1edfa72f52968ac0$''']
