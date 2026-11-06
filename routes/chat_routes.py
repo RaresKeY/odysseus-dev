@@ -2067,7 +2067,7 @@ def _reconcile_selected_route_from_request(
     if selected_endpoint_id or selected_endpoint_url:
         try:
             from src.auth_helpers import owner_filter
-            from src.endpoint_resolver import build_headers, normalize_base
+            from src.endpoint_resolver import build_headers, endpoint_headers, normalize_base
             db = SessionLocal()
             try:
                 q = db.query(ModelEndpoint).filter(ModelEndpoint.is_enabled == True)
@@ -2097,7 +2097,10 @@ def _reconcile_selected_route_from_request(
                 if not ep:
                     return False
                 endpoint_url = build_chat_url(normalize_base(ep.base_url or ""))
-                headers = build_headers(ep.api_key or "", ep.base_url or "") if ep.api_key else {}
+                headers = endpoint_headers(
+                    build_headers(ep.api_key, ep.base_url or "") if ep.api_key else {},
+                    endpoint_kind=getattr(ep, "endpoint_kind", None),
+                )
                 resolved_endpoint_id = ep.id
             finally:
                 db.close()
@@ -2114,7 +2117,11 @@ def _reconcile_selected_route_from_request(
         selected_model == (getattr(sess, "model", "") or "")
         and endpoint_url == (getattr(sess, "endpoint_url", "") or "")
     )
-    headers_changed = dict(getattr(sess, "headers", None) or {}) != dict(headers or {})
+    headers_changed = (
+        dict(getattr(sess, "headers", None) or {}) != dict(headers or {})
+        or getattr(getattr(sess, "headers", None), "endpoint_kind", None)
+        != getattr(headers, "endpoint_kind", None)
+    )
     binding_changed = bool(
         resolved_endpoint_id
         and resolved_endpoint_id != (getattr(sess, "endpoint_id", None) or None)
@@ -2124,7 +2131,7 @@ def _reconcile_selected_route_from_request(
 
     sess.model = selected_model
     sess.endpoint_url = endpoint_url
-    sess.headers = headers or {}
+    sess.headers = headers if headers is not None else {}
     if resolved_endpoint_id:
         sess.endpoint_id = resolved_endpoint_id
     elif route_changed:
