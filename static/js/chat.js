@@ -865,7 +865,7 @@ import { invalidateSettings } from './appConfig.js';
     const effort = document.getElementById('reasoning-effort-wrap');
     if (effort) popup.appendChild(effort);
 
-    const addGenerationSlider = (label, value, min, max, step, formatter, key) => {
+    const addGenerationSlider = (label, value, min, max, step, formatter, key, control = null) => {
       const row = document.createElement('div');
       row.className = 'chat-context-threshold-row';
       row.innerHTML = `<div class="chat-context-threshold-top"><span>${label}</span><span>${formatter(value)}</span></div>`;
@@ -873,9 +873,17 @@ import { invalidateSettings } from './appConfig.js';
       Object.assign(input, { type: 'range', min: String(min), max: String(max), step: String(step), value: String(value), className: 'chat-context-threshold-slider preset-range' });
       input.addEventListener('input', () => { row.querySelector('.chat-context-threshold-top span:last-child').textContent = formatter(Number(input.value)); });
       input.addEventListener('change', () => _saveChatGenerationSettings({ [key]: key === 'max_tokens_override' && Number(input.value) > 8192 ? null : Number(input.value) }));
+      if (control?.enabled === false) {
+        input.disabled = true;
+        row.classList.add('generation-control-unavailable');
+        row.setAttribute('aria-disabled', 'true');
+        row.title = control.reason || 'Not sent for this model.';
+        row.querySelector('.chat-context-threshold-top span:last-child').textContent = 'Not sent';
+      }
+      input.setAttribute('aria-label', label);
       row.appendChild(input); popup.appendChild(row);
     };
-    addGenerationSlider('Temperature', d.temperature_override ?? 1, 0, 2, 0.1, v => Number(v).toFixed(1), 'temperature_override');
+    addGenerationSlider('Temperature', d.temperature_override ?? 1, 0, 2, 0.1, v => Number(v).toFixed(1), 'temperature_override', d.temperature_control);
     addGenerationSlider('Max tokens', d.max_tokens_override ?? 8448, 256, 8448, 256, v => Number(v) > 8192 ? 'No limit' : Number(v).toLocaleString(), 'max_tokens_override');
 
 	    const threshold = _clampAutoCompactThreshold(d.auto_compact_threshold || 85);

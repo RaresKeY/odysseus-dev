@@ -422,6 +422,14 @@ def create_request_authority(request_text, *, owner=None, session_id=None, works
         roots = tuple(FilesystemRoot.from_dict(item["identity"]) for item in effective_elevation_roots())
         if workspace:
             roots = (FilesystemRoot.seal(workspace, owner=_owner(owner)), *roots)
+        else:
+            # Bound turns retain the ordinary root; elevation only adds folders.
+            from src.tool_execution import default_agent_workspace
+            try:
+                root = FilesystemRoot.seal(default_agent_workspace(), owner=_owner(owner))
+                roots = (root, *roots)
+            except (OSError, ValueError, RuntimeError):
+                pass  # An unavailable default grants no filesystem root.
     authority = RequestAuthority(uuid4().hex, _owner(owner), str(session_id or ""),
                                  str(workspace or ""), tuple(grants), resource_roots=roots)
     if client_runtime_context is not None:

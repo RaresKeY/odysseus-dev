@@ -250,6 +250,7 @@
   <link rel="stylesheet" href="/static/css/00-tokens.css?v=20260929csssplit">
   <link rel="stylesheet" href="/static/css/01-agent-chat.css?v=20260929csssplit">
   <link rel="stylesheet" href="/static/css/chat-automation.css?v=20260929csssplit">
+  <link rel="stylesheet" href="/static/css/decision-activity.css?v=20260929csssplit">
   <link rel="stylesheet" href="/static/css/02-compare.css?v=20260929csssplit">
   <link rel="stylesheet" href="/static/css/03-agent-chat.css?v=20260929csssplit">
   <link rel="stylesheet" href="/static/css/04-memory.css?v=20260929csssplit">
@@ -1183,6 +1184,17 @@
         </script>
       </div>
       <div id="pinned-tools-bar"></div>
+      <div id="chat-workspace-bar" class="chat-workspace-bar" hidden>
+        <div class="chat-workspace-chip">
+          <button type="button" id="workspace-indicator-btn" class="workspace-chip-select" aria-label="Change workspace">
+            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 7a2 2 0 0 1 2-2h4l2 2h8a2 2 0 0 1 2 2v8a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/></svg>
+            <span id="workspace-indicator-name"></span>
+          </button>
+          <button type="button" id="workspace-clear-btn" class="workspace-remove" title="Leave workspace" aria-label="Leave workspace">
+            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="m6 6 12 12M6 18 18 6"/></svg>
+          </button>
+        </div>
+      </div>
       <div class="chat-input-bottom" style="visibility:hidden">
         <div class="chat-input-left">
           <!-- Overflow menu (+) — always first/left -->
@@ -1278,12 +1290,6 @@
               <line x1="6" y1="6" x2="18" y2="18"/>
               <line x1="18" y1="6" x2="6" y2="18"/>
             </svg>
-          </button>
-          <!-- Workspace indicator (hidden until a folder is set) -->
-          <button type="button" class="input-icon-btn tool-indicator" title="Workspace - click to clear" id="workspace-indicator-btn" aria-label="Clear workspace" style="display:none;">
-            <svg class="workspace-indicator-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 7a2 2 0 0 1 2-2h4l2 2h8a2 2 0 0 1 2 2v8a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/></svg>
-            <span style="font-size:11px;margin-left:2px;max-width:120px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;" id="workspace-indicator-name"></span>
-            <svg class="tool-indicator-x" width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round"><line x1="6" y1="6" x2="18" y2="18"/><line x1="18" y1="6" x2="6" y2="18"/></svg>
           </button>
           <!-- RAG toolbar indicator (hidden until active) -->
           <button type="button" class="input-icon-btn tool-indicator" title="RAG active — click to deactivate" id="rag-indicator-btn" style="display:none;">
@@ -1428,8 +1434,7 @@
 
   </main>
   <dialog id="chat-decision-pane" aria-labelledby="chat-decision-title">
-    <div class="modal-header"><h2 id="chat-decision-title">Decision activity</h2><button type="button" id="chat-decision-close" aria-label="Close decision activity">Close</button></div>
-    <div class="decision-activity-toolbar"><button type="button" id="chat-decision-refresh">Refresh</button></div>
+    <div class="modal-header"><h2 id="chat-decision-title">Decisions</h2><div class="decision-header-actions"><button type="button" id="chat-decision-refresh" aria-label="Reload decisions" title="Reload decisions"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true"><path d="M20 7v5h-5M4 17v-5h5"/><path d="M6 7a7 7 0 0 1 12-1l2 6M4 12l2 6a7 7 0 0 0 12-1"/></svg></button><button type="button" id="chat-decision-close" aria-label="Close decisions" title="Close decisions"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true"><path d="m6 6 12 12M18 6 6 18"/></svg></button></div></div>
     <div id="chat-decision-activity" aria-busy="false"></div>
   </dialog>
   <button id="scroll-bottom-btn" class="scroll-nav-btn" title="Scroll to bottom"><span class="scroll-nav-caret" aria-hidden="true">&#9662;</span></button>

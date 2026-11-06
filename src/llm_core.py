@@ -1553,6 +1553,24 @@ def _apply_openai_request_controls(payload, url, model, headers, provider):
             payload.pop(key)
 
 
+def temperature_control_status(url, model, headers=None, *, temperature=1.0):
+    """Project the actual transport's omission rules without contacting a provider."""
+    if not url or not model:
+        return {"enabled": False, "reason": "Select a model first."}
+    provider = _detect_provider(url)
+    if provider == "anthropic":
+        enabled = not _anthropic_rejects_temperature(model)
+    elif provider == "ollama":
+        enabled = True
+    else:
+        from src import model_capabilities as mc
+        from src.model_request_controls import DIALECT_CODEX_RESPONSES, DIALECT_OPENAI_CHAT
+        dialect = DIALECT_CODEX_RESPONSES if provider == "chatgpt-subscription" else DIALECT_OPENAI_CHAT
+        controls = _request_controls_for(url, model, headers, provider=provider, dialect=dialect)
+        enabled = not _omit_temperature(provider, model) and controls.permits(mc.CONTROL_TEMPERATURE, temperature)
+    return {"enabled": enabled, "reason": "" if enabled else "This provider and model do not receive the temperature setting."}
+
+
 def _build_chatgpt_responses_payload(
     model: str,
     messages: List[Dict],

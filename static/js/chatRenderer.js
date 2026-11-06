@@ -2513,18 +2513,6 @@ export function createMsgFooter(msgElement, { animate = false } = {}) {
 /**
  * Create a footer row for a user message with action buttons (same system as AI footer).
  */
-const _USER_ACTION_RECENTS_KEY = 'odysseus-user-actions-recent';
-
-function _getUserRecentActions() {
-  try { return JSON.parse(localStorage.getItem(_USER_ACTION_RECENTS_KEY) || '[]'); } catch { return []; }
-}
-function _trackUserAction(id) {
-  let recent = _getUserRecentActions().filter(x => x !== id);
-  recent.unshift(id);
-  if (recent.length > 10) recent.length = 10;
-  localStorage.setItem(_USER_ACTION_RECENTS_KEY, JSON.stringify(recent));
-}
-
 export function createUserMsgFooter(msgElement) {
   const footer = document.createElement('div');
   footer.className = 'msg-footer';
@@ -2554,9 +2542,8 @@ export function createUserMsgFooter(msgElement) {
     }},
   ];
 
-  const recent = _getUserRecentActions();
   const defaults = ['edit', 'delete', 'copy'];
-  const order = recent.length > 0 ? recent : defaults;
+  const order = defaults;
   const sorted = [...allActions].sort((a, b) => {
     const ai = order.indexOf(a.id), bi = order.indexOf(b.id);
     if (ai >= 0 && bi >= 0) return ai - bi;
@@ -2569,7 +2556,6 @@ export function createUserMsgFooter(msgElement) {
 
   visible.forEach(a => {
     const btn = _makeActionBtn(a.cls, a.title, a.html ? '' : a.icon, (ev) => {
-      _trackUserAction(a.id);
       a.handler(ev);
     });
     if (a.html) btn.innerHTML = a.icon;
@@ -2603,8 +2589,7 @@ export function createUserMsgFooter(msgElement) {
         item.innerHTML = `<span class="overflow-icon">${a.icon}</span> ${a.title}`;
         item.addEventListener('click', (ev) => {
           ev.stopPropagation();
-          _trackUserAction(a.id);
-          closeMenu();
+              closeMenu();
           a.handler(ev);
         });
         menu.appendChild(item);

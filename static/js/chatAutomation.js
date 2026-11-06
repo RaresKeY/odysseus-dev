@@ -43,8 +43,13 @@ async function openPermissions() {
   $('chat-permissions-menu').hidden=false;
   positionPermissions();
   $('chat-approval-mode').setAttribute('aria-expanded','true');
-  refresh();
-  ($('chat-permissions-menu').querySelector('[aria-checked="true"]:not(:disabled)') || $('chat-permissions-menu').querySelector('button:not(:disabled):not([hidden])'))?.focus();
+  // Refresh temporarily disables Auto-Approve. Focus the selected item only
+  // after availability settles, unless the user has already moved or closed it.
+  const focusSequence=sequence+1;
+  await refresh();
+  const menu=$('chat-permissions-menu');
+  if(focusSequence!==sequence || menu.hidden || menu.contains(document.activeElement))return;
+  (menu.querySelector('[aria-checked="true"]:not(:disabled)') || $('chat-permissions-menu').querySelector('button:not(:disabled):not([hidden])'))?.focus();
 }
 function controlsBusy(busy) {
   saving=busy;
@@ -216,6 +221,7 @@ async function initialize(){
     if($('chat-permissions-menu').hidden)openPermissions();else closePermissions(true);
   });
   $('chat-approval-mode').addEventListener('keydown',e=>{
+    if(e.key==='Escape' && !$('chat-permissions-menu').hidden){e.preventDefault();closePermissions(true);return;}
     if(['ArrowDown','ArrowUp'].includes(e.key)){e.preventDefault();openPermissions();}
   });
   $('chat-permissions-menu').addEventListener('keydown',e=>{
