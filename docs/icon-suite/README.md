@@ -32,4 +32,8 @@ The inventory is pinned to [upstream dev at c21980f5a6d1cb84db8c8ab0f488cefc7764
 
 The gallery reproduces the pinned presets and selected component rules: foreground inheritance, rail opacity and active background, accent fallbacks, white Send ink, mixed mic backgrounds and advanced brand/Send overrides. The `ocean` preset is displayed as Starfield. A fixed blue `--color-accent` and the absence of a global `--accent` definition are preserved.
 
-This contribution adds reusable assets and a review gallery. Existing application call sites are unchanged. The authenticated application has not been tested with icon replacements. Screenshots show the running component gallery, not an authenticated Odysseus session. Retained source and CSS excerpts originate from this repository and remain subject to its existing license; no third-party icon package is bundled.
+The fork now applies the owner’s exported new choices at reviewed application call sites. Explicit old choices and unspecified IDs remain old. See the [selected icon integration review](integration/README.md), [captioned before/after screenshots](integration/review.html) and [every selected ID’s visual status](integration/visual-coverage.csv). The component color trials and the authenticated app captures are labeled separately. Conditional controls are not claimed as verified. Retained source and CSS excerpts originate from this repository and remain subject to its existing license; no third-party icon package is bundled.
+
+## Compare and select
+
+The opening Old vs new grid shows captured source glyphs and literal text beside the new family. Click an entire side to select and lock a winner. Only the unchosen side turns gray; Unlock allows a different choice. Picks persist in browser storage and Export picks saves their exact source variant as JSON. Source roles distinguish carets, formatting marks, labels and numeric steppers so these fragments are not confused with missing semantic icons.

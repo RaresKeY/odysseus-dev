@@ -10,6 +10,7 @@ from collections import Counter, defaultdict
 from pathlib import Path
 
 from glyphs import describe, resolve
+from comparison import build_comparison
 
 ROOT = Path(__file__).resolve().parents[2] / 'docs/icon-suite'
 SOURCE = ROOT / 'evidence/upstream-source'
@@ -369,10 +370,12 @@ def main():
         lines += ['']
     (ROOT/'ICON_INVENTORY.md').write_text('\n'.join(lines).rstrip()+'\n')
     template = (ROOT/'template.html').read_text()
+    comparison = build_comparison(ROOT, inventory, audit, SOURCE)
     inline_sprite = sprite.replace('<svg xmlns="http://www.w3.org/2000/svg">', '<svg xmlns="http://www.w3.org/2000/svg" aria-hidden="true" style="position:absolute;width:0;height:0;overflow:hidden">', 1)
     template = template.replace('<!-- SPRITE -->', inline_sprite)
     template = template.replace('<!-- DATA -->', json.dumps(inventory, ensure_ascii=False).replace('<', '\\u003c'))
     template = template.replace('<!-- CONTRACT -->', json.dumps(contract).replace('<', '\\u003c'))
+    template = template.replace('<!-- COMPARISON -->', json.dumps(comparison, ensure_ascii=False).replace('<', '\\u003c'))
     template = template.replace('<!-- APP -->', (ROOT/'gallery.js').read_text())
     (ROOT/'index.html').write_text(template)
     print(json.dumps({'icons':len(icons), 'coverage':inventory['coverage'], 'themes':len(themes),

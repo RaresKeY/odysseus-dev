@@ -4769,7 +4769,7 @@ body.ge-editor-open textarea.ge-direct-text-editor {
 .ge-export-field input:focus { outline: none; border-color: var(--red); }
 .ge-export-format {
   display: grid;
-  grid-template-columns: repeat(3, 1fr);
+  grid-template-columns: repeat(4, minmax(0, 1fr));
   border: 1px solid var(--border);
   border-radius: 5px;
   overflow: hidden;
@@ -9892,3 +9892,5 @@ body.ge-alt-eyedropper .ge-brush-cursor {
   font-size: 11px;
   line-height: 1.35;
 }
+
+.ge-export-format button.ody-ui-with-label { min-width:0; padding-inline:4px; gap:4px; }

@@ -1,0 +1,2856 @@
+{
+  "version": 1,
+  "base_pr_head": "e71b14fc32d8e0aad1710aa4bd20d85b9339a150",
+  "inventory_sha": "c21980f5a6d1cb84db8c8ab0f488cefc7764eb3f",
+  "export_sha256": "1cc73f7f36f977c16b4ca2cec87ae42c3c82f99049b213237a24bd2563a8fc8f",
+  "default": "old",
+  "counts": {
+    "applied": 116,
+    "kept-old-needs-remap": 2
+  },
+  "selected_new": 118,
+  "explicit_old": 140,
+  "unspecified_keep_old": 544,
+  "entries": [
+    {
+      "id": "notes",
+      "winner": "new",
+      "captured": {
+        "original": "53fdbb1800f4",
+        "path": "static/index.html",
+        "line": 769,
+        "basis": "Button title",
+        "source_label": "Notes",
+        "priority": 90,
+        "status": "source-label candidate",
+        "source_url": "https://github.com/odysseus-dev/odysseus/blob/c21980f5a6d1cb84db8c8ab0f488cefc7764eb3f/static/index.html#L769"
+      },
+      "status": "applied",
+      "targets": [
+        {
+          "path": "static/index.html",
+          "selector": "[data-ui-icon=\"notes\"]"
+        }
+      ],
+      "explanation": "Use the selected navigation mark in both the icon rail and the expanded sidebar.",
+      "captured_role": "action-or-status-icon",
+      "applied_role": "action-or-status-icon"
+    },
+    {
+      "id": "theme",
+      "winner": "new",
+      "captured": {
+        "original": "8204048e5c26",
+        "path": "static/index.html",
+        "line": 772,
+        "basis": "Button title",
+        "source_label": "Theme",
+        "priority": 90,
+        "status": "source-label candidate",
+        "source_url": "https://github.com/odysseus-dev/odysseus/blob/c21980f5a6d1cb84db8c8ab0f488cefc7764eb3f/static/index.html#L772"
+      },
+      "status": "applied",
+      "targets": [
+        {
+          "path": "static/index.html",
+          "selector": "[data-ui-icon=\"theme\"]"
+        }
+      ],
+      "explanation": "Use the selected navigation mark in both the icon rail and the expanded sidebar.",
+      "captured_role": "action-or-status-icon",
+      "applied_role": "action-or-status-icon"
+    },
+    {
+      "id": "add",
+      "winner": "new",
+      "captured": {
+        "original": "f5f6080f4c0b",
+        "path": "static/js/document.js",
+        "line": 7611,
+        "basis": "Button title",
+        "source_label": "Add signature (then click on PDF)",
+        "priority": 90,
+        "status": "source-label candidate",
+        "source_url": "https://github.com/odysseus-dev/odysseus/blob/c21980f5a6d1cb84db8c8ab0f488cefc7764eb3f/static/js/document.js#L7611"
+      },
+      "status": "applied",
+      "targets": [
+        {
+          "path": "static/js/editor/build/controls.js",
+          "selector": "[data-ui-icon=\"add\"]"
+        }
+      ],
+      "explanation": "Add a gradient stop; keep the signature nib on Add signature.",
+      "captured_role": "action-or-status-icon",
+      "applied_role": "labeled-command"
+    },
+    {
+      "id": "rename",
+      "winner": "new",
+      "captured": {
+        "original": "37be3b268b02",
+        "path": "static/js/admin.js",
+        "line": 1078,
+        "basis": "Button aria-label",
+        "source_label": "Rename endpoint",
+        "priority": 90,
+        "status": "source-label candidate",
+        "source_url": "https://github.com/odysseus-dev/odysseus/blob/c21980f5a6d1cb84db8c8ab0f488cefc7764eb3f/static/js/admin.js#L1078"
+      },
+      "status": "applied",
+      "targets": [
+        {
+          "path": "static/js/admin.js",
+          "selector": "[data-ui-icon=\"rename\"]"
+        }
+      ],
+      "explanation": "Current user Rename action; the endpoint Rename control no longer exists at this PR head.",
+      "captured_role": "action-or-status-icon",
+      "applied_role": "labeled-command"
+    },
+    {
+      "id": "delete",
+      "winner": "new",
+      "captured": {
+        "original": "04f34e76fb12",
+        "path": "frontend/src/features/notes/ui/cardRendering.js",
+        "line": 124,
+        "basis": "Button title",
+        "source_label": "Delete item",
+        "priority": 90,
+        "status": "source-label candidate",
+        "source_url": "https://github.com/odysseus-dev/odysseus/blob/c21980f5a6d1cb84db8c8ab0f488cefc7764eb3f/frontend/src/features/notes/ui/cardRendering.js#L124"
+      },
+      "status": "applied",
+      "targets": [
+        {
+          "path": "frontend/src/features/notes/ui/cardRendering.js",
+          "selector": "[data-ui-icon=\"delete\"]"
+        },
+        {
+          "path": "static/js/features/notes/ui/cardRendering.js",
+          "selector": "[data-ui-icon=\"delete\"]"
+        }
+      ],
+      "explanation": "Scoped to the selected source control; existing labels, state hooks and unrelated glyphs remain.",
+      "captured_role": "action-or-status-icon",
+      "applied_role": "action-or-status-icon"
+    },
+    {
+      "id": "download",
+      "winner": "new",
+      "captured": {
+        "original": "1bfac70878dd",
+        "path": "static/js/cookbookRunning.js",
+        "line": 2461,
+        "basis": "Button title",
+        "source_label": "Start this queued download now",
+        "priority": 90,
+        "status": "source-label candidate",
+        "source_url": "https://github.com/odysseus-dev/odysseus/blob/c21980f5a6d1cb84db8c8ab0f488cefc7764eb3f/static/js/cookbookRunning.js#L2461"
+      },
+      "status": "applied",
+      "targets": [
+        {
+          "path": "static/js/cookbook.js",
+          "selector": "[data-ui-icon=\"download\"]"
+        }
+      ],
+      "explanation": "Actual Download action; the captured triangle starts a queued task.",
+      "captured_role": "action-or-status-icon",
+      "applied_role": "labeled-command"
+    },
+    {
+      "id": "save",
+      "winner": "new",
+      "captured": {
+        "original": "81db0bf4bd47",
+        "path": "frontend/src/features/notes/ui/cardRendering.js",
+        "line": 204,
+        "basis": "Button title",
+        "source_label": "Save (archive)",
+        "priority": 90,
+        "status": "source-label candidate",
+        "source_url": "https://github.com/odysseus-dev/odysseus/blob/c21980f5a6d1cb84db8c8ab0f488cefc7764eb3f/frontend/src/features/notes/ui/cardRendering.js#L204"
+      },
+      "status": "applied",
+      "targets": [
+        {
+          "path": "frontend/src/features/notes/ui/cardRendering.js",
+          "selector": "[data-ui-icon=\"save\"]"
+        },
+        {
+          "path": "static/js/features/notes/ui/cardRendering.js",
+          "selector": "[data-ui-icon=\"save\"]"
+        }
+      ],
+      "explanation": "Scoped to the selected source control; existing labels, state hooks and unrelated glyphs remain.",
+      "captured_role": "action-or-status-icon",
+      "applied_role": "action-or-status-icon"
+    },
+    {
+      "id": "deselect",
+      "winner": "new",
+      "captured": {
+        "original": "d2f3a7ec906a",
+        "path": "frontend/src/features/notes/ui/panel.js",
+        "line": 181,
+        "basis": "Button aria-label",
+        "source_label": "Cancel selection",
+        "priority": 90,
+        "status": "source-label candidate",
+        "source_url": "https://github.com/odysseus-dev/odysseus/blob/c21980f5a6d1cb84db8c8ab0f488cefc7764eb3f/frontend/src/features/notes/ui/panel.js#L181"
+      },
+      "status": "applied",
+      "targets": [
+        {
+          "path": "frontend/src/features/notes/ui/panel.js",
+          "selector": "[data-ui-icon=\"deselect\"]"
+        },
+        {
+          "path": "static/js/features/notes/ui/panel.js",
+          "selector": "[data-ui-icon=\"deselect\"]"
+        }
+      ],
+      "explanation": "Scoped to the selected source control; existing labels, state hooks and unrelated glyphs remain.",
+      "captured_role": "action-or-status-icon",
+      "applied_role": "action-or-status-icon"
+    },
+    {
+      "id": "filter",
+      "winner": "new",
+      "captured": {
+        "original": "9c5915de1209",
+        "path": "static/js/cookbook.js",
+        "line": 3266,
+        "basis": "Button title",
+        "source_label": "Filter by serving engine",
+        "priority": 90,
+        "status": "source-label candidate",
+        "source_url": "https://github.com/odysseus-dev/odysseus/blob/c21980f5a6d1cb84db8c8ab0f488cefc7764eb3f/static/js/cookbook.js#L3266"
+      },
+      "status": "applied",
+      "targets": [
+        {
+          "path": "static/js/cookbook.js",
+          "selector": "[data-ui-icon=\"filter\"]"
+        }
+      ],
+      "explanation": "Scoped to the selected source control; existing labels, state hooks and unrelated glyphs remain.",
+      "captured_role": "disclosure-arrow",
+      "applied_role": "semantic-icon-plus-disclosure"
+    },
+    {
+      "id": "filter-clear",
+      "winner": "new",
+      "captured": {
+        "original": "text-29a390f9237e",
+        "path": "static/js/gallery.js",
+        "line": 521,
+        "basis": "Literal button text",
+        "source_label": "Clear every gallery filter",
+        "priority": 60,
+        "status": "source-label candidate",
+        "source_url": "https://github.com/odysseus-dev/odysseus/blob/c21980f5a6d1cb84db8c8ab0f488cefc7764eb3f/static/js/gallery.js#L521"
+      },
+      "status": "applied",
+      "targets": [
+        {
+          "path": "static/js/gallery.js",
+          "selector": "[data-ui-icon=\"filter-clear\"]"
+        }
+      ],
+      "explanation": "Scoped to the selected source control; existing labels, state hooks and unrelated glyphs remain.",
+      "captured_role": "text-command",
+      "applied_role": "labeled-command"
+    },
+    {
+      "id": "sort",
+      "winner": "new",
+      "captured": {
+        "original": "db036ab22250",
+        "path": "static/index.html",
+        "line": 809,
+        "basis": "Button title",
+        "source_label": "Sort sessions",
+        "priority": 90,
+        "status": "source-label candidate",
+        "source_url": "https://github.com/odysseus-dev/odysseus/blob/c21980f5a6d1cb84db8c8ab0f488cefc7764eb3f/static/index.html#L809"
+      },
+      "status": "applied",
+      "targets": [
+        {
+          "path": "static/index.html",
+          "selector": "[data-ui-icon=\"sort\"]"
+        }
+      ],
+      "explanation": "Scoped to the selected source control; existing labels, state hooks and unrelated glyphs remain.",
+      "captured_role": "action-or-status-icon",
+      "applied_role": "action-or-status-icon"
+    },
+    {
+      "id": "favorite",
+      "winner": "new",
+      "captured": {
+        "original": "b429c4656075",
+        "path": "static/js/gallery.js",
+        "line": 1616,
+        "basis": "Button aria-label",
+        "source_label": "Favorite",
+        "priority": 90,
+        "status": "source-label candidate",
+        "source_url": "https://github.com/odysseus-dev/odysseus/blob/c21980f5a6d1cb84db8c8ab0f488cefc7764eb3f/static/js/gallery.js#L1616"
+      },
+      "status": "applied",
+      "targets": [
+        {
+          "path": "static/js/gallery.js",
+          "selector": "[data-ui-icon=\"favorite\"]"
+        }
+      ],
+      "explanation": "Scoped to the selected source control; existing labels, state hooks and unrelated glyphs remain.",
+      "captured_role": "action-or-status-icon",
+      "applied_role": "action-or-status-icon"
+    },
+    {
+      "id": "unlink",
+      "winner": "new",
+      "captured": {
+        "original": "text-b90108da0bd2",
+        "path": "static/js/document.js",
+        "line": 7710,
+        "basis": "Literal button text",
+        "source_label": "Unlink",
+        "priority": 60,
+        "status": "source-label candidate",
+        "source_url": "https://github.com/odysseus-dev/odysseus/blob/c21980f5a6d1cb84db8c8ab0f488cefc7764eb3f/static/js/document.js#L7710"
+      },
+      "status": "kept-old-needs-remap",
+      "targets": [],
+      "explanation": "Captured mobile Unlink button closes the document tab. Keep it for now; fix the misleading label separately instead of adding a broken-link symbol.",
+      "captured_role": "text-command"
+    },
+    {
+      "id": "open",
+      "winner": "new",
+      "captured": {
+        "original": "dcb275bcf58c",
+        "path": "static/js/cookbookRunning.js",
+        "line": 2460,
+        "basis": "Button title",
+        "source_label": "Open in Launch",
+        "priority": 90,
+        "status": "source-label candidate",
+        "source_url": "https://github.com/odysseus-dev/odysseus/blob/c21980f5a6d1cb84db8c8ab0f488cefc7764eb3f/static/js/cookbookRunning.js#L2460"
+      },
+      "status": "applied",
+      "targets": [
+        {
+          "path": "static/js/cookbookRunning.js",
+          "selector": "[data-ui-icon=\"open\"]"
+        }
+      ],
+      "explanation": "Scoped to the selected source control; existing labels, state hooks and unrelated glyphs remain.",
+      "captured_role": "action-or-status-icon",
+      "applied_role": "action-or-status-icon"
+    },
+    {
+      "id": "move",
+      "winner": "new",
+      "captured": {
+        "original": "33957ec498c1",
+        "path": "static/index.html",
+        "line": 476,
+        "basis": "Button title",
+        "source_label": "Move selected duplicates, failed audits, and low-confidence skills to the bin",
+        "priority": 90,
+        "status": "source-label candidate",
+        "source_url": "https://github.com/odysseus-dev/odysseus/blob/c21980f5a6d1cb84db8c8ab0f488cefc7764eb3f/static/index.html#L476"
+      },
+      "status": "applied",
+      "targets": [
+        {
+          "path": "static/js/editor/build/toolbar.js",
+          "selector": "[data-ui-icon=\"move\"]"
+        }
+      ],
+      "explanation": "Move tool; the captured Bin button deletes skills.",
+      "captured_role": "action-or-status-icon",
+      "applied_role": "tool-icon"
+    },
+    {
+      "id": "clear",
+      "winner": "new",
+      "captured": {
+        "original": "c7e9fa64aa70",
+        "path": "static/index.html",
+        "line": 1192,
+        "basis": "Button aria-label",
+        "source_label": "Clear selected Notes/Todos context",
+        "priority": 90,
+        "status": "source-label candidate",
+        "source_url": "https://github.com/odysseus-dev/odysseus/blob/c21980f5a6d1cb84db8c8ab0f488cefc7764eb3f/static/index.html#L1192"
+      },
+      "status": "applied",
+      "targets": [
+        {
+          "path": "static/index.html",
+          "selector": "[data-ui-icon=\"clear\"]"
+        }
+      ],
+      "explanation": "Scoped to the selected source control; existing labels, state hooks and unrelated glyphs remain.",
+      "captured_role": "action-or-status-icon",
+      "applied_role": "action-or-status-icon"
+    },
+    {
+      "id": "expand",
+      "winner": "new",
+      "captured": {
+        "original": "b097c1e32940",
+        "path": "static/js/compare/icons.js",
+        "line": 11,
+        "basis": "Named SVG: ICON_EXPAND",
+        "source_label": "ICON_EXPAND",
+        "priority": 80,
+        "status": "source-label candidate",
+        "source_url": "https://github.com/odysseus-dev/odysseus/blob/c21980f5a6d1cb84db8c8ab0f488cefc7764eb3f/static/js/compare/icons.js#L11"
+      },
+      "status": "applied",
+      "targets": [
+        {
+          "path": "static/js/compare/icons.js",
+          "selector": "[data-ui-icon=\"expand\"]"
+        }
+      ],
+      "explanation": "Scoped to the selected source control; existing labels, state hooks and unrelated glyphs remain.",
+      "captured_role": "action-or-status-icon",
+      "applied_role": "action-or-status-icon"
+    },
+    {
+      "id": "collapse",
+      "winner": "new",
+      "captured": {
+        "original": "812314c18892",
+        "path": "static/index.html",
+        "line": 1464,
+        "basis": "Button aria-label",
+        "source_label": "Collapse settings navigation",
+        "priority": 90,
+        "status": "source-label candidate",
+        "source_url": "https://github.com/odysseus-dev/odysseus/blob/c21980f5a6d1cb84db8c8ab0f488cefc7764eb3f/static/index.html#L1464"
+      },
+      "status": "applied",
+      "targets": [
+        {
+          "path": "static/js/compare/icons.js",
+          "selector": "[data-ui-icon=\"collapse\"]"
+        }
+      ],
+      "explanation": "Collapse a comparison pane; keep the Settings navigation chevron.",
+      "captured_role": "disclosure-arrow",
+      "applied_role": "action-icon"
+    },
+    {
+      "id": "maximize",
+      "winner": "new",
+      "captured": {
+        "original": "8dcce15ead4a",
+        "path": "static/js/editor/build/topbar.js",
+        "line": 527,
+        "basis": "Button aria-label",
+        "source_label": "Maximize editor",
+        "priority": 90,
+        "status": "source-label candidate",
+        "source_url": "https://github.com/odysseus-dev/odysseus/blob/c21980f5a6d1cb84db8c8ab0f488cefc7764eb3f/static/js/editor/build/topbar.js#L527"
+      },
+      "status": "applied",
+      "targets": [
+        {
+          "path": "static/js/editor/build/topbar.js",
+          "selector": "[data-ui-icon=\"maximize\"]"
+        }
+      ],
+      "explanation": "Scoped to the selected source control; existing labels, state hooks and unrelated glyphs remain.",
+      "captured_role": "action-or-status-icon",
+      "applied_role": "action-or-status-icon"
+    },
+    {
+      "id": "panel-right",
+      "winner": "new",
+      "captured": {
+        "original": "03a78506bae9",
+        "path": "static/js/editor/build/topbar.js",
+        "line": 473,
+        "basis": "Button title",
+        "source_label": "Window panels",
+        "priority": 90,
+        "status": "source-label candidate",
+        "source_url": "https://github.com/odysseus-dev/odysseus/blob/c21980f5a6d1cb84db8c8ab0f488cefc7764eb3f/static/js/editor/build/topbar.js#L473"
+      },
+      "status": "applied",
+      "targets": [
+        {
+          "path": "static/js/editor/build/topbar.js",
+          "selector": "[data-ui-icon=\"panel-right\"]"
+        }
+      ],
+      "explanation": "Scoped to the selected source control; existing labels, state hooks and unrelated glyphs remain.",
+      "captured_role": "action-or-status-icon",
+      "applied_role": "action-or-status-icon"
+    },
+    {
+      "id": "sidebar-close",
+      "winner": "new",
+      "captured": {
+        "original": "f34deb630f37",
+        "path": "static/index.html",
+        "line": 781,
+        "basis": "Button title",
+        "source_label": "Toggle sidebar",
+        "priority": 90,
+        "status": "source-label candidate",
+        "source_url": "https://github.com/odysseus-dev/odysseus/blob/c21980f5a6d1cb84db8c8ab0f488cefc7764eb3f/static/index.html#L781"
+      },
+      "status": "applied",
+      "targets": [
+        {
+          "path": "static/index.html",
+          "selector": "[data-ui-icon=\"sidebar-close\"]"
+        }
+      ],
+      "explanation": "Use the new close glyph on the active external toggle only while the sidebar is expanded. Keep the old hamburger to open it. The captured in-sidebar toggle is hidden by CSS.",
+      "captured_role": "action-or-status-icon",
+      "applied_role": "sidebar-expanded-icon"
+    },
+    {
+      "id": "dock",
+      "winner": "new",
+      "captured": {
+        "original": "90b50e309d57",
+        "path": "static/js/editor/build/dock.js",
+        "line": 127,
+        "basis": "Button aria-label",
+        "source_label": "Dock panel",
+        "priority": 90,
+        "status": "source-label candidate",
+        "source_url": "https://github.com/odysseus-dev/odysseus/blob/c21980f5a6d1cb84db8c8ab0f488cefc7764eb3f/static/js/editor/build/dock.js#L127"
+      },
+      "status": "applied",
+      "targets": [
+        {
+          "path": "static/js/editor/build/dock.js",
+          "selector": "[data-ui-icon=\"dock\"]"
+        }
+      ],
+      "explanation": "Scoped to the selected source control; existing labels, state hooks and unrelated glyphs remain.",
+      "captured_role": "action-or-status-icon",
+      "applied_role": "action-or-status-icon"
+    },
+    {
+      "id": "quote",
+      "winner": "new",
+      "captured": {
+        "original": "0ef9a79371db",
+        "path": "static/js/emailLibrary/signatureFold.js",
+        "line": 21,
+        "basis": "Named SVG: _QUOTE_ICON",
+        "source_label": "_QUOTE_ICON",
+        "priority": 80,
+        "status": "source-label candidate",
+        "source_url": "https://github.com/odysseus-dev/odysseus/blob/c21980f5a6d1cb84db8c8ab0f488cefc7764eb3f/static/js/emailLibrary/signatureFold.js#L21"
+      },
+      "status": "applied",
+      "targets": [
+        {
+          "path": "static/js/emailLibrary/signatureFold.js",
+          "selector": "[data-ui-icon=\"quote\"]"
+        }
+      ],
+      "explanation": "Scoped to the selected source control; existing labels, state hooks and unrelated glyphs remain.",
+      "captured_role": "action-or-status-icon",
+      "applied_role": "action-or-status-icon"
+    },
+    {
+      "id": "reasoning",
+      "winner": "new",
+      "captured": {
+        "original": "cdb93a58a95c",
+        "path": "static/index.html",
+        "line": 1259,
+        "basis": "Button title",
+        "source_label": "Reasoning effort",
+        "priority": 90,
+        "status": "source-label candidate",
+        "source_url": "https://github.com/odysseus-dev/odysseus/blob/c21980f5a6d1cb84db8c8ab0f488cefc7764eb3f/static/index.html#L1259"
+      },
+      "status": "applied",
+      "targets": [
+        {
+          "path": "static/index.html",
+          "selector": "[data-ui-icon=\"reasoning\"]"
+        }
+      ],
+      "explanation": "Scoped to the selected source control; existing labels, state hooks and unrelated glyphs remain.",
+      "captured_role": "disclosure-arrow",
+      "applied_role": "semantic-icon-plus-disclosure"
+    },
+    {
+      "id": "context",
+      "winner": "new",
+      "captured": {
+        "original": "5f82f568036e",
+        "path": "static/js/document.js",
+        "line": 7568,
+        "basis": "Button title",
+        "source_label": "Draft a reply with AI (fast + optional context)",
+        "priority": 90,
+        "status": "source-label candidate",
+        "source_url": "https://github.com/odysseus-dev/odysseus/blob/c21980f5a6d1cb84db8c8ab0f488cefc7764eb3f/static/js/document.js#L7568"
+      },
+      "status": "applied",
+      "targets": [
+        {
+          "path": "static/index.html",
+          "selector": "[data-ui-icon=\"context\"]"
+        }
+      ],
+      "explanation": "Chat context meter; the captured button drafts an AI reply.",
+      "captured_role": "action-or-status-icon",
+      "applied_role": "labeled-command"
+    },
+    {
+      "id": "model-add",
+      "winner": "new",
+      "captured": {
+        "original": "d1079e2f2a76",
+        "path": "static/index.html",
+        "line": 1084,
+        "basis": "Button aria-label",
+        "source_label": "Add model endpoints",
+        "priority": 90,
+        "status": "source-label candidate",
+        "source_url": "https://github.com/odysseus-dev/odysseus/blob/c21980f5a6d1cb84db8c8ab0f488cefc7764eb3f/static/index.html#L1084"
+      },
+      "status": "applied",
+      "targets": [
+        {
+          "path": "static/index.html",
+          "selector": "[data-ui-icon=\"model-add\"]"
+        }
+      ],
+      "explanation": "Scoped to the selected source control; existing labels, state hooks and unrelated glyphs remain.",
+      "captured_role": "action-or-status-icon",
+      "applied_role": "action-or-status-icon"
+    },
+    {
+      "id": "database",
+      "winner": "new",
+      "captured": {
+        "original": "a85bc4fafd3b",
+        "path": "static/js/calendar.js",
+        "line": 1056,
+        "basis": "Button title",
+        "source_label": "Refresh from database",
+        "priority": 90,
+        "status": "source-label candidate",
+        "source_url": "https://github.com/odysseus-dev/odysseus/blob/c21980f5a6d1cb84db8c8ab0f488cefc7764eb3f/static/js/calendar.js#L1056"
+      },
+      "status": "kept-old-needs-remap",
+      "targets": [],
+      "explanation": "Captured source refreshes calendar data. Keep the refresh arrow; a database cylinder does not convey refresh.",
+      "captured_role": "action-or-status-icon"
+    },
+    {
+      "id": "file",
+      "winner": "new",
+      "captured": {
+        "original": "564f1ff0a51f",
+        "path": "static/js/editor/build/topbar.js",
+        "line": 18,
+        "basis": "Button title",
+        "source_label": "File actions",
+        "priority": 90,
+        "status": "source-label candidate",
+        "source_url": "https://github.com/odysseus-dev/odysseus/blob/c21980f5a6d1cb84db8c8ab0f488cefc7764eb3f/static/js/editor/build/topbar.js#L18"
+      },
+      "status": "applied",
+      "targets": [
+        {
+          "path": "static/js/editor/build/topbar.js",
+          "selector": "[data-ui-icon=\"file\"]"
+        }
+      ],
+      "explanation": "Scoped to the selected source control; existing labels, state hooks and unrelated glyphs remain.",
+      "captured_role": "action-or-status-icon",
+      "applied_role": "action-or-status-icon"
+    },
+    {
+      "id": "bold",
+      "winner": "new",
+      "captured": {
+        "original": "text-df7e70e50215",
+        "path": "static/js/document.js",
+        "line": 7574,
+        "basis": "Literal button text",
+        "source_label": "Bold (Ctrl+B)",
+        "priority": 60,
+        "status": "source-label candidate",
+        "source_url": "https://github.com/odysseus-dev/odysseus/blob/c21980f5a6d1cb84db8c8ab0f488cefc7764eb3f/static/js/document.js#L7574"
+      },
+      "status": "applied",
+      "targets": [
+        {
+          "path": "static/js/document.js",
+          "selector": "[data-ui-icon=\"bold\"]"
+        }
+      ],
+      "explanation": "Scoped to the selected source control; existing labels, state hooks and unrelated glyphs remain.",
+      "captured_role": "formatting-glyph",
+      "applied_role": "formatting-glyph"
+    },
+    {
+      "id": "italic",
+      "winner": "new",
+      "captured": {
+        "original": "text-a83dd0ccbffe",
+        "path": "static/js/document.js",
+        "line": 7575,
+        "basis": "Literal button text",
+        "source_label": "Italic (Ctrl+I)",
+        "priority": 60,
+        "status": "source-label candidate",
+        "source_url": "https://github.com/odysseus-dev/odysseus/blob/c21980f5a6d1cb84db8c8ab0f488cefc7764eb3f/static/js/document.js#L7575"
+      },
+      "status": "applied",
+      "targets": [
+        {
+          "path": "static/js/document.js",
+          "selector": "[data-ui-icon=\"italic\"]"
+        }
+      ],
+      "explanation": "Scoped to the selected source control; existing labels, state hooks and unrelated glyphs remain.",
+      "captured_role": "formatting-glyph",
+      "applied_role": "formatting-glyph"
+    },
+    {
+      "id": "underline",
+      "winner": "new",
+      "captured": {
+        "original": "text-a25513c7e0f6",
+        "path": "static/js/document.js",
+        "line": 7577,
+        "basis": "Literal button text",
+        "source_label": "Underline (Ctrl+U)",
+        "priority": 60,
+        "status": "source-label candidate",
+        "source_url": "https://github.com/odysseus-dev/odysseus/blob/c21980f5a6d1cb84db8c8ab0f488cefc7764eb3f/static/js/document.js#L7577"
+      },
+      "status": "applied",
+      "targets": [
+        {
+          "path": "static/js/document.js",
+          "selector": "[data-ui-icon=\"underline\"]"
+        }
+      ],
+      "explanation": "Scoped to the selected source control; existing labels, state hooks and unrelated glyphs remain.",
+      "captured_role": "formatting-glyph",
+      "applied_role": "formatting-glyph"
+    },
+    {
+      "id": "strikethrough",
+      "winner": "new",
+      "captured": {
+        "original": "text-8de0b3c47f11",
+        "path": "static/js/document.js",
+        "line": 7576,
+        "basis": "Literal button text",
+        "source_label": "Strikethrough (Ctrl+Shift+X)",
+        "priority": 60,
+        "status": "source-label candidate",
+        "source_url": "https://github.com/odysseus-dev/odysseus/blob/c21980f5a6d1cb84db8c8ab0f488cefc7764eb3f/static/js/document.js#L7576"
+      },
+      "status": "applied",
+      "targets": [
+        {
+          "path": "static/js/document.js",
+          "selector": "[data-ui-icon=\"strikethrough\"]"
+        }
+      ],
+      "explanation": "Scoped to the selected source control; existing labels, state hooks and unrelated glyphs remain.",
+      "captured_role": "formatting-glyph",
+      "applied_role": "formatting-glyph"
+    },
+    {
+      "id": "superscript",
+      "winner": "new",
+      "captured": {
+        "original": "text-844ecc08164e",
+        "path": "static/js/document.js",
+        "line": 7578,
+        "basis": "Literal button text",
+        "source_label": "Superscript",
+        "priority": 60,
+        "status": "source-label candidate",
+        "source_url": "https://github.com/odysseus-dev/odysseus/blob/c21980f5a6d1cb84db8c8ab0f488cefc7764eb3f/static/js/document.js#L7578"
+      },
+      "status": "applied",
+      "targets": [
+        {
+          "path": "static/js/document.js",
+          "selector": "[data-ui-icon=\"superscript\"]"
+        }
+      ],
+      "explanation": "Scoped to the selected source control; existing labels, state hooks and unrelated glyphs remain.",
+      "captured_role": "formatting-glyph",
+      "applied_role": "formatting-glyph"
+    },
+    {
+      "id": "subscript",
+      "winner": "new",
+      "captured": {
+        "original": "text-844ecc08164e",
+        "path": "static/js/document.js",
+        "line": 7579,
+        "basis": "Literal button text",
+        "source_label": "Subscript",
+        "priority": 60,
+        "status": "source-label candidate",
+        "source_url": "https://github.com/odysseus-dev/odysseus/blob/c21980f5a6d1cb84db8c8ab0f488cefc7764eb3f/static/js/document.js#L7579"
+      },
+      "status": "applied",
+      "targets": [
+        {
+          "path": "static/js/document.js",
+          "selector": "[data-ui-icon=\"subscript\"]"
+        }
+      ],
+      "explanation": "Scoped to the selected source control; existing labels, state hooks and unrelated glyphs remain.",
+      "captured_role": "formatting-glyph",
+      "applied_role": "formatting-glyph"
+    },
+    {
+      "id": "heading",
+      "winner": "new",
+      "captured": {
+        "original": "90be1febf1d2",
+        "path": "static/js/document.js",
+        "line": 7581,
+        "basis": "Button title",
+        "source_label": "Heading (Ctrl+Alt+1-6)",
+        "priority": 90,
+        "status": "source-label candidate",
+        "source_url": "https://github.com/odysseus-dev/odysseus/blob/c21980f5a6d1cb84db8c8ab0f488cefc7764eb3f/static/js/document.js#L7581"
+      },
+      "status": "applied",
+      "targets": [
+        {
+          "path": "static/js/document.js",
+          "selector": "[data-ui-icon=\"heading\"]"
+        }
+      ],
+      "explanation": "Replace the H mark and preserve the disclosure chevron.",
+      "captured_role": "disclosure-arrow",
+      "applied_role": "formatting-dropdown"
+    },
+    {
+      "id": "font-family",
+      "winner": "new",
+      "captured": {
+        "original": "90be1febf1d2",
+        "path": "static/js/document.js",
+        "line": 7582,
+        "basis": "Button aria-label",
+        "source_label": "Font family",
+        "priority": 90,
+        "status": "source-label candidate",
+        "source_url": "https://github.com/odysseus-dev/odysseus/blob/c21980f5a6d1cb84db8c8ab0f488cefc7764eb3f/static/js/document.js#L7582"
+      },
+      "status": "applied",
+      "targets": [
+        {
+          "path": "static/js/document.js",
+          "selector": "[data-ui-icon=\"font-family\"]"
+        }
+      ],
+      "explanation": "Replace the Aa mark and preserve the disclosure chevron.",
+      "captured_role": "disclosure-arrow",
+      "applied_role": "formatting-dropdown"
+    },
+    {
+      "id": "font-size",
+      "winner": "new",
+      "captured": {
+        "original": "37ea9e198402",
+        "path": "static/js/document.js",
+        "line": 7571,
+        "basis": "Button aria-label",
+        "source_label": "Editor display size",
+        "priority": 90,
+        "status": "source-label candidate",
+        "source_url": "https://github.com/odysseus-dev/odysseus/blob/c21980f5a6d1cb84db8c8ab0f488cefc7764eb3f/static/js/document.js#L7571"
+      },
+      "status": "applied",
+      "targets": [
+        {
+          "path": "static/js/document.js",
+          "selector": "[data-ui-icon=\"font-size\"]"
+        }
+      ],
+      "explanation": "Scoped to the selected source control; existing labels, state hooks and unrelated glyphs remain.",
+      "captured_role": "action-or-status-icon",
+      "applied_role": "action-or-status-icon"
+    },
+    {
+      "id": "text-color",
+      "winner": "new",
+      "captured": {
+        "original": "749e5b9e172e",
+        "path": "static/js/document.js",
+        "line": 7597,
+        "basis": "Button title",
+        "source_label": "Text color",
+        "priority": 90,
+        "status": "source-label candidate",
+        "source_url": "https://github.com/odysseus-dev/odysseus/blob/c21980f5a6d1cb84db8c8ab0f488cefc7764eb3f/static/js/document.js#L7597"
+      },
+      "status": "applied",
+      "targets": [
+        {
+          "path": "static/js/document.js",
+          "selector": "[data-ui-icon=\"text-color\"]"
+        }
+      ],
+      "explanation": "Scoped to the selected source control; existing labels, state hooks and unrelated glyphs remain.",
+      "captured_role": "disclosure-arrow",
+      "applied_role": "semantic-icon-plus-disclosure"
+    },
+    {
+      "id": "highlight",
+      "winner": "new",
+      "captured": {
+        "original": "0557ce84b1d7",
+        "path": "static/js/document.js",
+        "line": 7598,
+        "basis": "Button title",
+        "source_label": "Highlight color",
+        "priority": 90,
+        "status": "source-label candidate",
+        "source_url": "https://github.com/odysseus-dev/odysseus/blob/c21980f5a6d1cb84db8c8ab0f488cefc7764eb3f/static/js/document.js#L7598"
+      },
+      "status": "applied",
+      "targets": [
+        {
+          "path": "static/js/document.js",
+          "selector": "[data-ui-icon=\"highlight\"]"
+        }
+      ],
+      "explanation": "Scoped to the selected source control; existing labels, state hooks and unrelated glyphs remain.",
+      "captured_role": "action-or-status-icon",
+      "applied_role": "action-or-status-icon"
+    },
+    {
+      "id": "indent",
+      "winner": "new",
+      "captured": {
+        "original": "6ea1468b81f7",
+        "path": "static/js/document.js",
+        "line": 7595,
+        "basis": "Button title",
+        "source_label": "Decrease indent (Ctrl+[)",
+        "priority": 90,
+        "status": "source-label candidate",
+        "source_url": "https://github.com/odysseus-dev/odysseus/blob/c21980f5a6d1cb84db8c8ab0f488cefc7764eb3f/static/js/document.js#L7595"
+      },
+      "status": "applied",
+      "targets": [
+        {
+          "path": "static/js/document.js",
+          "selector": "[data-ui-icon=\"indent\"]"
+        }
+      ],
+      "explanation": "Increase indent; the captured source decreases indent.",
+      "captured_role": "action-or-status-icon",
+      "applied_role": "action-icon"
+    },
+    {
+      "id": "line-spacing",
+      "winner": "new",
+      "captured": {
+        "original": "7f8fc2a60ccf",
+        "path": "static/js/document.js",
+        "line": 7594,
+        "basis": "Button title",
+        "source_label": "Line spacing",
+        "priority": 90,
+        "status": "source-label candidate",
+        "source_url": "https://github.com/odysseus-dev/odysseus/blob/c21980f5a6d1cb84db8c8ab0f488cefc7764eb3f/static/js/document.js#L7594"
+      },
+      "status": "applied",
+      "targets": [
+        {
+          "path": "static/js/document.js",
+          "selector": "[data-ui-icon=\"line-spacing\"]"
+        }
+      ],
+      "explanation": "Scoped to the selected source control; existing labels, state hooks and unrelated glyphs remain.",
+      "captured_role": "action-or-status-icon",
+      "applied_role": "action-or-status-icon"
+    },
+    {
+      "id": "blockquote",
+      "winner": "new",
+      "captured": {
+        "original": "91c1d7a349e1",
+        "path": "static/js/document.js",
+        "line": 7600,
+        "basis": "Button title",
+        "source_label": "Block quote",
+        "priority": 90,
+        "status": "source-label candidate",
+        "source_url": "https://github.com/odysseus-dev/odysseus/blob/c21980f5a6d1cb84db8c8ab0f488cefc7764eb3f/static/js/document.js#L7600"
+      },
+      "status": "applied",
+      "targets": [
+        {
+          "path": "static/js/document.js",
+          "selector": "[data-ui-icon=\"blockquote\"]"
+        }
+      ],
+      "explanation": "Scoped to the selected source control; existing labels, state hooks and unrelated glyphs remain.",
+      "captured_role": "action-or-status-icon",
+      "applied_role": "action-or-status-icon"
+    },
+    {
+      "id": "text-box",
+      "winner": "new",
+      "captured": {
+        "original": "text-e632b7095b0b",
+        "path": "frontend/src/features/notes/ui/drawing.js",
+        "line": 28,
+        "basis": "Literal button text",
+        "source_label": "Add text",
+        "priority": 60,
+        "status": "source-label candidate",
+        "source_url": "https://github.com/odysseus-dev/odysseus/blob/c21980f5a6d1cb84db8c8ab0f488cefc7764eb3f/frontend/src/features/notes/ui/drawing.js#L28"
+      },
+      "status": "applied",
+      "targets": [
+        {
+          "path": "frontend/src/features/notes/ui/drawing.js",
+          "selector": "[data-ui-icon=\"text-box\"]"
+        },
+        {
+          "path": "static/js/features/notes/ui/drawing.js",
+          "selector": "[data-ui-icon=\"text-box\"]"
+        }
+      ],
+      "explanation": "Scoped to the selected source control; existing labels, state hooks and unrelated glyphs remain.",
+      "captured_role": "text-command",
+      "applied_role": "action-icon"
+    },
+    {
+      "id": "compose",
+      "winner": "new",
+      "captured": {
+        "original": "27f1350b4016",
+        "path": "static/index.html",
+        "line": 862,
+        "basis": "Button title",
+        "source_label": "Compose email",
+        "priority": 90,
+        "status": "source-label candidate",
+        "source_url": "https://github.com/odysseus-dev/odysseus/blob/c21980f5a6d1cb84db8c8ab0f488cefc7764eb3f/static/index.html#L862"
+      },
+      "status": "applied",
+      "targets": [
+        {
+          "path": "static/index.html",
+          "selector": "[data-ui-icon=\"compose\"]"
+        }
+      ],
+      "explanation": "Scoped to the selected source control; existing labels, state hooks and unrelated glyphs remain.",
+      "captured_role": "action-or-status-icon",
+      "applied_role": "action-or-status-icon"
+    },
+    {
+      "id": "send-later",
+      "winner": "new",
+      "captured": {
+        "original": "5e64380d19bc",
+        "path": "static/js/document.js",
+        "line": 7659,
+        "basis": "Button title",
+        "source_label": "More send options",
+        "priority": 90,
+        "status": "source-label candidate",
+        "source_url": "https://github.com/odysseus-dev/odysseus/blob/c21980f5a6d1cb84db8c8ab0f488cefc7764eb3f/static/js/document.js#L7659"
+      },
+      "status": "applied",
+      "targets": [
+        {
+          "path": "static/js/document.js",
+          "selector": "[data-ui-icon=\"send-later\"]"
+        }
+      ],
+      "explanation": "Scoped to the selected source control; existing labels, state hooks and unrelated glyphs remain.",
+      "captured_role": "disclosure-arrow",
+      "applied_role": "semantic-icon-plus-disclosure"
+    },
+    {
+      "id": "spam",
+      "winner": "new",
+      "captured": {
+        "original": "5cb5cbaa3df4",
+        "path": "static/js/emailInbox.js",
+        "line": 22,
+        "basis": "Named SVG: _spamIcon",
+        "source_label": "_spamIcon",
+        "priority": 80,
+        "status": "source-label candidate",
+        "source_url": "https://github.com/odysseus-dev/odysseus/blob/c21980f5a6d1cb84db8c8ab0f488cefc7764eb3f/static/js/emailInbox.js#L22"
+      },
+      "status": "applied",
+      "targets": [
+        {
+          "path": "static/js/emailInbox.js",
+          "selector": "[data-ui-icon=\"spam\"]"
+        }
+      ],
+      "explanation": "Scoped to the selected source control; existing labels, state hooks and unrelated glyphs remain.",
+      "captured_role": "action-or-status-icon",
+      "applied_role": "action-or-status-icon"
+    },
+    {
+      "id": "play",
+      "winner": "new",
+      "captured": {
+        "original": "0a90babbf8e0",
+        "path": "static/js/chat.js",
+        "line": 5822,
+        "basis": "Named SVG: ICON_PLAY_TTS",
+        "source_label": "ICON_PLAY_TTS",
+        "priority": 80,
+        "status": "source-label candidate",
+        "source_url": "https://github.com/odysseus-dev/odysseus/blob/c21980f5a6d1cb84db8c8ab0f488cefc7764eb3f/static/js/chat.js#L5822"
+      },
+      "status": "applied",
+      "targets": [
+        {
+          "path": "static/js/chat.js",
+          "selector": "[data-ui-icon=\"play\"]"
+        }
+      ],
+      "explanation": "Scoped to the selected source control; existing labels, state hooks and unrelated glyphs remain.",
+      "captured_role": "action-or-status-icon",
+      "applied_role": "action-or-status-icon"
+    },
+    {
+      "id": "pause",
+      "winner": "new",
+      "captured": {
+        "original": "8efc77b745cb",
+        "path": "static/js/tasks.js",
+        "line": 923,
+        "basis": "Button aria-label",
+        "source_label": "Active - click to pause",
+        "priority": 90,
+        "status": "source-label candidate",
+        "source_url": "https://github.com/odysseus-dev/odysseus/blob/c21980f5a6d1cb84db8c8ab0f488cefc7764eb3f/static/js/tasks.js#L923"
+      },
+      "status": "applied",
+      "targets": [
+        {
+          "path": "static/js/tasks.js",
+          "selector": "[data-ui-icon=\"pause\"]"
+        }
+      ],
+      "explanation": "Scoped to the selected source control; existing labels, state hooks and unrelated glyphs remain.",
+      "captured_role": "action-or-status-icon",
+      "applied_role": "action-or-status-icon"
+    },
+    {
+      "id": "image",
+      "winner": "new",
+      "captured": {
+        "original": "b0ad547e3b8d",
+        "path": "static/js/document.js",
+        "line": 7587,
+        "basis": "Button aria-label",
+        "source_label": "Insert image",
+        "priority": 90,
+        "status": "source-label candidate",
+        "source_url": "https://github.com/odysseus-dev/odysseus/blob/c21980f5a6d1cb84db8c8ab0f488cefc7764eb3f/static/js/document.js#L7587"
+      },
+      "status": "applied",
+      "targets": [
+        {
+          "path": "static/js/document.js",
+          "selector": "[data-ui-icon=\"image\"]"
+        }
+      ],
+      "explanation": "Scoped to the selected source control; existing labels, state hooks and unrelated glyphs remain.",
+      "captured_role": "action-or-status-icon",
+      "applied_role": "action-or-status-icon"
+    },
+    {
+      "id": "image-export",
+      "winner": "new",
+      "captured": {
+        "original": "8034fd22bc11",
+        "path": "static/js/editor/build/topbar.js",
+        "line": 556,
+        "basis": "Button title",
+        "source_label": "Export an image to your computer",
+        "priority": 90,
+        "status": "source-label candidate",
+        "source_url": "https://github.com/odysseus-dev/odysseus/blob/c21980f5a6d1cb84db8c8ab0f488cefc7764eb3f/static/js/editor/build/topbar.js#L556"
+      },
+      "status": "applied",
+      "targets": [
+        {
+          "path": "static/js/editor/build/topbar.js",
+          "selector": "[data-ui-icon=\"image-export\"]"
+        }
+      ],
+      "explanation": "Visible File menu Export Image command; the captured secondary export dropdown is hidden.",
+      "captured_role": "action-or-status-icon",
+      "applied_role": "labeled-command"
+    },
+    {
+      "id": "rotate-right",
+      "winner": "new",
+      "captured": {
+        "original": "a5c555954f67",
+        "path": "static/js/editor/build/transform-popup.js",
+        "line": 108,
+        "basis": "Button aria-label",
+        "source_label": "Rotate 90 degrees",
+        "priority": 90,
+        "status": "source-label candidate",
+        "source_url": "https://github.com/odysseus-dev/odysseus/blob/c21980f5a6d1cb84db8c8ab0f488cefc7764eb3f/static/js/editor/build/transform-popup.js#L108"
+      },
+      "status": "applied",
+      "targets": [
+        {
+          "path": "static/js/editor/build/transform-popup.js",
+          "selector": "[data-ui-icon=\"rotate-right\"]"
+        }
+      ],
+      "explanation": "Scoped to the selected source control; existing labels, state hooks and unrelated glyphs remain.",
+      "captured_role": "action-or-status-icon",
+      "applied_role": "action-or-status-icon"
+    },
+    {
+      "id": "zoom-in",
+      "winner": "new",
+      "captured": {
+        "original": "text-a318c24216de",
+        "path": "static/js/calendar.js",
+        "line": 1689,
+        "basis": "Literal button text",
+        "source_label": "Zoom in",
+        "priority": 60,
+        "status": "source-label candidate",
+        "source_url": "https://github.com/odysseus-dev/odysseus/blob/c21980f5a6d1cb84db8c8ab0f488cefc7764eb3f/static/js/calendar.js#L1689"
+      },
+      "status": "applied",
+      "targets": [
+        {
+          "path": "static/js/calendar.js",
+          "selector": "[data-ui-icon=\"zoom-in\"]"
+        }
+      ],
+      "explanation": "Scoped to the selected source control; existing labels, state hooks and unrelated glyphs remain.",
+      "captured_role": "text-command",
+      "applied_role": "action-icon"
+    },
+    {
+      "id": "line",
+      "winner": "new",
+      "captured": {
+        "original": "77837afb3318",
+        "path": "frontend/src/features/notes/ui/drawing.js",
+        "line": 30,
+        "basis": "Button title",
+        "source_label": "Line \u2014 click to cycle size",
+        "priority": 90,
+        "status": "source-label candidate",
+        "source_url": "https://github.com/odysseus-dev/odysseus/blob/c21980f5a6d1cb84db8c8ab0f488cefc7764eb3f/frontend/src/features/notes/ui/drawing.js#L30"
+      },
+      "status": "applied",
+      "targets": [
+        {
+          "path": "frontend/src/features/notes/ui/drawing.js",
+          "selector": "[data-ui-icon=\"line\"]"
+        },
+        {
+          "path": "static/js/features/notes/ui/drawing.js",
+          "selector": "[data-ui-icon=\"line\"]"
+        }
+      ],
+      "explanation": "Scoped to the selected source control; existing labels, state hooks and unrelated glyphs remain.",
+      "captured_role": "action-or-status-icon",
+      "applied_role": "action-or-status-icon"
+    },
+    {
+      "id": "path",
+      "winner": "new",
+      "captured": {
+        "original": "83e15a8b0cb2",
+        "path": "static/js/editor/build/controls.js",
+        "line": 19,
+        "basis": "Button title",
+        "source_label": "Cancel path (Escape)",
+        "priority": 90,
+        "status": "source-label candidate",
+        "source_url": "https://github.com/odysseus-dev/odysseus/blob/c21980f5a6d1cb84db8c8ab0f488cefc7764eb3f/static/js/editor/build/controls.js#L19"
+      },
+      "status": "applied",
+      "targets": [
+        {
+          "path": "static/js/editor/build/toolbar.js",
+          "selector": "[data-ui-icon=\"path\"]"
+        }
+      ],
+      "explanation": "Pen Path tool; the captured X cancels a path.",
+      "captured_role": "action-or-status-icon",
+      "applied_role": "tool-icon"
+    },
+    {
+      "id": "polygon",
+      "winner": "new",
+      "captured": {
+        "original": "2553900a234f",
+        "path": "static/js/editor/build/controls.js",
+        "line": 318,
+        "basis": "Button title",
+        "source_label": "Polygon",
+        "priority": 90,
+        "status": "source-label candidate",
+        "source_url": "https://github.com/odysseus-dev/odysseus/blob/c21980f5a6d1cb84db8c8ab0f488cefc7764eb3f/static/js/editor/build/controls.js#L318"
+      },
+      "status": "applied",
+      "targets": [
+        {
+          "path": "static/js/editor/build/controls.js",
+          "selector": "[data-ui-icon=\"polygon\"]"
+        }
+      ],
+      "explanation": "Scoped to the selected source control; existing labels, state hooks and unrelated glyphs remain.",
+      "captured_role": "action-or-status-icon",
+      "applied_role": "action-or-status-icon"
+    },
+    {
+      "id": "rectangle",
+      "winner": "new",
+      "captured": {
+        "original": "4f60ff9b08de",
+        "path": "static/js/editor/build/controls.js",
+        "line": 315,
+        "basis": "Button title",
+        "source_label": "Rectangle",
+        "priority": 90,
+        "status": "source-label candidate",
+        "source_url": "https://github.com/odysseus-dev/odysseus/blob/c21980f5a6d1cb84db8c8ab0f488cefc7764eb3f/static/js/editor/build/controls.js#L315"
+      },
+      "status": "applied",
+      "targets": [
+        {
+          "path": "static/js/editor/build/controls.js",
+          "selector": "[data-ui-icon=\"rectangle\"]"
+        }
+      ],
+      "explanation": "Scoped to the selected source control; existing labels, state hooks and unrelated glyphs remain.",
+      "captured_role": "action-or-status-icon",
+      "applied_role": "action-or-status-icon"
+    },
+    {
+      "id": "ellipse",
+      "winner": "new",
+      "captured": {
+        "original": "47c54babe6bf",
+        "path": "static/js/editor/build/controls.js",
+        "line": 316,
+        "basis": "Button title",
+        "source_label": "Ellipse",
+        "priority": 90,
+        "status": "source-label candidate",
+        "source_url": "https://github.com/odysseus-dev/odysseus/blob/c21980f5a6d1cb84db8c8ab0f488cefc7764eb3f/static/js/editor/build/controls.js#L316"
+      },
+      "status": "applied",
+      "targets": [
+        {
+          "path": "static/js/editor/build/controls.js",
+          "selector": "[data-ui-icon=\"ellipse\"]"
+        }
+      ],
+      "explanation": "Scoped to the selected source control; existing labels, state hooks and unrelated glyphs remain.",
+      "captured_role": "action-or-status-icon",
+      "applied_role": "action-or-status-icon"
+    },
+    {
+      "id": "shape-union",
+      "winner": "new",
+      "captured": {
+        "original": "text-6cf534820a60",
+        "path": "static/js/editor/build/topbar.js",
+        "line": 183,
+        "basis": "Literal button text",
+        "source_label": "Unite Shapes",
+        "priority": 60,
+        "status": "source-label candidate",
+        "source_url": "https://github.com/odysseus-dev/odysseus/blob/c21980f5a6d1cb84db8c8ab0f488cefc7764eb3f/static/js/editor/build/topbar.js#L183"
+      },
+      "status": "applied",
+      "targets": [
+        {
+          "path": "static/js/editor/build/topbar.js",
+          "selector": "[data-ui-icon=\"shape-union\"]"
+        }
+      ],
+      "explanation": "Scoped to the selected source control; existing labels, state hooks and unrelated glyphs remain.",
+      "captured_role": "menu-command",
+      "applied_role": "labeled-command"
+    },
+    {
+      "id": "shape-subtract",
+      "winner": "new",
+      "captured": {
+        "original": "text-584dcb3450e2",
+        "path": "static/js/editor/build/topbar.js",
+        "line": 184,
+        "basis": "Literal button text",
+        "source_label": "Subtract Shapes",
+        "priority": 60,
+        "status": "source-label candidate",
+        "source_url": "https://github.com/odysseus-dev/odysseus/blob/c21980f5a6d1cb84db8c8ab0f488cefc7764eb3f/static/js/editor/build/topbar.js#L184"
+      },
+      "status": "applied",
+      "targets": [
+        {
+          "path": "static/js/editor/build/topbar.js",
+          "selector": "[data-ui-icon=\"shape-subtract\"]"
+        }
+      ],
+      "explanation": "Scoped to the selected source control; existing labels, state hooks and unrelated glyphs remain.",
+      "captured_role": "menu-command",
+      "applied_role": "labeled-command"
+    },
+    {
+      "id": "shape-intersect",
+      "winner": "new",
+      "captured": {
+        "original": "1bb8d8ccb109",
+        "path": "static/js/editor/build/controls.js",
+        "line": 377,
+        "basis": "Button title",
+        "source_label": "Intersect selection",
+        "priority": 90,
+        "status": "source-label candidate",
+        "source_url": "https://github.com/odysseus-dev/odysseus/blob/c21980f5a6d1cb84db8c8ab0f488cefc7764eb3f/static/js/editor/build/controls.js#L377"
+      },
+      "status": "applied",
+      "targets": [
+        {
+          "path": "static/js/editor/build/controls.js",
+          "selector": "[data-ui-icon=\"shape-intersect\"]"
+        }
+      ],
+      "explanation": "Scoped to the selected source control; existing labels, state hooks and unrelated glyphs remain.",
+      "captured_role": "action-or-status-icon",
+      "applied_role": "action-or-status-icon"
+    },
+    {
+      "id": "shape-exclude",
+      "winner": "new",
+      "captured": {
+        "original": "text-3f74740c9240",
+        "path": "static/js/editor/build/topbar.js",
+        "line": 186,
+        "basis": "Literal button text",
+        "source_label": "Exclude Shapes",
+        "priority": 60,
+        "status": "source-label candidate",
+        "source_url": "https://github.com/odysseus-dev/odysseus/blob/c21980f5a6d1cb84db8c8ab0f488cefc7764eb3f/static/js/editor/build/topbar.js#L186"
+      },
+      "status": "applied",
+      "targets": [
+        {
+          "path": "static/js/editor/build/topbar.js",
+          "selector": "[data-ui-icon=\"shape-exclude\"]"
+        }
+      ],
+      "explanation": "Scoped to the selected source control; existing labels, state hooks and unrelated glyphs remain.",
+      "captured_role": "menu-command",
+      "applied_role": "labeled-command"
+    },
+    {
+      "id": "eyedropper",
+      "winner": "new",
+      "captured": {
+        "original": "d40329d41bdf",
+        "path": "static/js/colorPicker.js",
+        "line": 135,
+        "basis": "Button title",
+        "source_label": "Eyedropper",
+        "priority": 90,
+        "status": "source-label candidate",
+        "source_url": "https://github.com/odysseus-dev/odysseus/blob/c21980f5a6d1cb84db8c8ab0f488cefc7764eb3f/static/js/colorPicker.js#L135"
+      },
+      "status": "applied",
+      "targets": [
+        {
+          "path": "static/js/colorPicker.js",
+          "selector": "[data-ui-icon=\"eyedropper\"]"
+        }
+      ],
+      "explanation": "Scoped to the selected source control; existing labels, state hooks and unrelated glyphs remain.",
+      "captured_role": "action-or-status-icon",
+      "applied_role": "action-or-status-icon"
+    },
+    {
+      "id": "gradient",
+      "winner": "new",
+      "captured": {
+        "original": "text-5dec20debaf6",
+        "path": "static/js/editor/build/controls.js",
+        "line": 178,
+        "basis": "Literal button text",
+        "source_label": "Add stop",
+        "priority": 60,
+        "status": "source-label candidate",
+        "source_url": "https://github.com/odysseus-dev/odysseus/blob/c21980f5a6d1cb84db8c8ab0f488cefc7764eb3f/static/js/editor/build/controls.js#L178"
+      },
+      "status": "applied",
+      "targets": [
+        {
+          "path": "static/js/editor/build/toolbar.js",
+          "selector": "[data-ui-icon=\"gradient\"]"
+        }
+      ],
+      "explanation": "Gradient tool; the captured plus adds a gradient stop.",
+      "captured_role": "text-command",
+      "applied_role": "tool-icon"
+    },
+    {
+      "id": "color-swap",
+      "winner": "new",
+      "captured": {
+        "original": "cb95e3e572b1",
+        "path": "static/js/editor/build/toolbar.js",
+        "line": 295,
+        "basis": "Button aria-label",
+        "source_label": "Swap colors",
+        "priority": 90,
+        "status": "source-label candidate",
+        "source_url": "https://github.com/odysseus-dev/odysseus/blob/c21980f5a6d1cb84db8c8ab0f488cefc7764eb3f/static/js/editor/build/toolbar.js#L295"
+      },
+      "status": "applied",
+      "targets": [
+        {
+          "path": "static/js/editor/build/toolbar.js",
+          "selector": "[data-ui-icon=\"color-swap\"]"
+        }
+      ],
+      "explanation": "Scoped to the selected source control; existing labels, state hooks and unrelated glyphs remain.",
+      "captured_role": "action-or-status-icon",
+      "applied_role": "action-or-status-icon"
+    },
+    {
+      "id": "merge-down",
+      "winner": "new",
+      "captured": {
+        "original": "2c435eb16567",
+        "path": "static/js/editor/build/controls.js",
+        "line": 913,
+        "basis": "Button aria-label",
+        "source_label": "Merge down",
+        "priority": 90,
+        "status": "source-label candidate",
+        "source_url": "https://github.com/odysseus-dev/odysseus/blob/c21980f5a6d1cb84db8c8ab0f488cefc7764eb3f/static/js/editor/build/controls.js#L913"
+      },
+      "status": "applied",
+      "targets": [
+        {
+          "path": "static/js/editor/build/controls.js",
+          "selector": "[data-ui-icon=\"merge-down\"]"
+        }
+      ],
+      "explanation": "Scoped to the selected source control; existing labels, state hooks and unrelated glyphs remain.",
+      "captured_role": "action-or-status-icon",
+      "applied_role": "action-or-status-icon"
+    },
+    {
+      "id": "merge-visible",
+      "winner": "new",
+      "captured": {
+        "original": "106ff89fd1b9",
+        "path": "static/js/editor/build/controls.js",
+        "line": 916,
+        "basis": "Button aria-label",
+        "source_label": "Merge all",
+        "priority": 90,
+        "status": "source-label candidate",
+        "source_url": "https://github.com/odysseus-dev/odysseus/blob/c21980f5a6d1cb84db8c8ab0f488cefc7764eb3f/static/js/editor/build/controls.js#L916"
+      },
+      "status": "applied",
+      "targets": [
+        {
+          "path": "static/js/editor/build/controls.js",
+          "selector": "[data-ui-icon=\"merge-visible\"]"
+        }
+      ],
+      "explanation": "Scoped to the selected source control; existing labels, state hooks and unrelated glyphs remain.",
+      "captured_role": "action-or-status-icon",
+      "applied_role": "action-or-status-icon"
+    },
+    {
+      "id": "flatten",
+      "winner": "new",
+      "captured": {
+        "original": "d7b14edd7bd7",
+        "path": "static/js/editor/build/controls.js",
+        "line": 919,
+        "basis": "Button aria-label",
+        "source_label": "Flatten copy",
+        "priority": 90,
+        "status": "source-label candidate",
+        "source_url": "https://github.com/odysseus-dev/odysseus/blob/c21980f5a6d1cb84db8c8ab0f488cefc7764eb3f/static/js/editor/build/controls.js#L919"
+      },
+      "status": "applied",
+      "targets": [
+        {
+          "path": "static/js/editor/build/controls.js",
+          "selector": "[data-ui-icon=\"flatten\"]"
+        }
+      ],
+      "explanation": "Scoped to the selected source control; existing labels, state hooks and unrelated glyphs remain.",
+      "captured_role": "action-or-status-icon",
+      "applied_role": "action-or-status-icon"
+    },
+    {
+      "id": "rasterize",
+      "winner": "new",
+      "captured": {
+        "original": "text-b37a1ce84fe7",
+        "path": "static/js/editor/build/controls.js",
+        "line": 310,
+        "basis": "Literal button text",
+        "source_label": "Rasterize",
+        "priority": 60,
+        "status": "source-label candidate",
+        "source_url": "https://github.com/odysseus-dev/odysseus/blob/c21980f5a6d1cb84db8c8ab0f488cefc7764eb3f/static/js/editor/build/controls.js#L310"
+      },
+      "status": "applied",
+      "targets": [
+        {
+          "path": "static/js/editor/build/controls.js",
+          "selector": "[data-ui-icon=\"rasterize\"]"
+        }
+      ],
+      "explanation": "Scoped to the selected source control; existing labels, state hooks and unrelated glyphs remain.",
+      "captured_role": "text-command",
+      "applied_role": "labeled-command"
+    },
+    {
+      "id": "lock",
+      "winner": "new",
+      "captured": {
+        "original": "08093d386f92",
+        "path": "static/js/editor/build/controls.js",
+        "line": 896,
+        "basis": "Button aria-label",
+        "source_label": "Toggle selected lock",
+        "priority": 90,
+        "status": "source-label candidate",
+        "source_url": "https://github.com/odysseus-dev/odysseus/blob/c21980f5a6d1cb84db8c8ab0f488cefc7764eb3f/static/js/editor/build/controls.js#L896"
+      },
+      "status": "applied",
+      "targets": [
+        {
+          "path": "static/js/editor/build/controls.js",
+          "selector": "[data-ui-icon=\"lock\"]"
+        }
+      ],
+      "explanation": "Scoped to the selected source control; existing labels, state hooks and unrelated glyphs remain.",
+      "captured_role": "action-or-status-icon",
+      "applied_role": "action-or-status-icon"
+    },
+    {
+      "id": "unlock",
+      "winner": "new",
+      "captured": {
+        "original": "text-4ac709aa58bc",
+        "path": "static/js/settings.js",
+        "line": 4499,
+        "basis": "Literal button text",
+        "source_label": "Unlock",
+        "priority": 60,
+        "status": "source-label candidate",
+        "source_url": "https://github.com/odysseus-dev/odysseus/blob/c21980f5a6d1cb84db8c8ab0f488cefc7764eb3f/static/js/settings.js#L4499"
+      },
+      "status": "applied",
+      "targets": [
+        {
+          "path": "static/js/settings.js",
+          "selector": "[data-ui-icon=\"unlock\"]"
+        }
+      ],
+      "explanation": "Scoped to the selected source control; existing labels, state hooks and unrelated glyphs remain.",
+      "captured_role": "text-command",
+      "applied_role": "labeled-command"
+    },
+    {
+      "id": "mask",
+      "winner": "new",
+      "captured": {
+        "original": "ae47743aff5c",
+        "path": "static/js/editor/build/controls.js",
+        "line": 665,
+        "basis": "Button title",
+        "source_label": "Hide mask",
+        "priority": 90,
+        "status": "source-label candidate",
+        "source_url": "https://github.com/odysseus-dev/odysseus/blob/c21980f5a6d1cb84db8c8ab0f488cefc7764eb3f/static/js/editor/build/controls.js#L665"
+      },
+      "status": "applied",
+      "targets": [
+        {
+          "path": "static/js/editor/build/controls.js",
+          "selector": "[data-ui-icon=\"mask\"]"
+        }
+      ],
+      "explanation": "Quick Mask mode icon; preserve the eye used to show/hide the mask.",
+      "captured_role": "action-or-status-icon",
+      "applied_role": "action-icon"
+    },
+    {
+      "id": "mask-add",
+      "winner": "new",
+      "captured": {
+        "original": "text-8ea6d7812ffd",
+        "path": "static/js/editor/build/topbar.js",
+        "line": 180,
+        "basis": "Literal button text",
+        "source_label": "Add a mask that reveals the whole layer",
+        "priority": 60,
+        "status": "source-label candidate",
+        "source_url": "https://github.com/odysseus-dev/odysseus/blob/c21980f5a6d1cb84db8c8ab0f488cefc7764eb3f/static/js/editor/build/topbar.js#L180"
+      },
+      "status": "applied",
+      "targets": [
+        {
+          "path": "static/js/editor/build/topbar.js",
+          "selector": "[data-ui-icon=\"mask-add\"]"
+        }
+      ],
+      "explanation": "Scoped to the selected source control; existing labels, state hooks and unrelated glyphs remain.",
+      "captured_role": "menu-command",
+      "applied_role": "labeled-command"
+    },
+    {
+      "id": "mask-invert",
+      "winner": "new",
+      "captured": {
+        "original": "edceef5d780a",
+        "path": "static/js/editor/build/controls.js",
+        "line": 669,
+        "basis": "Button title",
+        "source_label": "Invert mask",
+        "priority": 90,
+        "status": "source-label candidate",
+        "source_url": "https://github.com/odysseus-dev/odysseus/blob/c21980f5a6d1cb84db8c8ab0f488cefc7764eb3f/static/js/editor/build/controls.js#L669"
+      },
+      "status": "applied",
+      "targets": [
+        {
+          "path": "static/js/editor/build/controls.js",
+          "selector": "[data-ui-icon=\"mask-invert\"]"
+        }
+      ],
+      "explanation": "Scoped to the selected source control; existing labels, state hooks and unrelated glyphs remain.",
+      "captured_role": "action-or-status-icon",
+      "applied_role": "action-or-status-icon"
+    },
+    {
+      "id": "mask-clear",
+      "winner": "new",
+      "captured": {
+        "original": "138bdfbc1f4b",
+        "path": "static/js/editor/build/controls.js",
+        "line": 673,
+        "basis": "Button title",
+        "source_label": "Clear mask",
+        "priority": 90,
+        "status": "source-label candidate",
+        "source_url": "https://github.com/odysseus-dev/odysseus/blob/c21980f5a6d1cb84db8c8ab0f488cefc7764eb3f/static/js/editor/build/controls.js#L673"
+      },
+      "status": "applied",
+      "targets": [
+        {
+          "path": "static/js/editor/build/controls.js",
+          "selector": "[data-ui-icon=\"mask-clear\"]"
+        }
+      ],
+      "explanation": "Scoped to the selected source control; existing labels, state hooks and unrelated glyphs remain.",
+      "captured_role": "action-or-status-icon",
+      "applied_role": "action-or-status-icon"
+    },
+    {
+      "id": "selection",
+      "winner": "new",
+      "captured": {
+        "original": "5a2053b9a677",
+        "path": "static/js/editor/build/controls.js",
+        "line": 18,
+        "basis": "Button title",
+        "source_label": "Close path and make selection (Enter)",
+        "priority": 90,
+        "status": "source-label candidate",
+        "source_url": "https://github.com/odysseus-dev/odysseus/blob/c21980f5a6d1cb84db8c8ab0f488cefc7764eb3f/static/js/editor/build/controls.js#L18"
+      },
+      "status": "applied",
+      "targets": [
+        {
+          "path": "static/js/editor/build/controls.js",
+          "selector": "[data-ui-icon=\"selection\"]"
+        }
+      ],
+      "explanation": "Scoped to the selected source control; existing labels, state hooks and unrelated glyphs remain.",
+      "captured_role": "action-or-status-icon",
+      "applied_role": "action-or-status-icon"
+    },
+    {
+      "id": "magnetic-lasso",
+      "winner": "new",
+      "captured": {
+        "original": "c5c07f0faada",
+        "path": "static/js/editor/build/controls.js",
+        "line": 416,
+        "basis": "Button aria-label",
+        "source_label": "More lasso options (feather, edge stroke, magnetic)",
+        "priority": 90,
+        "status": "source-label candidate",
+        "source_url": "https://github.com/odysseus-dev/odysseus/blob/c21980f5a6d1cb84db8c8ab0f488cefc7764eb3f/static/js/editor/build/controls.js#L416"
+      },
+      "status": "applied",
+      "targets": [
+        {
+          "path": "static/js/editor/build/controls.js",
+          "selector": "[data-ui-icon=\"magnetic-lasso\"]"
+        }
+      ],
+      "explanation": "Magnetic mode button; keep the Lasso options chevron.",
+      "captured_role": "disclosure-arrow",
+      "applied_role": "labeled-command"
+    },
+    {
+      "id": "quick-select",
+      "winner": "new",
+      "captured": {
+        "original": "735bd007ae2b",
+        "path": "static/js/editor/build/controls.js",
+        "line": 565,
+        "basis": "Button aria-label",
+        "source_label": "More Quick Select options (help)",
+        "priority": 90,
+        "status": "source-label candidate",
+        "source_url": "https://github.com/odysseus-dev/odysseus/blob/c21980f5a6d1cb84db8c8ab0f488cefc7764eb3f/static/js/editor/build/controls.js#L565"
+      },
+      "status": "applied",
+      "targets": [
+        {
+          "path": "static/js/editor/build/toolbar.js",
+          "selector": "[data-ui-icon=\"quick-select\"]"
+        }
+      ],
+      "explanation": "Quick Select tool; keep the separate More options chevron.",
+      "captured_role": "disclosure-arrow",
+      "applied_role": "tool-icon"
+    },
+    {
+      "id": "subject-select",
+      "winner": "new",
+      "captured": {
+        "original": "text-68971283841a",
+        "path": "static/js/editor/build/topbar.js",
+        "line": 230,
+        "basis": "Literal button text",
+        "source_label": "Subject",
+        "priority": 60,
+        "status": "source-label candidate",
+        "source_url": "https://github.com/odysseus-dev/odysseus/blob/c21980f5a6d1cb84db8c8ab0f488cefc7764eb3f/static/js/editor/build/topbar.js#L230"
+      },
+      "status": "applied",
+      "targets": [
+        {
+          "path": "static/js/editor/build/topbar.js",
+          "selector": "[data-ui-icon=\"subject-select\"]"
+        }
+      ],
+      "explanation": "Scoped to the selected source control; existing labels, state hooks and unrelated glyphs remain.",
+      "captured_role": "menu-command",
+      "applied_role": "labeled-command"
+    },
+    {
+      "id": "harmonize",
+      "winner": "new",
+      "captured": {
+        "original": "text-5d815169fcad",
+        "path": "static/js/editor/build/controls.js",
+        "line": 819,
+        "basis": "Literal button text",
+        "source_label": "Harmonize",
+        "priority": 60,
+        "status": "source-label candidate",
+        "source_url": "https://github.com/odysseus-dev/odysseus/blob/c21980f5a6d1cb84db8c8ab0f488cefc7764eb3f/static/js/editor/build/controls.js#L819"
+      },
+      "status": "applied",
+      "targets": [
+        {
+          "path": "static/js/editor/build/controls.js",
+          "selector": "[data-ui-icon=\"harmonize\"]"
+        }
+      ],
+      "explanation": "Scoped to the selected source control; existing labels, state hooks and unrelated glyphs remain.",
+      "captured_role": "text-command",
+      "applied_role": "labeled-command"
+    },
+    {
+      "id": "skew",
+      "winner": "new",
+      "captured": {
+        "original": "text-a318c24216de",
+        "path": "static/js/editor/build/transform-popup.js",
+        "line": 73,
+        "basis": "Literal button text",
+        "source_label": "Skew X +1\u00b0",
+        "priority": 60,
+        "status": "source-label candidate",
+        "source_url": "https://github.com/odysseus-dev/odysseus/blob/c21980f5a6d1cb84db8c8ab0f488cefc7764eb3f/static/js/editor/build/transform-popup.js#L73"
+      },
+      "status": "applied",
+      "targets": [
+        {
+          "path": "static/js/editor/build/transform-popup.js",
+          "selector": "[data-ui-icon=\"skew\"]"
+        }
+      ],
+      "explanation": "Horizontal skew field; keep the numeric stepper signs.",
+      "captured_role": "numeric-stepper",
+      "applied_role": "field-label"
+    },
+    {
+      "id": "perspective",
+      "winner": "new",
+      "captured": {
+        "original": "text-a318c24216de",
+        "path": "static/js/editor/build/transform-popup.js",
+        "line": 89,
+        "basis": "Literal button text",
+        "source_label": "Perspective X +1",
+        "priority": 60,
+        "status": "source-label candidate",
+        "source_url": "https://github.com/odysseus-dev/odysseus/blob/c21980f5a6d1cb84db8c8ab0f488cefc7764eb3f/static/js/editor/build/transform-popup.js#L89"
+      },
+      "status": "applied",
+      "targets": [
+        {
+          "path": "static/js/editor/build/transform-popup.js",
+          "selector": "[data-ui-icon=\"perspective\"]"
+        }
+      ],
+      "explanation": "Horizontal perspective field; keep the numeric stepper signs.",
+      "captured_role": "numeric-stepper",
+      "applied_role": "field-label"
+    },
+    {
+      "id": "snapshot",
+      "winner": "new",
+      "captured": {
+        "original": "7c32f3fac6d6",
+        "path": "static/js/editor/history-panel.js",
+        "line": 215,
+        "basis": "Named SVG: SNAPSHOT_ICON",
+        "source_label": "SNAPSHOT_ICON",
+        "priority": 80,
+        "status": "source-label candidate",
+        "source_url": "https://github.com/odysseus-dev/odysseus/blob/c21980f5a6d1cb84db8c8ab0f488cefc7764eb3f/static/js/editor/history-panel.js#L215"
+      },
+      "status": "applied",
+      "targets": [
+        {
+          "path": "static/js/editor/history-panel.js",
+          "selector": "[data-ui-icon=\"snapshot\"]"
+        }
+      ],
+      "explanation": "Scoped to the selected source control; existing labels, state hooks and unrelated glyphs remain.",
+      "captured_role": "action-or-status-icon",
+      "applied_role": "action-or-status-icon"
+    },
+    {
+      "id": "history",
+      "winner": "new",
+      "captured": {
+        "original": "646aebb4eb2a",
+        "path": "static/index.html",
+        "line": 1015,
+        "basis": "Button title",
+        "source_label": "Enable Nobody mode \u2014 no memory or skill injection, no history saved",
+        "priority": 90,
+        "status": "source-label candidate",
+        "source_url": "https://github.com/odysseus-dev/odysseus/blob/c21980f5a6d1cb84db8c8ab0f488cefc7764eb3f/static/index.html#L1015"
+      },
+      "status": "applied",
+      "targets": [
+        {
+          "path": "static/js/editor/build/topbar.js",
+          "selector": "[data-ui-icon=\"history\"]"
+        }
+      ],
+      "explanation": "Editor history; the captured Nobody-mode action is unrelated.",
+      "captured_role": "action-or-status-icon",
+      "applied_role": "action-icon"
+    },
+    {
+      "id": "histogram",
+      "winner": "new",
+      "captured": {
+        "original": "text-3b4d8886df02",
+        "path": "static/js/editor/build/topbar.js",
+        "line": 82,
+        "basis": "Literal button text",
+        "source_label": "Equalize the histogram of the active layer",
+        "priority": 60,
+        "status": "source-label candidate",
+        "source_url": "https://github.com/odysseus-dev/odysseus/blob/c21980f5a6d1cb84db8c8ab0f488cefc7764eb3f/static/js/editor/build/topbar.js#L82"
+      },
+      "status": "applied",
+      "targets": [
+        {
+          "path": "static/js/editor/build/topbar.js",
+          "selector": "[data-ui-icon=\"histogram\"]"
+        }
+      ],
+      "explanation": "Scoped to the selected source control; existing labels, state hooks and unrelated glyphs remain.",
+      "captured_role": "menu-command",
+      "applied_role": "labeled-command"
+    },
+    {
+      "id": "hue-saturation",
+      "winner": "new",
+      "captured": {
+        "original": "text-38c2122e1e24",
+        "path": "static/js/editor/build/topbar.js",
+        "line": 142,
+        "basis": "Literal button text",
+        "source_label": "RGB Color",
+        "priority": 60,
+        "status": "source-label candidate",
+        "source_url": "https://github.com/odysseus-dev/odysseus/blob/c21980f5a6d1cb84db8c8ab0f488cefc7764eb3f/static/js/editor/build/topbar.js#L142"
+      },
+      "status": "applied",
+      "targets": [
+        {
+          "path": "static/js/editor/build/topbar.js",
+          "selector": "[data-ui-icon=\"hue-saturation\"]"
+        }
+      ],
+      "explanation": "Hue/Saturation adjustment; RGB Color selects a color mode.",
+      "captured_role": "format-or-mode-label",
+      "applied_role": "labeled-command"
+    },
+    {
+      "id": "black-white",
+      "winner": "new",
+      "captured": {
+        "original": "text-93638ea9e0b0",
+        "path": "static/js/editor/build/topbar.js",
+        "line": 143,
+        "basis": "Literal button text",
+        "source_label": "Grayscale",
+        "priority": 60,
+        "status": "source-label candidate",
+        "source_url": "https://github.com/odysseus-dev/odysseus/blob/c21980f5a6d1cb84db8c8ab0f488cefc7764eb3f/static/js/editor/build/topbar.js#L143"
+      },
+      "status": "applied",
+      "targets": [
+        {
+          "path": "static/js/editor/build/topbar.js",
+          "selector": "[data-ui-icon=\"black-white\"]"
+        }
+      ],
+      "explanation": "Scoped to the selected source control; existing labels, state hooks and unrelated glyphs remain.",
+      "captured_role": "format-or-mode-label",
+      "applied_role": "labeled-command"
+    },
+    {
+      "id": "invert",
+      "winner": "new",
+      "captured": {
+        "original": "text-7e04f2ffb933",
+        "path": "static/js/editor/build/topbar.js",
+        "line": 96,
+        "basis": "Literal button text",
+        "source_label": "Invert",
+        "priority": 60,
+        "status": "source-label candidate",
+        "source_url": "https://github.com/odysseus-dev/odysseus/blob/c21980f5a6d1cb84db8c8ab0f488cefc7764eb3f/static/js/editor/build/topbar.js#L96"
+      },
+      "status": "applied",
+      "targets": [
+        {
+          "path": "static/js/editor/build/topbar.js",
+          "selector": "[data-ui-icon=\"invert\"]"
+        }
+      ],
+      "explanation": "Scoped to the selected source control; existing labels, state hooks and unrelated glyphs remain.",
+      "captured_role": "menu-command",
+      "applied_role": "labeled-command"
+    },
+    {
+      "id": "desaturate",
+      "winner": "new",
+      "captured": {
+        "original": "text-79b92c97ee7a",
+        "path": "static/js/editor/build/topbar.js",
+        "line": 78,
+        "basis": "Literal button text",
+        "source_label": "Desaturate",
+        "priority": 60,
+        "status": "source-label candidate",
+        "source_url": "https://github.com/odysseus-dev/odysseus/blob/c21980f5a6d1cb84db8c8ab0f488cefc7764eb3f/static/js/editor/build/topbar.js#L78"
+      },
+      "status": "applied",
+      "targets": [
+        {
+          "path": "static/js/editor/build/topbar.js",
+          "selector": "[data-ui-icon=\"desaturate\"]"
+        }
+      ],
+      "explanation": "Scoped to the selected source control; existing labels, state hooks and unrelated glyphs remain.",
+      "captured_role": "menu-command",
+      "applied_role": "labeled-command"
+    },
+    {
+      "id": "auto-tone",
+      "winner": "new",
+      "captured": {
+        "original": "text-f25557d5d134",
+        "path": "static/js/editor/build/topbar.js",
+        "line": 79,
+        "basis": "Literal button text",
+        "source_label": "Auto Tone",
+        "priority": 60,
+        "status": "source-label candidate",
+        "source_url": "https://github.com/odysseus-dev/odysseus/blob/c21980f5a6d1cb84db8c8ab0f488cefc7764eb3f/static/js/editor/build/topbar.js#L79"
+      },
+      "status": "applied",
+      "targets": [
+        {
+          "path": "static/js/editor/build/topbar.js",
+          "selector": "[data-ui-icon=\"auto-tone\"]"
+        }
+      ],
+      "explanation": "Scoped to the selected source control; existing labels, state hooks and unrelated glyphs remain.",
+      "captured_role": "menu-command",
+      "applied_role": "labeled-command"
+    },
+    {
+      "id": "auto-contrast",
+      "winner": "new",
+      "captured": {
+        "original": "text-d01edfcf18fb",
+        "path": "static/js/editor/build/topbar.js",
+        "line": 80,
+        "basis": "Literal button text",
+        "source_label": "Auto Contrast",
+        "priority": 60,
+        "status": "source-label candidate",
+        "source_url": "https://github.com/odysseus-dev/odysseus/blob/c21980f5a6d1cb84db8c8ab0f488cefc7764eb3f/static/js/editor/build/topbar.js#L80"
+      },
+      "status": "applied",
+      "targets": [
+        {
+          "path": "static/js/editor/build/topbar.js",
+          "selector": "[data-ui-icon=\"auto-contrast\"]"
+        }
+      ],
+      "explanation": "Scoped to the selected source control; existing labels, state hooks and unrelated glyphs remain.",
+      "captured_role": "menu-command",
+      "applied_role": "labeled-command"
+    },
+    {
+      "id": "auto-color",
+      "winner": "new",
+      "captured": {
+        "original": "text-f3ef3209b78a",
+        "path": "static/js/editor/build/topbar.js",
+        "line": 81,
+        "basis": "Literal button text",
+        "source_label": "Auto Color",
+        "priority": 60,
+        "status": "source-label candidate",
+        "source_url": "https://github.com/odysseus-dev/odysseus/blob/c21980f5a6d1cb84db8c8ab0f488cefc7764eb3f/static/js/editor/build/topbar.js#L81"
+      },
+      "status": "applied",
+      "targets": [
+        {
+          "path": "static/js/editor/build/topbar.js",
+          "selector": "[data-ui-icon=\"auto-color\"]"
+        }
+      ],
+      "explanation": "Scoped to the selected source control; existing labels, state hooks and unrelated glyphs remain.",
+      "captured_role": "menu-command",
+      "applied_role": "labeled-command"
+    },
+    {
+      "id": "blur",
+      "winner": "new",
+      "captured": {
+        "original": "text-7d0ea5865216",
+        "path": "static/js/editor/build/topbar.js",
+        "line": 291,
+        "basis": "Literal button text",
+        "source_label": "Soft Blur",
+        "priority": 60,
+        "status": "source-label candidate",
+        "source_url": "https://github.com/odysseus-dev/odysseus/blob/c21980f5a6d1cb84db8c8ab0f488cefc7764eb3f/static/js/editor/build/topbar.js#L291"
+      },
+      "status": "applied",
+      "targets": [
+        {
+          "path": "static/js/editor/build/topbar.js",
+          "selector": "[data-ui-icon=\"blur\"]"
+        }
+      ],
+      "explanation": "Scoped to the selected source control; existing labels, state hooks and unrelated glyphs remain.",
+      "captured_role": "menu-command",
+      "applied_role": "labeled-command"
+    },
+    {
+      "id": "sharpen",
+      "winner": "new",
+      "captured": {
+        "original": "text-ac6f0be1274c",
+        "path": "static/js/editor/build/controls.js",
+        "line": 756,
+        "basis": "Literal button text",
+        "source_label": "Sharpen",
+        "priority": 60,
+        "status": "source-label candidate",
+        "source_url": "https://github.com/odysseus-dev/odysseus/blob/c21980f5a6d1cb84db8c8ab0f488cefc7764eb3f/static/js/editor/build/controls.js#L756"
+      },
+      "status": "applied",
+      "targets": [
+        {
+          "path": "static/js/editor/build/controls.js",
+          "selector": "[data-ui-icon=\"sharpen\"]"
+        }
+      ],
+      "explanation": "Scoped to the selected source control; existing labels, state hooks and unrelated glyphs remain.",
+      "captured_role": "text-command",
+      "applied_role": "labeled-command"
+    },
+    {
+      "id": "drop-shadow",
+      "winner": "new",
+      "captured": {
+        "original": "text-30e1d850b0e3",
+        "path": "static/js/editor/build/topbar.js",
+        "line": 293,
+        "basis": "Literal button text",
+        "source_label": "Soft Shadow",
+        "priority": 60,
+        "status": "source-label candidate",
+        "source_url": "https://github.com/odysseus-dev/odysseus/blob/c21980f5a6d1cb84db8c8ab0f488cefc7764eb3f/static/js/editor/build/topbar.js#L293"
+      },
+      "status": "applied",
+      "targets": [
+        {
+          "path": "static/js/editor/build/topbar.js",
+          "selector": "[data-ui-icon=\"drop-shadow\"]"
+        }
+      ],
+      "explanation": "Scoped to the selected source control; existing labels, state hooks and unrelated glyphs remain.",
+      "captured_role": "menu-command",
+      "applied_role": "labeled-command"
+    },
+    {
+      "id": "research-parallel",
+      "winner": "new",
+      "captured": {
+        "original": "e37301e7e65f",
+        "path": "static/js/compare/icons.js",
+        "line": 18,
+        "basis": "Named SVG: ICON_PARALLEL",
+        "source_label": "ICON_PARALLEL",
+        "priority": 80,
+        "status": "source-label candidate",
+        "source_url": "https://github.com/odysseus-dev/odysseus/blob/c21980f5a6d1cb84db8c8ab0f488cefc7764eb3f/static/js/compare/icons.js#L18"
+      },
+      "status": "applied",
+      "targets": [
+        {
+          "path": "static/js/compare/icons.js",
+          "selector": "[data-ui-icon=\"research-parallel\"]"
+        }
+      ],
+      "explanation": "Scoped to the selected source control; existing labels, state hooks and unrelated glyphs remain.",
+      "captured_role": "action-or-status-icon",
+      "applied_role": "action-or-status-icon"
+    },
+    {
+      "id": "research-sequential",
+      "winner": "new",
+      "captured": {
+        "original": "b31463952422",
+        "path": "static/js/compare/icons.js",
+        "line": 19,
+        "basis": "Named SVG: ICON_SEQUENTIAL",
+        "source_label": "ICON_SEQUENTIAL",
+        "priority": 80,
+        "status": "source-label candidate",
+        "source_url": "https://github.com/odysseus-dev/odysseus/blob/c21980f5a6d1cb84db8c8ab0f488cefc7764eb3f/static/js/compare/icons.js#L19"
+      },
+      "status": "applied",
+      "targets": [
+        {
+          "path": "static/js/compare/icons.js",
+          "selector": "[data-ui-icon=\"research-sequential\"]"
+        }
+      ],
+      "explanation": "Scoped to the selected source control; existing labels, state hooks and unrelated glyphs remain.",
+      "captured_role": "action-or-status-icon",
+      "applied_role": "action-or-status-icon"
+    },
+    {
+      "id": "memory-search",
+      "winner": "new",
+      "captured": {
+        "original": "6e4f204c1f1a",
+        "path": "static/js/chatRenderer.js",
+        "line": 31,
+        "basis": "Named SVG: search_memory",
+        "source_label": "search_memory",
+        "priority": 80,
+        "status": "source-label candidate",
+        "source_url": "https://github.com/odysseus-dev/odysseus/blob/c21980f5a6d1cb84db8c8ab0f488cefc7764eb3f/static/js/chatRenderer.js#L31"
+      },
+      "status": "applied",
+      "targets": [
+        {
+          "path": "static/js/chatRenderer.js",
+          "selector": "[data-ui-icon=\"memory-search\"]"
+        }
+      ],
+      "explanation": "Scoped to the selected source control; existing labels, state hooks and unrelated glyphs remain.",
+      "captured_role": "action-or-status-icon",
+      "applied_role": "action-or-status-icon"
+    },
+    {
+      "id": "skill-add",
+      "winner": "new",
+      "captured": {
+        "original": "text-f01ec050eca5",
+        "path": "static/index.html",
+        "line": 430,
+        "basis": "Literal button text",
+        "source_label": "Add Skill",
+        "priority": 60,
+        "status": "source-label candidate",
+        "source_url": "https://github.com/odysseus-dev/odysseus/blob/c21980f5a6d1cb84db8c8ab0f488cefc7764eb3f/static/index.html#L430"
+      },
+      "status": "applied",
+      "targets": [
+        {
+          "path": "static/index.html",
+          "selector": "[data-ui-icon=\"skill-add\"]"
+        }
+      ],
+      "explanation": "Scoped to the selected source control; existing labels, state hooks and unrelated glyphs remain.",
+      "captured_role": "text-command",
+      "applied_role": "labeled-command"
+    },
+    {
+      "id": "skill-test",
+      "winner": "new",
+      "captured": {
+        "original": "text-532eaabd9574",
+        "path": "static/js/admin.js",
+        "line": 3581,
+        "basis": "Literal button text",
+        "source_label": "Test",
+        "priority": 60,
+        "status": "source-label candidate",
+        "source_url": "https://github.com/odysseus-dev/odysseus/blob/c21980f5a6d1cb84db8c8ab0f488cefc7764eb3f/static/js/admin.js#L3581"
+      },
+      "status": "applied",
+      "targets": [
+        {
+          "path": "static/js/admin.js",
+          "selector": "[data-ui-icon=\"skill-test\"]"
+        }
+      ],
+      "explanation": "Scoped to the selected source control; existing labels, state hooks and unrelated glyphs remain.",
+      "captured_role": "text-command",
+      "applied_role": "labeled-command"
+    },
+    {
+      "id": "sliders",
+      "winner": "new",
+      "captured": {
+        "original": "f4d0abcbd924",
+        "path": "static/js/cookbook.js",
+        "line": 3240,
+        "basis": "Button title",
+        "source_label": "Set hardware manually",
+        "priority": 90,
+        "status": "source-label candidate",
+        "source_url": "https://github.com/odysseus-dev/odysseus/blob/c21980f5a6d1cb84db8c8ab0f488cefc7764eb3f/static/js/cookbook.js#L3240"
+      },
+      "status": "applied",
+      "targets": [
+        {
+          "path": "static/js/cookbook.js",
+          "selector": "[data-ui-icon=\"sliders\"]"
+        }
+      ],
+      "explanation": "Scoped to the selected source control; existing labels, state hooks and unrelated glyphs remain.",
+      "captured_role": "action-or-status-icon",
+      "applied_role": "action-or-status-icon"
+    },
+    {
+      "id": "keyboard",
+      "winner": "new",
+      "captured": {
+        "original": "773efde90674",
+        "path": "static/js/editor/build/topbar.js",
+        "line": 524,
+        "basis": "Button title",
+        "source_label": "Keyboard shortcuts (?)",
+        "priority": 90,
+        "status": "source-label candidate",
+        "source_url": "https://github.com/odysseus-dev/odysseus/blob/c21980f5a6d1cb84db8c8ab0f488cefc7764eb3f/static/js/editor/build/topbar.js#L524"
+      },
+      "status": "applied",
+      "targets": [
+        {
+          "path": "static/js/editor/build/topbar.js",
+          "selector": "[data-ui-icon=\"keyboard\"]"
+        }
+      ],
+      "explanation": "Visible Help menu command; the captured header shortcut icon is hidden in the current menubar layout.",
+      "captured_role": "action-or-status-icon",
+      "applied_role": "labeled-command"
+    },
+    {
+      "id": "logout",
+      "winner": "new",
+      "captured": {
+        "original": "text-d0527e4b3d65",
+        "path": "static/js/settings.js",
+        "line": 4501,
+        "basis": "Literal button text",
+        "source_label": "Logout",
+        "priority": 60,
+        "status": "source-label candidate",
+        "source_url": "https://github.com/odysseus-dev/odysseus/blob/c21980f5a6d1cb84db8c8ab0f488cefc7764eb3f/static/js/settings.js#L4501"
+      },
+      "status": "applied",
+      "targets": [
+        {
+          "path": "static/js/settings.js",
+          "selector": "[data-ui-icon=\"logout\"]"
+        }
+      ],
+      "explanation": "Scoped to the selected source control; existing labels, state hooks and unrelated glyphs remain.",
+      "captured_role": "text-command",
+      "applied_role": "labeled-command"
+    },
+    {
+      "id": "user-add",
+      "winner": "new",
+      "captured": {
+        "original": "text-115a26b51cc7",
+        "path": "static/index.html",
+        "line": 2273,
+        "basis": "Literal button text",
+        "source_label": "Add User",
+        "priority": 60,
+        "status": "source-label candidate",
+        "source_url": "https://github.com/odysseus-dev/odysseus/blob/c21980f5a6d1cb84db8c8ab0f488cefc7764eb3f/static/index.html#L2273"
+      },
+      "status": "applied",
+      "targets": [
+        {
+          "path": "static/index.html",
+          "selector": "[data-ui-icon=\"user-add\"]"
+        }
+      ],
+      "explanation": "Scoped to the selected source control; existing labels, state hooks and unrelated glyphs remain.",
+      "captured_role": "text-command",
+      "applied_role": "labeled-command"
+    },
+    {
+      "id": "password-show",
+      "winner": "new",
+      "captured": {
+        "original": "7af345538dce",
+        "path": "static/login.html",
+        "line": 298,
+        "basis": "Button aria-label",
+        "source_label": "Show password",
+        "priority": 90,
+        "status": "source-label candidate",
+        "source_url": "https://github.com/odysseus-dev/odysseus/blob/c21980f5a6d1cb84db8c8ab0f488cefc7764eb3f/static/login.html#L298"
+      },
+      "status": "applied",
+      "targets": [
+        {
+          "path": "static/login.html",
+          "selector": "[data-ui-icon=\"password-show\"]"
+        }
+      ],
+      "explanation": "Scoped to the selected source control; existing labels, state hooks and unrelated glyphs remain.",
+      "captured_role": "action-or-status-icon",
+      "applied_role": "action-or-status-icon"
+    },
+    {
+      "id": "ai-writing",
+      "winner": "new",
+      "captured": {
+        "original": "c5580151feb1",
+        "path": "static/js/document.js",
+        "line": 7570,
+        "basis": "Button aria-label",
+        "source_label": "Writing tools",
+        "priority": 90,
+        "status": "source-label candidate",
+        "source_url": "https://github.com/odysseus-dev/odysseus/blob/c21980f5a6d1cb84db8c8ab0f488cefc7764eb3f/static/js/document.js#L7570"
+      },
+      "status": "applied",
+      "targets": [
+        {
+          "path": "static/js/document.js",
+          "selector": "[data-ui-icon=\"ai-writing\"]"
+        }
+      ],
+      "explanation": "Scoped to the selected source control; existing labels, state hooks and unrelated glyphs remain.",
+      "captured_role": "action-or-status-icon",
+      "applied_role": "action-or-status-icon"
+    },
+    {
+      "id": "aspect-ratio",
+      "winner": "new",
+      "captured": {
+        "original": "6a7b42605d6e",
+        "path": "static/js/editor/build/controls.js",
+        "line": 389,
+        "basis": "Button aria-label",
+        "source_label": "Swap width and height",
+        "priority": 90,
+        "status": "source-label candidate",
+        "source_url": "https://github.com/odysseus-dev/odysseus/blob/c21980f5a6d1cb84db8c8ab0f488cefc7764eb3f/static/js/editor/build/controls.js#L389"
+      },
+      "status": "applied",
+      "targets": [
+        {
+          "path": "static/js/editor/build/controls.js",
+          "selector": "[data-ui-icon=\"aspect-ratio\"]"
+        }
+      ],
+      "explanation": "Original-aspect crop preset; retain the directional Swap width and height action.",
+      "captured_role": "action-or-status-icon",
+      "applied_role": "labeled-command"
+    },
+    {
+      "id": "crop-landscape",
+      "winner": "new",
+      "captured": {
+        "original": "52491436adfb",
+        "path": "static/js/research/panel.js",
+        "line": 1392,
+        "basis": "Named SVG: landscape",
+        "source_label": "landscape",
+        "priority": 80,
+        "status": "source-label candidate",
+        "source_url": "https://github.com/odysseus-dev/odysseus/blob/c21980f5a6d1cb84db8c8ab0f488cefc7764eb3f/static/js/research/panel.js#L1392"
+      },
+      "status": "applied",
+      "targets": [
+        {
+          "path": "static/js/editor/build/controls.js",
+          "selector": "[data-ui-icon=\"crop-landscape\"]"
+        }
+      ],
+      "explanation": "Widescreen crop preset; Research landscape is an overview strategy.",
+      "captured_role": "action-or-status-icon",
+      "applied_role": "labeled-command"
+    },
+    {
+      "id": "selection-add",
+      "winner": "new",
+      "captured": {
+        "original": "23b95bc3165f",
+        "path": "static/js/editor/build/controls.js",
+        "line": 403,
+        "basis": "Button title",
+        "source_label": "Add selection to mask",
+        "priority": 90,
+        "status": "source-label candidate",
+        "source_url": "https://github.com/odysseus-dev/odysseus/blob/c21980f5a6d1cb84db8c8ab0f488cefc7764eb3f/static/js/editor/build/controls.js#L403"
+      },
+      "status": "applied",
+      "targets": [
+        {
+          "path": "static/js/editor/build/controls.js",
+          "selector": "[data-ui-icon=\"selection-add\"]"
+        }
+      ],
+      "explanation": "Add to selection mode; To Mask creates a layer mask.",
+      "captured_role": "action-or-status-icon",
+      "applied_role": "action-icon"
+    },
+    {
+      "id": "selection-invert",
+      "winner": "new",
+      "captured": {
+        "original": "1a25b230d01f",
+        "path": "static/js/editor/build/controls.js",
+        "line": 400,
+        "basis": "Button title",
+        "source_label": "Invert selection",
+        "priority": 90,
+        "status": "source-label candidate",
+        "source_url": "https://github.com/odysseus-dev/odysseus/blob/c21980f5a6d1cb84db8c8ab0f488cefc7764eb3f/static/js/editor/build/controls.js#L400"
+      },
+      "status": "applied",
+      "targets": [
+        {
+          "path": "static/js/editor/build/controls.js",
+          "selector": "[data-ui-icon=\"selection-invert\"]"
+        }
+      ],
+      "explanation": "Scoped to the selected source control; existing labels, state hooks and unrelated glyphs remain.",
+      "captured_role": "action-or-status-icon",
+      "applied_role": "action-or-status-icon"
+    },
+    {
+      "id": "selection-reselect",
+      "winner": "new",
+      "captured": {
+        "original": "text-82ab787f5a1f",
+        "path": "static/js/editor/build/topbar.js",
+        "line": 218,
+        "basis": "Literal button text",
+        "source_label": "Reselect",
+        "priority": 60,
+        "status": "source-label candidate",
+        "source_url": "https://github.com/odysseus-dev/odysseus/blob/c21980f5a6d1cb84db8c8ab0f488cefc7764eb3f/static/js/editor/build/topbar.js#L218"
+      },
+      "status": "applied",
+      "targets": [
+        {
+          "path": "static/js/editor/build/topbar.js",
+          "selector": "[data-ui-icon=\"selection-reselect\"]"
+        }
+      ],
+      "explanation": "Scoped to the selected source control; existing labels, state hooks and unrelated glyphs remain.",
+      "captured_role": "menu-command",
+      "applied_role": "labeled-command"
+    },
+    {
+      "id": "selection-grow",
+      "winner": "new",
+      "captured": {
+        "original": "text-b97dc5270c17",
+        "path": "static/js/editor/build/topbar.js",
+        "line": 228,
+        "basis": "Literal button text",
+        "source_label": "Grow",
+        "priority": 60,
+        "status": "source-label candidate",
+        "source_url": "https://github.com/odysseus-dev/odysseus/blob/c21980f5a6d1cb84db8c8ab0f488cefc7764eb3f/static/js/editor/build/topbar.js#L228"
+      },
+      "status": "applied",
+      "targets": [
+        {
+          "path": "static/js/editor/build/topbar.js",
+          "selector": "[data-ui-icon=\"selection-grow\"]"
+        }
+      ],
+      "explanation": "Scoped to the selected source control; existing labels, state hooks and unrelated glyphs remain.",
+      "captured_role": "menu-command",
+      "applied_role": "labeled-command"
+    },
+    {
+      "id": "selection-similar",
+      "winner": "new",
+      "captured": {
+        "original": "text-3f63a3abbcd6",
+        "path": "static/js/editor/build/topbar.js",
+        "line": 229,
+        "basis": "Literal button text",
+        "source_label": "Similar",
+        "priority": 60,
+        "status": "source-label candidate",
+        "source_url": "https://github.com/odysseus-dev/odysseus/blob/c21980f5a6d1cb84db8c8ab0f488cefc7764eb3f/static/js/editor/build/topbar.js#L229"
+      },
+      "status": "applied",
+      "targets": [
+        {
+          "path": "static/js/editor/build/topbar.js",
+          "selector": "[data-ui-icon=\"selection-similar\"]"
+        }
+      ],
+      "explanation": "Scoped to the selected source control; existing labels, state hooks and unrelated glyphs remain.",
+      "captured_role": "menu-command",
+      "applied_role": "labeled-command"
+    },
+    {
+      "id": "align-distribute",
+      "winner": "new",
+      "captured": {
+        "original": "697af1723050",
+        "path": "static/js/editor/build/controls.js",
+        "line": 899,
+        "basis": "Button aria-label",
+        "source_label": "Align or distribute selected layers",
+        "priority": 90,
+        "status": "source-label candidate",
+        "source_url": "https://github.com/odysseus-dev/odysseus/blob/c21980f5a6d1cb84db8c8ab0f488cefc7764eb3f/static/js/editor/build/controls.js#L899"
+      },
+      "status": "applied",
+      "targets": [
+        {
+          "path": "static/js/editor/build/controls.js",
+          "selector": "[data-ui-icon=\"align-distribute\"]"
+        }
+      ],
+      "explanation": "Scoped to the selected source control; existing labels, state hooks and unrelated glyphs remain.",
+      "captured_role": "action-or-status-icon",
+      "applied_role": "action-or-status-icon"
+    },
+    {
+      "id": "transform-width",
+      "winner": "new",
+      "captured": {
+        "original": "text-a318c24216de",
+        "path": "static/js/editor/build/transform-popup.js",
+        "line": 48,
+        "basis": "Literal button text",
+        "source_label": "Increase width",
+        "priority": 60,
+        "status": "source-label candidate",
+        "source_url": "https://github.com/odysseus-dev/odysseus/blob/c21980f5a6d1cb84db8c8ab0f488cefc7764eb3f/static/js/editor/build/transform-popup.js#L48"
+      },
+      "status": "applied",
+      "targets": [
+        {
+          "path": "static/js/editor/build/transform-popup.js",
+          "selector": "[data-ui-icon=\"transform-width\"]"
+        }
+      ],
+      "explanation": "Width field; keep the increment/decrement buttons as + and minus.",
+      "captured_role": "numeric-stepper",
+      "applied_role": "field-label"
+    },
+    {
+      "id": "transform-height",
+      "winner": "new",
+      "captured": {
+        "original": "text-a318c24216de",
+        "path": "static/js/editor/build/transform-popup.js",
+        "line": 56,
+        "basis": "Literal button text",
+        "source_label": "Increase height",
+        "priority": 60,
+        "status": "source-label candidate",
+        "source_url": "https://github.com/odysseus-dev/odysseus/blob/c21980f5a6d1cb84db8c8ab0f488cefc7764eb3f/static/js/editor/build/transform-popup.js#L56"
+      },
+      "status": "applied",
+      "targets": [
+        {
+          "path": "static/js/editor/build/transform-popup.js",
+          "selector": "[data-ui-icon=\"transform-height\"]"
+        }
+      ],
+      "explanation": "Height field; keep the increment/decrement buttons as + and minus.",
+      "captured_role": "numeric-stepper",
+      "applied_role": "field-label"
+    },
+    {
+      "id": "image-generate",
+      "winner": "new",
+      "captured": {
+        "original": "2e6270d815bf",
+        "path": "static/js/chatRenderer.js",
+        "line": 51,
+        "basis": "Named SVG: generate_image",
+        "source_label": "generate_image",
+        "priority": 80,
+        "status": "source-label candidate",
+        "source_url": "https://github.com/odysseus-dev/odysseus/blob/c21980f5a6d1cb84db8c8ab0f488cefc7764eb3f/static/js/chatRenderer.js#L51"
+      },
+      "status": "applied",
+      "targets": [
+        {
+          "path": "static/js/chatRenderer.js",
+          "selector": "[data-ui-icon=\"image-generate\"]"
+        }
+      ],
+      "explanation": "Scoped to the selected source control; existing labels, state hooks and unrelated glyphs remain.",
+      "captured_role": "action-or-status-icon",
+      "applied_role": "action-or-status-icon"
+    },
+    {
+      "id": "file-png",
+      "winner": "new",
+      "captured": {
+        "original": "text-796120837694",
+        "path": "static/js/editor/export-dialog.js",
+        "line": 97,
+        "basis": "Literal button text",
+        "source_label": "PNG",
+        "priority": 60,
+        "status": "source-label candidate",
+        "source_url": "https://github.com/odysseus-dev/odysseus/blob/c21980f5a6d1cb84db8c8ab0f488cefc7764eb3f/static/js/editor/export-dialog.js#L97"
+      },
+      "status": "applied",
+      "targets": [
+        {
+          "path": "static/js/editor/export-dialog.js",
+          "selector": "[data-ui-icon=\"file-png\"]"
+        }
+      ],
+      "explanation": "Scoped to the selected source control; existing labels, state hooks and unrelated glyphs remain.",
+      "captured_role": "format-or-mode-label",
+      "applied_role": "labeled-command"
+    },
+    {
+      "id": "file-jpeg",
+      "winner": "new",
+      "captured": {
+        "original": "text-f4dc1c96a30f",
+        "path": "static/js/editor/export-dialog.js",
+        "line": 98,
+        "basis": "Literal button text",
+        "source_label": "JPEG",
+        "priority": 60,
+        "status": "source-label candidate",
+        "source_url": "https://github.com/odysseus-dev/odysseus/blob/c21980f5a6d1cb84db8c8ab0f488cefc7764eb3f/static/js/editor/export-dialog.js#L98"
+      },
+      "status": "applied",
+      "targets": [
+        {
+          "path": "static/js/editor/export-dialog.js",
+          "selector": "[data-ui-icon=\"file-jpeg\"]"
+        }
+      ],
+      "explanation": "Scoped to the selected source control; existing labels, state hooks and unrelated glyphs remain.",
+      "captured_role": "format-or-mode-label",
+      "applied_role": "labeled-command"
+    }
+  ]
+}

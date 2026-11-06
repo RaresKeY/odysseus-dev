@@ -18,3 +18,7 @@ The explicit source commit must exist in the local Git object database. Source c
 `check.py --full` additionally verifies source hashes, generated previews and a passing browser receipt. After the render, run the browser check before the full check. The browser tools use existing Chromium and Deno with a disposable profile and no package dependencies. Serve the repository root on loopback port 8785. On a workstation with the existing headless Gamescope wrapper, run `python3 tools/icon-suite/run_browser_checks.py` inside that wrapper. The wrapper supplies an offscreen Wayland display; the script itself does not create one.
 
 Bounds checking renders a padded viewBox so overflow cannot be hidden by clipping. The browser check verifies search/filter/selection, keyboard use, custom recoloring, all 19 component color trials, generated reference loads and narrow layout. These checks cover the asset gallery and theme contracts. They do not establish full application integration.
+
+## Exported choice contract
+
+Run `python3 tools/icon-suite/check_choices.py` to verify the selected-only application markers, retained model controls and dropdown carets, numeric signs, labels, four-column export layout, sidebar state, Notes served/authored equality and cache version. [The integration review](../../docs/icon-suite/integration/README.md) records the exact export, contextual target corrections, actual app screenshots and conditional controls. This focused static check does not execute the app.

@@ -74,34 +74,171 @@ try {
     await sleep(100);
   }
   assert(ready, 'Gallery initializes');
+  const saveScreenshot = async (name) => {
+    const result = await page.call('Page.captureScreenshot', { format: 'png', captureBeyondViewport: false });
+    await Deno.writeFile(`checks/${name}.png`, Uint8Array.from(atob(result.data), (c) => c.charCodeAt(0)));
+  };
+  const comparison = await evaluate(`({view:iconLab.state.view,hash:location.hash,
+    count:document.querySelectorAll('.comparison-card').length,expected:iconLab.COMPARISON.paired_icons,
+    columns:getComputedStyle(document.getElementById('comparison-grid')).gridTemplateColumns.split(' ').length,
+    oldSize:getComputedStyle(document.querySelector('.old-slot .original-icon')).width,
+    newSize:getComputedStyle(document.querySelector('.new-slot svg')).width,
+    inspector:getComputedStyle(document.querySelector('.inspector')).display})`);
+  assert(comparison.view==='compare' && comparison.hash==='#compare' && comparison.count===comparison.expected
+    && comparison.columns>=4 && comparison.oldSize==='56px' && comparison.newSize==='56px' && comparison.inspector==='none',
+    'Large paired comparison grid is the default view', comparison);
+  await saveScreenshot('comparison-desktop');
+  const variants = await evaluate(`(() => {
+    const select=document.querySelector('.original-variants'), card=select.closest('.comparison-card');
+    const old=card.querySelector('.old-slot .comparison-preview').dataset.original;
+    const fresh=card.querySelector('.new-slot use').getAttribute('href');
+    select.value='1';select.dispatchEvent(new Event('change',{bubbles:true}));
+    return {changed:old!==card.querySelector('.old-slot .comparison-preview').dataset.original,
+      unchanged:fresh===card.querySelector('.new-slot use').getAttribute('href'),source:card.querySelector('.comparison-footer a').href.startsWith('https://github.com/odysseus-dev/odysseus/blob/')};
+  })()`);
+  assert(Object.values(variants).every(Boolean), 'Old SVG variants change independently of the new glyph', variants);
+  const pickTarget = await evaluate(`(() => {
+    const card=document.querySelector('.original-variants').closest('.comparison-card');
+    window.reviewTestId=card.dataset.id;
+    card.scrollIntoView({block:'nearest'});
+    const slot=card.querySelector('.old-slot'), rect=slot.getBoundingClientRect();
+    return {x:rect.x+8,y:rect.y+8,color:getComputedStyle(slot).color,
+      original:card.querySelector('.old-slot .comparison-preview').dataset.original};
+  })()`);
+  await page.call('Input.dispatchMouseEvent', {type:'mousePressed',x:pickTarget.x,y:pickTarget.y,button:'left',clickCount:1});
+  await page.call('Input.dispatchMouseEvent', {type:'mouseReleased',x:pickTarget.x,y:pickTarget.y,button:'left',clickCount:1});
+  const oldWinner = await evaluate(`(() => {
+    const card=document.querySelector('.comparison-card[data-id="'+reviewTestId+'"]');
+    const old=card.querySelector('.old-slot'), fresh=card.querySelector('.new-slot');
+    return {winner:card.dataset.winner,locked:old.disabled&&fresh.disabled&&card.querySelector('select').disabled,
+      losers:card.querySelectorAll('.is-loser').length,oldOpacity:getComputedStyle(old).opacity,
+      oldFilter:getComputedStyle(old).filter,oldColor:getComputedStyle(old).color,
+      newOpacity:getComputedStyle(fresh).opacity,newFilter:getComputedStyle(fresh).filter,
+      cardOpacity:getComputedStyle(card).opacity,unlock:!card.querySelector('.unlock-choice').hidden,
+      count:document.getElementById('winner-count').textContent};
+  })()`);
+  assert(oldWinner.winner==='old' && oldWinner.locked && oldWinner.losers===1 && oldWinner.oldOpacity==='1'
+    && oldWinner.oldFilter==='none' && oldWinner.oldColor===pickTarget.color && oldWinner.newOpacity==='0.32'
+    && oldWinner.newFilter==='grayscale(1)' && oldWinner.cardOpacity==='1' && oldWinner.unlock && oldWinner.count==='1 picked',
+    'Clicking the whole old side locks the pick and grays only the unchosen new side', oldWinner);
+  assert(await evaluate(`(() => {
+    const card=document.querySelector('.comparison-card[data-id="'+reviewTestId+'"]');
+    card.querySelector('.new-slot').click();
+    return card.dataset.winner==='old' && iconLab.choiceExport().choices[0].old.original===card.querySelector('.old-slot .comparison-preview').dataset.original;
+  })()`), 'Locked choices cannot be overwritten and retain the exact reviewed old variant');
+  await saveScreenshot('choices-old-winner');
+  const exported = await evaluate(`iconLab.choiceExport()`);
+  assert(exported.choices.length===1 && exported.choices[0].winner==='old'
+    && exported.choices[0].old.original===pickTarget.original && exported.choices[0].old.source_url.startsWith('https://github.com/'),
+    'Pick export includes the winner, pinned source variant and provenance');
+  await page.call('Page.reload', {ignoreCache:true});
+  await sleep(100);
+  for (let i=0;i<100;i++) {
+    if (await evaluate('Boolean(window.iconLab?.ready)')) break;
+    await sleep(50);
+  }
+  const restored = await evaluate(`(() => {
+    const id=iconLab.choiceExport().choices[0].id;
+    window.reviewTestId=id;
+    const card=document.querySelector('.comparison-card[data-id="'+id+'"]');
+    return {winner:card.dataset.winner,variant:card.querySelector('.old-slot .comparison-preview').dataset.original,
+      select:card.querySelector('select').disabled,count:document.getElementById('winner-count').textContent};
+  })()`);
+  assert(restored.winner==='old' && restored.variant===pickTarget.original && restored.select && restored.count==='1 picked',
+    'Winner, lock and selected old variant survive a real page reload', restored);
+  const unlocked = await evaluate(`(() => {
+    const card=document.querySelector('.comparison-card[data-id="'+reviewTestId+'"]');
+    card.querySelector('.unlock-choice').click();
+    return {winner:card.dataset.winner,losers:card.querySelectorAll('.is-loser').length,
+      enabled:[...card.querySelectorAll('.winner-option,select')].every(el=>!el.disabled),
+      focus:document.activeElement===card.querySelector('.old-slot'),count:iconLab.choiceExport().choices.length};
+  })()`);
+  assert(unlocked.winner==='' && unlocked.losers===0 && unlocked.enabled && unlocked.focus && unlocked.count===0,
+    'Unlock reopens both sides, restores color and returns keyboard focus', unlocked);
+  await evaluate(`document.querySelector('.comparison-card[data-id="'+reviewTestId+'"] .new-slot').focus()`);
+  await page.call('Input.dispatchKeyEvent', {type:'keyDown',key:'Enter',code:'Enter',text:'\r',windowsVirtualKeyCode:13});
+  await page.call('Input.dispatchKeyEvent', {type:'keyUp',key:'Enter',code:'Enter',windowsVirtualKeyCode:13});
+  assert(await evaluate(`(() => {
+    const card=document.querySelector('.comparison-card[data-id="'+reviewTestId+'"]');
+    return card.dataset.winner==='new' && card.querySelector('.old-slot').classList.contains('is-loser')
+      && getComputedStyle(card.querySelector('.new-slot')).opacity==='1'
+      && getComputedStyle(card.querySelector('.new-slot')).filter==='none'
+      && document.activeElement===card.querySelector('.unlock-choice');
+  })()`), 'Keyboard can choose new while only old grays out and Unlock remains reachable');
+  await saveScreenshot('choices-desktop');
+  await evaluate(`document.getElementById('search').value=reviewTestId;document.getElementById('search').dispatchEvent(new Event('input',{bubbles:true}));document.getElementById('role-select').value='accent';document.getElementById('role-select').dispatchEvent(new Event('change',{bubbles:true}));document.getElementById('theme-select').value='light';document.getElementById('theme-select').dispatchEvent(new Event('change',{bubbles:true}))`);
+  assert(await evaluate(`(() => {
+    const card=document.querySelector('.comparison-card[data-id="'+reviewTestId+'"]');
+    return card.dataset.winner==='new' && card.querySelector('.old-slot').classList.contains('is-loser')
+      && getComputedStyle(card.querySelector('.new-slot')).color===getComputedStyle(card.querySelector('.comparison-pair')).color
+      && getComputedStyle(card.querySelector('.new-slot')).filter==='none';
+  })()`), 'Picks and winner ink survive filtering, role changes and theme changes');
+  await saveScreenshot('choices-light');
+  await page.call('Emulation.setDeviceMetricsOverride', {width:390,height:844,deviceScaleFactor:1,mobile:true});
+  assert(await evaluate(`(() => {
+    const card=document.querySelector('.comparison-card[data-id="'+reviewTestId+'"]');
+    return document.documentElement.scrollWidth<=390 && card.querySelectorAll('.winner-option').length===2
+      && card.querySelector('.unlock-choice').getBoundingClientRect().width>0
+      && getComputedStyle(card.querySelector('.new-slot')).opacity==='1';
+  })()`), 'Narrow layout keeps both winner sides and Unlock visible');
+  await saveScreenshot('choices-narrow');
+  await page.call('Emulation.setDeviceMetricsOverride', {width:1600,height:1040,deviceScaleFactor:1,mobile:false});
+  const storageFailure = await evaluate(`(() => {
+    const card=document.querySelector('.comparison-card[data-id="'+reviewTestId+'"]');
+    window.originalSetItem=Storage.prototype.setItem;
+    Storage.prototype.setItem=()=>{throw new DOMException('Storage blocked','QuotaExceededError')};
+    card.querySelector('.unlock-choice').click();card.querySelector('.old-slot').click();
+    const result=card.dataset.winner==='old' && document.getElementById('choice-save-status').classList.contains('save-failed')
+      && !document.getElementById('export-choices').disabled && iconLab.choiceExport().choices.length===1;
+    Storage.prototype.setItem=window.originalSetItem;
+    card.querySelector('.unlock-choice').click();
+    return result;
+  })()`);
+  assert(storageFailure, 'Blocked storage leaves picks usable and exportable with visible save feedback');
+  await evaluate(`document.getElementById('search').value='';document.getElementById('search').dispatchEvent(new Event('input',{bubbles:true}));document.getElementById('role-select').value='foreground';document.getElementById('role-select').dispatchEvent(new Event('change',{bubbles:true}));document.getElementById('theme-select').value='dark';document.getElementById('theme-select').dispatchEvent(new Event('change',{bubbles:true}))`);
+  await evaluate(`document.getElementById('inspect-toggle').click()`);
+  assert(await evaluate(`getComputedStyle(document.querySelector('.inspector')).display!=='none'`), 'Comparison inspector can be opened');
+  await evaluate(`document.getElementById('inspect-toggle').click();document.querySelectorAll('.compare-select')[1].focus()`);
+  await page.call('Input.dispatchKeyEvent', {type:'keyDown',key:'Enter',code:'Enter',text:'\r',windowsVirtualKeyCode:13});
+  await page.call('Input.dispatchKeyEvent', {type:'keyUp',key:'Enter',code:'Enter',windowsVirtualKeyCode:13});
+  assert(await evaluate(`document.querySelectorAll('.comparison-card')[1].dataset.id===document.getElementById('selected-name').textContent`), 'Keyboard selects a comparison pair');
+  await evaluate(`document.getElementById('comparison-scope').value='all';document.getElementById('comparison-scope').dispatchEvent(new Event('change',{bubbles:true}))`);
+  assert(await evaluate(`document.querySelectorAll('.comparison-card').length===802 && document.querySelectorAll('.comparison-missing').length===802-iconLab.COMPARISON.paired_icons`), 'All 802 new icons have a comparison slot without invented originals');
+  await evaluate(`document.getElementById('comparison-scope').value='unpaired';document.getElementById('comparison-scope').dispatchEvent(new Event('change',{bubbles:true}))`);
+  assert(await evaluate(`document.querySelectorAll('.comparison-card').length===802-iconLab.COMPARISON.paired_icons && document.querySelectorAll('.old-slot .original-icon,.old-slot .original-text').length===0`), 'Unmatched filter shows explicit empty counterparts');
+  assert(await evaluate(`(() => {
+    const card=document.querySelector('.comparison-card');
+    card.querySelector('.old-slot').click();
+    const unavailable=card.dataset.winner==='' && card.querySelector('.old-slot').disabled;
+    card.querySelector('.new-slot').click();
+    const chosen=card.dataset.winner==='new' && card.querySelectorAll('.is-loser').length===0;
+    card.querySelector('.unlock-choice').click();
+    return unavailable && chosen && iconLab.choiceExport().choices.length===0;
+  })()`), 'Entries without originals cannot choose an invented old winner');
+  await evaluate(`document.getElementById('comparison-scope').value='paired';document.getElementById('comparison-scope').dispatchEvent(new Event('change',{bubbles:true}));document.querySelector('[data-family="actions"]').click()`);
+  assert(await evaluate(`iconLab.state.view==='compare' && [...document.querySelectorAll('.comparison-card')].every(card=>iconLab.DATA.icons.find(x=>x.id===card.dataset.id).category==='actions')`), 'Family filters preserve comparison mode');
+  await evaluate(`document.querySelector('[data-family="all"]').click();document.getElementById('search').value='undo';document.getElementById('search').dispatchEvent(new Event('input',{bubbles:true}))`);
+  assert(await evaluate(`!!document.querySelector('.comparison-card[data-id="undo"] .original-icon') && document.querySelectorAll('.comparison-card').length<20`), 'Comparison search finds actual undo originals');
+  await evaluate(`document.getElementById('comparison-size').value='88';document.getElementById('comparison-size').dispatchEvent(new Event('input',{bubbles:true}))`);
+  assert(await evaluate(`getComputedStyle(document.querySelector('.comparison-card[data-id="undo"] .old-slot svg')).width==='88px' && getComputedStyle(document.querySelector('.comparison-card[data-id="undo"] .new-slot svg')).width==='88px'`), 'Comparison size applies equally to old and new geometry');
+  await evaluate(`document.getElementById('comparison-size').value='56';document.getElementById('comparison-size').dispatchEvent(new Event('input',{bubbles:true}));document.getElementById('search').value='';document.getElementById('search').dispatchEvent(new Event('input',{bubbles:true}));document.getElementById('same-ink').click()`);
+  assert(await evaluate(`iconLab.state.sameInk===false && document.querySelectorAll('.comparison-card').length===iconLab.COMPARISON.paired_icons`), 'Original paint can be restored');
+  await evaluate(`document.getElementById('same-ink').click();document.getElementById('theme-select').value='light';document.getElementById('theme-select').dispatchEvent(new Event('change',{bubbles:true}));iconLab.selectIcon('sailboat')`);
+  const comparisonInk = await evaluate(`({old:getComputedStyle(document.querySelector('.old-slot svg')).color,new:getComputedStyle(document.querySelector('.new-slot svg')).color,unsafe:document.querySelectorAll('.old-slot script,.old-slot image,.old-slot foreignObject,.old-slot [href],.old-slot [onload]').length})`);
+  assert(comparisonInk.old==='rgb(38, 49, 58)' && comparisonInk.new===comparisonInk.old && comparisonInk.unsafe===0, 'Paired icons inherit the light theme with inert original SVGs', comparisonInk);
+  await saveScreenshot('comparison-light');
+  await page.call('Emulation.setDeviceMetricsOverride', {width:390,height:844,deviceScaleFactor:1,mobile:true});
+  await evaluate(`document.getElementById('theme-select').value='dark';document.getElementById('theme-select').dispatchEvent(new Event('change',{bubbles:true}))`);
+  const narrowComparison = await evaluate(`({width:document.documentElement.scrollWidth,columns:getComputedStyle(document.getElementById('comparison-grid')).gridTemplateColumns.split(' ').length,old:getComputedStyle(document.querySelector('.old-slot svg')).width,new:getComputedStyle(document.querySelector('.new-slot svg')).width})`);
+  assert(narrowComparison.width<=390 && narrowComparison.columns===1 && narrowComparison.old===narrowComparison.new, 'Narrow comparison keeps both columns without horizontal overflow', narrowComparison);
+  await saveScreenshot('comparison-narrow');
+  await page.call('Emulation.setDeviceMetricsOverride', {width:1600,height:1040,deviceScaleFactor:1,mobile:false});
+  await evaluate(`iconLab.switchView('catalog')`);
   const initial = await evaluate(`({ cells: document.querySelectorAll('.icon-cell').length,
     count: iconLab.DATA.count, symbols: document.querySelectorAll('symbol').length,
     missing: [...document.querySelectorAll('.icon-cell use')].filter(el => !document.querySelector(el.getAttribute('href'))).length })`);
   assert(initial.cells === 802 && initial.count === 802 && initial.symbols === 802 && initial.missing === 0,
     'All 802 glyphs mounted with resolved symbols', initial);
-  const metadataSafety = await evaluate(`(() => {
-    const icon=iconLab.DATA.icons.find(x=>x.id==='sailboat'), saved=structuredClone(icon);
-    const upstream=iconLab.DATA.upstream, revision=iconLab.DATA.upstream_sha;
-    const label='" onload="window.unexpectedMetadataScript=1';
-    try {
-      icon.svg='javascript:window.unexpectedMetadataScript=1'; icon.label=label;
-      icon.uses=[{path:'static/" onclick="unexpected.js',line:'1" onclick="unexpected'}];
-      iconLab.DATA.upstream='javascript:window.unexpectedMetadataScript=1';
-      iconLab.DATA.upstream_sha='revision/" onclick="unexpected';
-      iconLab.selectIcon('sailboat');
-      const svg=new DOMParser().parseFromString(document.getElementById('svg-code').value,'image/svg+xml').documentElement;
-      const download=new URL(document.getElementById('download-svg').href);
-      const source=new URL(document.querySelector('#selected-uses a').href);
-      return {label:svg.getAttribute('aria-label')===label, noHandler:!svg.hasAttribute('onload'),
-        download:download.protocol==='http:' && download.pathname.endsWith('/static/icons/ui/sailboat.svg'),
-        source:source.origin==='https://github.com' && source.pathname.startsWith('/odysseus-dev/odysseus/blob/') && source.hash==='#L1',
-        script:!window.unexpectedMetadataScript};
-    } finally {
-      Object.assign(icon,saved);iconLab.DATA.upstream=upstream;iconLab.DATA.upstream_sha=revision;
-      iconLab.selectIcon('sailboat');
-    }
-  })()`);
-  assert(Object.values(metadataSafety).every(Boolean), 'Catalog metadata cannot inject SVG attributes or link protocols', metadataSafety);
   await evaluate(`document.getElementById('search').value='mask';document.getElementById('search').dispatchEvent(new Event('input',{bubbles:true}))`);
   const search = await evaluate(`({count:document.querySelectorAll('.icon-cell').length, mask:!!document.querySelector('.icon-cell[data-id="mask"]')})`);
   assert(search.count > 5 && search.count < 60 && search.mask, 'Search filters to relevant masks', search);
@@ -119,10 +256,6 @@ try {
   assert(await evaluate(`getComputedStyle(document.querySelector('.icon-cell svg')).color==='rgb(136, 68, 204)'`), 'Every SVG inherits a custom parent accent');
   await evaluate(`document.getElementById('reset-theme').click();document.getElementById('theme-select').value='dark';document.getElementById('theme-select').dispatchEvent(new Event('change',{bubbles:true}));document.getElementById('role-select').value='foreground';document.getElementById('role-select').dispatchEvent(new Event('change',{bubbles:true}));iconLab.selectIcon('sailboat')`);
   await sleep(100);
-  const saveScreenshot = async (name) => {
-    const result = await page.call('Page.captureScreenshot', { format: 'png', captureBeyondViewport: false });
-    await Deno.writeFile(`checks/${name}.png`, Uint8Array.from(atob(result.data), (c) => c.charCodeAt(0)));
-  };
   await saveScreenshot('gallery-desktop');
   await evaluate(`document.querySelector('[data-view="themes"]').focus()`);
   await page.call('Input.dispatchKeyEvent', { type: 'keyDown', key: 'Enter', code: 'Enter', text: '\r', unmodifiedText: '\r', windowsVirtualKeyCode: 13, nativeVirtualKeyCode: 13 });

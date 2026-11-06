@@ -1,0 +1,8 @@
+{
+  "export_sha256": "1cc73f7f36f977c16b4ca2cec87ae42c3c82f99049b213237a24bd2563a8fc8f",
+  "explicit_new": 118,
+  "explicit_old": 140,
+  "unspecified_keep_old": 544,
+  "default": "old",
+  "source_sha": "c21980f5a6d1cb84db8c8ab0f488cefc7764eb3f"
+}

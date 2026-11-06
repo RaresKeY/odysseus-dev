@@ -1680,7 +1680,7 @@ async function _renderWeek() {
   let railHtml = `<div class="cal-wk-rail">
     <div class="cal-wk-rail-spacer">
       <button class="cal-wk-zoom" id="cal-wk-zoom-out" title="Zoom out (–)" aria-label="Zoom out">−</button>
-      <button class="cal-wk-zoom" id="cal-wk-zoom-in" title="Zoom in (+)" aria-label="Zoom in">+</button>
+      <button class="cal-wk-zoom" id="cal-wk-zoom-in" title="Zoom in (+)" aria-label="Zoom in"><svg width="13" height="13" class="ody-ui-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" data-ui-icon="zoom-in"><circle cx="10.5" cy="10.5" r="6.5"/><path d="m16 16 5 5"/><path d="M7 10.5h7M10.5 7v7"/></svg></button>
     </div>${weekHasAllDayEvents ? `
     <div class="cal-wk-rail-allday-spacer" aria-hidden="true"></div>` : ''}`;
   for (let h = WEEK_HOUR_START; h < WEEK_HOUR_END; h++) {
