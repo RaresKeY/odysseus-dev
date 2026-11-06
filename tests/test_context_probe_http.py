@@ -56,6 +56,7 @@ def provider_server(tls=None):
 
     server = ThreadingHTTPServer(("127.0.0.1", 0), Handler)
     if tls is not None:
+        tls.minimum_version = ssl.TLSVersion.TLSv1_2
         server.socket = tls.wrap_socket(server.socket, server_side=True)
     thread = threading.Thread(target=server.serve_forever, daemon=True)
     thread.start()
