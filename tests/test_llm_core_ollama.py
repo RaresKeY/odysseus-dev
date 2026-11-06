@@ -256,8 +256,13 @@ def test_build_ollama_payload_omits_default_context_fallback():
 def test_llm_call_threads_discovered_num_ctx(monkeypatch):
     """When get_context_length returns a real, large value, it ends up
     in the outgoing Ollama request as options.num_ctx (issue #909)."""
-    monkeypatch.setattr(llm_core, "get_context_length",
-                        lambda url, model: 32768)
+    context_calls = []
+
+    def resolve_context(url, model, *, headers=None):
+        context_calls.append((url, model, headers))
+        return 32768
+
+    monkeypatch.setattr(llm_core, "get_context_length", resolve_context)
 
     seen = {}
 
@@ -277,9 +282,11 @@ def test_llm_call_threads_discovered_num_ctx(monkeypatch):
         [{"role": "user", "content": "Say OK"}],
         temperature=0.2,
         max_tokens=7,
+        headers={"Authorization": "Bearer selected"},
     )
 
     assert seen["json"]["options"]["num_ctx"] == 32768
+    assert context_calls == [("https://ollama.com/api", "kimi-k2", {"Authorization": "Bearer selected"})]
 
 
 def test_stream_llm_threads_discovered_num_ctx(monkeypatch):
@@ -298,8 +305,13 @@ def test_stream_llm_threads_discovered_num_ctx(monkeypatch):
             "stream": True,
         }
 
-    monkeypatch.setattr(llm_core, "get_context_length",
-                        lambda url, model: 32768)
+    context_calls = []
+
+    def resolve_context(url, model, *, headers=None):
+        context_calls.append((url, model, headers))
+        return 32768
+
+    monkeypatch.setattr(llm_core, "get_context_length", resolve_context)
     monkeypatch.setattr(llm_core, "_build_ollama_payload",
                         spy_build_ollama_payload)
 
@@ -315,6 +327,7 @@ def test_stream_llm_threads_discovered_num_ctx(monkeypatch):
             [{"role": "user", "content": "Say OK"}],
             temperature=0.2,
             max_tokens=7,
+            headers={"Authorization": "Bearer selected"},
         )]
 
     out = asyncio.run(collect())
@@ -322,3 +335,4 @@ def test_stream_llm_threads_discovered_num_ctx(monkeypatch):
     assert seen["num_ctx"] == 32768
     assert seen["stream"] is True
     assert out  # we got the SSE error chunk
+    assert context_calls == [("https://ollama.com/api", "kimi-k2", {"Authorization": "Bearer selected"})]

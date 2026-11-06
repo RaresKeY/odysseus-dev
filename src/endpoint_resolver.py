@@ -432,6 +432,22 @@ def build_models_url(base: str) -> Optional[str]:
     return _append_endpoint_path(base, "/models")
 
 
+class EndpointHeaders(dict):
+    """HTTP fields with request-local endpoint metadata that never enters the wire payload."""
+
+    def __init__(self, values, *, endpoint_kind=None):
+        super().__init__(values)
+        kind = str(endpoint_kind or "auto").strip().lower()
+        self.endpoint_kind = kind if kind in {"auto", "local", "api", "proxy"} else "auto"
+
+    def copy(self):
+        return type(self)(self, endpoint_kind=self.endpoint_kind)
+
+
+def endpoint_headers(values, *, endpoint_kind=None):
+    return EndpointHeaders(values, endpoint_kind=endpoint_kind)
+
+
 def build_headers(api_key: Optional[str], base: str) -> Dict[str, str]:
     """Build auth headers for an endpoint."""
     provider = _detect_provider(base)
@@ -539,7 +555,9 @@ def resolve_endpoint(
             logger.warning("Could not resolve endpoint runtime credentials: %s", e)
             return fallback_url, fallback_model, fallback_headers
         chat_url = build_chat_url(base)
-        headers = build_headers(api_key, base)
+        headers = endpoint_headers(
+            build_headers(api_key, base), endpoint_kind=getattr(ep, "endpoint_kind", None),
+        )
 
         # Discard a configured model the user has since disabled on the
         # endpoint (e.g. a stale `default_model` left pointing at a now-hidden
@@ -593,7 +611,9 @@ def _resolve_endpoint_by_id_with_descriptor(
             logger.warning("Could not resolve endpoint runtime credentials: %s", e)
             return None
         chat_url = build_chat_url(base)
-        headers = build_headers(api_key, base)
+        headers = endpoint_headers(
+            build_headers(api_key, base), endpoint_kind=getattr(ep, "endpoint_kind", None),
+        )
         m = (model or "").strip()
         enabled_models = _endpoint_enabled_models(ep)
         if require_exact_model:

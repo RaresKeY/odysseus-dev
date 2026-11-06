@@ -23,7 +23,7 @@ def isolated_runtime(monkeypatch):
     llm_core._response_model_cache.clear()
     monkeypatch.setattr(llm_core, "note_model_activity", lambda *a, **k: None)
     monkeypatch.setattr(llm_core, "_is_host_dead", lambda *_: False)
-    monkeypatch.setattr(llm_core, "get_context_length", lambda *_: 8192)
+    monkeypatch.setattr(llm_core, "get_context_length", lambda *_, **options: 8192)
     yield
     model_capability_cache.clear()
     llm_core._response_cache.clear()

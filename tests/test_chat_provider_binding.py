@@ -35,7 +35,7 @@ def store(tmp_path, monkeypatch):
         db.commit()
     monkeypatch.setattr(llm_core, "_get_cached_response", lambda *_: None)
     monkeypatch.setattr(llm_core, "_set_cached_response", lambda *a, **kw: None)
-    monkeypatch.setattr(llm_core, "get_context_length", lambda *_: 32768)
+    monkeypatch.setattr(llm_core, "get_context_length", lambda *_, **options: 32768)
     monkeypatch.setattr(llm_core, "_is_host_dead", lambda *_: False)
     monkeypatch.setattr(llm_core, "note_model_activity", lambda *a, **kw: None)
     monkeypatch.setattr(llm_core, "_clear_host_dead", lambda *_: None)

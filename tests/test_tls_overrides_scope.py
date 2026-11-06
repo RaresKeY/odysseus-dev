@@ -38,6 +38,7 @@ REPO = Path(__file__).resolve().parents[1]
 # come with its own justification in code review.
 ALLOWED_CALLERS = frozenset({
     "src/llm_core.py",          # shared AsyncClient used by stream_llm
+    "src/model_context.py",     # same-origin metadata probes using the already-selected provider credentials
     "routes/model_routes.py",   # _probe_endpoint + _ping_endpoint
     "src/decisions/provider.py",  # registered owner-visible decision inference only; never page URL fetching
 })
@@ -69,7 +70,7 @@ def _grep_files(pattern: str) -> set[str]:
 def test_llm_verify_only_used_in_allowlisted_files():
     """llm_verify() must only be consumed by the LLM provider HTTP path.
 
-    The extra CA bundle is scoped to the two known LLM HTTP entry points.
+    The extra CA bundle is scoped to the allowlisted LLM HTTP entry points.
     If a future PR threads llm_verify() into web_fetch, search providers,
     embeddings, gallery downloads, webhook delivery, or any other
     arbitrary-URL caller, that's a scope expansion and a security review.

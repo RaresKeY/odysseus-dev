@@ -69,7 +69,7 @@ def test_scoped_http_request_control(monkeypatch, value, expected):
             monkeypatch.setattr(llm_core, "_get_http_client", lambda: client)
             monkeypatch.setattr(llm_core, "_is_host_dead", lambda *_: False)
             monkeypatch.setattr(llm_core, "note_model_activity", lambda *a, **k: None)
-            monkeypatch.setattr(llm_core, "get_context_length", lambda *a: 8192)
+            monkeypatch.setattr(llm_core, "get_context_length", lambda *a, **options: 8192)
             return await llm_core.llm_call_async(
                 URL, MODEL, [{"role": "user", "content": "Hi"}],
                 headers=headers, reasoning_effort=value, max_tokens=64,

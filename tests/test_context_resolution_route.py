@@ -331,7 +331,7 @@ def _context_harness(monkeypatch):
     legacy = []
     monkeypatch.setattr(
         chat_helpers, "get_context_length",
-        lambda *args: legacy.append(args) or 8192,
+        lambda *args, **kwargs: legacy.append((args, kwargs)) or 8192,
     )
     compactions = []
 

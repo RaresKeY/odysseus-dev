@@ -1,5 +1,7 @@
 from types import SimpleNamespace
 
+import pytest
+
 from routes.chat_routes import _reconcile_selected_route_from_request
 
 
@@ -31,12 +33,14 @@ class _Db:
         pass
 
 
-def test_selected_endpoint_hydrates_headers_when_model_and_url_match(monkeypatch):
+@pytest.mark.parametrize("api_key", ["secret-key", ""])
+def test_selected_endpoint_hydrates_headers_when_model_and_url_match(monkeypatch, api_key):
     endpoint = SimpleNamespace(
         id="endpoint-1",
         is_enabled=True,
         base_url="https://openrouter.ai/api/v1",
-        api_key="secret-key",
+        api_key=api_key,
+        endpoint_kind="proxy",
         owner="alice",
     )
     session_row = SimpleNamespace(
@@ -49,6 +53,7 @@ def test_selected_endpoint_hydrates_headers_when_model_and_url_match(monkeypatch
     monkeypatch.setattr("routes.chat_routes.SessionLocal", lambda: db)
     monkeypatch.setattr("routes.chat_routes.owner_filter", lambda query, *args, **kwargs: query, raising=False)
     sess = SimpleNamespace(
+        endpoint_id="endpoint-1",
         model="moonshotai/kimi-k3",
         endpoint_url="https://openrouter.ai/api/v1/chat/completions",
         headers={},
@@ -64,5 +69,12 @@ def test_selected_endpoint_hydrates_headers_when_model_and_url_match(monkeypatch
     )
 
     assert changed is True
-    assert sess.headers.get("Authorization") == "Bearer secret-key"
+    assert sess.headers.get("Authorization") == ("Bearer secret-key" if api_key else None)
+    assert "endpoint_kind" not in sess.headers
+    if not api_key:
+        assert dict(sess.headers) == {}
+    assert sess.headers.endpoint_kind == "proxy"
     assert session_row.headers == sess.headers
+    assert _reconcile_selected_route_from_request(
+        SimpleNamespace(), sess, "session-1", form, owner=None
+    ) is False
