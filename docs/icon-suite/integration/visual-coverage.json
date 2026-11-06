@@ -1,0 +1,4876 @@
+{
+  "version": 1,
+  "base_pr_head": "e71b14fc32d8e0aad1710aa4bd20d85b9339a150",
+  "export_sha256": "1cc73f7f36f977c16b4ca2cec87ae42c3c82f99049b213237a24bd2563a8fc8f",
+  "counts": {
+    "observed": 89,
+    "not-observed": 27,
+    "kept-old": 2
+  },
+  "scenes": 83,
+  "javascript_exceptions": 0,
+  "automation_issues": 0,
+  "svg_containment_failures": [],
+  "text_originals": 43,
+  "observed_text_originals": 36,
+  "entries": [
+    {
+      "id": "notes",
+      "winner": "new",
+      "captured": {
+        "original": "53fdbb1800f4",
+        "path": "static/index.html",
+        "line": 769,
+        "basis": "Button title",
+        "source_label": "Notes",
+        "priority": 90,
+        "status": "source-label candidate",
+        "source_url": "https://github.com/odysseus-dev/odysseus/blob/c21980f5a6d1cb84db8c8ab0f488cefc7764eb3f/static/index.html#L769"
+      },
+      "status": "applied",
+      "targets": [
+        {
+          "path": "static/index.html",
+          "selector": "[data-ui-icon=\"notes\"]"
+        }
+      ],
+      "explanation": "Use the selected navigation mark in both the icon rail and the expanded sidebar.",
+      "captured_role": "action-or-status-icon",
+      "applied_role": "action-or-status-icon",
+      "original_label": "Notes",
+      "was_text": false,
+      "visual_status": "observed",
+      "visual_explanation": "Visible, unobscured in 01-shell. SVG is 14 by 14 px; contained in its owner control.",
+      "screenshot": "screenshots/after/notes.png",
+      "receipt": {
+        "id": "notes",
+        "tag": "DIV",
+        "label": "Notes\nnew",
+        "width": 14,
+        "height": 14,
+        "color": "rgb(156, 222, 242)",
+        "parent": {
+          "x": 9,
+          "y": 384,
+          "width": 222,
+          "height": 30
+        },
+        "contained": true,
+        "scene": "01-shell"
+      }
+    },
+    {
+      "id": "theme",
+      "winner": "new",
+      "captured": {
+        "original": "8204048e5c26",
+        "path": "static/index.html",
+        "line": 772,
+        "basis": "Button title",
+        "source_label": "Theme",
+        "priority": 90,
+        "status": "source-label candidate",
+        "source_url": "https://github.com/odysseus-dev/odysseus/blob/c21980f5a6d1cb84db8c8ab0f488cefc7764eb3f/static/index.html#L772"
+      },
+      "status": "applied",
+      "targets": [
+        {
+          "path": "static/index.html",
+          "selector": "[data-ui-icon=\"theme\"]"
+        }
+      ],
+      "explanation": "Use the selected navigation mark in both the icon rail and the expanded sidebar.",
+      "captured_role": "action-or-status-icon",
+      "applied_role": "action-or-status-icon",
+      "original_label": "Theme",
+      "was_text": false,
+      "visual_status": "observed",
+      "visual_explanation": "Visible, unobscured in 01-shell. SVG is 14 by 14 px; contained in its owner control.",
+      "screenshot": "screenshots/after/theme.png",
+      "receipt": {
+        "id": "theme",
+        "tag": "DIV",
+        "label": "Theme",
+        "width": 14,
+        "height": 14,
+        "color": "rgb(156, 222, 242)",
+        "parent": {
+          "x": 9,
+          "y": 474,
+          "width": 222,
+          "height": 30
+        },
+        "contained": true,
+        "scene": "01-shell"
+      }
+    },
+    {
+      "id": "add",
+      "winner": "new",
+      "captured": {
+        "original": "f5f6080f4c0b",
+        "path": "static/js/document.js",
+        "line": 7611,
+        "basis": "Button title",
+        "source_label": "Add signature (then click on PDF)",
+        "priority": 90,
+        "status": "source-label candidate",
+        "source_url": "https://github.com/odysseus-dev/odysseus/blob/c21980f5a6d1cb84db8c8ab0f488cefc7764eb3f/static/js/document.js#L7611"
+      },
+      "status": "applied",
+      "targets": [
+        {
+          "path": "static/js/editor/build/controls.js",
+          "selector": "[data-ui-icon=\"add\"]"
+        }
+      ],
+      "explanation": "Add a gradient stop; keep the signature nib on Add signature.",
+      "captured_role": "action-or-status-icon",
+      "applied_role": "labeled-command",
+      "original_label": "Add signature (then click on PDF)",
+      "was_text": false,
+      "visual_status": "observed",
+      "visual_explanation": "Visible, unobscured in editor-tool-gradient. SVG is 14 by 14 px; contained in its owner control.",
+      "screenshot": "screenshots/after/add.png",
+      "receipt": {
+        "id": "add",
+        "tag": "BUTTON",
+        "label": "Add stop",
+        "width": 14,
+        "height": 14,
+        "color": "rgb(156, 222, 242)",
+        "parent": {
+          "x": 678.59375,
+          "y": 119.5,
+          "width": 76,
+          "height": 32
+        },
+        "contained": true,
+        "scene": "editor-tool-gradient"
+      }
+    },
+    {
+      "id": "rename",
+      "winner": "new",
+      "captured": {
+        "original": "37be3b268b02",
+        "path": "static/js/admin.js",
+        "line": 1078,
+        "basis": "Button aria-label",
+        "source_label": "Rename endpoint",
+        "priority": 90,
+        "status": "source-label candidate",
+        "source_url": "https://github.com/odysseus-dev/odysseus/blob/c21980f5a6d1cb84db8c8ab0f488cefc7764eb3f/static/js/admin.js#L1078"
+      },
+      "status": "applied",
+      "targets": [
+        {
+          "path": "static/js/admin.js",
+          "selector": "[data-ui-icon=\"rename\"]"
+        }
+      ],
+      "explanation": "Current user Rename action; the endpoint Rename control no longer exists at this PR head.",
+      "captured_role": "action-or-status-icon",
+      "applied_role": "labeled-command",
+      "original_label": "Rename endpoint",
+      "was_text": false,
+      "visual_status": "observed",
+      "visual_explanation": "Visible, unobscured in settings-users. SVG is 14 by 14 px; contained in its owner control.",
+      "screenshot": "screenshots/after/rename.png",
+      "receipt": {
+        "id": "rename",
+        "tag": "BUTTON",
+        "label": "Rename",
+        "width": 14,
+        "height": 14,
+        "color": "rgb(156, 222, 242)",
+        "parent": {
+          "x": 1217,
+          "y": 489.21875,
+          "width": 80,
+          "height": 32
+        },
+        "contained": true,
+        "scene": "settings-users"
+      }
+    },
+    {
+      "id": "delete",
+      "winner": "new",
+      "captured": {
+        "original": "04f34e76fb12",
+        "path": "frontend/src/features/notes/ui/cardRendering.js",
+        "line": 124,
+        "basis": "Button title",
+        "source_label": "Delete item",
+        "priority": 90,
+        "status": "source-label candidate",
+        "source_url": "https://github.com/odysseus-dev/odysseus/blob/c21980f5a6d1cb84db8c8ab0f488cefc7764eb3f/frontend/src/features/notes/ui/cardRendering.js#L124"
+      },
+      "status": "applied",
+      "targets": [
+        {
+          "path": "frontend/src/features/notes/ui/cardRendering.js",
+          "selector": "[data-ui-icon=\"delete\"]"
+        },
+        {
+          "path": "static/js/features/notes/ui/cardRendering.js",
+          "selector": "[data-ui-icon=\"delete\"]"
+        }
+      ],
+      "explanation": "Scoped to the selected source control; existing labels, state hooks and unrelated glyphs remain.",
+      "captured_role": "action-or-status-icon",
+      "applied_role": "action-or-status-icon",
+      "original_label": "Delete item",
+      "was_text": false,
+      "visual_status": "observed",
+      "visual_explanation": "Visible, unobscured in notes-saved-checklist. SVG is 10 by 10 px; contained in its owner control.",
+      "screenshot": "screenshots/after/delete.png",
+      "receipt": {
+        "id": "delete",
+        "tag": "BUTTON",
+        "label": "Delete item",
+        "width": 10,
+        "height": 10,
+        "color": "rgb(156, 222, 242)",
+        "parent": {
+          "x": 1560,
+          "y": 197,
+          "width": 14,
+          "height": 32
+        },
+        "contained": true,
+        "scene": "notes-saved-checklist"
+      }
+    },
+    {
+      "id": "download",
+      "winner": "new",
+      "captured": {
+        "original": "1bfac70878dd",
+        "path": "static/js/cookbookRunning.js",
+        "line": 2461,
+        "basis": "Button title",
+        "source_label": "Start this queued download now",
+        "priority": 90,
+        "status": "source-label candidate",
+        "source_url": "https://github.com/odysseus-dev/odysseus/blob/c21980f5a6d1cb84db8c8ab0f488cefc7764eb3f/static/js/cookbookRunning.js#L2461"
+      },
+      "status": "applied",
+      "targets": [
+        {
+          "path": "static/js/cookbook.js",
+          "selector": "[data-ui-icon=\"download\"]"
+        }
+      ],
+      "explanation": "Actual Download action; the captured triangle starts a queued task.",
+      "captured_role": "action-or-status-icon",
+      "applied_role": "labeled-command",
+      "original_label": "Start this queued download now",
+      "was_text": false,
+      "visual_status": "observed",
+      "visual_explanation": "Visible, unobscured in feature-cookbook. SVG is 14 by 14 px; contained in its owner control.",
+      "screenshot": "screenshots/after/download.png",
+      "receipt": {
+        "id": "download",
+        "tag": "BUTTON",
+        "label": "Download",
+        "width": 14,
+        "height": 14,
+        "color": "rgb(255, 255, 255)",
+        "parent": {
+          "x": 1064,
+          "y": 200.09375,
+          "width": 102,
+          "height": 28
+        },
+        "contained": true,
+        "scene": "feature-cookbook"
+      }
+    },
+    {
+      "id": "save",
+      "winner": "new",
+      "captured": {
+        "original": "81db0bf4bd47",
+        "path": "frontend/src/features/notes/ui/cardRendering.js",
+        "line": 204,
+        "basis": "Button title",
+        "source_label": "Save (archive)",
+        "priority": 90,
+        "status": "source-label candidate",
+        "source_url": "https://github.com/odysseus-dev/odysseus/blob/c21980f5a6d1cb84db8c8ab0f488cefc7764eb3f/frontend/src/features/notes/ui/cardRendering.js#L204"
+      },
+      "status": "applied",
+      "targets": [
+        {
+          "path": "frontend/src/features/notes/ui/cardRendering.js",
+          "selector": "[data-ui-icon=\"save\"]"
+        },
+        {
+          "path": "static/js/features/notes/ui/cardRendering.js",
+          "selector": "[data-ui-icon=\"save\"]"
+        }
+      ],
+      "explanation": "Scoped to the selected source control; existing labels, state hooks and unrelated glyphs remain.",
+      "captured_role": "action-or-status-icon",
+      "applied_role": "action-or-status-icon",
+      "original_label": "Save (archive)",
+      "was_text": false,
+      "visual_status": "not-observed",
+      "visual_explanation": "The selected Save (archive) SVG is in a legacy Notes action footer hidden by the current card layout. The visible card uses Mark done. Keep archiving terminology; rename this catalog concept archive before wider reuse.",
+      "context_screenshot": "screenshots/after/notes-saved-actions.png"
+    },
+    {
+      "id": "deselect",
+      "winner": "new",
+      "captured": {
+        "original": "d2f3a7ec906a",
+        "path": "frontend/src/features/notes/ui/panel.js",
+        "line": 181,
+        "basis": "Button aria-label",
+        "source_label": "Cancel selection",
+        "priority": 90,
+        "status": "source-label candidate",
+        "source_url": "https://github.com/odysseus-dev/odysseus/blob/c21980f5a6d1cb84db8c8ab0f488cefc7764eb3f/frontend/src/features/notes/ui/panel.js#L181"
+      },
+      "status": "applied",
+      "targets": [
+        {
+          "path": "frontend/src/features/notes/ui/panel.js",
+          "selector": "[data-ui-icon=\"deselect\"]"
+        },
+        {
+          "path": "static/js/features/notes/ui/panel.js",
+          "selector": "[data-ui-icon=\"deselect\"]"
+        }
+      ],
+      "explanation": "Scoped to the selected source control; existing labels, state hooks and unrelated glyphs remain.",
+      "captured_role": "action-or-status-icon",
+      "applied_role": "action-or-status-icon",
+      "original_label": "Cancel selection",
+      "was_text": false,
+      "visual_status": "observed",
+      "visual_explanation": "Visible, unobscured in notes-bulk-selection. SVG is 12 by 12 px; contained in its owner control.",
+      "screenshot": "screenshots/after/deselect.png",
+      "receipt": {
+        "id": "deselect",
+        "tag": "BUTTON",
+        "label": "Cancel selection",
+        "width": 12,
+        "height": 12,
+        "color": "rgb(224, 108, 117)",
+        "parent": {
+          "x": 1542,
+          "y": 109,
+          "width": 30,
+          "height": 24
+        },
+        "contained": true,
+        "scene": "notes-bulk-selection"
+      }
+    },
+    {
+      "id": "filter",
+      "winner": "new",
+      "captured": {
+        "original": "9c5915de1209",
+        "path": "static/js/cookbook.js",
+        "line": 3266,
+        "basis": "Button title",
+        "source_label": "Filter by serving engine",
+        "priority": 90,
+        "status": "source-label candidate",
+        "source_url": "https://github.com/odysseus-dev/odysseus/blob/c21980f5a6d1cb84db8c8ab0f488cefc7764eb3f/static/js/cookbook.js#L3266"
+      },
+      "status": "applied",
+      "targets": [
+        {
+          "path": "static/js/cookbook.js",
+          "selector": "[data-ui-icon=\"filter\"]"
+        }
+      ],
+      "explanation": "Scoped to the selected source control; existing labels, state hooks and unrelated glyphs remain.",
+      "captured_role": "disclosure-arrow",
+      "applied_role": "semantic-icon-plus-disclosure",
+      "original_label": "Filter by serving engine",
+      "was_text": false,
+      "visual_status": "not-observed",
+      "visual_explanation": "Serving-engine filter is conditional on the hardware-fit results view. Its separate disclosure caret is preserved. No hardware scan or provider download was invoked. Screenshot shows the fixture model-picker context, not this unobserved glyph.",
+      "context_screenshot": "screenshots/after/02-model-picker.png"
+    },
+    {
+      "id": "filter-clear",
+      "winner": "new",
+      "captured": {
+        "original": "text-29a390f9237e",
+        "path": "static/js/gallery.js",
+        "line": 521,
+        "basis": "Literal button text",
+        "source_label": "Clear every gallery filter",
+        "priority": 60,
+        "status": "source-label candidate",
+        "source_url": "https://github.com/odysseus-dev/odysseus/blob/c21980f5a6d1cb84db8c8ab0f488cefc7764eb3f/static/js/gallery.js#L521"
+      },
+      "status": "applied",
+      "targets": [
+        {
+          "path": "static/js/gallery.js",
+          "selector": "[data-ui-icon=\"filter-clear\"]"
+        }
+      ],
+      "explanation": "Scoped to the selected source control; existing labels, state hooks and unrelated glyphs remain.",
+      "captured_role": "text-command",
+      "applied_role": "labeled-command",
+      "original_label": "Clear every gallery filter",
+      "was_text": true,
+      "visual_status": "not-observed",
+      "visual_explanation": "The Clear all filter action was not observed in the fixture. It retains its text label; no blanket replacement of gallery clear buttons was made. Screenshot shows the fixture model-picker context, not this unobserved glyph.",
+      "context_screenshot": "screenshots/after/02-model-picker.png"
+    },
+    {
+      "id": "sort",
+      "winner": "new",
+      "captured": {
+        "original": "db036ab22250",
+        "path": "static/index.html",
+        "line": 809,
+        "basis": "Button title",
+        "source_label": "Sort sessions",
+        "priority": 90,
+        "status": "source-label candidate",
+        "source_url": "https://github.com/odysseus-dev/odysseus/blob/c21980f5a6d1cb84db8c8ab0f488cefc7764eb3f/static/index.html#L809"
+      },
+      "status": "applied",
+      "targets": [
+        {
+          "path": "static/index.html",
+          "selector": "[data-ui-icon=\"sort\"]"
+        }
+      ],
+      "explanation": "Scoped to the selected source control; existing labels, state hooks and unrelated glyphs remain.",
+      "captured_role": "action-or-status-icon",
+      "applied_role": "action-or-status-icon",
+      "original_label": "Sort sessions",
+      "was_text": false,
+      "visual_status": "not-observed",
+      "visual_explanation": "Session Sort needs a populated session list. The empty disposable account did not expose this control.",
+      "context_screenshot": "screenshots/after/01-sidebar-expanded.png"
+    },
+    {
+      "id": "favorite",
+      "winner": "new",
+      "captured": {
+        "original": "b429c4656075",
+        "path": "static/js/gallery.js",
+        "line": 1616,
+        "basis": "Button aria-label",
+        "source_label": "Favorite",
+        "priority": 90,
+        "status": "source-label candidate",
+        "source_url": "https://github.com/odysseus-dev/odysseus/blob/c21980f5a6d1cb84db8c8ab0f488cefc7764eb3f/static/js/gallery.js#L1616"
+      },
+      "status": "applied",
+      "targets": [
+        {
+          "path": "static/js/gallery.js",
+          "selector": "[data-ui-icon=\"favorite\"]"
+        }
+      ],
+      "explanation": "Scoped to the selected source control; existing labels, state hooks and unrelated glyphs remain.",
+      "captured_role": "action-or-status-icon",
+      "applied_role": "action-or-status-icon",
+      "original_label": "Favorite",
+      "was_text": false,
+      "visual_status": "not-observed",
+      "visual_explanation": "The real photo detail header was not exposed by the fixture. Dynamic favorite paint is retained in source, but this control remains unverified. Screenshot shows the fixture model-picker context, not this unobserved glyph.",
+      "context_screenshot": "screenshots/after/02-model-picker.png"
+    },
+    {
+      "id": "unlink",
+      "winner": "new",
+      "captured": {
+        "original": "text-b90108da0bd2",
+        "path": "static/js/document.js",
+        "line": 7710,
+        "basis": "Literal button text",
+        "source_label": "Unlink",
+        "priority": 60,
+        "status": "source-label candidate",
+        "source_url": "https://github.com/odysseus-dev/odysseus/blob/c21980f5a6d1cb84db8c8ab0f488cefc7764eb3f/static/js/document.js#L7710"
+      },
+      "status": "kept-old-needs-remap",
+      "targets": [],
+      "explanation": "Captured mobile Unlink button closes the document tab. Keep it for now; fix the misleading label separately instead of adding a broken-link symbol.",
+      "captured_role": "text-command",
+      "original_label": "Unlink",
+      "was_text": true,
+      "visual_status": "kept-old",
+      "visual_explanation": "Captured mobile Unlink button closes the document tab. Keep it for now; fix the misleading label separately instead of adding a broken-link symbol.",
+      "context_screenshot": "screenshots/after/03-document-editing.png"
+    },
+    {
+      "id": "open",
+      "winner": "new",
+      "captured": {
+        "original": "dcb275bcf58c",
+        "path": "static/js/cookbookRunning.js",
+        "line": 2460,
+        "basis": "Button title",
+        "source_label": "Open in Launch",
+        "priority": 90,
+        "status": "source-label candidate",
+        "source_url": "https://github.com/odysseus-dev/odysseus/blob/c21980f5a6d1cb84db8c8ab0f488cefc7764eb3f/static/js/cookbookRunning.js#L2460"
+      },
+      "status": "applied",
+      "targets": [
+        {
+          "path": "static/js/cookbookRunning.js",
+          "selector": "[data-ui-icon=\"open\"]"
+        }
+      ],
+      "explanation": "Scoped to the selected source control; existing labels, state hooks and unrelated glyphs remain.",
+      "captured_role": "action-or-status-icon",
+      "applied_role": "action-or-status-icon",
+      "original_label": "Open in Launch",
+      "was_text": false,
+      "visual_status": "not-observed",
+      "visual_explanation": "Open in Launch requires a downloaded, launchable model task. No model download or launch was performed. Screenshot shows the fixture model-picker context, not this unobserved glyph.",
+      "context_screenshot": "screenshots/after/02-model-picker.png"
+    },
+    {
+      "id": "move",
+      "winner": "new",
+      "captured": {
+        "original": "33957ec498c1",
+        "path": "static/index.html",
+        "line": 476,
+        "basis": "Button title",
+        "source_label": "Move selected duplicates, failed audits, and low-confidence skills to the bin",
+        "priority": 90,
+        "status": "source-label candidate",
+        "source_url": "https://github.com/odysseus-dev/odysseus/blob/c21980f5a6d1cb84db8c8ab0f488cefc7764eb3f/static/index.html#L476"
+      },
+      "status": "applied",
+      "targets": [
+        {
+          "path": "static/js/editor/build/toolbar.js",
+          "selector": "[data-ui-icon=\"move\"]"
+        }
+      ],
+      "explanation": "Move tool; the captured Bin button deletes skills.",
+      "captured_role": "action-or-status-icon",
+      "applied_role": "tool-icon",
+      "original_label": "Move selected duplicates, failed audits, and low-confidence skills to the bin",
+      "was_text": false,
+      "visual_status": "observed",
+      "visual_explanation": "Visible, unobscured in 06-editor. SVG is 18 by 18 px; contained in its owner control.",
+      "screenshot": "screenshots/after/move.png",
+      "receipt": {
+        "id": "move",
+        "tag": "SPAN",
+        "label": "",
+        "width": 18,
+        "height": 18,
+        "color": "color(srgb 0.611765 0.870588 0.94902 / 0.85)",
+        "parent": {
+          "x": 21,
+          "y": 123.5,
+          "width": 18,
+          "height": 18
+        },
+        "contained": true,
+        "scene": "06-editor"
+      }
+    },
+    {
+      "id": "clear",
+      "winner": "new",
+      "captured": {
+        "original": "c7e9fa64aa70",
+        "path": "static/index.html",
+        "line": 1192,
+        "basis": "Button aria-label",
+        "source_label": "Clear selected Notes/Todos context",
+        "priority": 90,
+        "status": "source-label candidate",
+        "source_url": "https://github.com/odysseus-dev/odysseus/blob/c21980f5a6d1cb84db8c8ab0f488cefc7764eb3f/static/index.html#L1192"
+      },
+      "status": "applied",
+      "targets": [
+        {
+          "path": "static/index.html",
+          "selector": "[data-ui-icon=\"clear\"]"
+        }
+      ],
+      "explanation": "Scoped to the selected source control; existing labels, state hooks and unrelated glyphs remain.",
+      "captured_role": "action-or-status-icon",
+      "applied_role": "action-or-status-icon",
+      "original_label": "Clear selected Notes/Todos context",
+      "was_text": false,
+      "visual_status": "not-observed",
+      "visual_explanation": "Clear selected Notes/Todos context appears only after attaching context to chat. This state was not exercised.",
+      "context_screenshot": "screenshots/after/01-sidebar-expanded.png"
+    },
+    {
+      "id": "expand",
+      "winner": "new",
+      "captured": {
+        "original": "b097c1e32940",
+        "path": "static/js/compare/icons.js",
+        "line": 11,
+        "basis": "Named SVG: ICON_EXPAND",
+        "source_label": "ICON_EXPAND",
+        "priority": 80,
+        "status": "source-label candidate",
+        "source_url": "https://github.com/odysseus-dev/odysseus/blob/c21980f5a6d1cb84db8c8ab0f488cefc7764eb3f/static/js/compare/icons.js#L11"
+      },
+      "status": "applied",
+      "targets": [
+        {
+          "path": "static/js/compare/icons.js",
+          "selector": "[data-ui-icon=\"expand\"]"
+        }
+      ],
+      "explanation": "Scoped to the selected source control; existing labels, state hooks and unrelated glyphs remain.",
+      "captured_role": "action-or-status-icon",
+      "applied_role": "action-or-status-icon",
+      "original_label": "ICON_EXPAND",
+      "was_text": false,
+      "visual_status": "not-observed",
+      "visual_explanation": "Comparison pane expand is conditional on an active comparison. No provider-backed comparison was run.",
+      "context_screenshot": "screenshots/after/02-model-picker.png"
+    },
+    {
+      "id": "collapse",
+      "winner": "new",
+      "captured": {
+        "original": "812314c18892",
+        "path": "static/index.html",
+        "line": 1464,
+        "basis": "Button aria-label",
+        "source_label": "Collapse settings navigation",
+        "priority": 90,
+        "status": "source-label candidate",
+        "source_url": "https://github.com/odysseus-dev/odysseus/blob/c21980f5a6d1cb84db8c8ab0f488cefc7764eb3f/static/index.html#L1464"
+      },
+      "status": "applied",
+      "targets": [
+        {
+          "path": "static/js/compare/icons.js",
+          "selector": "[data-ui-icon=\"collapse\"]"
+        }
+      ],
+      "explanation": "Collapse a comparison pane; keep the Settings navigation chevron.",
+      "captured_role": "disclosure-arrow",
+      "applied_role": "action-icon",
+      "original_label": "Collapse settings navigation",
+      "was_text": false,
+      "visual_status": "not-observed",
+      "visual_explanation": "Comparison pane collapse is conditional on an expanded comparison pane. The Settings navigation chevron was retained.",
+      "context_screenshot": "screenshots/after/02-model-picker.png"
+    },
+    {
+      "id": "maximize",
+      "winner": "new",
+      "captured": {
+        "original": "8dcce15ead4a",
+        "path": "static/js/editor/build/topbar.js",
+        "line": 527,
+        "basis": "Button aria-label",
+        "source_label": "Maximize editor",
+        "priority": 90,
+        "status": "source-label candidate",
+        "source_url": "https://github.com/odysseus-dev/odysseus/blob/c21980f5a6d1cb84db8c8ab0f488cefc7764eb3f/static/js/editor/build/topbar.js#L527"
+      },
+      "status": "applied",
+      "targets": [
+        {
+          "path": "static/js/editor/build/topbar.js",
+          "selector": "[data-ui-icon=\"maximize\"]"
+        }
+      ],
+      "explanation": "Scoped to the selected source control; existing labels, state hooks and unrelated glyphs remain.",
+      "captured_role": "action-or-status-icon",
+      "applied_role": "action-or-status-icon",
+      "original_label": "Maximize editor",
+      "was_text": false,
+      "visual_status": "observed",
+      "visual_explanation": "Visible, unobscured in 06-editor. SVG is 14 by 14 px; contained in its owner control.",
+      "screenshot": "screenshots/after/maximize.png",
+      "receipt": {
+        "id": "maximize",
+        "tag": "BUTTON",
+        "label": "Maximize editor",
+        "width": 14,
+        "height": 14,
+        "color": "color(srgb 0.611765 0.870588 0.94902 / 0.58)",
+        "parent": {
+          "x": 1537,
+          "y": 11,
+          "width": 24,
+          "height": 24
+        },
+        "contained": true,
+        "scene": "06-editor"
+      }
+    },
+    {
+      "id": "panel-right",
+      "winner": "new",
+      "captured": {
+        "original": "03a78506bae9",
+        "path": "static/js/editor/build/topbar.js",
+        "line": 473,
+        "basis": "Button title",
+        "source_label": "Window panels",
+        "priority": 90,
+        "status": "source-label candidate",
+        "source_url": "https://github.com/odysseus-dev/odysseus/blob/c21980f5a6d1cb84db8c8ab0f488cefc7764eb3f/static/js/editor/build/topbar.js#L473"
+      },
+      "status": "applied",
+      "targets": [
+        {
+          "path": "static/js/editor/build/topbar.js",
+          "selector": "[data-ui-icon=\"panel-right\"]"
+        }
+      ],
+      "explanation": "Scoped to the selected source control; existing labels, state hooks and unrelated glyphs remain.",
+      "captured_role": "action-or-status-icon",
+      "applied_role": "action-or-status-icon",
+      "original_label": "Window panels",
+      "was_text": false,
+      "visual_status": "not-observed",
+      "visual_explanation": "Window panels has a semantic glyph and separate caret inside ge-stacked-glyph, hidden by the current text-menubar CSS. Keep the text label and caret; do not force this dormant glyph into the menubar.",
+      "context_screenshot": "screenshots/after/editor-menu-window.png"
+    },
+    {
+      "id": "sidebar-close",
+      "winner": "new",
+      "captured": {
+        "original": "f34deb630f37",
+        "path": "static/index.html",
+        "line": 781,
+        "basis": "Button title",
+        "source_label": "Toggle sidebar",
+        "priority": 90,
+        "status": "source-label candidate",
+        "source_url": "https://github.com/odysseus-dev/odysseus/blob/c21980f5a6d1cb84db8c8ab0f488cefc7764eb3f/static/index.html#L781"
+      },
+      "status": "applied",
+      "targets": [
+        {
+          "path": "static/index.html",
+          "selector": "[data-ui-icon=\"sidebar-close\"]"
+        }
+      ],
+      "explanation": "Use the new close glyph on the active external toggle only while the sidebar is expanded. Keep the old hamburger to open it. The captured in-sidebar toggle is hidden by CSS.",
+      "captured_role": "action-or-status-icon",
+      "applied_role": "sidebar-expanded-icon",
+      "original_label": "Toggle sidebar",
+      "was_text": false,
+      "visual_status": "observed",
+      "visual_explanation": "Visible, unobscured in 01-shell. SVG is 18 by 18 px; contained in its owner control.",
+      "screenshot": "screenshots/after/sidebar-close.png",
+      "receipt": {
+        "id": "sidebar-close",
+        "tag": "BUTTON",
+        "label": "Hide sidebar",
+        "width": 18,
+        "height": 18,
+        "color": "rgb(156, 222, 242)",
+        "parent": {
+          "x": 9,
+          "y": 12,
+          "width": 30,
+          "height": 30
+        },
+        "contained": true,
+        "scene": "01-shell"
+      }
+    },
+    {
+      "id": "dock",
+      "winner": "new",
+      "captured": {
+        "original": "90b50e309d57",
+        "path": "static/js/editor/build/dock.js",
+        "line": 127,
+        "basis": "Button aria-label",
+        "source_label": "Dock panel",
+        "priority": 90,
+        "status": "source-label candidate",
+        "source_url": "https://github.com/odysseus-dev/odysseus/blob/c21980f5a6d1cb84db8c8ab0f488cefc7764eb3f/static/js/editor/build/dock.js#L127"
+      },
+      "status": "applied",
+      "targets": [
+        {
+          "path": "static/js/editor/build/dock.js",
+          "selector": "[data-ui-icon=\"dock\"]"
+        }
+      ],
+      "explanation": "Scoped to the selected source control; existing labels, state hooks and unrelated glyphs remain.",
+      "captured_role": "action-or-status-icon",
+      "applied_role": "action-or-status-icon",
+      "original_label": "Dock panel",
+      "was_text": false,
+      "visual_status": "not-observed",
+      "visual_explanation": "Dock panel belongs to the editor floating-panel UI. No floating dock panel was created; the History popup is a different component.",
+      "context_screenshot": "screenshots/after/editor-history.png"
+    },
+    {
+      "id": "quote",
+      "winner": "new",
+      "captured": {
+        "original": "0ef9a79371db",
+        "path": "static/js/emailLibrary/signatureFold.js",
+        "line": 21,
+        "basis": "Named SVG: _QUOTE_ICON",
+        "source_label": "_QUOTE_ICON",
+        "priority": 80,
+        "status": "source-label candidate",
+        "source_url": "https://github.com/odysseus-dev/odysseus/blob/c21980f5a6d1cb84db8c8ab0f488cefc7764eb3f/static/js/emailLibrary/signatureFold.js#L21"
+      },
+      "status": "applied",
+      "targets": [
+        {
+          "path": "static/js/emailLibrary/signatureFold.js",
+          "selector": "[data-ui-icon=\"quote\"]"
+        }
+      ],
+      "explanation": "Scoped to the selected source control; existing labels, state hooks and unrelated glyphs remain.",
+      "captured_role": "action-or-status-icon",
+      "applied_role": "action-or-status-icon",
+      "original_label": "_QUOTE_ICON",
+      "was_text": false,
+      "visual_status": "not-observed",
+      "visual_explanation": "Quoted email-thread fold needs a loaded email thread. No mailbox was configured or contacted. Screenshot shows the fixture model-picker context, not this unobserved glyph.",
+      "context_screenshot": "screenshots/after/02-model-picker.png"
+    },
+    {
+      "id": "reasoning",
+      "winner": "new",
+      "captured": {
+        "original": "cdb93a58a95c",
+        "path": "static/index.html",
+        "line": 1259,
+        "basis": "Button title",
+        "source_label": "Reasoning effort",
+        "priority": 90,
+        "status": "source-label candidate",
+        "source_url": "https://github.com/odysseus-dev/odysseus/blob/c21980f5a6d1cb84db8c8ab0f488cefc7764eb3f/static/index.html#L1259"
+      },
+      "status": "applied",
+      "targets": [
+        {
+          "path": "static/index.html",
+          "selector": "[data-ui-icon=\"reasoning\"]"
+        }
+      ],
+      "explanation": "Scoped to the selected source control; existing labels, state hooks and unrelated glyphs remain.",
+      "captured_role": "disclosure-arrow",
+      "applied_role": "semantic-icon-plus-disclosure",
+      "original_label": "Reasoning effort",
+      "was_text": false,
+      "visual_status": "not-observed",
+      "visual_explanation": "Reasoning controls depend on model capabilities. No reasoning-capable provider was configured. Source check confirms the new semantic mark is alongside the retained dropdown caret.",
+      "context_screenshot": "screenshots/after/02-model-picker.png"
+    },
+    {
+      "id": "context",
+      "winner": "new",
+      "captured": {
+        "original": "5f82f568036e",
+        "path": "static/js/document.js",
+        "line": 7568,
+        "basis": "Button title",
+        "source_label": "Draft a reply with AI (fast + optional context)",
+        "priority": 90,
+        "status": "source-label candidate",
+        "source_url": "https://github.com/odysseus-dev/odysseus/blob/c21980f5a6d1cb84db8c8ab0f488cefc7764eb3f/static/js/document.js#L7568"
+      },
+      "status": "applied",
+      "targets": [
+        {
+          "path": "static/index.html",
+          "selector": "[data-ui-icon=\"context\"]"
+        }
+      ],
+      "explanation": "Chat context meter; the captured button drafts an AI reply.",
+      "captured_role": "action-or-status-icon",
+      "applied_role": "labeled-command",
+      "original_label": "Draft a reply with AI (fast + optional context)",
+      "was_text": false,
+      "visual_status": "not-observed",
+      "visual_explanation": "Chat context meter depends on an active session/model context. The disposable account did not expose it. The AI Draft reply button was retained.",
+      "context_screenshot": "screenshots/after/02-model-picker.png"
+    },
+    {
+      "id": "model-add",
+      "winner": "new",
+      "captured": {
+        "original": "d1079e2f2a76",
+        "path": "static/index.html",
+        "line": 1084,
+        "basis": "Button aria-label",
+        "source_label": "Add model endpoints",
+        "priority": 90,
+        "status": "source-label candidate",
+        "source_url": "https://github.com/odysseus-dev/odysseus/blob/c21980f5a6d1cb84db8c8ab0f488cefc7764eb3f/static/index.html#L1084"
+      },
+      "status": "applied",
+      "targets": [
+        {
+          "path": "static/index.html",
+          "selector": "[data-ui-icon=\"model-add\"]"
+        }
+      ],
+      "explanation": "Scoped to the selected source control; existing labels, state hooks and unrelated glyphs remain.",
+      "captured_role": "action-or-status-icon",
+      "applied_role": "action-or-status-icon",
+      "original_label": "Add model endpoints",
+      "was_text": false,
+      "visual_status": "observed",
+      "visual_explanation": "Visible, unobscured in 02-model-picker. SVG is 14 by 14 px; contained in its owner control.",
+      "screenshot": "screenshots/after/model-add.png",
+      "receipt": {
+        "id": "model-add",
+        "tag": "BUTTON",
+        "label": "Add model endpoints",
+        "width": 14,
+        "height": 14,
+        "color": "rgb(224, 108, 117)",
+        "parent": {
+          "x": 1270,
+          "y": 396.78125,
+          "width": 30,
+          "height": 30
+        },
+        "contained": true,
+        "scene": "02-model-picker"
+      }
+    },
+    {
+      "id": "database",
+      "winner": "new",
+      "captured": {
+        "original": "a85bc4fafd3b",
+        "path": "static/js/calendar.js",
+        "line": 1056,
+        "basis": "Button title",
+        "source_label": "Refresh from database",
+        "priority": 90,
+        "status": "source-label candidate",
+        "source_url": "https://github.com/odysseus-dev/odysseus/blob/c21980f5a6d1cb84db8c8ab0f488cefc7764eb3f/static/js/calendar.js#L1056"
+      },
+      "status": "kept-old-needs-remap",
+      "targets": [],
+      "explanation": "Captured source refreshes calendar data. Keep the refresh arrow; a database cylinder does not convey refresh.",
+      "captured_role": "action-or-status-icon",
+      "original_label": "Refresh from database",
+      "was_text": false,
+      "visual_status": "kept-old",
+      "visual_explanation": "Captured source refreshes calendar data. Keep the refresh arrow; a database cylinder does not convey refresh. Screenshot shows the fixture model-picker context, not this unobserved glyph.",
+      "context_screenshot": "screenshots/after/02-model-picker.png"
+    },
+    {
+      "id": "file",
+      "winner": "new",
+      "captured": {
+        "original": "564f1ff0a51f",
+        "path": "static/js/editor/build/topbar.js",
+        "line": 18,
+        "basis": "Button title",
+        "source_label": "File actions",
+        "priority": 90,
+        "status": "source-label candidate",
+        "source_url": "https://github.com/odysseus-dev/odysseus/blob/c21980f5a6d1cb84db8c8ab0f488cefc7764eb3f/static/js/editor/build/topbar.js#L18"
+      },
+      "status": "applied",
+      "targets": [
+        {
+          "path": "static/js/editor/build/topbar.js",
+          "selector": "[data-ui-icon=\"file\"]"
+        }
+      ],
+      "explanation": "Scoped to the selected source control; existing labels, state hooks and unrelated glyphs remain.",
+      "captured_role": "action-or-status-icon",
+      "applied_role": "action-or-status-icon",
+      "original_label": "File actions",
+      "was_text": false,
+      "visual_status": "not-observed",
+      "visual_explanation": "The File semantic glyph is inside ge-stacked-glyph, which the current text-menubar CSS hides. The visible File label remains correct. Avoid duplicating a file icon just to replace a hidden fragment.",
+      "context_screenshot": "screenshots/after/editor-menu-file.png"
+    },
+    {
+      "id": "bold",
+      "winner": "new",
+      "captured": {
+        "original": "text-df7e70e50215",
+        "path": "static/js/document.js",
+        "line": 7574,
+        "basis": "Literal button text",
+        "source_label": "Bold (Ctrl+B)",
+        "priority": 60,
+        "status": "source-label candidate",
+        "source_url": "https://github.com/odysseus-dev/odysseus/blob/c21980f5a6d1cb84db8c8ab0f488cefc7764eb3f/static/js/document.js#L7574"
+      },
+      "status": "applied",
+      "targets": [
+        {
+          "path": "static/js/document.js",
+          "selector": "[data-ui-icon=\"bold\"]"
+        }
+      ],
+      "explanation": "Scoped to the selected source control; existing labels, state hooks and unrelated glyphs remain.",
+      "captured_role": "formatting-glyph",
+      "applied_role": "formatting-glyph",
+      "original_label": "Bold (Ctrl+B)",
+      "was_text": true,
+      "visual_status": "observed",
+      "visual_explanation": "Visible, unobscured in 03-document. SVG is 13 by 13 px; contained in its owner control.",
+      "screenshot": "screenshots/after/bold.png",
+      "receipt": {
+        "id": "bold",
+        "tag": "BUTTON",
+        "label": "Bold",
+        "width": 13,
+        "height": 13,
+        "color": "rgb(156, 222, 242)",
+        "parent": {
+          "x": 1256,
+          "y": 37.5,
+          "width": 27,
+          "height": 32
+        },
+        "contained": true,
+        "scene": "03-document"
+      }
+    },
+    {
+      "id": "italic",
+      "winner": "new",
+      "captured": {
+        "original": "text-a83dd0ccbffe",
+        "path": "static/js/document.js",
+        "line": 7575,
+        "basis": "Literal button text",
+        "source_label": "Italic (Ctrl+I)",
+        "priority": 60,
+        "status": "source-label candidate",
+        "source_url": "https://github.com/odysseus-dev/odysseus/blob/c21980f5a6d1cb84db8c8ab0f488cefc7764eb3f/static/js/document.js#L7575"
+      },
+      "status": "applied",
+      "targets": [
+        {
+          "path": "static/js/document.js",
+          "selector": "[data-ui-icon=\"italic\"]"
+        }
+      ],
+      "explanation": "Scoped to the selected source control; existing labels, state hooks and unrelated glyphs remain.",
+      "captured_role": "formatting-glyph",
+      "applied_role": "formatting-glyph",
+      "original_label": "Italic (Ctrl+I)",
+      "was_text": true,
+      "visual_status": "observed",
+      "visual_explanation": "Visible, unobscured in 03-document. SVG is 13 by 13 px; contained in its owner control.",
+      "screenshot": "screenshots/after/italic.png",
+      "receipt": {
+        "id": "italic",
+        "tag": "BUTTON",
+        "label": "Italic",
+        "width": 13,
+        "height": 13,
+        "color": "rgb(156, 222, 242)",
+        "parent": {
+          "x": 1284,
+          "y": 37.5,
+          "width": 27,
+          "height": 32
+        },
+        "contained": true,
+        "scene": "03-document"
+      }
+    },
+    {
+      "id": "underline",
+      "winner": "new",
+      "captured": {
+        "original": "text-a25513c7e0f6",
+        "path": "static/js/document.js",
+        "line": 7577,
+        "basis": "Literal button text",
+        "source_label": "Underline (Ctrl+U)",
+        "priority": 60,
+        "status": "source-label candidate",
+        "source_url": "https://github.com/odysseus-dev/odysseus/blob/c21980f5a6d1cb84db8c8ab0f488cefc7764eb3f/static/js/document.js#L7577"
+      },
+      "status": "applied",
+      "targets": [
+        {
+          "path": "static/js/document.js",
+          "selector": "[data-ui-icon=\"underline\"]"
+        }
+      ],
+      "explanation": "Scoped to the selected source control; existing labels, state hooks and unrelated glyphs remain.",
+      "captured_role": "formatting-glyph",
+      "applied_role": "formatting-glyph",
+      "original_label": "Underline (Ctrl+U)",
+      "was_text": true,
+      "visual_status": "observed",
+      "visual_explanation": "Visible, unobscured in 03-document. SVG is 13 by 13 px; contained in its owner control.",
+      "screenshot": "screenshots/after/underline.png",
+      "receipt": {
+        "id": "underline",
+        "tag": "BUTTON",
+        "label": "Underline",
+        "width": 13,
+        "height": 13,
+        "color": "rgb(156, 222, 242)",
+        "parent": {
+          "x": 1312,
+          "y": 37.5,
+          "width": 27,
+          "height": 32
+        },
+        "contained": true,
+        "scene": "03-document"
+      }
+    },
+    {
+      "id": "strikethrough",
+      "winner": "new",
+      "captured": {
+        "original": "text-8de0b3c47f11",
+        "path": "static/js/document.js",
+        "line": 7576,
+        "basis": "Literal button text",
+        "source_label": "Strikethrough (Ctrl+Shift+X)",
+        "priority": 60,
+        "status": "source-label candidate",
+        "source_url": "https://github.com/odysseus-dev/odysseus/blob/c21980f5a6d1cb84db8c8ab0f488cefc7764eb3f/static/js/document.js#L7576"
+      },
+      "status": "applied",
+      "targets": [
+        {
+          "path": "static/js/document.js",
+          "selector": "[data-ui-icon=\"strikethrough\"]"
+        }
+      ],
+      "explanation": "Scoped to the selected source control; existing labels, state hooks and unrelated glyphs remain.",
+      "captured_role": "formatting-glyph",
+      "applied_role": "formatting-glyph",
+      "original_label": "Strikethrough (Ctrl+Shift+X)",
+      "was_text": true,
+      "visual_status": "observed",
+      "visual_explanation": "Visible, unobscured in 03-document. SVG is 13 by 13 px; contained in its owner control.",
+      "screenshot": "screenshots/after/strikethrough.png",
+      "receipt": {
+        "id": "strikethrough",
+        "tag": "BUTTON",
+        "label": "Strikethrough",
+        "width": 13,
+        "height": 13,
+        "color": "rgb(156, 222, 242)",
+        "parent": {
+          "x": 1340,
+          "y": 37.5,
+          "width": 27,
+          "height": 32
+        },
+        "contained": true,
+        "scene": "03-document"
+      }
+    },
+    {
+      "id": "superscript",
+      "winner": "new",
+      "captured": {
+        "original": "text-844ecc08164e",
+        "path": "static/js/document.js",
+        "line": 7578,
+        "basis": "Literal button text",
+        "source_label": "Superscript",
+        "priority": 60,
+        "status": "source-label candidate",
+        "source_url": "https://github.com/odysseus-dev/odysseus/blob/c21980f5a6d1cb84db8c8ab0f488cefc7764eb3f/static/js/document.js#L7578"
+      },
+      "status": "applied",
+      "targets": [
+        {
+          "path": "static/js/document.js",
+          "selector": "[data-ui-icon=\"superscript\"]"
+        }
+      ],
+      "explanation": "Scoped to the selected source control; existing labels, state hooks and unrelated glyphs remain.",
+      "captured_role": "formatting-glyph",
+      "applied_role": "formatting-glyph",
+      "original_label": "Superscript",
+      "was_text": true,
+      "visual_status": "observed",
+      "visual_explanation": "Visible, unobscured in 03-document-editing. SVG is 13 by 13 px; contained in its owner control.",
+      "screenshot": "screenshots/after/superscript.png",
+      "receipt": {
+        "id": "superscript",
+        "tag": "BUTTON",
+        "label": "Superscript",
+        "width": 13,
+        "height": 13,
+        "color": "rgb(156, 222, 242)",
+        "parent": {
+          "x": 1309,
+          "y": 37.5,
+          "width": 27,
+          "height": 32
+        },
+        "contained": true,
+        "scene": "03-document-editing"
+      }
+    },
+    {
+      "id": "subscript",
+      "winner": "new",
+      "captured": {
+        "original": "text-844ecc08164e",
+        "path": "static/js/document.js",
+        "line": 7579,
+        "basis": "Literal button text",
+        "source_label": "Subscript",
+        "priority": 60,
+        "status": "source-label candidate",
+        "source_url": "https://github.com/odysseus-dev/odysseus/blob/c21980f5a6d1cb84db8c8ab0f488cefc7764eb3f/static/js/document.js#L7579"
+      },
+      "status": "applied",
+      "targets": [
+        {
+          "path": "static/js/document.js",
+          "selector": "[data-ui-icon=\"subscript\"]"
+        }
+      ],
+      "explanation": "Scoped to the selected source control; existing labels, state hooks and unrelated glyphs remain.",
+      "captured_role": "formatting-glyph",
+      "applied_role": "formatting-glyph",
+      "original_label": "Subscript",
+      "was_text": true,
+      "visual_status": "observed",
+      "visual_explanation": "Visible, unobscured in 03-document-editing. SVG is 13 by 13 px; contained in its owner control.",
+      "screenshot": "screenshots/after/subscript.png",
+      "receipt": {
+        "id": "subscript",
+        "tag": "BUTTON",
+        "label": "Subscript",
+        "width": 13,
+        "height": 13,
+        "color": "rgb(156, 222, 242)",
+        "parent": {
+          "x": 1337,
+          "y": 37.5,
+          "width": 27,
+          "height": 32
+        },
+        "contained": true,
+        "scene": "03-document-editing"
+      }
+    },
+    {
+      "id": "heading",
+      "winner": "new",
+      "captured": {
+        "original": "90be1febf1d2",
+        "path": "static/js/document.js",
+        "line": 7581,
+        "basis": "Button title",
+        "source_label": "Heading (Ctrl+Alt+1-6)",
+        "priority": 90,
+        "status": "source-label candidate",
+        "source_url": "https://github.com/odysseus-dev/odysseus/blob/c21980f5a6d1cb84db8c8ab0f488cefc7764eb3f/static/js/document.js#L7581"
+      },
+      "status": "applied",
+      "targets": [
+        {
+          "path": "static/js/document.js",
+          "selector": "[data-ui-icon=\"heading\"]"
+        }
+      ],
+      "explanation": "Replace the H mark and preserve the disclosure chevron.",
+      "captured_role": "disclosure-arrow",
+      "applied_role": "formatting-dropdown",
+      "original_label": "Heading (Ctrl+Alt+1-6)",
+      "was_text": false,
+      "visual_status": "observed",
+      "visual_explanation": "Visible, unobscured in 03-document. SVG is 13 by 13 px; contained in its owner control.",
+      "screenshot": "screenshots/after/heading.png",
+      "receipt": {
+        "id": "heading",
+        "tag": "BUTTON",
+        "label": "Heading",
+        "width": 13,
+        "height": 13,
+        "color": "rgb(156, 222, 242)",
+        "parent": {
+          "x": 1117,
+          "y": 37.5,
+          "width": 38,
+          "height": 32
+        },
+        "contained": true,
+        "scene": "03-document"
+      }
+    },
+    {
+      "id": "font-family",
+      "winner": "new",
+      "captured": {
+        "original": "90be1febf1d2",
+        "path": "static/js/document.js",
+        "line": 7582,
+        "basis": "Button aria-label",
+        "source_label": "Font family",
+        "priority": 90,
+        "status": "source-label candidate",
+        "source_url": "https://github.com/odysseus-dev/odysseus/blob/c21980f5a6d1cb84db8c8ab0f488cefc7764eb3f/static/js/document.js#L7582"
+      },
+      "status": "applied",
+      "targets": [
+        {
+          "path": "static/js/document.js",
+          "selector": "[data-ui-icon=\"font-family\"]"
+        }
+      ],
+      "explanation": "Replace the Aa mark and preserve the disclosure chevron.",
+      "captured_role": "disclosure-arrow",
+      "applied_role": "formatting-dropdown",
+      "original_label": "Font family",
+      "was_text": false,
+      "visual_status": "observed",
+      "visual_explanation": "Visible, unobscured in 03-document. SVG is 13 by 13 px; contained in its owner control.",
+      "screenshot": "screenshots/after/font-family.png",
+      "receipt": {
+        "id": "font-family",
+        "tag": "BUTTON",
+        "label": "Font family",
+        "width": 13,
+        "height": 13,
+        "color": "rgb(156, 222, 242)",
+        "parent": {
+          "x": 1156,
+          "y": 37.5,
+          "width": 38,
+          "height": 32
+        },
+        "contained": true,
+        "scene": "03-document"
+      }
+    },
+    {
+      "id": "font-size",
+      "winner": "new",
+      "captured": {
+        "original": "37ea9e198402",
+        "path": "static/js/document.js",
+        "line": 7571,
+        "basis": "Button aria-label",
+        "source_label": "Editor display size",
+        "priority": 90,
+        "status": "source-label candidate",
+        "source_url": "https://github.com/odysseus-dev/odysseus/blob/c21980f5a6d1cb84db8c8ab0f488cefc7764eb3f/static/js/document.js#L7571"
+      },
+      "status": "applied",
+      "targets": [
+        {
+          "path": "static/js/document.js",
+          "selector": "[data-ui-icon=\"font-size\"]"
+        }
+      ],
+      "explanation": "Scoped to the selected source control; existing labels, state hooks and unrelated glyphs remain.",
+      "captured_role": "action-or-status-icon",
+      "applied_role": "action-or-status-icon",
+      "original_label": "Editor display size",
+      "was_text": false,
+      "visual_status": "observed",
+      "visual_explanation": "Visible, unobscured in document-email. SVG is 12 by 12 px; contained in its owner control.",
+      "screenshot": "screenshots/after/font-size.png",
+      "receipt": {
+        "id": "font-size",
+        "tag": "BUTTON",
+        "label": "Editor display size",
+        "width": 12,
+        "height": 12,
+        "color": "rgb(156, 222, 242)",
+        "parent": {
+          "x": 946,
+          "y": 129.5,
+          "width": 26,
+          "height": 28
+        },
+        "contained": true,
+        "scene": "document-email"
+      }
+    },
+    {
+      "id": "text-color",
+      "winner": "new",
+      "captured": {
+        "original": "749e5b9e172e",
+        "path": "static/js/document.js",
+        "line": 7597,
+        "basis": "Button title",
+        "source_label": "Text color",
+        "priority": 90,
+        "status": "source-label candidate",
+        "source_url": "https://github.com/odysseus-dev/odysseus/blob/c21980f5a6d1cb84db8c8ab0f488cefc7764eb3f/static/js/document.js#L7597"
+      },
+      "status": "applied",
+      "targets": [
+        {
+          "path": "static/js/document.js",
+          "selector": "[data-ui-icon=\"text-color\"]"
+        }
+      ],
+      "explanation": "Replace the existing A mark and keep its accent underline and separate dropdown caret.",
+      "captured_role": "disclosure-arrow",
+      "applied_role": "formatting-dropdown",
+      "original_label": "Text color",
+      "was_text": false,
+      "visual_status": "observed",
+      "visual_explanation": "Visible, unobscured in 03-document. SVG is 13 by 13 px; contained in its owner control.",
+      "screenshot": "screenshots/after/text-color.png",
+      "receipt": {
+        "id": "text-color",
+        "tag": "BUTTON",
+        "label": "Text color",
+        "width": 13,
+        "height": 13,
+        "color": "rgb(156, 222, 242)",
+        "parent": {
+          "x": 1378,
+          "y": 37.5,
+          "width": 38,
+          "height": 32
+        },
+        "contained": true,
+        "scene": "03-document"
+      }
+    },
+    {
+      "id": "highlight",
+      "winner": "new",
+      "captured": {
+        "original": "0557ce84b1d7",
+        "path": "static/js/document.js",
+        "line": 7598,
+        "basis": "Button title",
+        "source_label": "Highlight color",
+        "priority": 90,
+        "status": "source-label candidate",
+        "source_url": "https://github.com/odysseus-dev/odysseus/blob/c21980f5a6d1cb84db8c8ab0f488cefc7764eb3f/static/js/document.js#L7598"
+      },
+      "status": "applied",
+      "targets": [
+        {
+          "path": "static/js/document.js",
+          "selector": "[data-ui-icon=\"highlight\"]"
+        }
+      ],
+      "explanation": "Scoped to the selected source control; existing labels, state hooks and unrelated glyphs remain.",
+      "captured_role": "action-or-status-icon",
+      "applied_role": "action-or-status-icon",
+      "original_label": "Highlight color",
+      "was_text": false,
+      "visual_status": "observed",
+      "visual_explanation": "Visible, unobscured in 03-document. SVG is 13 by 13 px; contained in its owner control.",
+      "screenshot": "screenshots/after/highlight.png",
+      "receipt": {
+        "id": "highlight",
+        "tag": "BUTTON",
+        "label": "Highlight color",
+        "width": 13,
+        "height": 13,
+        "color": "rgb(224, 108, 117)",
+        "parent": {
+          "x": 1417,
+          "y": 37.5,
+          "width": 38,
+          "height": 32
+        },
+        "contained": true,
+        "scene": "03-document"
+      }
+    },
+    {
+      "id": "indent",
+      "winner": "new",
+      "captured": {
+        "original": "6ea1468b81f7",
+        "path": "static/js/document.js",
+        "line": 7595,
+        "basis": "Button title",
+        "source_label": "Decrease indent (Ctrl+[)",
+        "priority": 90,
+        "status": "source-label candidate",
+        "source_url": "https://github.com/odysseus-dev/odysseus/blob/c21980f5a6d1cb84db8c8ab0f488cefc7764eb3f/static/js/document.js#L7595"
+      },
+      "status": "applied",
+      "targets": [
+        {
+          "path": "static/js/document.js",
+          "selector": "[data-ui-icon=\"indent\"]"
+        }
+      ],
+      "explanation": "Increase indent; the captured source decreases indent.",
+      "captured_role": "action-or-status-icon",
+      "applied_role": "action-icon",
+      "original_label": "Decrease indent (Ctrl+[)",
+      "was_text": false,
+      "visual_status": "observed",
+      "visual_explanation": "Visible, unobscured in 03-document-editing. SVG is 13 by 13 px; contained in its owner control.",
+      "screenshot": "screenshots/after/indent.png",
+      "receipt": {
+        "id": "indent",
+        "tag": "BUTTON",
+        "label": "Increase indent (Ctrl+])",
+        "width": 13,
+        "height": 13,
+        "color": "rgb(156, 222, 242)",
+        "parent": {
+          "x": 1095,
+          "y": 37.5,
+          "width": 27,
+          "height": 32
+        },
+        "contained": true,
+        "scene": "03-document-editing"
+      }
+    },
+    {
+      "id": "line-spacing",
+      "winner": "new",
+      "captured": {
+        "original": "7f8fc2a60ccf",
+        "path": "static/js/document.js",
+        "line": 7594,
+        "basis": "Button title",
+        "source_label": "Line spacing",
+        "priority": 90,
+        "status": "source-label candidate",
+        "source_url": "https://github.com/odysseus-dev/odysseus/blob/c21980f5a6d1cb84db8c8ab0f488cefc7764eb3f/static/js/document.js#L7594"
+      },
+      "status": "applied",
+      "targets": [
+        {
+          "path": "static/js/document.js",
+          "selector": "[data-ui-icon=\"line-spacing\"]"
+        }
+      ],
+      "explanation": "Scoped to the selected source control; existing labels, state hooks and unrelated glyphs remain.",
+      "captured_role": "action-or-status-icon",
+      "applied_role": "action-or-status-icon",
+      "original_label": "Line spacing",
+      "was_text": false,
+      "visual_status": "observed",
+      "visual_explanation": "Visible, unobscured in 03-document-editing. SVG is 13 by 13 px; contained in its owner control.",
+      "screenshot": "screenshots/after/line-spacing.png",
+      "receipt": {
+        "id": "line-spacing",
+        "tag": "BUTTON",
+        "label": "Line spacing",
+        "width": 13,
+        "height": 13,
+        "color": "rgb(156, 222, 242)",
+        "parent": {
+          "x": 940,
+          "y": 37.5,
+          "width": 38,
+          "height": 32
+        },
+        "contained": true,
+        "scene": "03-document-editing"
+      }
+    },
+    {
+      "id": "blockquote",
+      "winner": "new",
+      "captured": {
+        "original": "91c1d7a349e1",
+        "path": "static/js/document.js",
+        "line": 7600,
+        "basis": "Button title",
+        "source_label": "Block quote",
+        "priority": 90,
+        "status": "source-label candidate",
+        "source_url": "https://github.com/odysseus-dev/odysseus/blob/c21980f5a6d1cb84db8c8ab0f488cefc7764eb3f/static/js/document.js#L7600"
+      },
+      "status": "applied",
+      "targets": [
+        {
+          "path": "static/js/document.js",
+          "selector": "[data-ui-icon=\"blockquote\"]"
+        }
+      ],
+      "explanation": "Scoped to the selected source control; existing labels, state hooks and unrelated glyphs remain.",
+      "captured_role": "action-or-status-icon",
+      "applied_role": "action-or-status-icon",
+      "original_label": "Block quote",
+      "was_text": false,
+      "visual_status": "observed",
+      "visual_explanation": "Visible, unobscured in 03-document-editing. SVG is 13 by 13 px; contained in its owner control.",
+      "screenshot": "screenshots/after/blockquote.png",
+      "receipt": {
+        "id": "blockquote",
+        "tag": "BUTTON",
+        "label": "Block quote",
+        "width": 13,
+        "height": 13,
+        "color": "rgb(156, 222, 242)",
+        "parent": {
+          "x": 1123,
+          "y": 37.5,
+          "width": 27,
+          "height": 32
+        },
+        "contained": true,
+        "scene": "03-document-editing"
+      }
+    },
+    {
+      "id": "text-box",
+      "winner": "new",
+      "captured": {
+        "original": "text-e632b7095b0b",
+        "path": "frontend/src/features/notes/ui/drawing.js",
+        "line": 28,
+        "basis": "Literal button text",
+        "source_label": "Add text",
+        "priority": 60,
+        "status": "source-label candidate",
+        "source_url": "https://github.com/odysseus-dev/odysseus/blob/c21980f5a6d1cb84db8c8ab0f488cefc7764eb3f/frontend/src/features/notes/ui/drawing.js#L28"
+      },
+      "status": "applied",
+      "targets": [
+        {
+          "path": "frontend/src/features/notes/ui/drawing.js",
+          "selector": "[data-ui-icon=\"text-box\"]"
+        },
+        {
+          "path": "static/js/features/notes/ui/drawing.js",
+          "selector": "[data-ui-icon=\"text-box\"]"
+        }
+      ],
+      "explanation": "Scoped to the selected source control; existing labels, state hooks and unrelated glyphs remain.",
+      "captured_role": "text-command",
+      "applied_role": "action-icon",
+      "original_label": "Add text",
+      "was_text": true,
+      "visual_status": "observed",
+      "visual_explanation": "Visible, unobscured in notes-drawing. SVG is 13 by 13 px; contained in its owner control.",
+      "screenshot": "screenshots/after/text-box.png",
+      "receipt": {
+        "id": "text-box",
+        "tag": "BUTTON",
+        "label": "Add text",
+        "width": 13,
+        "height": 13,
+        "color": "rgb(156, 222, 242)",
+        "parent": {
+          "x": 1276,
+          "y": 471.65625,
+          "width": 34,
+          "height": 32
+        },
+        "contained": true,
+        "scene": "notes-drawing"
+      }
+    },
+    {
+      "id": "compose",
+      "winner": "new",
+      "captured": {
+        "original": "27f1350b4016",
+        "path": "static/index.html",
+        "line": 862,
+        "basis": "Button title",
+        "source_label": "Compose email",
+        "priority": 90,
+        "status": "source-label candidate",
+        "source_url": "https://github.com/odysseus-dev/odysseus/blob/c21980f5a6d1cb84db8c8ab0f488cefc7764eb3f/static/index.html#L862"
+      },
+      "status": "applied",
+      "targets": [
+        {
+          "path": "static/index.html",
+          "selector": "[data-ui-icon=\"compose\"]"
+        }
+      ],
+      "explanation": "Scoped to the selected source control; existing labels, state hooks and unrelated glyphs remain.",
+      "captured_role": "action-or-status-icon",
+      "applied_role": "action-or-status-icon",
+      "original_label": "Compose email",
+      "was_text": false,
+      "visual_status": "observed",
+      "visual_explanation": "Visible, unobscured in 01-shell. SVG is 11 by 11 px; contained in its owner control.",
+      "screenshot": "screenshots/after/compose.png",
+      "receipt": {
+        "id": "compose",
+        "tag": "BUTTON",
+        "label": "Compose email",
+        "width": 11,
+        "height": 11,
+        "color": "rgb(156, 222, 242)",
+        "parent": {
+          "x": 206,
+          "y": 119.5,
+          "width": 21,
+          "height": 14
+        },
+        "contained": true,
+        "scene": "01-shell"
+      }
+    },
+    {
+      "id": "send-later",
+      "winner": "new",
+      "captured": {
+        "original": "5e64380d19bc",
+        "path": "static/js/document.js",
+        "line": 7659,
+        "basis": "Button title",
+        "source_label": "More send options",
+        "priority": 90,
+        "status": "source-label candidate",
+        "source_url": "https://github.com/odysseus-dev/odysseus/blob/c21980f5a6d1cb84db8c8ab0f488cefc7764eb3f/static/js/document.js#L7659"
+      },
+      "status": "applied",
+      "targets": [
+        {
+          "path": "static/js/document.js",
+          "selector": "[data-ui-icon=\"send-later\"]"
+        }
+      ],
+      "explanation": "Scoped to the selected source control; existing labels, state hooks and unrelated glyphs remain.",
+      "captured_role": "disclosure-arrow",
+      "applied_role": "semantic-icon-plus-disclosure",
+      "original_label": "More send options",
+      "was_text": false,
+      "visual_status": "observed",
+      "visual_explanation": "Visible, unobscured in document-email. SVG is 13 by 13 px; contained in its owner control.",
+      "screenshot": "screenshots/after/send-later.png",
+      "receipt": {
+        "id": "send-later",
+        "tag": "BUTTON",
+        "label": "More send options",
+        "width": 13,
+        "height": 13,
+        "color": "rgb(224, 108, 117)",
+        "parent": {
+          "x": 1543,
+          "y": 1000,
+          "width": 43,
+          "height": 28
+        },
+        "contained": true,
+        "scene": "document-email"
+      }
+    },
+    {
+      "id": "spam",
+      "winner": "new",
+      "captured": {
+        "original": "5cb5cbaa3df4",
+        "path": "static/js/emailInbox.js",
+        "line": 22,
+        "basis": "Named SVG: _spamIcon",
+        "source_label": "_spamIcon",
+        "priority": 80,
+        "status": "source-label candidate",
+        "source_url": "https://github.com/odysseus-dev/odysseus/blob/c21980f5a6d1cb84db8c8ab0f488cefc7764eb3f/static/js/emailInbox.js#L22"
+      },
+      "status": "applied",
+      "targets": [
+        {
+          "path": "static/js/emailInbox.js",
+          "selector": "[data-ui-icon=\"spam\"]"
+        }
+      ],
+      "explanation": "Scoped to the selected source control; existing labels, state hooks and unrelated glyphs remain.",
+      "captured_role": "action-or-status-icon",
+      "applied_role": "action-or-status-icon",
+      "original_label": "_spamIcon",
+      "was_text": false,
+      "visual_status": "not-observed",
+      "visual_explanation": "Spam action requires a selected mailbox message. No email account or external mailbox was used. Screenshot shows the fixture model-picker context, not this unobserved glyph.",
+      "context_screenshot": "screenshots/after/02-model-picker.png"
+    },
+    {
+      "id": "play",
+      "winner": "new",
+      "captured": {
+        "original": "0a90babbf8e0",
+        "path": "static/js/chat.js",
+        "line": 5822,
+        "basis": "Named SVG: ICON_PLAY_TTS",
+        "source_label": "ICON_PLAY_TTS",
+        "priority": 80,
+        "status": "source-label candidate",
+        "source_url": "https://github.com/odysseus-dev/odysseus/blob/c21980f5a6d1cb84db8c8ab0f488cefc7764eb3f/static/js/chat.js#L5822"
+      },
+      "status": "applied",
+      "targets": [
+        {
+          "path": "static/js/chat.js",
+          "selector": "[data-ui-icon=\"play\"]"
+        }
+      ],
+      "explanation": "Scoped to the selected source control; existing labels, state hooks and unrelated glyphs remain.",
+      "captured_role": "action-or-status-icon",
+      "applied_role": "action-or-status-icon",
+      "original_label": "ICON_PLAY_TTS",
+      "was_text": false,
+      "visual_status": "not-observed",
+      "visual_explanation": "The chosen Play glyph is a paused/completed TTS state. No speech service or audio playback was exercised.",
+      "context_screenshot": "screenshots/after/chat-tool-fixture.png"
+    },
+    {
+      "id": "pause",
+      "winner": "new",
+      "captured": {
+        "original": "8efc77b745cb",
+        "path": "static/js/tasks.js",
+        "line": 923,
+        "basis": "Button aria-label",
+        "source_label": "Active - click to pause",
+        "priority": 90,
+        "status": "source-label candidate",
+        "source_url": "https://github.com/odysseus-dev/odysseus/blob/c21980f5a6d1cb84db8c8ab0f488cefc7764eb3f/static/js/tasks.js#L923"
+      },
+      "status": "applied",
+      "targets": [
+        {
+          "path": "static/js/tasks.js",
+          "selector": "[data-ui-icon=\"pause\"]"
+        }
+      ],
+      "explanation": "Scoped to the selected source control; existing labels, state hooks and unrelated glyphs remain.",
+      "captured_role": "action-or-status-icon",
+      "applied_role": "action-or-status-icon",
+      "original_label": "Active - click to pause",
+      "was_text": false,
+      "visual_status": "observed",
+      "visual_explanation": "Visible, unobscured in feature-tasks. SVG is 10.07293701171875 by 10.07293701171875 px; contained in its owner control.",
+      "screenshot": "screenshots/after/pause.png",
+      "receipt": {
+        "id": "pause",
+        "tag": "BUTTON",
+        "label": "Active - click to pause",
+        "width": 10.07293701171875,
+        "height": 10.07293701171875,
+        "color": "rgb(80, 250, 123)",
+        "parent": {
+          "x": 953.951171875,
+          "y": 306.2731628417969,
+          "width": 69.9124755859375,
+          "height": 20.1458740234375
+        },
+        "contained": true,
+        "scene": "feature-tasks"
+      }
+    },
+    {
+      "id": "image",
+      "winner": "new",
+      "captured": {
+        "original": "b0ad547e3b8d",
+        "path": "static/js/document.js",
+        "line": 7587,
+        "basis": "Button aria-label",
+        "source_label": "Insert image",
+        "priority": 90,
+        "status": "source-label candidate",
+        "source_url": "https://github.com/odysseus-dev/odysseus/blob/c21980f5a6d1cb84db8c8ab0f488cefc7764eb3f/static/js/document.js#L7587"
+      },
+      "status": "applied",
+      "targets": [
+        {
+          "path": "static/js/document.js",
+          "selector": "[data-ui-icon=\"image\"]"
+        }
+      ],
+      "explanation": "Scoped to the selected source control; existing labels, state hooks and unrelated glyphs remain.",
+      "captured_role": "action-or-status-icon",
+      "applied_role": "action-or-status-icon",
+      "original_label": "Insert image",
+      "was_text": false,
+      "visual_status": "observed",
+      "visual_explanation": "Visible, unobscured in 03-document. SVG is 13 by 13 px; contained in its owner control.",
+      "screenshot": "screenshots/after/image.png",
+      "receipt": {
+        "id": "image",
+        "tag": "BUTTON",
+        "label": "Insert image",
+        "width": 13,
+        "height": 13,
+        "color": "rgb(156, 222, 242)",
+        "parent": {
+          "x": 1549,
+          "y": 37.5,
+          "width": 27,
+          "height": 32
+        },
+        "contained": true,
+        "scene": "03-document"
+      }
+    },
+    {
+      "id": "image-export",
+      "winner": "new",
+      "captured": {
+        "original": "8034fd22bc11",
+        "path": "static/js/editor/build/topbar.js",
+        "line": 556,
+        "basis": "Button title",
+        "source_label": "Export an image to your computer",
+        "priority": 90,
+        "status": "source-label candidate",
+        "source_url": "https://github.com/odysseus-dev/odysseus/blob/c21980f5a6d1cb84db8c8ab0f488cefc7764eb3f/static/js/editor/build/topbar.js#L556"
+      },
+      "status": "applied",
+      "targets": [
+        {
+          "path": "static/js/editor/build/topbar.js",
+          "selector": "[data-ui-icon=\"image-export\"]"
+        }
+      ],
+      "explanation": "Visible File menu Export Image command; the captured secondary export dropdown is hidden.",
+      "captured_role": "action-or-status-icon",
+      "applied_role": "labeled-command",
+      "original_label": "Export an image to your computer",
+      "was_text": false,
+      "visual_status": "observed",
+      "visual_explanation": "Visible, unobscured in editor-menu-file. SVG is 14 by 14 px; contained in its owner control.",
+      "screenshot": "screenshots/after/image-export.png",
+      "receipt": {
+        "id": "image-export",
+        "tag": "BUTTON",
+        "label": "Export Image\u2026",
+        "width": 14,
+        "height": 14,
+        "color": "rgb(156, 222, 242)",
+        "parent": {
+          "x": 26,
+          "y": 347,
+          "width": 198,
+          "height": 32
+        },
+        "contained": true,
+        "scene": "editor-menu-file"
+      }
+    },
+    {
+      "id": "rotate-right",
+      "winner": "new",
+      "captured": {
+        "original": "a5c555954f67",
+        "path": "static/js/editor/build/transform-popup.js",
+        "line": 108,
+        "basis": "Button aria-label",
+        "source_label": "Rotate 90 degrees",
+        "priority": 90,
+        "status": "source-label candidate",
+        "source_url": "https://github.com/odysseus-dev/odysseus/blob/c21980f5a6d1cb84db8c8ab0f488cefc7764eb3f/static/js/editor/build/transform-popup.js#L108"
+      },
+      "status": "applied",
+      "targets": [
+        {
+          "path": "static/js/editor/build/transform-popup.js",
+          "selector": "[data-ui-icon=\"rotate-right\"]"
+        }
+      ],
+      "explanation": "Scoped to the selected source control; existing labels, state hooks and unrelated glyphs remain.",
+      "captured_role": "action-or-status-icon",
+      "applied_role": "action-or-status-icon",
+      "original_label": "Rotate 90 degrees",
+      "was_text": false,
+      "visual_status": "observed",
+      "visual_explanation": "Visible, unobscured in editor-tool-transform. SVG is 14 by 14 px; contained in its owner control.",
+      "screenshot": "screenshots/after/rotate-right.png",
+      "receipt": {
+        "id": "rotate-right",
+        "tag": "BUTTON",
+        "label": "Rotate 90 degrees",
+        "width": 14,
+        "height": 14,
+        "color": "rgb(136, 136, 136)",
+        "parent": {
+          "x": 1099.046875,
+          "y": 118.5,
+          "width": 24,
+          "height": 24
+        },
+        "contained": true,
+        "scene": "editor-tool-transform"
+      }
+    },
+    {
+      "id": "zoom-in",
+      "winner": "new",
+      "captured": {
+        "original": "text-a318c24216de",
+        "path": "static/js/calendar.js",
+        "line": 1689,
+        "basis": "Literal button text",
+        "source_label": "Zoom in",
+        "priority": 60,
+        "status": "source-label candidate",
+        "source_url": "https://github.com/odysseus-dev/odysseus/blob/c21980f5a6d1cb84db8c8ab0f488cefc7764eb3f/static/js/calendar.js#L1689"
+      },
+      "status": "applied",
+      "targets": [
+        {
+          "path": "static/js/calendar.js",
+          "selector": "[data-ui-icon=\"zoom-in\"]"
+        }
+      ],
+      "explanation": "Scoped to the selected source control; existing labels, state hooks and unrelated glyphs remain.",
+      "captured_role": "text-command",
+      "applied_role": "action-icon",
+      "original_label": "Zoom in",
+      "was_text": true,
+      "visual_status": "not-observed",
+      "visual_explanation": "The Week zoom controls were not observed after opening Calendar in the disposable account. The action is unchanged apart from its glyph. Screenshot shows the fixture model-picker context, not this unobserved glyph.",
+      "context_screenshot": "screenshots/after/02-model-picker.png"
+    },
+    {
+      "id": "line",
+      "winner": "new",
+      "captured": {
+        "original": "77837afb3318",
+        "path": "frontend/src/features/notes/ui/drawing.js",
+        "line": 30,
+        "basis": "Button title",
+        "source_label": "Line \u2014 click to cycle size",
+        "priority": 90,
+        "status": "source-label candidate",
+        "source_url": "https://github.com/odysseus-dev/odysseus/blob/c21980f5a6d1cb84db8c8ab0f488cefc7764eb3f/frontend/src/features/notes/ui/drawing.js#L30"
+      },
+      "status": "applied",
+      "targets": [
+        {
+          "path": "frontend/src/features/notes/ui/drawing.js",
+          "selector": "[data-ui-icon=\"line\"]"
+        },
+        {
+          "path": "static/js/features/notes/ui/drawing.js",
+          "selector": "[data-ui-icon=\"line\"]"
+        }
+      ],
+      "explanation": "Scoped to the selected source control; existing labels, state hooks and unrelated glyphs remain.",
+      "captured_role": "action-or-status-icon",
+      "applied_role": "action-or-status-icon",
+      "original_label": "Line \u2014 click to cycle size",
+      "was_text": false,
+      "visual_status": "observed",
+      "visual_explanation": "Visible, unobscured in notes-drawing. SVG is 20 by 20 px; contained in its owner control.",
+      "screenshot": "screenshots/after/line.png",
+      "receipt": {
+        "id": "line",
+        "tag": "BUTTON",
+        "label": "Line \u2014 click to cycle size",
+        "width": 20,
+        "height": 20,
+        "color": "rgb(156, 222, 242)",
+        "parent": {
+          "x": 1316,
+          "y": 471.65625,
+          "width": 34,
+          "height": 32
+        },
+        "contained": true,
+        "scene": "notes-drawing"
+      }
+    },
+    {
+      "id": "path",
+      "winner": "new",
+      "captured": {
+        "original": "83e15a8b0cb2",
+        "path": "static/js/editor/build/controls.js",
+        "line": 19,
+        "basis": "Button title",
+        "source_label": "Cancel path (Escape)",
+        "priority": 90,
+        "status": "source-label candidate",
+        "source_url": "https://github.com/odysseus-dev/odysseus/blob/c21980f5a6d1cb84db8c8ab0f488cefc7764eb3f/static/js/editor/build/controls.js#L19"
+      },
+      "status": "applied",
+      "targets": [
+        {
+          "path": "static/js/editor/build/toolbar.js",
+          "selector": "[data-ui-icon=\"path\"]"
+        }
+      ],
+      "explanation": "Pen Path tool; the captured X cancels a path.",
+      "captured_role": "action-or-status-icon",
+      "applied_role": "tool-icon",
+      "original_label": "Cancel path (Escape)",
+      "was_text": false,
+      "visual_status": "observed",
+      "visual_explanation": "Visible, unobscured in editor-tool-path. SVG is 18 by 18 px; contained in its owner control.",
+      "screenshot": "screenshots/after/path.png",
+      "receipt": {
+        "id": "path",
+        "tag": "SPAN",
+        "label": "",
+        "width": 18,
+        "height": 18,
+        "color": "color(srgb 0.611765 0.870588 0.94902 / 0.85)",
+        "parent": {
+          "x": 21,
+          "y": 123.5,
+          "width": 18,
+          "height": 18
+        },
+        "contained": true,
+        "scene": "editor-tool-path"
+      }
+    },
+    {
+      "id": "polygon",
+      "winner": "new",
+      "captured": {
+        "original": "2553900a234f",
+        "path": "static/js/editor/build/controls.js",
+        "line": 318,
+        "basis": "Button title",
+        "source_label": "Polygon",
+        "priority": 90,
+        "status": "source-label candidate",
+        "source_url": "https://github.com/odysseus-dev/odysseus/blob/c21980f5a6d1cb84db8c8ab0f488cefc7764eb3f/static/js/editor/build/controls.js#L318"
+      },
+      "status": "applied",
+      "targets": [
+        {
+          "path": "static/js/editor/build/controls.js",
+          "selector": "[data-ui-icon=\"polygon\"]"
+        }
+      ],
+      "explanation": "Scoped to the selected source control; existing labels, state hooks and unrelated glyphs remain.",
+      "captured_role": "action-or-status-icon",
+      "applied_role": "action-or-status-icon",
+      "original_label": "Polygon",
+      "was_text": false,
+      "visual_status": "observed",
+      "visual_explanation": "Visible, unobscured in editor-tool-shape. SVG is 14 by 14 px; contained in its owner control.",
+      "screenshot": "screenshots/after/polygon.png",
+      "receipt": {
+        "id": "polygon",
+        "tag": "BUTTON",
+        "label": "Polygon",
+        "width": 14,
+        "height": 14,
+        "color": "rgb(156, 222, 242)",
+        "parent": {
+          "x": 218.109375,
+          "y": 121.5,
+          "width": 36,
+          "height": 28
+        },
+        "contained": true,
+        "scene": "editor-tool-shape"
+      }
+    },
+    {
+      "id": "rectangle",
+      "winner": "new",
+      "captured": {
+        "original": "4f60ff9b08de",
+        "path": "static/js/editor/build/controls.js",
+        "line": 315,
+        "basis": "Button title",
+        "source_label": "Rectangle",
+        "priority": 90,
+        "status": "source-label candidate",
+        "source_url": "https://github.com/odysseus-dev/odysseus/blob/c21980f5a6d1cb84db8c8ab0f488cefc7764eb3f/static/js/editor/build/controls.js#L315"
+      },
+      "status": "applied",
+      "targets": [
+        {
+          "path": "static/js/editor/build/controls.js",
+          "selector": "[data-ui-icon=\"rectangle\"]"
+        }
+      ],
+      "explanation": "Scoped to the selected source control; existing labels, state hooks and unrelated glyphs remain.",
+      "captured_role": "action-or-status-icon",
+      "applied_role": "action-or-status-icon",
+      "original_label": "Rectangle",
+      "was_text": false,
+      "visual_status": "observed",
+      "visual_explanation": "Visible, unobscured in editor-tool-shape. SVG is 14 by 14 px; contained in its owner control.",
+      "screenshot": "screenshots/after/rectangle.png",
+      "receipt": {
+        "id": "rectangle",
+        "tag": "BUTTON",
+        "label": "Rectangle",
+        "width": 14,
+        "height": 14,
+        "color": "rgb(224, 108, 117)",
+        "parent": {
+          "x": 98.109375,
+          "y": 121.5,
+          "width": 36,
+          "height": 28
+        },
+        "contained": true,
+        "scene": "editor-tool-shape"
+      }
+    },
+    {
+      "id": "ellipse",
+      "winner": "new",
+      "captured": {
+        "original": "47c54babe6bf",
+        "path": "static/js/editor/build/controls.js",
+        "line": 316,
+        "basis": "Button title",
+        "source_label": "Ellipse",
+        "priority": 90,
+        "status": "source-label candidate",
+        "source_url": "https://github.com/odysseus-dev/odysseus/blob/c21980f5a6d1cb84db8c8ab0f488cefc7764eb3f/static/js/editor/build/controls.js#L316"
+      },
+      "status": "applied",
+      "targets": [
+        {
+          "path": "static/js/editor/build/controls.js",
+          "selector": "[data-ui-icon=\"ellipse\"]"
+        }
+      ],
+      "explanation": "Scoped to the selected source control; existing labels, state hooks and unrelated glyphs remain.",
+      "captured_role": "action-or-status-icon",
+      "applied_role": "action-or-status-icon",
+      "original_label": "Ellipse",
+      "was_text": false,
+      "visual_status": "observed",
+      "visual_explanation": "Visible, unobscured in editor-tool-shape. SVG is 14 by 14 px; contained in its owner control.",
+      "screenshot": "screenshots/after/ellipse.png",
+      "receipt": {
+        "id": "ellipse",
+        "tag": "BUTTON",
+        "label": "Ellipse",
+        "width": 14,
+        "height": 14,
+        "color": "rgb(156, 222, 242)",
+        "parent": {
+          "x": 138.109375,
+          "y": 121.5,
+          "width": 36,
+          "height": 28
+        },
+        "contained": true,
+        "scene": "editor-tool-shape"
+      }
+    },
+    {
+      "id": "shape-union",
+      "winner": "new",
+      "captured": {
+        "original": "text-6cf534820a60",
+        "path": "static/js/editor/build/topbar.js",
+        "line": 183,
+        "basis": "Literal button text",
+        "source_label": "Unite Shapes",
+        "priority": 60,
+        "status": "source-label candidate",
+        "source_url": "https://github.com/odysseus-dev/odysseus/blob/c21980f5a6d1cb84db8c8ab0f488cefc7764eb3f/static/js/editor/build/topbar.js#L183"
+      },
+      "status": "applied",
+      "targets": [
+        {
+          "path": "static/js/editor/build/topbar.js",
+          "selector": "[data-ui-icon=\"shape-union\"]"
+        }
+      ],
+      "explanation": "Scoped to the selected source control; existing labels, state hooks and unrelated glyphs remain.",
+      "captured_role": "menu-command",
+      "applied_role": "labeled-command",
+      "original_label": "Unite Shapes",
+      "was_text": true,
+      "visual_status": "observed",
+      "visual_explanation": "Visible, unobscured in editor-menu-layer. SVG is 14 by 14 px; contained in its owner control.",
+      "screenshot": "screenshots/after/shape-union.png",
+      "receipt": {
+        "id": "shape-union",
+        "tag": "BUTTON",
+        "label": "Unite Shapes",
+        "width": 14,
+        "height": 14,
+        "color": "rgb(156, 222, 242)",
+        "parent": {
+          "x": 162,
+          "y": 559.765625,
+          "width": 190,
+          "height": 12.046875
+        },
+        "contained": true,
+        "scene": "editor-menu-layer"
+      }
+    },
+    {
+      "id": "shape-subtract",
+      "winner": "new",
+      "captured": {
+        "original": "text-584dcb3450e2",
+        "path": "static/js/editor/build/topbar.js",
+        "line": 184,
+        "basis": "Literal button text",
+        "source_label": "Subtract Shapes",
+        "priority": 60,
+        "status": "source-label candidate",
+        "source_url": "https://github.com/odysseus-dev/odysseus/blob/c21980f5a6d1cb84db8c8ab0f488cefc7764eb3f/static/js/editor/build/topbar.js#L184"
+      },
+      "status": "applied",
+      "targets": [
+        {
+          "path": "static/js/editor/build/topbar.js",
+          "selector": "[data-ui-icon=\"shape-subtract\"]"
+        }
+      ],
+      "explanation": "Scoped to the selected source control; existing labels, state hooks and unrelated glyphs remain.",
+      "captured_role": "menu-command",
+      "applied_role": "labeled-command",
+      "original_label": "Subtract Shapes",
+      "was_text": true,
+      "visual_status": "observed",
+      "visual_explanation": "Visible, unobscured in editor-menu-layer. SVG is 14 by 14 px; contained in its owner control.",
+      "screenshot": "screenshots/after/shape-subtract.png",
+      "receipt": {
+        "id": "shape-subtract",
+        "tag": "BUTTON",
+        "label": "Subtract Shapes",
+        "width": 14,
+        "height": 14,
+        "color": "rgb(156, 222, 242)",
+        "parent": {
+          "x": 162,
+          "y": 579.8125,
+          "width": 190,
+          "height": 12.046875
+        },
+        "contained": true,
+        "scene": "editor-menu-layer"
+      }
+    },
+    {
+      "id": "shape-intersect",
+      "winner": "new",
+      "captured": {
+        "original": "1bb8d8ccb109",
+        "path": "static/js/editor/build/controls.js",
+        "line": 377,
+        "basis": "Button title",
+        "source_label": "Intersect selection",
+        "priority": 90,
+        "status": "source-label candidate",
+        "source_url": "https://github.com/odysseus-dev/odysseus/blob/c21980f5a6d1cb84db8c8ab0f488cefc7764eb3f/static/js/editor/build/controls.js#L377"
+      },
+      "status": "applied",
+      "targets": [
+        {
+          "path": "static/js/editor/build/controls.js",
+          "selector": "[data-ui-icon=\"shape-intersect\"]"
+        },
+        {
+          "path": "static/js/editor/build/topbar.js",
+          "selector": "[data-ui-icon=\"shape-intersect\"]"
+        }
+      ],
+      "explanation": "Scoped to the selected source control; existing labels, state hooks and unrelated glyphs remain.",
+      "captured_role": "action-or-status-icon",
+      "applied_role": "action-or-status-icon",
+      "original_label": "Intersect selection",
+      "was_text": false,
+      "visual_status": "observed",
+      "visual_explanation": "Visible, unobscured in editor-tool-marquee. SVG is 13 by 13 px; contained in its owner control.",
+      "screenshot": "screenshots/after/shape-intersect.png",
+      "receipt": {
+        "id": "shape-intersect",
+        "tag": "BUTTON",
+        "label": "Intersect selection",
+        "width": 13,
+        "height": 13,
+        "color": "rgb(156, 222, 242)",
+        "parent": {
+          "x": 286.75,
+          "y": 119.5,
+          "width": 27,
+          "height": 32
+        },
+        "contained": true,
+        "scene": "editor-tool-marquee"
+      }
+    },
+    {
+      "id": "shape-exclude",
+      "winner": "new",
+      "captured": {
+        "original": "text-3f74740c9240",
+        "path": "static/js/editor/build/topbar.js",
+        "line": 186,
+        "basis": "Literal button text",
+        "source_label": "Exclude Shapes",
+        "priority": 60,
+        "status": "source-label candidate",
+        "source_url": "https://github.com/odysseus-dev/odysseus/blob/c21980f5a6d1cb84db8c8ab0f488cefc7764eb3f/static/js/editor/build/topbar.js#L186"
+      },
+      "status": "applied",
+      "targets": [
+        {
+          "path": "static/js/editor/build/topbar.js",
+          "selector": "[data-ui-icon=\"shape-exclude\"]"
+        }
+      ],
+      "explanation": "Scoped to the selected source control; existing labels, state hooks and unrelated glyphs remain.",
+      "captured_role": "menu-command",
+      "applied_role": "labeled-command",
+      "original_label": "Exclude Shapes",
+      "was_text": true,
+      "visual_status": "observed",
+      "visual_explanation": "Visible, unobscured in editor-menu-layer. SVG is 14 by 14 px; contained in its owner control.",
+      "screenshot": "screenshots/after/shape-exclude.png",
+      "receipt": {
+        "id": "shape-exclude",
+        "tag": "BUTTON",
+        "label": "Exclude Shapes",
+        "width": 14,
+        "height": 14,
+        "color": "rgb(156, 222, 242)",
+        "parent": {
+          "x": 162,
+          "y": 619.90625,
+          "width": 190,
+          "height": 12.046875
+        },
+        "contained": true,
+        "scene": "editor-menu-layer"
+      }
+    },
+    {
+      "id": "eyedropper",
+      "winner": "new",
+      "captured": {
+        "original": "d40329d41bdf",
+        "path": "static/js/colorPicker.js",
+        "line": 135,
+        "basis": "Button title",
+        "source_label": "Eyedropper",
+        "priority": 90,
+        "status": "source-label candidate",
+        "source_url": "https://github.com/odysseus-dev/odysseus/blob/c21980f5a6d1cb84db8c8ab0f488cefc7764eb3f/static/js/colorPicker.js#L135"
+      },
+      "status": "applied",
+      "targets": [
+        {
+          "path": "static/js/colorPicker.js",
+          "selector": "[data-ui-icon=\"eyedropper\"]"
+        }
+      ],
+      "explanation": "Scoped to the selected source control; existing labels, state hooks and unrelated glyphs remain.",
+      "captured_role": "action-or-status-icon",
+      "applied_role": "action-or-status-icon",
+      "original_label": "Eyedropper",
+      "was_text": false,
+      "visual_status": "not-observed",
+      "visual_explanation": "The custom color-picker popover did not expose its Eyedropper glyph in this run. The active inline swatches are a different owner. This remains unverified.",
+      "context_screenshot": "screenshots/after/editor-color-picker.png"
+    },
+    {
+      "id": "gradient",
+      "winner": "new",
+      "captured": {
+        "original": "text-5dec20debaf6",
+        "path": "static/js/editor/build/controls.js",
+        "line": 178,
+        "basis": "Literal button text",
+        "source_label": "Add stop",
+        "priority": 60,
+        "status": "source-label candidate",
+        "source_url": "https://github.com/odysseus-dev/odysseus/blob/c21980f5a6d1cb84db8c8ab0f488cefc7764eb3f/static/js/editor/build/controls.js#L178"
+      },
+      "status": "applied",
+      "targets": [
+        {
+          "path": "static/js/editor/build/toolbar.js",
+          "selector": "[data-ui-icon=\"gradient\"]"
+        }
+      ],
+      "explanation": "Gradient tool; the captured plus adds a gradient stop.",
+      "captured_role": "text-command",
+      "applied_role": "tool-icon",
+      "original_label": "Add stop",
+      "was_text": true,
+      "visual_status": "observed",
+      "visual_explanation": "Visible, unobscured in 06-editor. SVG is 15 by 15 px; contained in its owner control.",
+      "screenshot": "screenshots/after/gradient.png",
+      "receipt": {
+        "id": "gradient",
+        "tag": "BUTTON",
+        "label": "Gradient (G)",
+        "width": 15,
+        "height": 15,
+        "color": "rgb(156, 222, 242)",
+        "parent": {
+          "x": 11,
+          "y": 499,
+          "width": 43,
+          "height": 34
+        },
+        "contained": true,
+        "scene": "06-editor"
+      }
+    },
+    {
+      "id": "color-swap",
+      "winner": "new",
+      "captured": {
+        "original": "cb95e3e572b1",
+        "path": "static/js/editor/build/toolbar.js",
+        "line": 295,
+        "basis": "Button aria-label",
+        "source_label": "Swap colors",
+        "priority": 90,
+        "status": "source-label candidate",
+        "source_url": "https://github.com/odysseus-dev/odysseus/blob/c21980f5a6d1cb84db8c8ab0f488cefc7764eb3f/static/js/editor/build/toolbar.js#L295"
+      },
+      "status": "applied",
+      "targets": [
+        {
+          "path": "static/js/editor/build/toolbar.js",
+          "selector": "[data-ui-icon=\"color-swap\"]"
+        }
+      ],
+      "explanation": "Scoped to the selected source control; existing labels, state hooks and unrelated glyphs remain.",
+      "captured_role": "action-or-status-icon",
+      "applied_role": "action-or-status-icon",
+      "original_label": "Swap colors",
+      "was_text": false,
+      "visual_status": "observed",
+      "visual_explanation": "Visible, unobscured in 06-editor. SVG is 11 by 11 px; contained in its owner control.",
+      "screenshot": "screenshots/after/color-swap.png",
+      "receipt": {
+        "id": "color-swap",
+        "tag": "BUTTON",
+        "label": "Swap colors",
+        "width": 11,
+        "height": 11,
+        "color": "color(srgb 0.611765 0.870588 0.94902 / 0.55)",
+        "parent": {
+          "x": 26.5,
+          "y": 961,
+          "width": 18,
+          "height": 15
+        },
+        "contained": true,
+        "scene": "06-editor"
+      }
+    },
+    {
+      "id": "merge-down",
+      "winner": "new",
+      "captured": {
+        "original": "2c435eb16567",
+        "path": "static/js/editor/build/controls.js",
+        "line": 913,
+        "basis": "Button aria-label",
+        "source_label": "Merge down",
+        "priority": 90,
+        "status": "source-label candidate",
+        "source_url": "https://github.com/odysseus-dev/odysseus/blob/c21980f5a6d1cb84db8c8ab0f488cefc7764eb3f/static/js/editor/build/controls.js#L913"
+      },
+      "status": "applied",
+      "targets": [
+        {
+          "path": "static/js/editor/build/controls.js",
+          "selector": "[data-ui-icon=\"merge-down\"]"
+        }
+      ],
+      "explanation": "Scoped to the selected source control; existing labels, state hooks and unrelated glyphs remain.",
+      "captured_role": "action-or-status-icon",
+      "applied_role": "action-or-status-icon",
+      "original_label": "Merge down",
+      "was_text": false,
+      "visual_status": "observed",
+      "visual_explanation": "Visible, unobscured in 06-editor. SVG is 14 by 14 px; contained in its owner control.",
+      "screenshot": "screenshots/after/merge-down.png",
+      "receipt": {
+        "id": "merge-down",
+        "tag": "BUTTON",
+        "label": "Merge down",
+        "width": 14,
+        "height": 14,
+        "color": "rgb(156, 222, 242)",
+        "parent": {
+          "x": 1317.203125,
+          "y": 842.234375,
+          "width": 28,
+          "height": 32
+        },
+        "contained": true,
+        "scene": "06-editor"
+      }
+    },
+    {
+      "id": "merge-visible",
+      "winner": "new",
+      "captured": {
+        "original": "106ff89fd1b9",
+        "path": "static/js/editor/build/controls.js",
+        "line": 916,
+        "basis": "Button aria-label",
+        "source_label": "Merge all",
+        "priority": 90,
+        "status": "source-label candidate",
+        "source_url": "https://github.com/odysseus-dev/odysseus/blob/c21980f5a6d1cb84db8c8ab0f488cefc7764eb3f/static/js/editor/build/controls.js#L916"
+      },
+      "status": "applied",
+      "targets": [
+        {
+          "path": "static/js/editor/build/controls.js",
+          "selector": "[data-ui-icon=\"merge-visible\"]"
+        }
+      ],
+      "explanation": "Scoped to the selected source control; existing labels, state hooks and unrelated glyphs remain.",
+      "captured_role": "action-or-status-icon",
+      "applied_role": "action-or-status-icon",
+      "original_label": "Merge all",
+      "was_text": false,
+      "visual_status": "observed",
+      "visual_explanation": "Visible, unobscured in 06-editor. SVG is 14 by 14 px; contained in its owner control.",
+      "screenshot": "screenshots/after/merge-visible.png",
+      "receipt": {
+        "id": "merge-visible",
+        "tag": "BUTTON",
+        "label": "Merge all",
+        "width": 14,
+        "height": 14,
+        "color": "rgb(156, 222, 242)",
+        "parent": {
+          "x": 1349.203125,
+          "y": 842.234375,
+          "width": 28,
+          "height": 32
+        },
+        "contained": true,
+        "scene": "06-editor"
+      }
+    },
+    {
+      "id": "flatten",
+      "winner": "new",
+      "captured": {
+        "original": "d7b14edd7bd7",
+        "path": "static/js/editor/build/controls.js",
+        "line": 919,
+        "basis": "Button aria-label",
+        "source_label": "Flatten copy",
+        "priority": 90,
+        "status": "source-label candidate",
+        "source_url": "https://github.com/odysseus-dev/odysseus/blob/c21980f5a6d1cb84db8c8ab0f488cefc7764eb3f/static/js/editor/build/controls.js#L919"
+      },
+      "status": "applied",
+      "targets": [
+        {
+          "path": "static/js/editor/build/controls.js",
+          "selector": "[data-ui-icon=\"flatten\"]"
+        }
+      ],
+      "explanation": "Scoped to the selected source control; existing labels, state hooks and unrelated glyphs remain.",
+      "captured_role": "action-or-status-icon",
+      "applied_role": "action-or-status-icon",
+      "original_label": "Flatten copy",
+      "was_text": false,
+      "visual_status": "observed",
+      "visual_explanation": "Visible, unobscured in 06-editor. SVG is 14 by 14 px; contained in its owner control.",
+      "screenshot": "screenshots/after/flatten.png",
+      "receipt": {
+        "id": "flatten",
+        "tag": "BUTTON",
+        "label": "Flatten copy",
+        "width": 14,
+        "height": 14,
+        "color": "rgb(156, 222, 242)",
+        "parent": {
+          "x": 1381.203125,
+          "y": 842.234375,
+          "width": 28,
+          "height": 32
+        },
+        "contained": true,
+        "scene": "06-editor"
+      }
+    },
+    {
+      "id": "rasterize",
+      "winner": "new",
+      "captured": {
+        "original": "text-b37a1ce84fe7",
+        "path": "static/js/editor/build/controls.js",
+        "line": 310,
+        "basis": "Literal button text",
+        "source_label": "Rasterize",
+        "priority": 60,
+        "status": "source-label candidate",
+        "source_url": "https://github.com/odysseus-dev/odysseus/blob/c21980f5a6d1cb84db8c8ab0f488cefc7764eb3f/static/js/editor/build/controls.js#L310"
+      },
+      "status": "applied",
+      "targets": [
+        {
+          "path": "static/js/editor/build/controls.js",
+          "selector": "[data-ui-icon=\"rasterize\"]"
+        }
+      ],
+      "explanation": "Scoped to the selected source control; existing labels, state hooks and unrelated glyphs remain.",
+      "captured_role": "text-command",
+      "applied_role": "labeled-command",
+      "original_label": "Rasterize",
+      "was_text": true,
+      "visual_status": "observed",
+      "visual_explanation": "Visible, unobscured in editor-tool-text. SVG is 14 by 14 px; contained in its owner control.",
+      "screenshot": "screenshots/after/rasterize.png",
+      "receipt": {
+        "id": "rasterize",
+        "tag": "BUTTON",
+        "label": "Rasterize",
+        "width": 14,
+        "height": 14,
+        "color": "rgb(156, 222, 242)",
+        "parent": {
+          "x": 1501,
+          "y": 128,
+          "width": 78,
+          "height": 32
+        },
+        "contained": true,
+        "scene": "editor-tool-text"
+      }
+    },
+    {
+      "id": "lock",
+      "winner": "new",
+      "captured": {
+        "original": "08093d386f92",
+        "path": "static/js/editor/build/controls.js",
+        "line": 896,
+        "basis": "Button aria-label",
+        "source_label": "Toggle selected lock",
+        "priority": 90,
+        "status": "source-label candidate",
+        "source_url": "https://github.com/odysseus-dev/odysseus/blob/c21980f5a6d1cb84db8c8ab0f488cefc7764eb3f/static/js/editor/build/controls.js#L896"
+      },
+      "status": "applied",
+      "targets": [
+        {
+          "path": "static/js/editor/build/controls.js",
+          "selector": "[data-ui-icon=\"lock\"]"
+        }
+      ],
+      "explanation": "Scoped to the selected source control; existing labels, state hooks and unrelated glyphs remain.",
+      "captured_role": "action-or-status-icon",
+      "applied_role": "action-or-status-icon",
+      "original_label": "Toggle selected lock",
+      "was_text": false,
+      "visual_status": "not-observed",
+      "visual_explanation": "Toggle selected lock is a multi-selected-layer action. The fixture added layers but did not establish a multi-selection; this glyph remains unverified.",
+      "context_screenshot": "screenshots/after/editor-layer-properties.png"
+    },
+    {
+      "id": "unlock",
+      "winner": "new",
+      "captured": {
+        "original": "text-4ac709aa58bc",
+        "path": "static/js/settings.js",
+        "line": 4499,
+        "basis": "Literal button text",
+        "source_label": "Unlock",
+        "priority": 60,
+        "status": "source-label candidate",
+        "source_url": "https://github.com/odysseus-dev/odysseus/blob/c21980f5a6d1cb84db8c8ab0f488cefc7764eb3f/static/js/settings.js#L4499"
+      },
+      "status": "applied",
+      "targets": [
+        {
+          "path": "static/js/settings.js",
+          "selector": "[data-ui-icon=\"unlock\"]"
+        }
+      ],
+      "explanation": "Scoped to the selected source control; existing labels, state hooks and unrelated glyphs remain.",
+      "captured_role": "text-command",
+      "applied_role": "labeled-command",
+      "original_label": "Unlock",
+      "was_text": true,
+      "visual_status": "not-observed",
+      "visual_explanation": "Unlock belongs to the Vaultwarden integration form. No vault authentication or unlock operation was performed. Screenshot shows the fixture model-picker context, not this unobserved glyph.",
+      "context_screenshot": "screenshots/after/02-model-picker.png"
+    },
+    {
+      "id": "mask",
+      "winner": "new",
+      "captured": {
+        "original": "ae47743aff5c",
+        "path": "static/js/editor/build/controls.js",
+        "line": 665,
+        "basis": "Button title",
+        "source_label": "Hide mask",
+        "priority": 90,
+        "status": "source-label candidate",
+        "source_url": "https://github.com/odysseus-dev/odysseus/blob/c21980f5a6d1cb84db8c8ab0f488cefc7764eb3f/static/js/editor/build/controls.js#L665"
+      },
+      "status": "applied",
+      "targets": [
+        {
+          "path": "static/js/editor/build/controls.js",
+          "selector": "[data-ui-icon=\"mask\"]"
+        }
+      ],
+      "explanation": "Quick Mask mode icon; preserve the eye used to show/hide the mask.",
+      "captured_role": "action-or-status-icon",
+      "applied_role": "action-icon",
+      "original_label": "Hide mask",
+      "was_text": false,
+      "visual_status": "observed",
+      "visual_explanation": "Visible, unobscured in editor-tool-marquee. SVG is 14 by 14 px; contained in its owner control.",
+      "screenshot": "screenshots/after/mask.png",
+      "receipt": {
+        "id": "mask",
+        "tag": "BUTTON",
+        "label": "Edit selection as Quick Mask (Q)",
+        "width": 14,
+        "height": 14,
+        "color": "rgb(156, 222, 242)",
+        "parent": {
+          "x": 809.859375,
+          "y": 115.5,
+          "width": 87,
+          "height": 32
+        },
+        "contained": true,
+        "scene": "editor-tool-marquee"
+      }
+    },
+    {
+      "id": "mask-add",
+      "winner": "new",
+      "captured": {
+        "original": "text-8ea6d7812ffd",
+        "path": "static/js/editor/build/topbar.js",
+        "line": 180,
+        "basis": "Literal button text",
+        "source_label": "Add a mask that reveals the whole layer",
+        "priority": 60,
+        "status": "source-label candidate",
+        "source_url": "https://github.com/odysseus-dev/odysseus/blob/c21980f5a6d1cb84db8c8ab0f488cefc7764eb3f/static/js/editor/build/topbar.js#L180"
+      },
+      "status": "applied",
+      "targets": [
+        {
+          "path": "static/js/editor/build/topbar.js",
+          "selector": "[data-ui-icon=\"mask-add\"]"
+        }
+      ],
+      "explanation": "Scoped to the selected source control; existing labels, state hooks and unrelated glyphs remain.",
+      "captured_role": "menu-command",
+      "applied_role": "labeled-command",
+      "original_label": "Add a mask that reveals the whole layer",
+      "was_text": true,
+      "visual_status": "observed",
+      "visual_explanation": "Visible, unobscured in editor-menu-layer. SVG is 14 by 14 px; contained in its owner control.",
+      "screenshot": "screenshots/after/mask-add.png",
+      "receipt": {
+        "id": "mask-add",
+        "tag": "BUTTON",
+        "label": "Add a mask that reveals the whole layer",
+        "width": 14,
+        "height": 14,
+        "color": "rgb(156, 222, 242)",
+        "parent": {
+          "x": 162,
+          "y": 506.671875,
+          "width": 190,
+          "height": 12.046875
+        },
+        "contained": true,
+        "scene": "editor-menu-layer"
+      }
+    },
+    {
+      "id": "mask-invert",
+      "winner": "new",
+      "captured": {
+        "original": "edceef5d780a",
+        "path": "static/js/editor/build/controls.js",
+        "line": 669,
+        "basis": "Button title",
+        "source_label": "Invert mask",
+        "priority": 90,
+        "status": "source-label candidate",
+        "source_url": "https://github.com/odysseus-dev/odysseus/blob/c21980f5a6d1cb84db8c8ab0f488cefc7764eb3f/static/js/editor/build/controls.js#L669"
+      },
+      "status": "applied",
+      "targets": [
+        {
+          "path": "static/js/editor/build/controls.js",
+          "selector": "[data-ui-icon=\"mask-invert\"]"
+        }
+      ],
+      "explanation": "Scoped to the selected source control; existing labels, state hooks and unrelated glyphs remain.",
+      "captured_role": "action-or-status-icon",
+      "applied_role": "action-or-status-icon",
+      "original_label": "Invert mask",
+      "was_text": false,
+      "visual_status": "observed",
+      "visual_explanation": "Visible, unobscured in editor-tool-inpaint. SVG is 12 by 12 px; contained in its owner control.",
+      "screenshot": "screenshots/after/mask-invert.png",
+      "receipt": {
+        "id": "mask-invert",
+        "tag": "BUTTON",
+        "label": "Invert mask",
+        "width": 12,
+        "height": 12,
+        "color": "rgb(156, 222, 242)",
+        "parent": {
+          "x": 973,
+          "y": 770,
+          "width": 58,
+          "height": 32
+        },
+        "contained": true,
+        "scene": "editor-tool-inpaint"
+      }
+    },
+    {
+      "id": "mask-clear",
+      "winner": "new",
+      "captured": {
+        "original": "138bdfbc1f4b",
+        "path": "static/js/editor/build/controls.js",
+        "line": 673,
+        "basis": "Button title",
+        "source_label": "Clear mask",
+        "priority": 90,
+        "status": "source-label candidate",
+        "source_url": "https://github.com/odysseus-dev/odysseus/blob/c21980f5a6d1cb84db8c8ab0f488cefc7764eb3f/static/js/editor/build/controls.js#L673"
+      },
+      "status": "applied",
+      "targets": [
+        {
+          "path": "static/js/editor/build/controls.js",
+          "selector": "[data-ui-icon=\"mask-clear\"]"
+        }
+      ],
+      "explanation": "Scoped to the selected source control; existing labels, state hooks and unrelated glyphs remain.",
+      "captured_role": "action-or-status-icon",
+      "applied_role": "action-or-status-icon",
+      "original_label": "Clear mask",
+      "was_text": false,
+      "visual_status": "observed",
+      "visual_explanation": "Visible, unobscured in editor-tool-inpaint. SVG is 12 by 12 px; contained in its owner control.",
+      "screenshot": "screenshots/after/mask-clear.png",
+      "receipt": {
+        "id": "mask-clear",
+        "tag": "BUTTON",
+        "label": "Clear mask",
+        "width": 12,
+        "height": 12,
+        "color": "rgb(156, 222, 242)",
+        "parent": {
+          "x": 1037,
+          "y": 770,
+          "width": 55,
+          "height": 32
+        },
+        "contained": true,
+        "scene": "editor-tool-inpaint"
+      }
+    },
+    {
+      "id": "selection",
+      "winner": "new",
+      "captured": {
+        "original": "5a2053b9a677",
+        "path": "static/js/editor/build/controls.js",
+        "line": 18,
+        "basis": "Button title",
+        "source_label": "Close path and make selection (Enter)",
+        "priority": 90,
+        "status": "source-label candidate",
+        "source_url": "https://github.com/odysseus-dev/odysseus/blob/c21980f5a6d1cb84db8c8ab0f488cefc7764eb3f/static/js/editor/build/controls.js#L18"
+      },
+      "status": "applied",
+      "targets": [
+        {
+          "path": "static/js/editor/build/controls.js",
+          "selector": "[data-ui-icon=\"selection\"]"
+        }
+      ],
+      "explanation": "Scoped to the selected source control; existing labels, state hooks and unrelated glyphs remain.",
+      "captured_role": "action-or-status-icon",
+      "applied_role": "action-or-status-icon",
+      "original_label": "Close path and make selection (Enter)",
+      "was_text": false,
+      "visual_status": "observed",
+      "visual_explanation": "Visible, unobscured in editor-tool-pen. SVG is 12 by 12 px; contained in its owner control.",
+      "screenshot": "screenshots/after/selection.png",
+      "receipt": {
+        "id": "selection",
+        "tag": "BUTTON",
+        "label": "Close path and make selection (Enter)",
+        "width": 12,
+        "height": 12,
+        "color": "rgb(156, 222, 242)",
+        "parent": {
+          "x": 136.671875,
+          "y": 115.5,
+          "width": 100,
+          "height": 32
+        },
+        "contained": true,
+        "scene": "editor-tool-pen"
+      }
+    },
+    {
+      "id": "magnetic-lasso",
+      "winner": "new",
+      "captured": {
+        "original": "c5c07f0faada",
+        "path": "static/js/editor/build/controls.js",
+        "line": 416,
+        "basis": "Button aria-label",
+        "source_label": "More lasso options (feather, edge stroke, magnetic)",
+        "priority": 90,
+        "status": "source-label candidate",
+        "source_url": "https://github.com/odysseus-dev/odysseus/blob/c21980f5a6d1cb84db8c8ab0f488cefc7764eb3f/static/js/editor/build/controls.js#L416"
+      },
+      "status": "applied",
+      "targets": [
+        {
+          "path": "static/js/editor/build/controls.js",
+          "selector": "[data-ui-icon=\"magnetic-lasso\"]"
+        }
+      ],
+      "explanation": "Magnetic mode button; keep the Lasso options chevron.",
+      "captured_role": "disclosure-arrow",
+      "applied_role": "labeled-command",
+      "original_label": "More lasso options (feather, edge stroke, magnetic)",
+      "was_text": false,
+      "visual_status": "observed",
+      "visual_explanation": "Visible, unobscured in editor-magnetic-options. SVG is 14 by 14 px; contained in its owner control.",
+      "screenshot": "screenshots/after/magnetic-lasso.png",
+      "receipt": {
+        "id": "magnetic-lasso",
+        "tag": "BUTTON",
+        "label": "Snap the outline to image edges as you drag.",
+        "width": 14,
+        "height": 14,
+        "color": "rgb(156, 222, 242)",
+        "parent": {
+          "x": 256.109375,
+          "y": 172.5,
+          "width": 78,
+          "height": 32
+        },
+        "contained": true,
+        "scene": "editor-magnetic-options"
+      }
+    },
+    {
+      "id": "quick-select",
+      "winner": "new",
+      "captured": {
+        "original": "735bd007ae2b",
+        "path": "static/js/editor/build/controls.js",
+        "line": 565,
+        "basis": "Button aria-label",
+        "source_label": "More Quick Select options (help)",
+        "priority": 90,
+        "status": "source-label candidate",
+        "source_url": "https://github.com/odysseus-dev/odysseus/blob/c21980f5a6d1cb84db8c8ab0f488cefc7764eb3f/static/js/editor/build/controls.js#L565"
+      },
+      "status": "applied",
+      "targets": [
+        {
+          "path": "static/js/editor/build/toolbar.js",
+          "selector": "[data-ui-icon=\"quick-select\"]"
+        }
+      ],
+      "explanation": "Quick Select tool; keep the separate More options chevron.",
+      "captured_role": "disclosure-arrow",
+      "applied_role": "tool-icon",
+      "original_label": "More Quick Select options (help)",
+      "was_text": false,
+      "visual_status": "observed",
+      "visual_explanation": "Visible, unobscured in editor-tool-quickselect. SVG is 18 by 18 px; contained in its owner control.",
+      "screenshot": "screenshots/after/quick-select.png",
+      "receipt": {
+        "id": "quick-select",
+        "tag": "SPAN",
+        "label": "",
+        "width": 18,
+        "height": 18,
+        "color": "color(srgb 0.611765 0.870588 0.94902 / 0.85)",
+        "parent": {
+          "x": 21,
+          "y": 123.5,
+          "width": 18,
+          "height": 18
+        },
+        "contained": true,
+        "scene": "editor-tool-quickselect"
+      }
+    },
+    {
+      "id": "subject-select",
+      "winner": "new",
+      "captured": {
+        "original": "text-68971283841a",
+        "path": "static/js/editor/build/topbar.js",
+        "line": 230,
+        "basis": "Literal button text",
+        "source_label": "Subject",
+        "priority": 60,
+        "status": "source-label candidate",
+        "source_url": "https://github.com/odysseus-dev/odysseus/blob/c21980f5a6d1cb84db8c8ab0f488cefc7764eb3f/static/js/editor/build/topbar.js#L230"
+      },
+      "status": "applied",
+      "targets": [
+        {
+          "path": "static/js/editor/build/topbar.js",
+          "selector": "[data-ui-icon=\"subject-select\"]"
+        }
+      ],
+      "explanation": "Scoped to the selected source control; existing labels, state hooks and unrelated glyphs remain.",
+      "captured_role": "menu-command",
+      "applied_role": "labeled-command",
+      "original_label": "Subject",
+      "was_text": true,
+      "visual_status": "observed",
+      "visual_explanation": "Visible, unobscured in editor-menu-selection. SVG is 14 by 14 px; contained in its owner control.",
+      "screenshot": "screenshots/after/subject-select.png",
+      "receipt": {
+        "id": "subject-select",
+        "tag": "BUTTON",
+        "label": "Subject",
+        "width": 14,
+        "height": 14,
+        "color": "rgb(156, 222, 242)",
+        "parent": {
+          "x": 263,
+          "y": 391.109375,
+          "width": 249,
+          "height": 30.578125
+        },
+        "contained": true,
+        "scene": "editor-menu-selection"
+      }
+    },
+    {
+      "id": "harmonize",
+      "winner": "new",
+      "captured": {
+        "original": "text-5d815169fcad",
+        "path": "static/js/editor/build/controls.js",
+        "line": 819,
+        "basis": "Literal button text",
+        "source_label": "Harmonize",
+        "priority": 60,
+        "status": "source-label candidate",
+        "source_url": "https://github.com/odysseus-dev/odysseus/blob/c21980f5a6d1cb84db8c8ab0f488cefc7764eb3f/static/js/editor/build/controls.js#L819"
+      },
+      "status": "applied",
+      "targets": [
+        {
+          "path": "static/js/editor/build/controls.js",
+          "selector": "[data-ui-icon=\"harmonize\"]"
+        }
+      ],
+      "explanation": "Scoped to the selected source control; existing labels, state hooks and unrelated glyphs remain.",
+      "captured_role": "text-command",
+      "applied_role": "labeled-command",
+      "original_label": "Harmonize",
+      "was_text": true,
+      "visual_status": "not-observed",
+      "visual_explanation": "Harmonize appears for a supported compositing workflow. Its label is retained. No ML harmonization service was invoked.",
+      "context_screenshot": "screenshots/after/editor-tool-inpaint.png"
+    },
+    {
+      "id": "skew",
+      "winner": "new",
+      "captured": {
+        "original": "text-a318c24216de",
+        "path": "static/js/editor/build/transform-popup.js",
+        "line": 73,
+        "basis": "Literal button text",
+        "source_label": "Skew X +1\u00b0",
+        "priority": 60,
+        "status": "source-label candidate",
+        "source_url": "https://github.com/odysseus-dev/odysseus/blob/c21980f5a6d1cb84db8c8ab0f488cefc7764eb3f/static/js/editor/build/transform-popup.js#L73"
+      },
+      "status": "applied",
+      "targets": [
+        {
+          "path": "static/js/editor/build/transform-popup.js",
+          "selector": "[data-ui-icon=\"skew\"]"
+        }
+      ],
+      "explanation": "Horizontal skew field; keep the numeric stepper signs.",
+      "captured_role": "numeric-stepper",
+      "applied_role": "field-label",
+      "original_label": "Skew X +1\u00b0",
+      "was_text": true,
+      "visual_status": "observed",
+      "visual_explanation": "Visible, unobscured in editor-tool-transform. SVG is 12 by 12 px; contained in its owner control.",
+      "screenshot": "screenshots/after/skew.png",
+      "receipt": {
+        "id": "skew",
+        "tag": "LABEL",
+        "label": "skew",
+        "width": 12,
+        "height": 12,
+        "color": "rgb(156, 222, 242)",
+        "parent": {
+          "x": 650.046875,
+          "y": 126.5,
+          "width": 12,
+          "height": 12
+        },
+        "contained": true,
+        "scene": "editor-tool-transform"
+      }
+    },
+    {
+      "id": "perspective",
+      "winner": "new",
+      "captured": {
+        "original": "text-a318c24216de",
+        "path": "static/js/editor/build/transform-popup.js",
+        "line": 89,
+        "basis": "Literal button text",
+        "source_label": "Perspective X +1",
+        "priority": 60,
+        "status": "source-label candidate",
+        "source_url": "https://github.com/odysseus-dev/odysseus/blob/c21980f5a6d1cb84db8c8ab0f488cefc7764eb3f/static/js/editor/build/transform-popup.js#L89"
+      },
+      "status": "applied",
+      "targets": [
+        {
+          "path": "static/js/editor/build/transform-popup.js",
+          "selector": "[data-ui-icon=\"perspective\"]"
+        }
+      ],
+      "explanation": "Horizontal perspective field; keep the numeric stepper signs.",
+      "captured_role": "numeric-stepper",
+      "applied_role": "field-label",
+      "original_label": "Perspective X +1",
+      "was_text": true,
+      "visual_status": "observed",
+      "visual_explanation": "Visible, unobscured in editor-tool-transform. SVG is 12 by 12 px; contained in its owner control.",
+      "screenshot": "screenshots/after/perspective.png",
+      "receipt": {
+        "id": "perspective",
+        "tag": "LABEL",
+        "label": "perspective",
+        "width": 12,
+        "height": 12,
+        "color": "rgb(156, 222, 242)",
+        "parent": {
+          "x": 846.046875,
+          "y": 126.5,
+          "width": 12,
+          "height": 12
+        },
+        "contained": true,
+        "scene": "editor-tool-transform"
+      }
+    },
+    {
+      "id": "snapshot",
+      "winner": "new",
+      "captured": {
+        "original": "7c32f3fac6d6",
+        "path": "static/js/editor/history-panel.js",
+        "line": 215,
+        "basis": "Named SVG: SNAPSHOT_ICON",
+        "source_label": "SNAPSHOT_ICON",
+        "priority": 80,
+        "status": "source-label candidate",
+        "source_url": "https://github.com/odysseus-dev/odysseus/blob/c21980f5a6d1cb84db8c8ab0f488cefc7764eb3f/static/js/editor/history-panel.js#L215"
+      },
+      "status": "applied",
+      "targets": [
+        {
+          "path": "static/js/editor/history-panel.js",
+          "selector": "[data-ui-icon=\"snapshot\"]"
+        }
+      ],
+      "explanation": "Scoped to the selected source control; existing labels, state hooks and unrelated glyphs remain.",
+      "captured_role": "action-or-status-icon",
+      "applied_role": "action-or-status-icon",
+      "original_label": "SNAPSHOT_ICON",
+      "was_text": false,
+      "visual_status": "observed",
+      "visual_explanation": "Visible, unobscured in editor-history. SVG is 14 by 14 px; contained in its owner control.",
+      "screenshot": "screenshots/after/snapshot.png",
+      "receipt": {
+        "id": "snapshot",
+        "tag": "BUTTON",
+        "label": "Create a new snapshot",
+        "width": 14,
+        "height": 14,
+        "color": "rgb(136, 136, 136)",
+        "parent": {
+          "x": 292,
+          "y": 832,
+          "width": 22,
+          "height": 22
+        },
+        "contained": true,
+        "scene": "editor-history"
+      }
+    },
+    {
+      "id": "history",
+      "winner": "new",
+      "captured": {
+        "original": "646aebb4eb2a",
+        "path": "static/index.html",
+        "line": 1015,
+        "basis": "Button title",
+        "source_label": "Enable Nobody mode \u2014 no memory or skill injection, no history saved",
+        "priority": 90,
+        "status": "source-label candidate",
+        "source_url": "https://github.com/odysseus-dev/odysseus/blob/c21980f5a6d1cb84db8c8ab0f488cefc7764eb3f/static/index.html#L1015"
+      },
+      "status": "applied",
+      "targets": [
+        {
+          "path": "static/js/editor/build/topbar.js",
+          "selector": "[data-ui-icon=\"history\"]"
+        }
+      ],
+      "explanation": "Editor history; the captured Nobody-mode action is unrelated.",
+      "captured_role": "action-or-status-icon",
+      "applied_role": "action-icon",
+      "original_label": "Enable Nobody mode \u2014 no memory or skill injection, no history saved",
+      "was_text": false,
+      "visual_status": "observed",
+      "visual_explanation": "Visible, unobscured in 06-editor. SVG is 14 by 14 px; contained in its owner control.",
+      "screenshot": "screenshots/after/history.png",
+      "receipt": {
+        "id": "history",
+        "tag": "BUTTON",
+        "label": "History",
+        "width": 14,
+        "height": 14,
+        "color": "rgb(156, 222, 242)",
+        "parent": {
+          "x": 85,
+          "y": 994,
+          "width": 28,
+          "height": 32
+        },
+        "contained": true,
+        "scene": "06-editor"
+      }
+    },
+    {
+      "id": "histogram",
+      "winner": "new",
+      "captured": {
+        "original": "text-3b4d8886df02",
+        "path": "static/js/editor/build/topbar.js",
+        "line": 82,
+        "basis": "Literal button text",
+        "source_label": "Equalize the histogram of the active layer",
+        "priority": 60,
+        "status": "source-label candidate",
+        "source_url": "https://github.com/odysseus-dev/odysseus/blob/c21980f5a6d1cb84db8c8ab0f488cefc7764eb3f/static/js/editor/build/topbar.js#L82"
+      },
+      "status": "applied",
+      "targets": [
+        {
+          "path": "static/js/editor/build/topbar.js",
+          "selector": "[data-ui-icon=\"histogram\"]"
+        }
+      ],
+      "explanation": "Scoped to the selected source control; existing labels, state hooks and unrelated glyphs remain.",
+      "captured_role": "menu-command",
+      "applied_role": "labeled-command",
+      "original_label": "Equalize the histogram of the active layer",
+      "was_text": true,
+      "visual_status": "observed",
+      "visual_explanation": "Visible, unobscured in editor-image-adjustments. SVG is 14 by 14 px; contained in its owner control.",
+      "screenshot": "screenshots/after/histogram.png",
+      "receipt": {
+        "id": "histogram",
+        "tag": "BUTTON",
+        "label": "Equalize the histogram of the active layer",
+        "width": 14,
+        "height": 14,
+        "color": "rgb(156, 222, 242)",
+        "parent": {
+          "x": 286,
+          "y": 264.890625,
+          "width": 180,
+          "height": 20.390625
+        },
+        "contained": true,
+        "scene": "editor-image-adjustments"
+      }
+    },
+    {
+      "id": "hue-saturation",
+      "winner": "new",
+      "captured": {
+        "original": "text-38c2122e1e24",
+        "path": "static/js/editor/build/topbar.js",
+        "line": 142,
+        "basis": "Literal button text",
+        "source_label": "RGB Color",
+        "priority": 60,
+        "status": "source-label candidate",
+        "source_url": "https://github.com/odysseus-dev/odysseus/blob/c21980f5a6d1cb84db8c8ab0f488cefc7764eb3f/static/js/editor/build/topbar.js#L142"
+      },
+      "status": "applied",
+      "targets": [
+        {
+          "path": "static/js/editor/build/topbar.js",
+          "selector": "[data-ui-icon=\"hue-saturation\"]"
+        }
+      ],
+      "explanation": "Hue/Saturation adjustment; RGB Color selects a color mode.",
+      "captured_role": "format-or-mode-label",
+      "applied_role": "labeled-command",
+      "original_label": "RGB Color",
+      "was_text": true,
+      "visual_status": "observed",
+      "visual_explanation": "Visible, unobscured in editor-image-adjustments. SVG is 14 by 14 px; contained in its owner control.",
+      "screenshot": "screenshots/after/hue-saturation.png",
+      "receipt": {
+        "id": "hue-saturation",
+        "tag": "BUTTON",
+        "label": "Hue/Saturation",
+        "width": 14,
+        "height": 14,
+        "color": "rgb(156, 222, 242)",
+        "parent": {
+          "x": 286,
+          "y": 344.0625,
+          "width": 180,
+          "height": 20.390625
+        },
+        "contained": true,
+        "scene": "editor-image-adjustments"
+      }
+    },
+    {
+      "id": "black-white",
+      "winner": "new",
+      "captured": {
+        "original": "text-93638ea9e0b0",
+        "path": "static/js/editor/build/topbar.js",
+        "line": 143,
+        "basis": "Literal button text",
+        "source_label": "Grayscale",
+        "priority": 60,
+        "status": "source-label candidate",
+        "source_url": "https://github.com/odysseus-dev/odysseus/blob/c21980f5a6d1cb84db8c8ab0f488cefc7764eb3f/static/js/editor/build/topbar.js#L143"
+      },
+      "status": "applied",
+      "targets": [
+        {
+          "path": "static/js/editor/build/topbar.js",
+          "selector": "[data-ui-icon=\"black-white\"]"
+        }
+      ],
+      "explanation": "Scoped to the selected source control; existing labels, state hooks and unrelated glyphs remain.",
+      "captured_role": "format-or-mode-label",
+      "applied_role": "labeled-command",
+      "original_label": "Grayscale",
+      "was_text": true,
+      "visual_status": "observed",
+      "visual_explanation": "Visible, unobscured in editor-menu-image. SVG is 14 by 14 px; contained in its owner control.",
+      "screenshot": "screenshots/after/black-white.png",
+      "receipt": {
+        "id": "black-white",
+        "tag": "BUTTON",
+        "label": "Grayscale",
+        "width": 14,
+        "height": 14,
+        "color": "rgb(156, 222, 242)",
+        "parent": {
+          "x": 107,
+          "y": 502.125,
+          "width": 175,
+          "height": 18.3125
+        },
+        "contained": true,
+        "scene": "editor-menu-image"
+      }
+    },
+    {
+      "id": "invert",
+      "winner": "new",
+      "captured": {
+        "original": "text-7e04f2ffb933",
+        "path": "static/js/editor/build/topbar.js",
+        "line": 96,
+        "basis": "Literal button text",
+        "source_label": "Invert",
+        "priority": 60,
+        "status": "source-label candidate",
+        "source_url": "https://github.com/odysseus-dev/odysseus/blob/c21980f5a6d1cb84db8c8ab0f488cefc7764eb3f/static/js/editor/build/topbar.js#L96"
+      },
+      "status": "applied",
+      "targets": [
+        {
+          "path": "static/js/editor/build/topbar.js",
+          "selector": "[data-ui-icon=\"invert\"]"
+        }
+      ],
+      "explanation": "Scoped to the selected source control; existing labels, state hooks and unrelated glyphs remain.",
+      "captured_role": "menu-command",
+      "applied_role": "labeled-command",
+      "original_label": "Invert",
+      "was_text": true,
+      "visual_status": "observed",
+      "visual_explanation": "Visible, unobscured in editor-image-adjustments. SVG is 14 by 14 px; contained in its owner control.",
+      "screenshot": "screenshots/after/invert.png",
+      "receipt": {
+        "id": "invert",
+        "tag": "BUTTON",
+        "label": "Invert",
+        "width": 14,
+        "height": 14,
+        "color": "rgb(156, 222, 242)",
+        "parent": {
+          "x": 286,
+          "y": 634.359375,
+          "width": 180,
+          "height": 20.390625
+        },
+        "contained": true,
+        "scene": "editor-image-adjustments"
+      }
+    },
+    {
+      "id": "desaturate",
+      "winner": "new",
+      "captured": {
+        "original": "text-79b92c97ee7a",
+        "path": "static/js/editor/build/topbar.js",
+        "line": 78,
+        "basis": "Literal button text",
+        "source_label": "Desaturate",
+        "priority": 60,
+        "status": "source-label candidate",
+        "source_url": "https://github.com/odysseus-dev/odysseus/blob/c21980f5a6d1cb84db8c8ab0f488cefc7764eb3f/static/js/editor/build/topbar.js#L78"
+      },
+      "status": "applied",
+      "targets": [
+        {
+          "path": "static/js/editor/build/topbar.js",
+          "selector": "[data-ui-icon=\"desaturate\"]"
+        }
+      ],
+      "explanation": "Scoped to the selected source control; existing labels, state hooks and unrelated glyphs remain.",
+      "captured_role": "menu-command",
+      "applied_role": "labeled-command",
+      "original_label": "Desaturate",
+      "was_text": true,
+      "visual_status": "observed",
+      "visual_explanation": "Visible, unobscured in editor-image-adjustments. SVG is 14 by 14 px; contained in its owner control.",
+      "screenshot": "screenshots/after/desaturate.png",
+      "receipt": {
+        "id": "desaturate",
+        "tag": "BUTTON",
+        "label": "Desaturate",
+        "width": 14,
+        "height": 14,
+        "color": "rgb(156, 222, 242)",
+        "parent": {
+          "x": 286,
+          "y": 159.328125,
+          "width": 180,
+          "height": 20.390625
+        },
+        "contained": true,
+        "scene": "editor-image-adjustments"
+      }
+    },
+    {
+      "id": "auto-tone",
+      "winner": "new",
+      "captured": {
+        "original": "text-f25557d5d134",
+        "path": "static/js/editor/build/topbar.js",
+        "line": 79,
+        "basis": "Literal button text",
+        "source_label": "Auto Tone",
+        "priority": 60,
+        "status": "source-label candidate",
+        "source_url": "https://github.com/odysseus-dev/odysseus/blob/c21980f5a6d1cb84db8c8ab0f488cefc7764eb3f/static/js/editor/build/topbar.js#L79"
+      },
+      "status": "applied",
+      "targets": [
+        {
+          "path": "static/js/editor/build/topbar.js",
+          "selector": "[data-ui-icon=\"auto-tone\"]"
+        }
+      ],
+      "explanation": "Scoped to the selected source control; existing labels, state hooks and unrelated glyphs remain.",
+      "captured_role": "menu-command",
+      "applied_role": "labeled-command",
+      "original_label": "Auto Tone",
+      "was_text": true,
+      "visual_status": "observed",
+      "visual_explanation": "Visible, unobscured in editor-image-adjustments. SVG is 14 by 14 px; contained in its owner control.",
+      "screenshot": "screenshots/after/auto-tone.png",
+      "receipt": {
+        "id": "auto-tone",
+        "tag": "BUTTON",
+        "label": "Auto Tone",
+        "width": 14,
+        "height": 14,
+        "color": "rgb(156, 222, 242)",
+        "parent": {
+          "x": 286,
+          "y": 185.71875,
+          "width": 180,
+          "height": 20.390625
+        },
+        "contained": true,
+        "scene": "editor-image-adjustments"
+      }
+    },
+    {
+      "id": "auto-contrast",
+      "winner": "new",
+      "captured": {
+        "original": "text-d01edfcf18fb",
+        "path": "static/js/editor/build/topbar.js",
+        "line": 80,
+        "basis": "Literal button text",
+        "source_label": "Auto Contrast",
+        "priority": 60,
+        "status": "source-label candidate",
+        "source_url": "https://github.com/odysseus-dev/odysseus/blob/c21980f5a6d1cb84db8c8ab0f488cefc7764eb3f/static/js/editor/build/topbar.js#L80"
+      },
+      "status": "applied",
+      "targets": [
+        {
+          "path": "static/js/editor/build/topbar.js",
+          "selector": "[data-ui-icon=\"auto-contrast\"]"
+        }
+      ],
+      "explanation": "Scoped to the selected source control; existing labels, state hooks and unrelated glyphs remain.",
+      "captured_role": "menu-command",
+      "applied_role": "labeled-command",
+      "original_label": "Auto Contrast",
+      "was_text": true,
+      "visual_status": "observed",
+      "visual_explanation": "Visible, unobscured in editor-image-adjustments. SVG is 14 by 14 px; contained in its owner control.",
+      "screenshot": "screenshots/after/auto-contrast.png",
+      "receipt": {
+        "id": "auto-contrast",
+        "tag": "BUTTON",
+        "label": "Auto Contrast",
+        "width": 14,
+        "height": 14,
+        "color": "rgb(156, 222, 242)",
+        "parent": {
+          "x": 286,
+          "y": 212.109375,
+          "width": 180,
+          "height": 20.390625
+        },
+        "contained": true,
+        "scene": "editor-image-adjustments"
+      }
+    },
+    {
+      "id": "auto-color",
+      "winner": "new",
+      "captured": {
+        "original": "text-f3ef3209b78a",
+        "path": "static/js/editor/build/topbar.js",
+        "line": 81,
+        "basis": "Literal button text",
+        "source_label": "Auto Color",
+        "priority": 60,
+        "status": "source-label candidate",
+        "source_url": "https://github.com/odysseus-dev/odysseus/blob/c21980f5a6d1cb84db8c8ab0f488cefc7764eb3f/static/js/editor/build/topbar.js#L81"
+      },
+      "status": "applied",
+      "targets": [
+        {
+          "path": "static/js/editor/build/topbar.js",
+          "selector": "[data-ui-icon=\"auto-color\"]"
+        }
+      ],
+      "explanation": "Scoped to the selected source control; existing labels, state hooks and unrelated glyphs remain.",
+      "captured_role": "menu-command",
+      "applied_role": "labeled-command",
+      "original_label": "Auto Color",
+      "was_text": true,
+      "visual_status": "observed",
+      "visual_explanation": "Visible, unobscured in editor-image-adjustments. SVG is 14 by 14 px; contained in its owner control.",
+      "screenshot": "screenshots/after/auto-color.png",
+      "receipt": {
+        "id": "auto-color",
+        "tag": "BUTTON",
+        "label": "Auto Color",
+        "width": 14,
+        "height": 14,
+        "color": "rgb(156, 222, 242)",
+        "parent": {
+          "x": 286,
+          "y": 238.5,
+          "width": 180,
+          "height": 20.390625
+        },
+        "contained": true,
+        "scene": "editor-image-adjustments"
+      }
+    },
+    {
+      "id": "blur",
+      "winner": "new",
+      "captured": {
+        "original": "text-7d0ea5865216",
+        "path": "static/js/editor/build/topbar.js",
+        "line": 291,
+        "basis": "Literal button text",
+        "source_label": "Soft Blur",
+        "priority": 60,
+        "status": "source-label candidate",
+        "source_url": "https://github.com/odysseus-dev/odysseus/blob/c21980f5a6d1cb84db8c8ab0f488cefc7764eb3f/static/js/editor/build/topbar.js#L291"
+      },
+      "status": "applied",
+      "targets": [
+        {
+          "path": "static/js/editor/build/topbar.js",
+          "selector": "[data-ui-icon=\"blur\"]"
+        }
+      ],
+      "explanation": "Scoped to the selected source control; existing labels, state hooks and unrelated glyphs remain.",
+      "captured_role": "menu-command",
+      "applied_role": "labeled-command",
+      "original_label": "Soft Blur",
+      "was_text": true,
+      "visual_status": "observed",
+      "visual_explanation": "Visible, unobscured in editor-submenu-filter-presets. SVG is 14 by 14 px; contained in its owner control.",
+      "screenshot": "screenshots/after/blur.png",
+      "receipt": {
+        "id": "blur",
+        "tag": "BUTTON",
+        "label": "Soft Blur",
+        "width": 14,
+        "height": 14,
+        "color": "rgb(156, 222, 242)",
+        "parent": {
+          "x": 493,
+          "y": 206.609375,
+          "width": 180,
+          "height": 20.390625
+        },
+        "contained": true,
+        "scene": "editor-submenu-filter-presets"
+      }
+    },
+    {
+      "id": "sharpen",
+      "winner": "new",
+      "captured": {
+        "original": "text-ac6f0be1274c",
+        "path": "static/js/editor/build/controls.js",
+        "line": 756,
+        "basis": "Literal button text",
+        "source_label": "Sharpen",
+        "priority": 60,
+        "status": "source-label candidate",
+        "source_url": "https://github.com/odysseus-dev/odysseus/blob/c21980f5a6d1cb84db8c8ab0f488cefc7764eb3f/static/js/editor/build/controls.js#L756"
+      },
+      "status": "applied",
+      "targets": [
+        {
+          "path": "static/js/editor/build/controls.js",
+          "selector": "[data-ui-icon=\"sharpen\"]"
+        }
+      ],
+      "explanation": "Scoped to the selected source control; existing labels, state hooks and unrelated glyphs remain.",
+      "captured_role": "text-command",
+      "applied_role": "labeled-command",
+      "original_label": "Sharpen",
+      "was_text": true,
+      "visual_status": "observed",
+      "visual_explanation": "Visible, unobscured in editor-tool-sharpen. SVG is 14 by 14 px; contained in its owner control.",
+      "screenshot": "screenshots/after/sharpen.png",
+      "receipt": {
+        "id": "sharpen",
+        "tag": "BUTTON",
+        "label": "Sharpen",
+        "width": 14,
+        "height": 14,
+        "color": "rgb(40, 44, 52)",
+        "parent": {
+          "x": 401.75,
+          "y": 115.5,
+          "width": 83,
+          "height": 32
+        },
+        "contained": true,
+        "scene": "editor-tool-sharpen"
+      }
+    },
+    {
+      "id": "drop-shadow",
+      "winner": "new",
+      "captured": {
+        "original": "text-30e1d850b0e3",
+        "path": "static/js/editor/build/topbar.js",
+        "line": 293,
+        "basis": "Literal button text",
+        "source_label": "Soft Shadow",
+        "priority": 60,
+        "status": "source-label candidate",
+        "source_url": "https://github.com/odysseus-dev/odysseus/blob/c21980f5a6d1cb84db8c8ab0f488cefc7764eb3f/static/js/editor/build/topbar.js#L293"
+      },
+      "status": "applied",
+      "targets": [
+        {
+          "path": "static/js/editor/build/topbar.js",
+          "selector": "[data-ui-icon=\"drop-shadow\"]"
+        }
+      ],
+      "explanation": "Scoped to the selected source control; existing labels, state hooks and unrelated glyphs remain.",
+      "captured_role": "menu-command",
+      "applied_role": "labeled-command",
+      "original_label": "Soft Shadow",
+      "was_text": true,
+      "visual_status": "observed",
+      "visual_explanation": "Visible, unobscured in editor-submenu-filter-presets. SVG is 14 by 14 px; contained in its owner control.",
+      "screenshot": "screenshots/after/drop-shadow.png",
+      "receipt": {
+        "id": "drop-shadow",
+        "tag": "BUTTON",
+        "label": "Soft Shadow",
+        "width": 14,
+        "height": 14,
+        "color": "rgb(156, 222, 242)",
+        "parent": {
+          "x": 493,
+          "y": 259.390625,
+          "width": 180,
+          "height": 20.390625
+        },
+        "contained": true,
+        "scene": "editor-submenu-filter-presets"
+      }
+    },
+    {
+      "id": "research-parallel",
+      "winner": "new",
+      "captured": {
+        "original": "e37301e7e65f",
+        "path": "static/js/compare/icons.js",
+        "line": 18,
+        "basis": "Named SVG: ICON_PARALLEL",
+        "source_label": "ICON_PARALLEL",
+        "priority": 80,
+        "status": "source-label candidate",
+        "source_url": "https://github.com/odysseus-dev/odysseus/blob/c21980f5a6d1cb84db8c8ab0f488cefc7764eb3f/static/js/compare/icons.js#L18"
+      },
+      "status": "applied",
+      "targets": [
+        {
+          "path": "static/js/compare/icons.js",
+          "selector": "[data-ui-icon=\"research-parallel\"]"
+        }
+      ],
+      "explanation": "Scoped to the selected source control; existing labels, state hooks and unrelated glyphs remain.",
+      "captured_role": "action-or-status-icon",
+      "applied_role": "action-or-status-icon",
+      "original_label": "ICON_PARALLEL",
+      "was_text": false,
+      "visual_status": "not-observed",
+      "visual_explanation": "This is a comparison execution-mode icon, not the Deep Research navigation icon. No configured comparison models were available.",
+      "context_screenshot": "screenshots/after/02-model-picker.png"
+    },
+    {
+      "id": "research-sequential",
+      "winner": "new",
+      "captured": {
+        "original": "b31463952422",
+        "path": "static/js/compare/icons.js",
+        "line": 19,
+        "basis": "Named SVG: ICON_SEQUENTIAL",
+        "source_label": "ICON_SEQUENTIAL",
+        "priority": 80,
+        "status": "source-label candidate",
+        "source_url": "https://github.com/odysseus-dev/odysseus/blob/c21980f5a6d1cb84db8c8ab0f488cefc7764eb3f/static/js/compare/icons.js#L19"
+      },
+      "status": "applied",
+      "targets": [
+        {
+          "path": "static/js/compare/icons.js",
+          "selector": "[data-ui-icon=\"research-sequential\"]"
+        }
+      ],
+      "explanation": "Scoped to the selected source control; existing labels, state hooks and unrelated glyphs remain.",
+      "captured_role": "action-or-status-icon",
+      "applied_role": "action-or-status-icon",
+      "original_label": "ICON_SEQUENTIAL",
+      "was_text": false,
+      "visual_status": "not-observed",
+      "visual_explanation": "This is a comparison execution-mode icon. No configured comparison models were available.",
+      "context_screenshot": "screenshots/after/02-model-picker.png"
+    },
+    {
+      "id": "memory-search",
+      "winner": "new",
+      "captured": {
+        "original": "6e4f204c1f1a",
+        "path": "static/js/chatRenderer.js",
+        "line": 31,
+        "basis": "Named SVG: search_memory",
+        "source_label": "search_memory",
+        "priority": 80,
+        "status": "source-label candidate",
+        "source_url": "https://github.com/odysseus-dev/odysseus/blob/c21980f5a6d1cb84db8c8ab0f488cefc7764eb3f/static/js/chatRenderer.js#L31"
+      },
+      "status": "applied",
+      "targets": [
+        {
+          "path": "static/js/chatRenderer.js",
+          "selector": "[data-ui-icon=\"memory-search\"]"
+        }
+      ],
+      "explanation": "Scoped to the selected source control; existing labels, state hooks and unrelated glyphs remain.",
+      "captured_role": "action-or-status-icon",
+      "applied_role": "action-or-status-icon",
+      "original_label": "search_memory",
+      "was_text": false,
+      "visual_status": "observed",
+      "visual_explanation": "Visible, unobscured in chat-tool-fixture. SVG is 12 by 12 px; contained in its owner control.",
+      "screenshot": "screenshots/after/memory-search.png",
+      "receipt": {
+        "id": "memory-search",
+        "tag": "A",
+        "label": "Open memory",
+        "width": 12,
+        "height": 12,
+        "color": "color(srgb 0.611765 0.870588 0.94902 / 0.7)",
+        "parent": {
+          "x": 586,
+          "y": 188.6875,
+          "width": 14,
+          "height": 14
+        },
+        "contained": true,
+        "scene": "chat-tool-fixture"
+      }
+    },
+    {
+      "id": "skill-add",
+      "winner": "new",
+      "captured": {
+        "original": "text-f01ec050eca5",
+        "path": "static/index.html",
+        "line": 430,
+        "basis": "Literal button text",
+        "source_label": "Add Skill",
+        "priority": 60,
+        "status": "source-label candidate",
+        "source_url": "https://github.com/odysseus-dev/odysseus/blob/c21980f5a6d1cb84db8c8ab0f488cefc7764eb3f/static/index.html#L430"
+      },
+      "status": "applied",
+      "targets": [
+        {
+          "path": "static/index.html",
+          "selector": "[data-ui-icon=\"skill-add\"]"
+        }
+      ],
+      "explanation": "Scoped to the selected source control; existing labels, state hooks and unrelated glyphs remain.",
+      "captured_role": "text-command",
+      "applied_role": "labeled-command",
+      "original_label": "Add Skill",
+      "was_text": true,
+      "visual_status": "observed",
+      "visual_explanation": "Visible, unobscured in skills-add. SVG is 14 by 14 px; contained in its owner control.",
+      "screenshot": "screenshots/after/skill-add.png",
+      "receipt": {
+        "id": "skill-add",
+        "tag": "BUTTON",
+        "label": "Add Skill",
+        "width": 14,
+        "height": 14,
+        "color": "rgb(255, 255, 255)",
+        "parent": {
+          "x": 972,
+          "y": 425.1875,
+          "width": 108,
+          "height": 32
+        },
+        "contained": true,
+        "scene": "skills-add"
+      }
+    },
+    {
+      "id": "skill-test",
+      "winner": "new",
+      "captured": {
+        "original": "text-532eaabd9574",
+        "path": "static/js/admin.js",
+        "line": 3581,
+        "basis": "Literal button text",
+        "source_label": "Test",
+        "priority": 60,
+        "status": "source-label candidate",
+        "source_url": "https://github.com/odysseus-dev/odysseus/blob/c21980f5a6d1cb84db8c8ab0f488cefc7764eb3f/static/js/admin.js#L3581"
+      },
+      "status": "applied",
+      "targets": [
+        {
+          "path": "static/js/admin.js",
+          "selector": "[data-ui-icon=\"skill-test\"]"
+        }
+      ],
+      "explanation": "Scoped to the selected source control; existing labels, state hooks and unrelated glyphs remain.",
+      "captured_role": "text-command",
+      "applied_role": "labeled-command",
+      "original_label": "Test",
+      "was_text": true,
+      "visual_status": "not-observed",
+      "visual_explanation": "The captured Test label is actually a webhook Test command in Admin, not skill testing. Its label remains, but the catalog alias needs renaming to webhook-test or a separate skill-test mapping before broader reuse. No webhook was created or sent.",
+      "context_screenshot": "screenshots/after/settings-users.png"
+    },
+    {
+      "id": "sliders",
+      "winner": "new",
+      "captured": {
+        "original": "f4d0abcbd924",
+        "path": "static/js/cookbook.js",
+        "line": 3240,
+        "basis": "Button title",
+        "source_label": "Set hardware manually",
+        "priority": 90,
+        "status": "source-label candidate",
+        "source_url": "https://github.com/odysseus-dev/odysseus/blob/c21980f5a6d1cb84db8c8ab0f488cefc7764eb3f/static/js/cookbook.js#L3240"
+      },
+      "status": "applied",
+      "targets": [
+        {
+          "path": "static/js/cookbook.js",
+          "selector": "[data-ui-icon=\"sliders\"]"
+        }
+      ],
+      "explanation": "Scoped to the selected source control; existing labels, state hooks and unrelated glyphs remain.",
+      "captured_role": "action-or-status-icon",
+      "applied_role": "action-or-status-icon",
+      "original_label": "Set hardware manually",
+      "was_text": false,
+      "visual_status": "observed",
+      "visual_explanation": "Visible, unobscured in feature-cookbook. SVG is 14 by 14 px; contained in its owner control.",
+      "screenshot": "screenshots/after/sliders.png",
+      "receipt": {
+        "id": "sliders",
+        "tag": "BUTTON",
+        "label": "Set hardware manually",
+        "width": 14,
+        "height": 14,
+        "color": "rgb(224, 108, 117)",
+        "parent": {
+          "x": 557,
+          "y": 370.59375,
+          "width": 51,
+          "height": 28
+        },
+        "contained": true,
+        "scene": "feature-cookbook"
+      }
+    },
+    {
+      "id": "keyboard",
+      "winner": "new",
+      "captured": {
+        "original": "773efde90674",
+        "path": "static/js/editor/build/topbar.js",
+        "line": 524,
+        "basis": "Button title",
+        "source_label": "Keyboard shortcuts (?)",
+        "priority": 90,
+        "status": "source-label candidate",
+        "source_url": "https://github.com/odysseus-dev/odysseus/blob/c21980f5a6d1cb84db8c8ab0f488cefc7764eb3f/static/js/editor/build/topbar.js#L524"
+      },
+      "status": "applied",
+      "targets": [
+        {
+          "path": "static/js/editor/build/topbar.js",
+          "selector": "[data-ui-icon=\"keyboard\"]"
+        }
+      ],
+      "explanation": "Visible Help menu command; the captured header shortcut icon is hidden in the current menubar layout.",
+      "captured_role": "action-or-status-icon",
+      "applied_role": "labeled-command",
+      "original_label": "Keyboard shortcuts (?)",
+      "was_text": false,
+      "visual_status": "observed",
+      "visual_explanation": "Visible, unobscured in editor-menu-help. SVG is 14 by 14 px; contained in its owner control.",
+      "screenshot": "screenshots/after/keyboard.png",
+      "receipt": {
+        "id": "keyboard",
+        "tag": "BUTTON",
+        "label": "Keyboard Shortcuts",
+        "width": 14,
+        "height": 14,
+        "color": "rgb(156, 222, 242)",
+        "parent": {
+          "x": 579,
+          "y": 121,
+          "width": 190,
+          "height": 32
+        },
+        "contained": true,
+        "scene": "editor-menu-help"
+      }
+    },
+    {
+      "id": "logout",
+      "winner": "new",
+      "captured": {
+        "original": "text-d0527e4b3d65",
+        "path": "static/js/settings.js",
+        "line": 4501,
+        "basis": "Literal button text",
+        "source_label": "Logout",
+        "priority": 60,
+        "status": "source-label candidate",
+        "source_url": "https://github.com/odysseus-dev/odysseus/blob/c21980f5a6d1cb84db8c8ab0f488cefc7764eb3f/static/js/settings.js#L4501"
+      },
+      "status": "applied",
+      "targets": [
+        {
+          "path": "static/js/settings.js",
+          "selector": "[data-ui-icon=\"logout\"]"
+        }
+      ],
+      "explanation": "Scoped to the selected source control; existing labels, state hooks and unrelated glyphs remain.",
+      "captured_role": "text-command",
+      "applied_role": "labeled-command",
+      "original_label": "Logout",
+      "was_text": true,
+      "visual_status": "not-observed",
+      "visual_explanation": "This Logout action belongs to Vaultwarden, not Odysseus account logout. No vault logout request was sent. Screenshot shows the fixture model-picker context, not this unobserved glyph.",
+      "context_screenshot": "screenshots/after/02-model-picker.png"
+    },
+    {
+      "id": "user-add",
+      "winner": "new",
+      "captured": {
+        "original": "text-115a26b51cc7",
+        "path": "static/index.html",
+        "line": 2273,
+        "basis": "Literal button text",
+        "source_label": "Add User",
+        "priority": 60,
+        "status": "source-label candidate",
+        "source_url": "https://github.com/odysseus-dev/odysseus/blob/c21980f5a6d1cb84db8c8ab0f488cefc7764eb3f/static/index.html#L2273"
+      },
+      "status": "applied",
+      "targets": [
+        {
+          "path": "static/index.html",
+          "selector": "[data-ui-icon=\"user-add\"]"
+        }
+      ],
+      "explanation": "Scoped to the selected source control; existing labels, state hooks and unrelated glyphs remain.",
+      "captured_role": "text-command",
+      "applied_role": "labeled-command",
+      "original_label": "Add User",
+      "was_text": true,
+      "visual_status": "observed",
+      "visual_explanation": "Visible, unobscured in settings-users. SVG is 14 by 14 px; contained in its owner control.",
+      "screenshot": "screenshots/after/user-add.png",
+      "receipt": {
+        "id": "user-add",
+        "tag": "BUTTON",
+        "label": "Add User",
+        "width": 14,
+        "height": 14,
+        "color": "rgb(40, 44, 52)",
+        "parent": {
+          "x": 558,
+          "y": 659.828125,
+          "width": 92,
+          "height": 32
+        },
+        "contained": true,
+        "scene": "settings-users"
+      }
+    },
+    {
+      "id": "password-show",
+      "winner": "new",
+      "captured": {
+        "original": "7af345538dce",
+        "path": "static/login.html",
+        "line": 298,
+        "basis": "Button aria-label",
+        "source_label": "Show password",
+        "priority": 90,
+        "status": "source-label candidate",
+        "source_url": "https://github.com/odysseus-dev/odysseus/blob/c21980f5a6d1cb84db8c8ab0f488cefc7764eb3f/static/login.html#L298"
+      },
+      "status": "applied",
+      "targets": [
+        {
+          "path": "static/login.html",
+          "selector": "[data-ui-icon=\"password-show\"]"
+        }
+      ],
+      "explanation": "Scoped to the selected source control; existing labels, state hooks and unrelated glyphs remain.",
+      "captured_role": "action-or-status-icon",
+      "applied_role": "action-or-status-icon",
+      "original_label": "Show password",
+      "was_text": false,
+      "visual_status": "observed",
+      "visual_explanation": "Visible, unobscured in 00-login. SVG is 18 by 18 px; contained in its owner control.",
+      "screenshot": "screenshots/after/password-show.png",
+      "receipt": {
+        "id": "password-show",
+        "tag": "BUTTON",
+        "label": "Show password",
+        "width": 18,
+        "height": 18,
+        "color": "color(srgb 0.611765 0.870588 0.94902 / 0.4)",
+        "parent": {
+          "x": 913,
+          "y": 408.875,
+          "width": 26,
+          "height": 26
+        },
+        "contained": true,
+        "scene": "00-login"
+      }
+    },
+    {
+      "id": "ai-writing",
+      "winner": "new",
+      "captured": {
+        "original": "c5580151feb1",
+        "path": "static/js/document.js",
+        "line": 7570,
+        "basis": "Button aria-label",
+        "source_label": "Writing tools",
+        "priority": 90,
+        "status": "source-label candidate",
+        "source_url": "https://github.com/odysseus-dev/odysseus/blob/c21980f5a6d1cb84db8c8ab0f488cefc7764eb3f/static/js/document.js#L7570"
+      },
+      "status": "applied",
+      "targets": [
+        {
+          "path": "static/js/document.js",
+          "selector": "[data-ui-icon=\"ai-writing\"]"
+        }
+      ],
+      "explanation": "Scoped to the selected source control; existing labels, state hooks and unrelated glyphs remain.",
+      "captured_role": "action-or-status-icon",
+      "applied_role": "action-or-status-icon",
+      "original_label": "Writing tools",
+      "was_text": false,
+      "visual_status": "observed",
+      "visual_explanation": "Visible, unobscured in 03-document. SVG is 13 by 13 px; contained in its owner control.",
+      "screenshot": "screenshots/after/ai-writing.png",
+      "receipt": {
+        "id": "ai-writing",
+        "tag": "BUTTON",
+        "label": "Writing tools",
+        "width": 13,
+        "height": 13,
+        "color": "rgb(224, 108, 117)",
+        "parent": {
+          "x": 1080,
+          "y": 37.5,
+          "width": 36,
+          "height": 32
+        },
+        "contained": true,
+        "scene": "03-document"
+      }
+    },
+    {
+      "id": "aspect-ratio",
+      "winner": "new",
+      "captured": {
+        "original": "6a7b42605d6e",
+        "path": "static/js/editor/build/controls.js",
+        "line": 389,
+        "basis": "Button aria-label",
+        "source_label": "Swap width and height",
+        "priority": 90,
+        "status": "source-label candidate",
+        "source_url": "https://github.com/odysseus-dev/odysseus/blob/c21980f5a6d1cb84db8c8ab0f488cefc7764eb3f/static/js/editor/build/controls.js#L389"
+      },
+      "status": "applied",
+      "targets": [
+        {
+          "path": "static/js/editor/build/controls.js",
+          "selector": "[data-ui-icon=\"aspect-ratio\"]"
+        }
+      ],
+      "explanation": "Original-aspect crop preset; retain the directional Swap width and height action.",
+      "captured_role": "action-or-status-icon",
+      "applied_role": "labeled-command",
+      "original_label": "Swap width and height",
+      "was_text": false,
+      "visual_status": "observed",
+      "visual_explanation": "Visible, unobscured in editor-tool-crop. SVG is 14 by 14 px; contained in its owner control.",
+      "screenshot": "screenshots/after/aspect-ratio.png",
+      "receipt": {
+        "id": "aspect-ratio",
+        "tag": "BUTTON",
+        "label": "Keep the original image aspect ratio",
+        "width": 14,
+        "height": 14,
+        "color": "rgb(156, 222, 242)",
+        "parent": {
+          "x": 132.28125,
+          "y": 115.5,
+          "width": 70,
+          "height": 32
+        },
+        "contained": true,
+        "scene": "editor-tool-crop"
+      }
+    },
+    {
+      "id": "crop-landscape",
+      "winner": "new",
+      "captured": {
+        "original": "52491436adfb",
+        "path": "static/js/research/panel.js",
+        "line": 1392,
+        "basis": "Named SVG: landscape",
+        "source_label": "landscape",
+        "priority": 80,
+        "status": "source-label candidate",
+        "source_url": "https://github.com/odysseus-dev/odysseus/blob/c21980f5a6d1cb84db8c8ab0f488cefc7764eb3f/static/js/research/panel.js#L1392"
+      },
+      "status": "applied",
+      "targets": [
+        {
+          "path": "static/js/editor/build/controls.js",
+          "selector": "[data-ui-icon=\"crop-landscape\"]"
+        }
+      ],
+      "explanation": "Widescreen crop preset; Research landscape is an overview strategy.",
+      "captured_role": "action-or-status-icon",
+      "applied_role": "labeled-command",
+      "original_label": "landscape",
+      "was_text": false,
+      "visual_status": "observed",
+      "visual_explanation": "Visible, unobscured in editor-tool-crop. SVG is 14 by 14 px; contained in its owner control.",
+      "screenshot": "screenshots/after/crop-landscape.png",
+      "receipt": {
+        "id": "crop-landscape",
+        "tag": "BUTTON",
+        "label": "Widescreen (16:9)",
+        "width": 14,
+        "height": 14,
+        "color": "rgb(156, 222, 242)",
+        "parent": {
+          "x": 274.28125,
+          "y": 115.5,
+          "width": 53,
+          "height": 32
+        },
+        "contained": true,
+        "scene": "editor-tool-crop"
+      }
+    },
+    {
+      "id": "selection-add",
+      "winner": "new",
+      "captured": {
+        "original": "23b95bc3165f",
+        "path": "static/js/editor/build/controls.js",
+        "line": 403,
+        "basis": "Button title",
+        "source_label": "Add selection to mask",
+        "priority": 90,
+        "status": "source-label candidate",
+        "source_url": "https://github.com/odysseus-dev/odysseus/blob/c21980f5a6d1cb84db8c8ab0f488cefc7764eb3f/static/js/editor/build/controls.js#L403"
+      },
+      "status": "applied",
+      "targets": [
+        {
+          "path": "static/js/editor/build/controls.js",
+          "selector": "[data-ui-icon=\"selection-add\"]"
+        }
+      ],
+      "explanation": "Add to selection mode; To Mask creates a layer mask.",
+      "captured_role": "action-or-status-icon",
+      "applied_role": "action-icon",
+      "original_label": "Add selection to mask",
+      "was_text": false,
+      "visual_status": "observed",
+      "visual_explanation": "Visible, unobscured in editor-tool-marquee. SVG is 13 by 13 px; contained in its owner control.",
+      "screenshot": "screenshots/after/selection-add.png",
+      "receipt": {
+        "id": "selection-add",
+        "tag": "BUTTON",
+        "label": "Selection add",
+        "width": 13,
+        "height": 13,
+        "color": "rgb(156, 222, 242)",
+        "parent": {
+          "x": 230.75,
+          "y": 119.5,
+          "width": 27,
+          "height": 32
+        },
+        "contained": true,
+        "scene": "editor-tool-marquee"
+      }
+    },
+    {
+      "id": "selection-invert",
+      "winner": "new",
+      "captured": {
+        "original": "1a25b230d01f",
+        "path": "static/js/editor/build/controls.js",
+        "line": 400,
+        "basis": "Button title",
+        "source_label": "Invert selection",
+        "priority": 90,
+        "status": "source-label candidate",
+        "source_url": "https://github.com/odysseus-dev/odysseus/blob/c21980f5a6d1cb84db8c8ab0f488cefc7764eb3f/static/js/editor/build/controls.js#L400"
+      },
+      "status": "applied",
+      "targets": [
+        {
+          "path": "static/js/editor/build/controls.js",
+          "selector": "[data-ui-icon=\"selection-invert\"]"
+        }
+      ],
+      "explanation": "Scoped to the selected source control; existing labels, state hooks and unrelated glyphs remain.",
+      "captured_role": "action-or-status-icon",
+      "applied_role": "action-or-status-icon",
+      "original_label": "Invert selection",
+      "was_text": false,
+      "visual_status": "observed",
+      "visual_explanation": "Visible, unobscured in editor-tool-marquee. SVG is 14 by 14 px; contained in its owner control.",
+      "screenshot": "screenshots/after/selection-invert.png",
+      "receipt": {
+        "id": "selection-invert",
+        "tag": "BUTTON",
+        "label": "Invert selection",
+        "width": 14,
+        "height": 14,
+        "color": "rgb(156, 222, 242)",
+        "parent": {
+          "x": 507.859375,
+          "y": 115.5,
+          "width": 60,
+          "height": 32
+        },
+        "contained": true,
+        "scene": "editor-tool-marquee"
+      }
+    },
+    {
+      "id": "selection-reselect",
+      "winner": "new",
+      "captured": {
+        "original": "text-82ab787f5a1f",
+        "path": "static/js/editor/build/topbar.js",
+        "line": 218,
+        "basis": "Literal button text",
+        "source_label": "Reselect",
+        "priority": 60,
+        "status": "source-label candidate",
+        "source_url": "https://github.com/odysseus-dev/odysseus/blob/c21980f5a6d1cb84db8c8ab0f488cefc7764eb3f/static/js/editor/build/topbar.js#L218"
+      },
+      "status": "applied",
+      "targets": [
+        {
+          "path": "static/js/editor/build/topbar.js",
+          "selector": "[data-ui-icon=\"selection-reselect\"]"
+        }
+      ],
+      "explanation": "Scoped to the selected source control; existing labels, state hooks and unrelated glyphs remain.",
+      "captured_role": "menu-command",
+      "applied_role": "labeled-command",
+      "original_label": "Reselect",
+      "was_text": true,
+      "visual_status": "observed",
+      "visual_explanation": "Visible, unobscured in editor-menu-selection. SVG is 14 by 14 px; contained in its owner control.",
+      "screenshot": "screenshots/after/selection-reselect.png",
+      "receipt": {
+        "id": "selection-reselect",
+        "tag": "BUTTON",
+        "label": "Reselect",
+        "width": 14,
+        "height": 14,
+        "color": "rgb(156, 222, 242)",
+        "parent": {
+          "x": 263,
+          "y": 198.171875,
+          "width": 249,
+          "height": 30.59375
+        },
+        "contained": true,
+        "scene": "editor-menu-selection"
+      }
+    },
+    {
+      "id": "selection-grow",
+      "winner": "new",
+      "captured": {
+        "original": "text-b97dc5270c17",
+        "path": "static/js/editor/build/topbar.js",
+        "line": 228,
+        "basis": "Literal button text",
+        "source_label": "Grow",
+        "priority": 60,
+        "status": "source-label candidate",
+        "source_url": "https://github.com/odysseus-dev/odysseus/blob/c21980f5a6d1cb84db8c8ab0f488cefc7764eb3f/static/js/editor/build/topbar.js#L228"
+      },
+      "status": "applied",
+      "targets": [
+        {
+          "path": "static/js/editor/build/topbar.js",
+          "selector": "[data-ui-icon=\"selection-grow\"]"
+        }
+      ],
+      "explanation": "Scoped to the selected source control; existing labels, state hooks and unrelated glyphs remain.",
+      "captured_role": "menu-command",
+      "applied_role": "labeled-command",
+      "original_label": "Grow",
+      "was_text": true,
+      "visual_status": "observed",
+      "visual_explanation": "Visible, unobscured in editor-menu-selection. SVG is 14 by 14 px; contained in its owner control.",
+      "screenshot": "screenshots/after/selection-grow.png",
+      "receipt": {
+        "id": "selection-grow",
+        "tag": "BUTTON",
+        "label": "Grow",
+        "width": 14,
+        "height": 14,
+        "color": "rgb(156, 222, 242)",
+        "parent": {
+          "x": 263,
+          "y": 313.9375,
+          "width": 249,
+          "height": 30.578125
+        },
+        "contained": true,
+        "scene": "editor-menu-selection"
+      }
+    },
+    {
+      "id": "selection-similar",
+      "winner": "new",
+      "captured": {
+        "original": "text-3f63a3abbcd6",
+        "path": "static/js/editor/build/topbar.js",
+        "line": 229,
+        "basis": "Literal button text",
+        "source_label": "Similar",
+        "priority": 60,
+        "status": "source-label candidate",
+        "source_url": "https://github.com/odysseus-dev/odysseus/blob/c21980f5a6d1cb84db8c8ab0f488cefc7764eb3f/static/js/editor/build/topbar.js#L229"
+      },
+      "status": "applied",
+      "targets": [
+        {
+          "path": "static/js/editor/build/topbar.js",
+          "selector": "[data-ui-icon=\"selection-similar\"]"
+        }
+      ],
+      "explanation": "Scoped to the selected source control; existing labels, state hooks and unrelated glyphs remain.",
+      "captured_role": "menu-command",
+      "applied_role": "labeled-command",
+      "original_label": "Similar",
+      "was_text": true,
+      "visual_status": "observed",
+      "visual_explanation": "Visible, unobscured in editor-menu-selection. SVG is 14 by 14 px; contained in its owner control.",
+      "screenshot": "screenshots/after/selection-similar.png",
+      "receipt": {
+        "id": "selection-similar",
+        "tag": "BUTTON",
+        "label": "Similar",
+        "width": 14,
+        "height": 14,
+        "color": "rgb(156, 222, 242)",
+        "parent": {
+          "x": 263,
+          "y": 352.515625,
+          "width": 249,
+          "height": 30.59375
+        },
+        "contained": true,
+        "scene": "editor-menu-selection"
+      }
+    },
+    {
+      "id": "align-distribute",
+      "winner": "new",
+      "captured": {
+        "original": "697af1723050",
+        "path": "static/js/editor/build/controls.js",
+        "line": 899,
+        "basis": "Button aria-label",
+        "source_label": "Align or distribute selected layers",
+        "priority": 90,
+        "status": "source-label candidate",
+        "source_url": "https://github.com/odysseus-dev/odysseus/blob/c21980f5a6d1cb84db8c8ab0f488cefc7764eb3f/static/js/editor/build/controls.js#L899"
+      },
+      "status": "applied",
+      "targets": [
+        {
+          "path": "static/js/editor/build/controls.js",
+          "selector": "[data-ui-icon=\"align-distribute\"]"
+        }
+      ],
+      "explanation": "Scoped to the selected source control; existing labels, state hooks and unrelated glyphs remain.",
+      "captured_role": "action-or-status-icon",
+      "applied_role": "action-or-status-icon",
+      "original_label": "Align or distribute selected layers",
+      "was_text": false,
+      "visual_status": "not-observed",
+      "visual_explanation": "Align/distribute selected layers requires a multi-selection. It is distinct from ordinary text alignment. The multi-selected state was not established.",
+      "context_screenshot": "screenshots/after/editor-layer-properties.png"
+    },
+    {
+      "id": "transform-width",
+      "winner": "new",
+      "captured": {
+        "original": "text-a318c24216de",
+        "path": "static/js/editor/build/transform-popup.js",
+        "line": 48,
+        "basis": "Literal button text",
+        "source_label": "Increase width",
+        "priority": 60,
+        "status": "source-label candidate",
+        "source_url": "https://github.com/odysseus-dev/odysseus/blob/c21980f5a6d1cb84db8c8ab0f488cefc7764eb3f/static/js/editor/build/transform-popup.js#L48"
+      },
+      "status": "applied",
+      "targets": [
+        {
+          "path": "static/js/editor/build/transform-popup.js",
+          "selector": "[data-ui-icon=\"transform-width\"]"
+        }
+      ],
+      "explanation": "Width field; keep the increment/decrement buttons as + and minus.",
+      "captured_role": "numeric-stepper",
+      "applied_role": "field-label",
+      "original_label": "Increase width",
+      "was_text": true,
+      "visual_status": "observed",
+      "visual_explanation": "Visible, unobscured in editor-tool-transform. SVG is 12 by 12 px; contained in its owner control.",
+      "screenshot": "screenshots/after/transform-width.png",
+      "receipt": {
+        "id": "transform-width",
+        "tag": "LABEL",
+        "label": "transform width",
+        "width": 12,
+        "height": 12,
+        "color": "rgb(156, 222, 242)",
+        "parent": {
+          "x": 325.390625,
+          "y": 125.5,
+          "width": 28.828125,
+          "height": 14
+        },
+        "contained": true,
+        "scene": "editor-tool-transform"
+      }
+    },
+    {
+      "id": "transform-height",
+      "winner": "new",
+      "captured": {
+        "original": "text-a318c24216de",
+        "path": "static/js/editor/build/transform-popup.js",
+        "line": 56,
+        "basis": "Literal button text",
+        "source_label": "Increase height",
+        "priority": 60,
+        "status": "source-label candidate",
+        "source_url": "https://github.com/odysseus-dev/odysseus/blob/c21980f5a6d1cb84db8c8ab0f488cefc7764eb3f/static/js/editor/build/transform-popup.js#L56"
+      },
+      "status": "applied",
+      "targets": [
+        {
+          "path": "static/js/editor/build/transform-popup.js",
+          "selector": "[data-ui-icon=\"transform-height\"]"
+        }
+      ],
+      "explanation": "Height field; keep the increment/decrement buttons as + and minus.",
+      "captured_role": "numeric-stepper",
+      "applied_role": "field-label",
+      "original_label": "Increase height",
+      "was_text": true,
+      "visual_status": "observed",
+      "visual_explanation": "Visible, unobscured in editor-tool-transform. SVG is 12 by 12 px; contained in its owner control.",
+      "screenshot": "screenshots/after/transform-height.png",
+      "receipt": {
+        "id": "transform-height",
+        "tag": "LABEL",
+        "label": "transform height",
+        "width": 12,
+        "height": 12,
+        "color": "rgb(156, 222, 242)",
+        "parent": {
+          "x": 440.21875,
+          "y": 125.5,
+          "width": 25.828125,
+          "height": 14
+        },
+        "contained": true,
+        "scene": "editor-tool-transform"
+      }
+    },
+    {
+      "id": "image-generate",
+      "winner": "new",
+      "captured": {
+        "original": "2e6270d815bf",
+        "path": "static/js/chatRenderer.js",
+        "line": 51,
+        "basis": "Named SVG: generate_image",
+        "source_label": "generate_image",
+        "priority": 80,
+        "status": "source-label candidate",
+        "source_url": "https://github.com/odysseus-dev/odysseus/blob/c21980f5a6d1cb84db8c8ab0f488cefc7764eb3f/static/js/chatRenderer.js#L51"
+      },
+      "status": "applied",
+      "targets": [
+        {
+          "path": "static/js/chatRenderer.js",
+          "selector": "[data-ui-icon=\"image-generate\"]"
+        }
+      ],
+      "explanation": "Scoped to the selected source control; existing labels, state hooks and unrelated glyphs remain.",
+      "captured_role": "action-or-status-icon",
+      "applied_role": "action-or-status-icon",
+      "original_label": "generate_image",
+      "was_text": false,
+      "visual_status": "observed",
+      "visual_explanation": "Visible, unobscured in chat-tool-fixture. SVG is 12 by 12 px; contained in its owner control.",
+      "screenshot": "screenshots/after/image-generate.png",
+      "receipt": {
+        "id": "image-generate",
+        "tag": "SPAN",
+        "label": "",
+        "width": 12,
+        "height": 12,
+        "color": "color(srgb 0.611765 0.870588 0.94902 / 0.64)",
+        "parent": {
+          "x": 586,
+          "y": 219.6875,
+          "width": 14,
+          "height": 14
+        },
+        "contained": true,
+        "scene": "chat-tool-fixture"
+      }
+    },
+    {
+      "id": "file-png",
+      "winner": "new",
+      "captured": {
+        "original": "text-796120837694",
+        "path": "static/js/editor/export-dialog.js",
+        "line": 97,
+        "basis": "Literal button text",
+        "source_label": "PNG",
+        "priority": 60,
+        "status": "source-label candidate",
+        "source_url": "https://github.com/odysseus-dev/odysseus/blob/c21980f5a6d1cb84db8c8ab0f488cefc7764eb3f/static/js/editor/export-dialog.js#L97"
+      },
+      "status": "applied",
+      "targets": [
+        {
+          "path": "static/js/editor/export-dialog.js",
+          "selector": "[data-ui-icon=\"file-png\"]"
+        }
+      ],
+      "explanation": "Scoped to the selected source control; existing labels, state hooks and unrelated glyphs remain.",
+      "captured_role": "format-or-mode-label",
+      "applied_role": "labeled-command",
+      "original_label": "PNG",
+      "was_text": true,
+      "visual_status": "observed",
+      "visual_explanation": "Visible, unobscured in editor-export. SVG is 14 by 14 px; contained in its owner control.",
+      "screenshot": "screenshots/after/file-png.png",
+      "receipt": {
+        "id": "file-png",
+        "tag": "BUTTON",
+        "label": "PNG",
+        "width": 14,
+        "height": 14,
+        "color": "rgb(224, 108, 117)",
+        "parent": {
+          "x": 892.5,
+          "y": 393.75,
+          "width": 62.875,
+          "height": 32
+        },
+        "contained": true,
+        "scene": "editor-export"
+      }
+    },
+    {
+      "id": "file-jpeg",
+      "winner": "new",
+      "captured": {
+        "original": "text-f4dc1c96a30f",
+        "path": "static/js/editor/export-dialog.js",
+        "line": 98,
+        "basis": "Literal button text",
+        "source_label": "JPEG",
+        "priority": 60,
+        "status": "source-label candidate",
+        "source_url": "https://github.com/odysseus-dev/odysseus/blob/c21980f5a6d1cb84db8c8ab0f488cefc7764eb3f/static/js/editor/export-dialog.js#L98"
+      },
+      "status": "applied",
+      "targets": [
+        {
+          "path": "static/js/editor/export-dialog.js",
+          "selector": "[data-ui-icon=\"file-jpeg\"]"
+        }
+      ],
+      "explanation": "Scoped to the selected source control; existing labels, state hooks and unrelated glyphs remain.",
+      "captured_role": "format-or-mode-label",
+      "applied_role": "labeled-command",
+      "original_label": "JPEG",
+      "was_text": true,
+      "visual_status": "observed",
+      "visual_explanation": "Visible, unobscured in editor-export. SVG is 14 by 14 px; contained in its owner control.",
+      "screenshot": "screenshots/after/file-jpeg.png",
+      "receipt": {
+        "id": "file-jpeg",
+        "tag": "BUTTON",
+        "label": "JPEG",
+        "width": 14,
+        "height": 14,
+        "color": "rgb(156, 222, 242)",
+        "parent": {
+          "x": 955.375,
+          "y": 393.75,
+          "width": 62.875,
+          "height": 32
+        },
+        "contained": true,
+        "scene": "editor-export"
+      }
+    }
+  ]
+}

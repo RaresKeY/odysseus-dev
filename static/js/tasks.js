@@ -920,7 +920,7 @@ function _renderList() {
     const statusBadge = task.status === 'paused'
       ? `<button type="button" class="task-status-badge task-state-badge task-paused-badge" data-task-status-action="resume" title="Paused - click to resume" aria-label="Paused - click to resume"><svg width="10" height="10" viewBox="0 0 24 24" fill="currentColor"><rect x="6" y="5" width="4" height="14" rx="1"/><rect x="14" y="5" width="4" height="14" rx="1"/></svg><span class="task-state-label">paused</span></button>`
       : task.status === 'active'
-        ? `<button type="button" class="task-status-badge task-state-badge task-active-badge" data-task-status-action="pause" title="Active - click to pause" aria-label="Active - click to pause"><svg width="10" height="10" viewBox="0 0 24 24" fill="currentColor"><polygon points="7 4 19 12 7 20 7 4"/></svg><span class="task-state-label">active</span></button>`
+        ? `<button type="button" class="task-status-badge task-state-badge task-active-badge" data-task-status-action="pause" title="Active - click to pause" aria-label="Active - click to pause"><svg width="10" height="10" class="ody-ui-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" data-ui-icon="pause"><rect x="5" y="3" width="4" height="18" rx="1"/><rect x="15" y="3" width="4" height="18" rx="1"/></svg><span class="task-state-label">active</span></button>`
         : '';
     const builtinBadge = task.is_builtin
       ? `<span class="task-builtin-badge${task.is_modified ? ' modified' : ''}" title="${task.is_modified ? 'Built-in task — edited from its default' : 'Built-in task'}">built-in${task.is_modified ? ' · edited' : ''}</span>`

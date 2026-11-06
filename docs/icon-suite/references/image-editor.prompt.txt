@@ -1,0 +1,7 @@
+Use case: logo-brand
+Asset type: one image-editor tool reference contact sheet for the Odysseus monochrome SVG family
+Primary request: 36 coherent compact editor glyphs: image, album, canvas bounds, crop, perspective crop, clockwise rotate, horizontal flip, zoom in, zoom out, fit view, hand pan, brush, eraser, pen nib, straight line, bezier path, polygon, rectangle, ellipse, union shapes, eyedropper, paint bucket, gradient, color swatches, stacked layers, layer group, merge down, flatten, padlock, eye visibility, mask, dashed rectangular selection, lasso, magic wand, inpaint brush in dashed box, outpaint frame expansion.
+Style/medium: flat vector UI linework, monochrome, consistent 24x24 logical grid and 2-unit stroke. Rounded caps and joins with simple moderate corner radii. Strong readable silhouettes, practical for 14–24 pixel buttons.
+Composition/framing: 6 columns by 6 rows, one glyph per cell with small plain labels and generous gutters.
+Scene/backdrop: genuinely transparent background.
+Constraints: dark ink only, no colored fills except single-ink details, no shadows, gradients, texture, 3D, scene, decorative cards or logo treatments. Keep the system consistent with ordinary outline navigation icons. This is a family reference board for manually built currentColor SVG shapes.

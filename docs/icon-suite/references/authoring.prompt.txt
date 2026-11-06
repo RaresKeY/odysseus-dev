@@ -1,0 +1,7 @@
+Use case: logo-brand
+Asset type: one authoring, time, email and voice reference contact sheet for the Odysseus monochrome SVG suite
+Primary request: create 36 small UI glyphs in order: document with folded corner, folder, bold B, italic I, underlined U, paragraph mark, bulleted list, text alignment, insert table, signature pen stroke, find and replace, document comments, sticky note, drawing pen, checked task list, goal flag, reminder bell, tag, day calendar, week calendar, month calendar, recurring event, clock, timezone globe, inbox, envelope, compose email, reply all, forward, attachment paperclip, contact book, microphone, sound waveform, headphones, play triangle, subtitles.
+Style/medium: one coherent flat line-icon family using a 24x24 logical grid, uniform 2-unit stroke, round line caps and joins, simple optical balance and 2 units of padding. Functional at 14–24 pixels. Letters are clean vector-like strokes.
+Composition/framing: six-column by six-row contact sheet, separated glyphs with generous gutters and small plain labels underneath.
+Color palette: one dark ink, genuinely transparent background.
+Constraints: no gradients, shadows, colorful paint, 3D, texture, illustrative scene or decorative containers. Only meaningful outline shapes and small solid details. Design references for hand-authored SVGs whose ink inherits CSS currentColor.

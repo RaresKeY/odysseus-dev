@@ -212,7 +212,7 @@ export function createHistoryPanel({ undo, redo, takeSnapshot, restoreSnapshot, 
   // Named snapshots (Photoshop-style restore points) section — a camera
   // button plus one row per snapshot. Rendered above the timeline in both
   // the floating panel and the docked History panel.
-  const SNAPSHOT_ICON = '<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"></path><circle cx="12" cy="13" r="4"></circle></svg>';
+  const SNAPSHOT_ICON = '<svg width="13" height="13" class="ody-ui-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" data-ui-icon="snapshot"><g transform="translate(.3 .3) scale(.72)" stroke-width="2.6"><circle cx="12" cy="12" r="9"/><path d="M3 3v6h6M12 6v7l4 2"/></g><g transform="translate(1.2 1.2) scale(.9)" stroke-width="2.222"><path d="M19 16v6M16 19h6"/></g></svg>';
   function renderSnapshots(container) {
     if (!container) return;
     const snaps = (typeof listSnapshots === 'function') ? (listSnapshots() || []) : [];

@@ -1,0 +1,31 @@
+{
+  "pass": true,
+  "mode": "full",
+  "svg_files": 802,
+  "unique_geometry_bodies": 677,
+  "intentional_shared_geometry_files": 125,
+  "png_previews": 1604,
+  "currentColor_only": true,
+  "external_dependencies": 0,
+  "reference_sheets": 7,
+  "exact_upstream_css_rules": 13,
+  "themes": 19,
+  "source_controls_retained": 1648,
+  "source_svg_occurrences_retained": 1630,
+  "quoted_attribute_regression": "passed",
+  "geometry_overflow": 0,
+  "pinned_source_files_verified": 401,
+  "browser_assertions": 19,
+  "not_run": [
+    "Full authenticated Odysseus integration; this project is a component theme harness."
+  ],
+  "export_gallery_browser_checks": 19,
+  "fork_theme_comparison": "fork-theme-check.json",
+  "asset_geometry_unchanged": true,
+  "metadata_safety_regression": "passed",
+  "reviewed_screenshots": [
+    "checks/gallery-desktop.png",
+    "checks/gallery-narrow.png",
+    "checks/theme-trials.png"
+  ]
+}

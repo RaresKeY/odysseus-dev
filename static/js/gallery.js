@@ -518,7 +518,7 @@ function _renderAlbums() {
       }
     }
     if (_search || _activeTags.length || _activeModel || _activeAlbum || _favoritesOnly) {
-      fhtml += `<button class="gallery-chip gallery-clear-all-filters" data-clear="all" title="Clear every gallery filter">Clear all</button>`;
+      fhtml += `<button class="gallery-chip gallery-clear-all-filters ody-ui-with-label" data-clear="all" title="Clear every gallery filter"><svg width="14" height="14" class="ody-ui-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" data-ui-icon="filter-clear"><g transform="translate(.3 .3) scale(.72)" stroke-width="2.6"><path d="M3 4h18l-7 8v7l-4 2v-9L3 4Z"/></g><g transform="translate(1.2 1.2) scale(.9)" stroke-width="2.222"><path d="m17 17 5 5m0-5-5 5"/></g></svg><span class="ody-ui-label-text">Clear all</span></button>`;
     }
     filterC.innerHTML = fhtml;
     filterC.querySelector('.gallery-chip[data-album=""]')?.addEventListener('click', () => {
@@ -1613,7 +1613,7 @@ function _openDetail(img) {
         Download
       </button>
       <button class="gallery-detail-back gallery-detail-fav-header${img.favorite ? ' active' : ''}" id="gallery-detail-fav-header" title="${img.favorite ? 'Unfavorite' : 'Favorite'}" aria-label="Favorite" aria-pressed="${img.favorite ? 'true' : 'false'}" style="display:inline-flex;align-items:center;justify-content:center;padding:4px 8px;">
-        <svg width="14" height="14" viewBox="0 0 24 24" fill="${img.favorite ? 'currentColor' : 'none'}" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/></svg>
+        <svg width="14" height="14" class="ody-ui-icon" viewBox="0 0 24 24" fill="${img.favorite ? 'currentColor' : 'none'}" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" data-ui-icon="favorite"><path d="m12 3 3 6 6.5 1-4.7 4.7 1.1 6.5-5.9-3.1-5.9 3.1 1.1-6.5L2.5 10 9 9l3-6Z"/></svg>
       </button>
       <div class="gallery-detail-menu-wrap">
         <button class="gallery-detail-action gallery-detail-menu-btn" id="gallery-detail-menu-btn" title="Actions" aria-label="Photo actions">
