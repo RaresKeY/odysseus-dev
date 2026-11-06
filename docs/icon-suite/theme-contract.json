@@ -1,0 +1,249 @@
+{
+  "upstream_sha": "c21980f5a6d1cb84db8c8ab0f488cefc7764eb3f",
+  "themes": {
+    "dark": {
+      "bg": "#282c34",
+      "fg": "#9cdef2",
+      "panel": "#111111",
+      "border": "#355a66",
+      "red": "#e06c75"
+    },
+    "light": {
+      "bg": "#f3f5f7",
+      "fg": "#26313a",
+      "panel": "#ffffff",
+      "border": "#cbd3da",
+      "red": "#b34d5c"
+    },
+    "midnight": {
+      "bg": "#0d1117",
+      "fg": "#c9d1d9",
+      "panel": "#161b22",
+      "border": "#30363d",
+      "red": "#f85149"
+    },
+    "cyberpunk": {
+      "bg": "#10121a",
+      "fg": "#9bdde0",
+      "panel": "#171a26",
+      "border": "#514b78",
+      "red": "#d45aa8"
+    },
+    "retrowave": {
+      "bg": "#1a1a2e",
+      "fg": "#e94560",
+      "panel": "#16213e",
+      "border": "#533483",
+      "red": "#e94560"
+    },
+    "forest": {
+      "bg": "#1b2a1b",
+      "fg": "#a8d5a2",
+      "panel": "#142414",
+      "border": "#3d6b3d",
+      "red": "#7cb871"
+    },
+    "ocean": {
+      "bg": "#0b1a2c",
+      "fg": "#64d2ff",
+      "panel": "#091422",
+      "border": "#1e5074",
+      "red": "#4facfe"
+    },
+    "ume": {
+      "bg": "#271d2b",
+      "fg": "#f1d8e9",
+      "panel": "#1d1721",
+      "border": "#66475f",
+      "red": "#d98bb7"
+    },
+    "terminal": {
+      "bg": "#0b1110",
+      "fg": "#b8e6c1",
+      "panel": "#080d0c",
+      "border": "#28553a",
+      "red": "#6bd38b"
+    },
+    "organs": {
+      "bg": "#0a0406",
+      "fg": "#efe1c8",
+      "panel": "#15080a",
+      "border": "#3a1519",
+      "red": "#c83240"
+    },
+    "gpt": {
+      "bg": "#212121",
+      "fg": "#ececec",
+      "panel": "#171717",
+      "border": "#424242",
+      "red": "#949494",
+      "advanced": {
+        "sendBtnBg": "#949494",
+        "sendBtnHover": "#7f7f7f",
+        "userBubbleBg": "#2f2f2f",
+        "aiBubbleBg": "#171717",
+        "inputBg": "#2f2f2f",
+        "brandColor": "#ffffff",
+        "brandMixTo": "#ffffff"
+      }
+    },
+    "claude": {
+      "bg": "#1f1e1b",
+      "fg": "#f5f1e8",
+      "panel": "#2b2926",
+      "border": "#514b43",
+      "red": "#d97757"
+    },
+    "cute": {
+      "bg": "#fff4f7",
+      "fg": "#63394d",
+      "panel": "#fffafd",
+      "border": "#edc7d5",
+      "red": "#d65f88"
+    },
+    "eclipse": {
+      "bg": "#17191c",
+      "fg": "#e8e4dc",
+      "panel": "#0f1113",
+      "border": "#3c4248",
+      "red": "#46c2b3"
+    },
+    "porcelain": {
+      "bg": "#edf0f2",
+      "fg": "#252a30",
+      "panel": "#ffffff",
+      "border": "#c7cdd2",
+      "red": "#3478c9"
+    },
+    "arcade": {
+      "bg": "#15131d",
+      "fg": "#f4e85c",
+      "panel": "#0b1720",
+      "border": "#305f68",
+      "red": "#ff4f91"
+    },
+    "blueprint": {
+      "bg": "#10263b",
+      "fg": "#e8f1f5",
+      "panel": "#091a29",
+      "border": "#48758d",
+      "red": "#e6b84a"
+    },
+    "monolith": {
+      "bg": "#202020",
+      "fg": "#d8d8d2",
+      "panel": "#121212",
+      "border": "#50504b",
+      "red": "#b6e05c"
+    },
+    "yoyo": {
+      "bg": "#211f23",
+      "fg": "#dfdbd7",
+      "panel": "#141415",
+      "border": "#3e5146",
+      "red": "#e09d6c"
+    }
+  },
+  "source": "static/js/theme.js:13",
+  "roles": {
+    "foreground": "var(--fg)",
+    "accent": "var(--accent, var(--red))",
+    "rail": "var(--accent, var(--red)) at 0.5 opacity; hover/active opacity 1",
+    "rail_active_background": "color-mix(in srgb, var(--color-accent) 15%, transparent)",
+    "brand": "var(--brand-color, var(--red))",
+    "hamburger": "var(--hamburger-color, var(--fg))",
+    "send": "#fff on var(--send-btn-bg, var(--red))",
+    "send_mic": "var(--fg) on color-mix(in srgb, var(--send-btn-bg, var(--red)) 30%, var(--panel))",
+    "danger": "var(--red)",
+    "danger_icon_opacity": 0.7
+  },
+  "fixed_tokens": {
+    "--color-accent": "#00aaff"
+  },
+  "css_rules": [
+    {
+      "selector": ".icon-rail-btn",
+      "path": "static/css/01-agent-chat.css",
+      "line": 708,
+      "css": ".icon-rail-btn {\n      position: relative;\n      width: 34px;\n      height: 34px;\n      border: none;\n      background: transparent;\n      color: var(--accent, var(--red));\n      font-size: 16px;\n      border-radius: 6px;\n      cursor: pointer;\n      display: flex;\n      align-items: center;\n      justify-content: center;\n      opacity: 0.5;\n      transition: opacity 0.08s, background 0.08s;\n    }"
+    },
+    {
+      "selector": ".icon-rail-btn:hover",
+      "path": "static/css/01-agent-chat.css",
+      "line": 773,
+      "css": ".icon-rail-btn:hover { opacity: 1; background: color-mix(in srgb, var(--accent) 12%, transparent); }"
+    },
+    {
+      "selector": ".icon-rail-btn.active-section",
+      "path": "static/css/01-agent-chat.css",
+      "line": 774,
+      "css": ".icon-rail-btn.active-section { opacity: 1; background: color-mix(in srgb, var(--color-accent) 15%, transparent); }"
+    },
+    {
+      "selector": ".input-icon-btn",
+      "path": "static/css/01-agent-chat.css",
+      "line": 2755,
+      "css": ".input-icon-btn {\n      background: none;\n      border: none;\n      color: var(--fg);\n      opacity: 0.5;\n      cursor: pointer;\n      padding: 6px;\n      border-radius: 8px;\n      display: flex;\n      align-items: center;\n      justify-content: center;\n      transition: opacity 0.15s, background 0.15s, color 0.15s;\n      position: relative;\n    }"
+    },
+    {
+      "selector": ".input-icon-btn:hover",
+      "path": "static/css/01-agent-chat.css",
+      "line": 2769,
+      "css": ".input-icon-btn:hover {\n      opacity: 0.8;\n      background: color-mix(in srgb, var(--accent) 8%, transparent);\n    }"
+    },
+    {
+      "selector": ".input-icon-btn.active,",
+      "path": "static/css/01-agent-chat.css",
+      "line": 2773,
+      "css": ".input-icon-btn.active,\n\t    .input-icon-btn.expanded {\n\t      opacity: 1;\n\t      color: var(--fg);\n\t      background: color-mix(in srgb, var(--fg) 9%, transparent);\n\t    }"
+    },
+    {
+      "selector": ".send-btn",
+      "path": "static/css/01-agent-chat.css",
+      "line": 3014,
+      "css": ".send-btn {\n      /* Prefer the theme accent (--red). A stored custom `--send-btn-bg`\n         override only kicks in if it's set to a non-white value \u2014 guards\n         against ChatGPT-style themes where the stored override leaked\n         to white and rendered the send button invisible. */\n      background: var(--send-btn-bg, var(--red));\n      color: #fff;\n      border: none;\n      border-radius: 8px;\n      min-width: 32px;\n      width: 32px;\n      height: 32px !important;\n      padding: 0;\n      cursor: pointer;\n      display: flex;\n      align-items: center;\n      justify-content: center;\n      transition: background 0.25s, border-color 0.25s, color 0.25s, width 0.3s cubic-bezier(0.34, 1, 0.64, 1), padding 0.3s, border-radius 0.3s, opacity 0.1s;\n      flex-shrink: 0;\n      overflow: hidden;\n    }"
+    },
+    {
+      "selector": ".send-btn:hover",
+      "path": "static/css/01-agent-chat.css",
+      "line": 3094,
+      "css": ".send-btn:hover {\n      background: var(--send-btn-hover, color-mix(in srgb, var(--red) 80%, white));\n      color: #fff;\n    }"
+    },
+    {
+      "selector": ".send-btn.mic-mode,",
+      "path": "static/css/01-agent-chat.css",
+      "line": 3098,
+      "css": ".send-btn.mic-mode,\n    .send-btn.newchat-mode {\n      /* Idle / new-chat / mic states blend the picked Send Btn color into\n         the panel so the user's color choice is visible across every state,\n         not only briefly while typing. */\n      background: color-mix(in srgb, var(--send-btn-bg, var(--red)) 30%, var(--panel, #2a2a2a));\n      color: var(--fg);\n      border: 1px solid var(--border);\n      transition: width 0.3s cubic-bezier(0.34, 1.56, 0.64, 1), background 0.25s, border-color 0.25s, color 0.25s, border-radius 0.3s;\n    }"
+    },
+    {
+      "selector": ".sidebar-brand-title",
+      "path": "static/css/01-agent-chat.css",
+      "line": 500,
+      "css": ".sidebar-brand-title {\n      font-size: 1rem;\n      font-weight: 600;\n      line-height: 1.35;\n      color: var(--brand-color, var(--red));\n      white-space: nowrap;\n      user-select: none;\n      position: relative;\n      top: 0;\n      left: -10px;\n    }"
+    },
+    {
+      "selector": ".sidebar-hamburger",
+      "path": "static/css/01-agent-chat.css",
+      "line": 478,
+      "css": ".sidebar-hamburger {\n      display: none !important; /* external #hamburger-btn is the only toggle */\n    }"
+    },
+    {
+      "selector": ".dropdown-item-danger",
+      "path": "static/css/01-agent-chat.css",
+      "line": 7444,
+      "css": ".dropdown-item-danger {\n      color: var(--red) !important;\n    }"
+    },
+    {
+      "selector": ".dropdown-item-danger .dropdown-icon",
+      "path": "static/css/01-agent-chat.css",
+      "line": 7447,
+      "css": ".dropdown-item-danger .dropdown-icon {\n      opacity: 0.7;\n    }"
+    }
+  ],
+  "limits": [
+    "Component color harness, not a running Odysseus server.",
+    "Production styles do not define --accent globally; fallbacks and invalid no-fallback color-mix declarations are preserved.",
+    "Source-label icon mapping is a candidate replacement map, not an automatic integration patch.",
+    "Provider glyphs are neutral identifiers, not official vendor logos."
+  ]
+}
