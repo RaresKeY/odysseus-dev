@@ -3,9 +3,9 @@
   "base_pr_head": "e71b14fc32d8e0aad1710aa4bd20d85b9339a150",
   "export_sha256": "1cc73f7f36f977c16b4ca2cec87ae42c3c82f99049b213237a24bd2563a8fc8f",
   "counts": {
-    "observed": 89,
+    "observed": 88,
     "not-observed": 27,
-    "kept-old": 2
+    "kept-old": 3
   },
   "scenes": 83,
   "javascript_exceptions": 0,
@@ -1388,7 +1388,7 @@
       "original_label": "Editor display size",
       "was_text": false,
       "visual_status": "observed",
-      "visual_explanation": "Visible, unobscured in document-send-options. SVG is 12 by 12 px; contained in its owner control.",
+      "visual_explanation": "Visible, unobscured in document-email. SVG is 12 by 12 px; contained in its owner control.",
       "screenshot": "screenshots/after/font-size.png",
       "receipt": {
         "id": "font-size",
@@ -1404,7 +1404,7 @@
           "height": 28
         },
         "contained": true,
-        "scene": "document-send-options"
+        "scene": "document-email"
       }
     },
     {
@@ -2370,37 +2370,15 @@
         "status": "source-label candidate",
         "source_url": "https://github.com/odysseus-dev/odysseus/blob/c21980f5a6d1cb84db8c8ab0f488cefc7764eb3f/static/js/editor/build/controls.js#L377"
       },
-      "status": "applied",
-      "targets": [
-        {
-          "path": "static/js/editor/build/controls.js",
-          "selector": "[data-ui-icon=\"shape-intersect\"]"
-        }
-      ],
-      "explanation": "Scoped to the selected source control; existing labels, state hooks and unrelated glyphs remain.",
+      "status": "kept-old-needs-remap",
+      "targets": [],
+      "explanation": "The selected candidate is a rectangle with a check badge, not an overlap/intersection mark. Keep the existing overlap circles on Intersect selection and redraw this candidate before applying it.",
       "captured_role": "action-or-status-icon",
-      "applied_role": "action-or-status-icon",
       "original_label": "Intersect selection",
       "was_text": false,
-      "visual_status": "observed",
-      "visual_explanation": "Visible, unobscured in editor-tool-marquee. SVG is 13 by 13 px; contained in its owner control.",
-      "screenshot": "screenshots/after/shape-intersect.png",
-      "receipt": {
-        "id": "shape-intersect",
-        "tag": "BUTTON",
-        "label": "Intersect selection",
-        "width": 13,
-        "height": 13,
-        "color": "rgb(156, 222, 242)",
-        "parent": {
-          "x": 286.75,
-          "y": 119.5,
-          "width": 27,
-          "height": 32
-        },
-        "contained": true,
-        "scene": "editor-tool-marquee"
-      }
+      "visual_status": "kept-old",
+      "visual_explanation": "The selected candidate is a rectangle with a check badge, not an overlap/intersection mark. Keep the existing overlap circles on Intersect selection and redraw this candidate before applying it.",
+      "context_screenshot": "screenshots/after/editor-tool-marquee.png"
     },
     {
       "id": "shape-exclude",

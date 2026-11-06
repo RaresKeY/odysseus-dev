@@ -2,7 +2,7 @@
   "base": "e71b14fc32d8e0aad1710aa4bd20d85b9339a150",
   "sha256": {
     "static/index.html": "24feaa69a3a50f56330ec89d4b5d04868970e2aee1c9a281a455f9a71154782e",
-    "static/sw.js": "834cae08de6634c8798daaec9cf7bfb57c71b495d095ab58e286afc35c788b2c",
+    "static/sw.js": "b45d956d1b602a44e12472f5e67cd884aca0d6ab5a98d74b26b6ebdb88b80195",
     "static/login.html": "40471021b41f0835642f390eb5bf7d5f266eec93d8c2a6337a27ceab94443980",
     "static/js/settings.js": "1b85070b8f7f92851cb9ae7ca2fbdcc1972fbb057cf5f9404fe2ea086d86d5d9",
     "static/js/tasks.js": "591068635cb3ff121f6b1aa244052567526afb3bb419d0584f01be716d0663f4",
@@ -26,7 +26,7 @@
     "static/js/editor/build/topbar.js": "cd1e3072da2689e8e0d0a2c6cd2e9a6fd41e062d1c6f5f1931fba02df1458afc",
     "static/js/editor/build/dock.js": "529c0e7b26ec21d1e03253a90c5eedc5bb8b1107f3d2d32c086d2259b017ef7e",
     "static/js/editor/build/transform-popup.js": "c09762ca5105b9d205849730e4397683343ad285ad51ee731681daa58dd4a92a",
-    "static/js/editor/build/controls.js": "809d52660d86755c9bd1cf9e1735e56d9224242df65241e8faa900d443d4cc8c",
+    "static/js/editor/build/controls.js": "7ec264af9346311028611613305c10e4b103c9a8dd39af495cb61892cf7e55ec",
     "static/js/editor/build/toolbar.js": "1cc0a87bd9e45e919bc9ba43595c56b987288b43c5fb4fc887449cd19b6378b1",
     "static/js/features/notes/ui/cardRendering.js": "f532e1f27a4ae8c4f96c9408d1307540dedd1d6cb5ab29248010c781ef0d898c",
     "static/js/features/notes/ui/panel.js": "527e6b143782c4f78bd58567ed6682184dacd115611e257949f2784190640ec5",
