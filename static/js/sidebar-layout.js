@@ -107,6 +107,8 @@ export function initSidebarLayout(Storage, opts) {
       document.body.classList.toggle('sidebar-collapsed', sidebarHidden);
       _setSidebarModeClasses(!sidebarHidden ? 'full' : (railHidden ? 'off' : 'mini'));
       hamburgerBtn.setAttribute('aria-expanded', String(!sidebarHidden));
+      hamburgerBtn.title = sidebarHidden ? 'Show sidebar' : 'Hide sidebar';
+      hamburgerBtn.setAttribute('aria-label', hamburgerBtn.title);
       const sidebarToggleBtn = document.getElementById('sidebar-toggle-btn');
       if (sidebarToggleBtn) sidebarToggleBtn.setAttribute('aria-expanded', String(!sidebarHidden));
     }

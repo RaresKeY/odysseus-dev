@@ -1,0 +1,3876 @@
+{
+  "version": 1,
+  "upstream_sha": "c21980f5a6d1cb84db8c8ab0f488cefc7764eb3f",
+  "choices": [
+    {
+      "id": "sailboat",
+      "winner": "old",
+      "new_svg": "icons/sailboat.svg",
+      "old": {
+        "original": "2a8f67294d2f",
+        "path": "static/js/theme.js",
+        "line": 376,
+        "basis": "Inspected literal",
+        "source_label": "Sailboat",
+        "priority": 100,
+        "status": "source-label candidate",
+        "source_url": "https://github.com/odysseus-dev/odysseus/blob/c21980f5a6d1cb84db8c8ab0f488cefc7764eb3f/static/js/theme.js#L376"
+      }
+    },
+    {
+      "id": "chat",
+      "winner": "old",
+      "new_svg": "icons/chat.svg",
+      "old": {
+        "original": "45c3c24e7245",
+        "path": "static/js/compare/icons.js",
+        "line": 8,
+        "basis": "Named SVG: CHAT_ICON",
+        "source_label": "CHAT_ICON",
+        "priority": 80,
+        "status": "source-label candidate",
+        "source_url": "https://github.com/odysseus-dev/odysseus/blob/c21980f5a6d1cb84db8c8ab0f488cefc7764eb3f/static/js/compare/icons.js#L8"
+      }
+    },
+    {
+      "id": "new-chat",
+      "winner": "old",
+      "new_svg": "icons/new-chat.svg",
+      "old": {
+        "original": "c4c925ae9548",
+        "path": "static/index.html",
+        "line": 754,
+        "basis": "Button title",
+        "source_label": "New chat",
+        "priority": 90,
+        "status": "source-label candidate",
+        "source_url": "https://github.com/odysseus-dev/odysseus/blob/c21980f5a6d1cb84db8c8ab0f488cefc7764eb3f/static/index.html#L754"
+      }
+    },
+    {
+      "id": "documents",
+      "winner": "old",
+      "new_svg": "icons/documents.svg",
+      "old": {
+        "original": "13a3a9139eae",
+        "path": "static/index.html",
+        "line": 759,
+        "basis": "Button title",
+        "source_label": "Documents",
+        "priority": 90,
+        "status": "source-label candidate",
+        "source_url": "https://github.com/odysseus-dev/odysseus/blob/c21980f5a6d1cb84db8c8ab0f488cefc7764eb3f/static/index.html#L759"
+      }
+    },
+    {
+      "id": "calendar",
+      "winner": "old",
+      "new_svg": "icons/calendar.svg",
+      "old": {
+        "original": "f034ebb036a7",
+        "path": "static/index.html",
+        "line": 761,
+        "basis": "Button title",
+        "source_label": "Calendar",
+        "priority": 90,
+        "status": "source-label candidate",
+        "source_url": "https://github.com/odysseus-dev/odysseus/blob/c21980f5a6d1cb84db8c8ab0f488cefc7764eb3f/static/index.html#L761"
+      }
+    },
+    {
+      "id": "compare",
+      "winner": "old",
+      "new_svg": "icons/compare.svg",
+      "old": {
+        "original": "0b10d61f0133",
+        "path": "static/index.html",
+        "line": 762,
+        "basis": "Button title",
+        "source_label": "Compare",
+        "priority": 90,
+        "status": "source-label candidate",
+        "source_url": "https://github.com/odysseus-dev/odysseus/blob/c21980f5a6d1cb84db8c8ab0f488cefc7764eb3f/static/index.html#L762"
+      }
+    },
+    {
+      "id": "cookbook",
+      "winner": "old",
+      "new_svg": "icons/cookbook.svg",
+      "old": {
+        "original": "930aa0c48b65",
+        "path": "static/index.html",
+        "line": 763,
+        "basis": "Button title",
+        "source_label": "Cookbook",
+        "priority": 90,
+        "status": "source-label candidate",
+        "source_url": "https://github.com/odysseus-dev/odysseus/blob/c21980f5a6d1cb84db8c8ab0f488cefc7764eb3f/static/index.html#L763"
+      }
+    },
+    {
+      "id": "research",
+      "winner": "old",
+      "new_svg": "icons/research.svg",
+      "old": {
+        "original": "8c233d22c704",
+        "path": "static/index.html",
+        "line": 764,
+        "basis": "Button title",
+        "source_label": "Deep Research",
+        "priority": 90,
+        "status": "source-label candidate",
+        "source_url": "https://github.com/odysseus-dev/odysseus/blob/c21980f5a6d1cb84db8c8ab0f488cefc7764eb3f/static/index.html#L764"
+      }
+    },
+    {
+      "id": "email",
+      "winner": "old",
+      "new_svg": "icons/email.svg",
+      "old": {
+        "original": "563531cd0126",
+        "path": "static/index.html",
+        "line": 765,
+        "basis": "Button title",
+        "source_label": "Email",
+        "priority": 90,
+        "status": "source-label candidate",
+        "source_url": "https://github.com/odysseus-dev/odysseus/blob/c21980f5a6d1cb84db8c8ab0f488cefc7764eb3f/static/index.html#L765"
+      }
+    },
+    {
+      "id": "gallery",
+      "winner": "old",
+      "new_svg": "icons/gallery.svg",
+      "old": {
+        "original": "2f80c0147483",
+        "path": "static/index.html",
+        "line": 766,
+        "basis": "Button title",
+        "source_label": "Gallery",
+        "priority": 90,
+        "status": "source-label candidate",
+        "source_url": "https://github.com/odysseus-dev/odysseus/blob/c21980f5a6d1cb84db8c8ab0f488cefc7764eb3f/static/index.html#L766"
+      }
+    },
+    {
+      "id": "library",
+      "winner": "old",
+      "new_svg": "icons/library.svg",
+      "old": {
+        "original": "bc216a4493dd",
+        "path": "static/index.html",
+        "line": 767,
+        "basis": "Button title",
+        "source_label": "Library",
+        "priority": 90,
+        "status": "source-label candidate",
+        "source_url": "https://github.com/odysseus-dev/odysseus/blob/c21980f5a6d1cb84db8c8ab0f488cefc7764eb3f/static/index.html#L767"
+      }
+    },
+    {
+      "id": "memory",
+      "winner": "old",
+      "new_svg": "icons/memory.svg",
+      "old": {
+        "original": "f944a20820eb",
+        "path": "static/index.html",
+        "line": 768,
+        "basis": "Button title",
+        "source_label": "Memory",
+        "priority": 90,
+        "status": "source-label candidate",
+        "source_url": "https://github.com/odysseus-dev/odysseus/blob/c21980f5a6d1cb84db8c8ab0f488cefc7764eb3f/static/index.html#L768"
+      }
+    },
+    {
+      "id": "notes",
+      "winner": "new",
+      "new_svg": "icons/notes.svg",
+      "old": {
+        "original": "53fdbb1800f4",
+        "path": "static/index.html",
+        "line": 769,
+        "basis": "Button title",
+        "source_label": "Notes",
+        "priority": 90,
+        "status": "source-label candidate",
+        "source_url": "https://github.com/odysseus-dev/odysseus/blob/c21980f5a6d1cb84db8c8ab0f488cefc7764eb3f/static/index.html#L769"
+      }
+    },
+    {
+      "id": "skills",
+      "winner": "old",
+      "new_svg": "icons/skills.svg",
+      "old": {
+        "original": "262fa58ceba7",
+        "path": "static/index.html",
+        "line": 770,
+        "basis": "Button title",
+        "source_label": "Skills",
+        "priority": 90,
+        "status": "source-label candidate",
+        "source_url": "https://github.com/odysseus-dev/odysseus/blob/c21980f5a6d1cb84db8c8ab0f488cefc7764eb3f/static/index.html#L770"
+      }
+    },
+    {
+      "id": "tasks",
+      "winner": "old",
+      "new_svg": "icons/tasks.svg",
+      "old": {
+        "original": "3e7f9306e2d6",
+        "path": "static/index.html",
+        "line": 771,
+        "basis": "Button title",
+        "source_label": "Tasks",
+        "priority": 90,
+        "status": "source-label candidate",
+        "source_url": "https://github.com/odysseus-dev/odysseus/blob/c21980f5a6d1cb84db8c8ab0f488cefc7764eb3f/static/index.html#L771"
+      }
+    },
+    {
+      "id": "theme",
+      "winner": "new",
+      "new_svg": "icons/theme.svg",
+      "old": {
+        "original": "8204048e5c26",
+        "path": "static/index.html",
+        "line": 772,
+        "basis": "Button title",
+        "source_label": "Theme",
+        "priority": 90,
+        "status": "source-label candidate",
+        "source_url": "https://github.com/odysseus-dev/odysseus/blob/c21980f5a6d1cb84db8c8ab0f488cefc7764eb3f/static/index.html#L772"
+      }
+    },
+    {
+      "id": "settings",
+      "winner": "old",
+      "new_svg": "icons/settings.svg",
+      "old": {
+        "original": "62f57d93402d",
+        "path": "static/index.html",
+        "line": 775,
+        "basis": "Button title",
+        "source_label": "Settings",
+        "priority": 90,
+        "status": "source-label candidate",
+        "source_url": "https://github.com/odysseus-dev/odysseus/blob/c21980f5a6d1cb84db8c8ab0f488cefc7764eb3f/static/index.html#L775"
+      }
+    },
+    {
+      "id": "terminal",
+      "winner": "old",
+      "new_svg": "icons/terminal.svg",
+      "old": {
+        "original": "43f8a7fa8d2a",
+        "path": "static/index.html",
+        "line": 1178,
+        "basis": "Button aria-label",
+        "source_label": "Shell access",
+        "priority": 90,
+        "status": "source-label candidate",
+        "source_url": "https://github.com/odysseus-dev/odysseus/blob/c21980f5a6d1cb84db8c8ab0f488cefc7764eb3f/static/index.html#L1178"
+      }
+    },
+    {
+      "id": "help",
+      "winner": "old",
+      "new_svg": "icons/help.svg",
+      "old": {
+        "original": "20a34c08bff8",
+        "path": "static/js/editor/build/topbar.js",
+        "line": 511,
+        "basis": "Button title",
+        "source_label": "Help",
+        "priority": 90,
+        "status": "source-label candidate",
+        "source_url": "https://github.com/odysseus-dev/odysseus/blob/c21980f5a6d1cb84db8c8ab0f488cefc7764eb3f/static/js/editor/build/topbar.js#L511"
+      }
+    },
+    {
+      "id": "add",
+      "winner": "new",
+      "new_svg": "icons/add.svg",
+      "old": {
+        "original": "f5f6080f4c0b",
+        "path": "static/js/document.js",
+        "line": 7611,
+        "basis": "Button title",
+        "source_label": "Add signature (then click on PDF)",
+        "priority": 90,
+        "status": "source-label candidate",
+        "source_url": "https://github.com/odysseus-dev/odysseus/blob/c21980f5a6d1cb84db8c8ab0f488cefc7764eb3f/static/js/document.js#L7611"
+      }
+    },
+    {
+      "id": "close",
+      "winner": "old",
+      "new_svg": "icons/close.svg",
+      "old": {
+        "original": "cd1da607e28c",
+        "path": "frontend/src/features/notes/ui/editor.js",
+        "line": 99,
+        "basis": "Button title",
+        "source_label": "Close (keep changes)",
+        "priority": 90,
+        "status": "source-label candidate",
+        "source_url": "https://github.com/odysseus-dev/odysseus/blob/c21980f5a6d1cb84db8c8ab0f488cefc7764eb3f/frontend/src/features/notes/ui/editor.js#L99"
+      }
+    },
+    {
+      "id": "check",
+      "winner": "old",
+      "new_svg": "icons/check.svg",
+      "old": {
+        "original": "951f13ee6ec5",
+        "path": "static/js/cookbook.js",
+        "line": 3065,
+        "basis": "Button title",
+        "source_label": "Check SSH connection",
+        "priority": 90,
+        "status": "source-label candidate",
+        "source_url": "https://github.com/odysseus-dev/odysseus/blob/c21980f5a6d1cb84db8c8ab0f488cefc7764eb3f/static/js/cookbook.js#L3065"
+      }
+    },
+    {
+      "id": "copy",
+      "winner": "old",
+      "new_svg": "icons/copy.svg",
+      "old": {
+        "original": "066f79372079",
+        "path": "frontend/src/features/notes/ui/cardRendering.js",
+        "line": 178,
+        "basis": "Button aria-label",
+        "source_label": "Copy all items",
+        "priority": 90,
+        "status": "source-label candidate",
+        "source_url": "https://github.com/odysseus-dev/odysseus/blob/c21980f5a6d1cb84db8c8ab0f488cefc7764eb3f/frontend/src/features/notes/ui/cardRendering.js#L178"
+      }
+    },
+    {
+      "id": "paste",
+      "winner": "old",
+      "new_svg": "icons/paste.svg",
+      "old": {
+        "original": "text-594b89bc9ecf",
+        "path": "static/js/editor/build/topbar.js",
+        "line": 29,
+        "basis": "Literal button text",
+        "source_label": "From Clipboard",
+        "priority": 60,
+        "status": "source-label candidate",
+        "source_url": "https://github.com/odysseus-dev/odysseus/blob/c21980f5a6d1cb84db8c8ab0f488cefc7764eb3f/static/js/editor/build/topbar.js#L29"
+      }
+    },
+    {
+      "id": "edit",
+      "winner": "old",
+      "new_svg": "icons/edit.svg",
+      "old": {
+        "original": "13e6a38559c7",
+        "path": "frontend/src/features/notes/ui/cardRendering.js",
+        "line": 121,
+        "basis": "Button title",
+        "source_label": "Edit item",
+        "priority": 90,
+        "status": "source-label candidate",
+        "source_url": "https://github.com/odysseus-dev/odysseus/blob/c21980f5a6d1cb84db8c8ab0f488cefc7764eb3f/frontend/src/features/notes/ui/cardRendering.js#L121"
+      }
+    },
+    {
+      "id": "rename",
+      "winner": "new",
+      "new_svg": "icons/rename.svg",
+      "old": {
+        "original": "37be3b268b02",
+        "path": "static/js/admin.js",
+        "line": 1078,
+        "basis": "Button aria-label",
+        "source_label": "Rename endpoint",
+        "priority": 90,
+        "status": "source-label candidate",
+        "source_url": "https://github.com/odysseus-dev/odysseus/blob/c21980f5a6d1cb84db8c8ab0f488cefc7764eb3f/static/js/admin.js#L1078"
+      }
+    },
+    {
+      "id": "delete",
+      "winner": "new",
+      "new_svg": "icons/delete.svg",
+      "old": {
+        "original": "04f34e76fb12",
+        "path": "frontend/src/features/notes/ui/cardRendering.js",
+        "line": 124,
+        "basis": "Button title",
+        "source_label": "Delete item",
+        "priority": 90,
+        "status": "source-label candidate",
+        "source_url": "https://github.com/odysseus-dev/odysseus/blob/c21980f5a6d1cb84db8c8ab0f488cefc7764eb3f/frontend/src/features/notes/ui/cardRendering.js#L124"
+      }
+    },
+    {
+      "id": "delete-forever",
+      "winner": "old",
+      "new_svg": "icons/delete-forever.svg",
+      "old": {
+        "original": "fa1c7e98f946",
+        "path": "frontend/src/features/notes/ui/cardRendering.js",
+        "line": 169,
+        "basis": "Button aria-label",
+        "source_label": "Delete forever",
+        "priority": 90,
+        "status": "source-label candidate",
+        "source_url": "https://github.com/odysseus-dev/odysseus/blob/c21980f5a6d1cb84db8c8ab0f488cefc7764eb3f/frontend/src/features/notes/ui/cardRendering.js#L169"
+      }
+    },
+    {
+      "id": "archive",
+      "winner": "old",
+      "new_svg": "icons/archive.svg",
+      "old": {
+        "original": "b2f791f5f8ed",
+        "path": "frontend/src/features/notes/ui/editor.js",
+        "line": 91,
+        "basis": "Button title",
+        "source_label": "Archive",
+        "priority": 90,
+        "status": "source-label candidate",
+        "source_url": "https://github.com/odysseus-dev/odysseus/blob/c21980f5a6d1cb84db8c8ab0f488cefc7764eb3f/frontend/src/features/notes/ui/editor.js#L91"
+      }
+    },
+    {
+      "id": "restore",
+      "winner": "old",
+      "new_svg": "icons/restore.svg",
+      "old": {
+        "original": "20039b29be81",
+        "path": "frontend/src/features/notes/ui/cardRendering.js",
+        "line": 172,
+        "basis": "Button title",
+        "source_label": "Unarchive",
+        "priority": 90,
+        "status": "source-label candidate",
+        "source_url": "https://github.com/odysseus-dev/odysseus/blob/c21980f5a6d1cb84db8c8ab0f488cefc7764eb3f/frontend/src/features/notes/ui/cardRendering.js#L172"
+      }
+    },
+    {
+      "id": "download",
+      "winner": "new",
+      "new_svg": "icons/download.svg",
+      "old": {
+        "original": "1bfac70878dd",
+        "path": "static/js/cookbookRunning.js",
+        "line": 2461,
+        "basis": "Button title",
+        "source_label": "Start this queued download now",
+        "priority": 90,
+        "status": "source-label candidate",
+        "source_url": "https://github.com/odysseus-dev/odysseus/blob/c21980f5a6d1cb84db8c8ab0f488cefc7764eb3f/static/js/cookbookRunning.js#L2461"
+      }
+    },
+    {
+      "id": "import",
+      "winner": "old",
+      "new_svg": "icons/import.svg",
+      "old": {
+        "original": "d0fa78b1a924",
+        "path": "static/index.html",
+        "line": 384,
+        "basis": "Button title",
+        "source_label": "Import memories from a file",
+        "priority": 90,
+        "status": "source-label candidate",
+        "source_url": "https://github.com/odysseus-dev/odysseus/blob/c21980f5a6d1cb84db8c8ab0f488cefc7764eb3f/static/index.html#L384"
+      }
+    },
+    {
+      "id": "export",
+      "winner": "old",
+      "new_svg": "icons/export.svg",
+      "old": {
+        "original": "24eb49f8369e",
+        "path": "static/index.html",
+        "line": 385,
+        "basis": "Button title",
+        "source_label": "Export all memories as JSON",
+        "priority": 90,
+        "status": "source-label candidate",
+        "source_url": "https://github.com/odysseus-dev/odysseus/blob/c21980f5a6d1cb84db8c8ab0f488cefc7764eb3f/static/index.html#L385"
+      }
+    },
+    {
+      "id": "save",
+      "winner": "new",
+      "new_svg": "icons/save.svg",
+      "old": {
+        "original": "81db0bf4bd47",
+        "path": "frontend/src/features/notes/ui/cardRendering.js",
+        "line": 204,
+        "basis": "Button title",
+        "source_label": "Save (archive)",
+        "priority": 90,
+        "status": "source-label candidate",
+        "source_url": "https://github.com/odysseus-dev/odysseus/blob/c21980f5a6d1cb84db8c8ab0f488cefc7764eb3f/frontend/src/features/notes/ui/cardRendering.js#L204"
+      }
+    },
+    {
+      "id": "refresh",
+      "winner": "old",
+      "new_svg": "icons/refresh.svg",
+      "old": {
+        "original": "06b28fb9d8b1",
+        "path": "static/index.html",
+        "line": 1080,
+        "basis": "Button aria-label",
+        "source_label": "Refresh model picker",
+        "priority": 90,
+        "status": "source-label candidate",
+        "source_url": "https://github.com/odysseus-dev/odysseus/blob/c21980f5a6d1cb84db8c8ab0f488cefc7764eb3f/static/index.html#L1080"
+      }
+    },
+    {
+      "id": "undo",
+      "winner": "old",
+      "new_svg": "icons/undo.svg",
+      "old": {
+        "original": "338bb905eb0e",
+        "path": "frontend/src/features/notes/ui/drawing.js",
+        "line": 26,
+        "basis": "Button aria-label",
+        "source_label": "Undo",
+        "priority": 90,
+        "status": "source-label candidate",
+        "source_url": "https://github.com/odysseus-dev/odysseus/blob/c21980f5a6d1cb84db8c8ab0f488cefc7764eb3f/frontend/src/features/notes/ui/drawing.js#L26"
+      }
+    },
+    {
+      "id": "redo",
+      "winner": "old",
+      "new_svg": "icons/redo.svg",
+      "old": {
+        "original": "3898572221f8",
+        "path": "static/js/document.js",
+        "line": 7480,
+        "basis": "Button aria-label",
+        "source_label": "Redo",
+        "priority": 90,
+        "status": "source-label candidate",
+        "source_url": "https://github.com/odysseus-dev/odysseus/blob/c21980f5a6d1cb84db8c8ab0f488cefc7764eb3f/static/js/document.js#L7480"
+      }
+    },
+    {
+      "id": "reset",
+      "winner": "old",
+      "new_svg": "icons/reset.svg",
+      "old": {
+        "original": "a73bd782bda5",
+        "path": "static/index.html",
+        "line": 1889,
+        "basis": "Button aria-label",
+        "source_label": "Reset Sidebar to defaults",
+        "priority": 90,
+        "status": "source-label candidate",
+        "source_url": "https://github.com/odysseus-dev/odysseus/blob/c21980f5a6d1cb84db8c8ab0f488cefc7764eb3f/static/index.html#L1889"
+      }
+    },
+    {
+      "id": "more-horizontal",
+      "winner": "old",
+      "new_svg": "icons/more-horizontal.svg",
+      "old": {
+        "original": "1ce71939462a",
+        "path": "frontend/src/features/notes/ui/cardRendering.js",
+        "line": 210,
+        "basis": "Button title",
+        "source_label": "More",
+        "priority": 90,
+        "status": "source-label candidate",
+        "source_url": "https://github.com/odysseus-dev/odysseus/blob/c21980f5a6d1cb84db8c8ab0f488cefc7764eb3f/frontend/src/features/notes/ui/cardRendering.js#L210"
+      }
+    },
+    {
+      "id": "select-all",
+      "winner": "old",
+      "new_svg": "icons/select-all.svg",
+      "old": {
+        "original": "e590a3ae57fa",
+        "path": "static/js/editor/build/controls.js",
+        "line": 922,
+        "basis": "Button aria-label",
+        "source_label": "Select all layers",
+        "priority": 90,
+        "status": "source-label candidate",
+        "source_url": "https://github.com/odysseus-dev/odysseus/blob/c21980f5a6d1cb84db8c8ab0f488cefc7764eb3f/static/js/editor/build/controls.js#L922"
+      }
+    },
+    {
+      "id": "deselect",
+      "winner": "new",
+      "new_svg": "icons/deselect.svg",
+      "old": {
+        "original": "d2f3a7ec906a",
+        "path": "frontend/src/features/notes/ui/panel.js",
+        "line": 181,
+        "basis": "Button aria-label",
+        "source_label": "Cancel selection",
+        "priority": 90,
+        "status": "source-label candidate",
+        "source_url": "https://github.com/odysseus-dev/odysseus/blob/c21980f5a6d1cb84db8c8ab0f488cefc7764eb3f/frontend/src/features/notes/ui/panel.js#L181"
+      }
+    },
+    {
+      "id": "filter",
+      "winner": "new",
+      "new_svg": "icons/filter.svg",
+      "old": {
+        "original": "9c5915de1209",
+        "path": "static/js/cookbook.js",
+        "line": 3266,
+        "basis": "Button title",
+        "source_label": "Filter by serving engine",
+        "priority": 90,
+        "status": "source-label candidate",
+        "source_url": "https://github.com/odysseus-dev/odysseus/blob/c21980f5a6d1cb84db8c8ab0f488cefc7764eb3f/static/js/cookbook.js#L3266"
+      }
+    },
+    {
+      "id": "filter-clear",
+      "winner": "new",
+      "new_svg": "icons/filter-clear.svg",
+      "old": {
+        "original": "text-29a390f9237e",
+        "path": "static/js/gallery.js",
+        "line": 521,
+        "basis": "Literal button text",
+        "source_label": "Clear every gallery filter",
+        "priority": 60,
+        "status": "source-label candidate",
+        "source_url": "https://github.com/odysseus-dev/odysseus/blob/c21980f5a6d1cb84db8c8ab0f488cefc7764eb3f/static/js/gallery.js#L521"
+      }
+    },
+    {
+      "id": "sort",
+      "winner": "new",
+      "new_svg": "icons/sort.svg",
+      "old": {
+        "original": "db036ab22250",
+        "path": "static/index.html",
+        "line": 809,
+        "basis": "Button title",
+        "source_label": "Sort sessions",
+        "priority": 90,
+        "status": "source-label candidate",
+        "source_url": "https://github.com/odysseus-dev/odysseus/blob/c21980f5a6d1cb84db8c8ab0f488cefc7764eb3f/static/index.html#L809"
+      }
+    },
+    {
+      "id": "favorite",
+      "winner": "new",
+      "new_svg": "icons/favorite.svg",
+      "old": {
+        "original": "b429c4656075",
+        "path": "static/js/gallery.js",
+        "line": 1616,
+        "basis": "Button aria-label",
+        "source_label": "Favorite",
+        "priority": 90,
+        "status": "source-label candidate",
+        "source_url": "https://github.com/odysseus-dev/odysseus/blob/c21980f5a6d1cb84db8c8ab0f488cefc7764eb3f/static/js/gallery.js#L1616"
+      }
+    },
+    {
+      "id": "link",
+      "winner": "old",
+      "new_svg": "icons/link.svg",
+      "old": {
+        "original": "4b4873f22951",
+        "path": "static/js/document.js",
+        "line": 7588,
+        "basis": "Button title",
+        "source_label": "Link (Ctrl+K)",
+        "priority": 90,
+        "status": "source-label candidate",
+        "source_url": "https://github.com/odysseus-dev/odysseus/blob/c21980f5a6d1cb84db8c8ab0f488cefc7764eb3f/static/js/document.js#L7588"
+      }
+    },
+    {
+      "id": "unlink",
+      "winner": "new",
+      "new_svg": "icons/unlink.svg",
+      "old": {
+        "original": "text-b90108da0bd2",
+        "path": "static/js/document.js",
+        "line": 7710,
+        "basis": "Literal button text",
+        "source_label": "Unlink",
+        "priority": 60,
+        "status": "source-label candidate",
+        "source_url": "https://github.com/odysseus-dev/odysseus/blob/c21980f5a6d1cb84db8c8ab0f488cefc7764eb3f/static/js/document.js#L7710"
+      }
+    },
+    {
+      "id": "open",
+      "winner": "new",
+      "new_svg": "icons/open.svg",
+      "old": {
+        "original": "dcb275bcf58c",
+        "path": "static/js/cookbookRunning.js",
+        "line": 2460,
+        "basis": "Button title",
+        "source_label": "Open in Launch",
+        "priority": 90,
+        "status": "source-label candidate",
+        "source_url": "https://github.com/odysseus-dev/odysseus/blob/c21980f5a6d1cb84db8c8ab0f488cefc7764eb3f/static/js/cookbookRunning.js#L2460"
+      }
+    },
+    {
+      "id": "move",
+      "winner": "new",
+      "new_svg": "icons/move.svg",
+      "old": {
+        "original": "33957ec498c1",
+        "path": "static/index.html",
+        "line": 476,
+        "basis": "Button title",
+        "source_label": "Move selected duplicates, failed audits, and low-confidence skills to the bin",
+        "priority": 90,
+        "status": "source-label candidate",
+        "source_url": "https://github.com/odysseus-dev/odysseus/blob/c21980f5a6d1cb84db8c8ab0f488cefc7764eb3f/static/index.html#L476"
+      }
+    },
+    {
+      "id": "clear",
+      "winner": "new",
+      "new_svg": "icons/clear.svg",
+      "old": {
+        "original": "c7e9fa64aa70",
+        "path": "static/index.html",
+        "line": 1192,
+        "basis": "Button aria-label",
+        "source_label": "Clear selected Notes/Todos context",
+        "priority": 90,
+        "status": "source-label candidate",
+        "source_url": "https://github.com/odysseus-dev/odysseus/blob/c21980f5a6d1cb84db8c8ab0f488cefc7764eb3f/static/index.html#L1192"
+      }
+    },
+    {
+      "id": "arrow-left",
+      "winner": "old",
+      "new_svg": "icons/arrow-left.svg",
+      "old": {
+        "original": "209394831557",
+        "path": "frontend/src/features/notes/ui/mobileEditor.js",
+        "line": 36,
+        "basis": "Button title",
+        "source_label": "Back",
+        "priority": 90,
+        "status": "source-label candidate",
+        "source_url": "https://github.com/odysseus-dev/odysseus/blob/c21980f5a6d1cb84db8c8ab0f488cefc7764eb3f/frontend/src/features/notes/ui/mobileEditor.js#L36"
+      }
+    },
+    {
+      "id": "chevron-left",
+      "winner": "old",
+      "new_svg": "icons/chevron-left.svg",
+      "old": {
+        "original": "ed75bace5b8e",
+        "path": "static/js/document.js",
+        "line": 7566,
+        "basis": "Button title",
+        "source_label": "Scroll left",
+        "priority": 90,
+        "status": "source-label candidate",
+        "source_url": "https://github.com/odysseus-dev/odysseus/blob/c21980f5a6d1cb84db8c8ab0f488cefc7764eb3f/static/js/document.js#L7566"
+      }
+    },
+    {
+      "id": "chevron-right",
+      "winner": "old",
+      "new_svg": "icons/chevron-right.svg",
+      "old": {
+        "original": "4ac4263b6de0",
+        "path": "static/js/document.js",
+        "line": 7617,
+        "basis": "Button title",
+        "source_label": "Scroll right",
+        "priority": 90,
+        "status": "source-label candidate",
+        "source_url": "https://github.com/odysseus-dev/odysseus/blob/c21980f5a6d1cb84db8c8ab0f488cefc7764eb3f/static/js/document.js#L7617"
+      }
+    },
+    {
+      "id": "expand",
+      "winner": "new",
+      "new_svg": "icons/expand.svg",
+      "old": {
+        "original": "b097c1e32940",
+        "path": "static/js/compare/icons.js",
+        "line": 11,
+        "basis": "Named SVG: ICON_EXPAND",
+        "source_label": "ICON_EXPAND",
+        "priority": 80,
+        "status": "source-label candidate",
+        "source_url": "https://github.com/odysseus-dev/odysseus/blob/c21980f5a6d1cb84db8c8ab0f488cefc7764eb3f/static/js/compare/icons.js#L11"
+      }
+    },
+    {
+      "id": "collapse",
+      "winner": "new",
+      "new_svg": "icons/collapse.svg",
+      "old": {
+        "original": "812314c18892",
+        "path": "static/index.html",
+        "line": 1464,
+        "basis": "Button aria-label",
+        "source_label": "Collapse settings navigation",
+        "priority": 90,
+        "status": "source-label candidate",
+        "source_url": "https://github.com/odysseus-dev/odysseus/blob/c21980f5a6d1cb84db8c8ab0f488cefc7764eb3f/static/index.html#L1464"
+      }
+    },
+    {
+      "id": "maximize",
+      "winner": "new",
+      "new_svg": "icons/maximize.svg",
+      "old": {
+        "original": "8dcce15ead4a",
+        "path": "static/js/editor/build/topbar.js",
+        "line": 527,
+        "basis": "Button aria-label",
+        "source_label": "Maximize editor",
+        "priority": 90,
+        "status": "source-label candidate",
+        "source_url": "https://github.com/odysseus-dev/odysseus/blob/c21980f5a6d1cb84db8c8ab0f488cefc7764eb3f/static/js/editor/build/topbar.js#L527"
+      }
+    },
+    {
+      "id": "minimize",
+      "winner": "old",
+      "new_svg": "icons/minimize.svg",
+      "old": {
+        "original": "3cd6cb0f805b",
+        "path": "frontend/src/features/notes/ui/panel.js",
+        "line": 163,
+        "basis": "Button aria-label",
+        "source_label": "Minimize notes",
+        "priority": 90,
+        "status": "source-label candidate",
+        "source_url": "https://github.com/odysseus-dev/odysseus/blob/c21980f5a6d1cb84db8c8ab0f488cefc7764eb3f/frontend/src/features/notes/ui/panel.js#L163"
+      }
+    },
+    {
+      "id": "panel-right",
+      "winner": "new",
+      "new_svg": "icons/panel-right.svg",
+      "old": {
+        "original": "03a78506bae9",
+        "path": "static/js/editor/build/topbar.js",
+        "line": 473,
+        "basis": "Button title",
+        "source_label": "Window panels",
+        "priority": 90,
+        "status": "source-label candidate",
+        "source_url": "https://github.com/odysseus-dev/odysseus/blob/c21980f5a6d1cb84db8c8ab0f488cefc7764eb3f/static/js/editor/build/topbar.js#L473"
+      }
+    },
+    {
+      "id": "sidebar-close",
+      "winner": "new",
+      "new_svg": "icons/sidebar-close.svg",
+      "old": {
+        "original": "f34deb630f37",
+        "path": "static/index.html",
+        "line": 781,
+        "basis": "Button title",
+        "source_label": "Toggle sidebar",
+        "priority": 90,
+        "status": "source-label candidate",
+        "source_url": "https://github.com/odysseus-dev/odysseus/blob/c21980f5a6d1cb84db8c8ab0f488cefc7764eb3f/static/index.html#L781"
+      }
+    },
+    {
+      "id": "grid",
+      "winner": "old",
+      "new_svg": "icons/grid.svg",
+      "old": {
+        "original": "63b57dbda2a4",
+        "path": "static/js/gallery.js",
+        "line": 1293,
+        "basis": "Button aria-label",
+        "source_label": "Grid view",
+        "priority": 90,
+        "status": "source-label candidate",
+        "source_url": "https://github.com/odysseus-dev/odysseus/blob/c21980f5a6d1cb84db8c8ab0f488cefc7764eb3f/static/js/gallery.js#L1293"
+      }
+    },
+    {
+      "id": "list",
+      "winner": "old",
+      "new_svg": "icons/list.svg",
+      "old": {
+        "original": "24339190de63",
+        "path": "static/js/gallery.js",
+        "line": 1294,
+        "basis": "Button aria-label",
+        "source_label": "List view",
+        "priority": 90,
+        "status": "source-label candidate",
+        "source_url": "https://github.com/odysseus-dev/odysseus/blob/c21980f5a6d1cb84db8c8ab0f488cefc7764eb3f/static/js/gallery.js#L1294"
+      }
+    },
+    {
+      "id": "table",
+      "winner": "old",
+      "new_svg": "icons/table.svg",
+      "old": {
+        "original": "d75f6ea12486",
+        "path": "static/js/document.js",
+        "line": 7601,
+        "basis": "Button title",
+        "source_label": "Table",
+        "priority": 90,
+        "status": "source-label candidate",
+        "source_url": "https://github.com/odysseus-dev/odysseus/blob/c21980f5a6d1cb84db8c8ab0f488cefc7764eb3f/static/js/document.js#L7601"
+      }
+    },
+    {
+      "id": "dock",
+      "winner": "new",
+      "new_svg": "icons/dock.svg",
+      "old": {
+        "original": "90b50e309d57",
+        "path": "static/js/editor/build/dock.js",
+        "line": 127,
+        "basis": "Button aria-label",
+        "source_label": "Dock panel",
+        "priority": 90,
+        "status": "source-label candidate",
+        "source_url": "https://github.com/odysseus-dev/odysseus/blob/c21980f5a6d1cb84db8c8ab0f488cefc7764eb3f/static/js/editor/build/dock.js#L127"
+      }
+    },
+    {
+      "id": "send",
+      "winner": "old",
+      "new_svg": "icons/send.svg",
+      "old": {
+        "original": "e0416b27cbd7",
+        "path": "static/js/document.js",
+        "line": 7658,
+        "basis": "Button title",
+        "source_label": "Send email (Ctrl+Enter)",
+        "priority": 90,
+        "status": "source-label candidate",
+        "source_url": "https://github.com/odysseus-dev/odysseus/blob/c21980f5a6d1cb84db8c8ab0f488cefc7764eb3f/static/js/document.js#L7658"
+      }
+    },
+    {
+      "id": "stop",
+      "winner": "old",
+      "new_svg": "icons/stop.svg",
+      "old": {
+        "original": "e0617857aeab",
+        "path": "static/js/compare/index.js",
+        "line": 554,
+        "basis": "Button title",
+        "source_label": "Stop",
+        "priority": 90,
+        "status": "source-label candidate",
+        "source_url": "https://github.com/odysseus-dev/odysseus/blob/c21980f5a6d1cb84db8c8ab0f488cefc7764eb3f/static/js/compare/index.js#L554"
+      }
+    },
+    {
+      "id": "resend",
+      "winner": "old",
+      "new_svg": "icons/resend.svg",
+      "old": {
+        "original": "422637eebe8f",
+        "path": "static/js/chatRenderer.js",
+        "line": 80,
+        "basis": "Named SVG: RESEND_ICON",
+        "source_label": "RESEND_ICON",
+        "priority": 80,
+        "status": "source-label candidate",
+        "source_url": "https://github.com/odysseus-dev/odysseus/blob/c21980f5a6d1cb84db8c8ab0f488cefc7764eb3f/static/js/chatRenderer.js#L80"
+      }
+    },
+    {
+      "id": "quote",
+      "winner": "new",
+      "new_svg": "icons/quote.svg",
+      "old": {
+        "original": "0ef9a79371db",
+        "path": "static/js/emailLibrary/signatureFold.js",
+        "line": 21,
+        "basis": "Named SVG: _QUOTE_ICON",
+        "source_label": "_QUOTE_ICON",
+        "priority": 80,
+        "status": "source-label candidate",
+        "source_url": "https://github.com/odysseus-dev/odysseus/blob/c21980f5a6d1cb84db8c8ab0f488cefc7764eb3f/static/js/emailLibrary/signatureFold.js#L21"
+      }
+    },
+    {
+      "id": "reply",
+      "winner": "old",
+      "new_svg": "icons/reply.svg",
+      "old": {
+        "original": "c27a873d822e",
+        "path": "static/js/emailLibrary/index.js",
+        "line": 6085,
+        "basis": "Button title",
+        "source_label": "Reply",
+        "priority": 90,
+        "status": "source-label candidate",
+        "source_url": "https://github.com/odysseus-dev/odysseus/blob/c21980f5a6d1cb84db8c8ab0f488cefc7764eb3f/static/js/emailLibrary/index.js#L6085"
+      }
+    },
+    {
+      "id": "reasoning",
+      "winner": "new",
+      "new_svg": "icons/reasoning.svg",
+      "old": {
+        "original": "cdb93a58a95c",
+        "path": "static/index.html",
+        "line": 1259,
+        "basis": "Button title",
+        "source_label": "Reasoning effort",
+        "priority": 90,
+        "status": "source-label candidate",
+        "source_url": "https://github.com/odysseus-dev/odysseus/blob/c21980f5a6d1cb84db8c8ab0f488cefc7764eb3f/static/index.html#L1259"
+      }
+    },
+    {
+      "id": "context",
+      "winner": "new",
+      "new_svg": "icons/context.svg",
+      "old": {
+        "original": "5f82f568036e",
+        "path": "static/js/document.js",
+        "line": 7568,
+        "basis": "Button title",
+        "source_label": "Draft a reply with AI (fast + optional context)",
+        "priority": 90,
+        "status": "source-label candidate",
+        "source_url": "https://github.com/odysseus-dev/odysseus/blob/c21980f5a6d1cb84db8c8ab0f488cefc7764eb3f/static/js/document.js#L7568"
+      }
+    },
+    {
+      "id": "persona",
+      "winner": "old",
+      "new_svg": "icons/persona.svg",
+      "old": {
+        "original": "0e5a0422037b",
+        "path": "static/index.html",
+        "line": 1226,
+        "basis": "Button title",
+        "source_label": "Persona active — click to deactivate",
+        "priority": 90,
+        "status": "source-label candidate",
+        "source_url": "https://github.com/odysseus-dev/odysseus/blob/c21980f5a6d1cb84db8c8ab0f488cefc7764eb3f/static/index.html#L1226"
+      }
+    },
+    {
+      "id": "group-chat",
+      "winner": "old",
+      "new_svg": "icons/group-chat.svg",
+      "old": {
+        "original": "334eda7177fb",
+        "path": "static/index.html",
+        "line": 1219,
+        "basis": "Button title",
+        "source_label": "Group Chat active — click to deactivate",
+        "priority": 90,
+        "status": "source-label candidate",
+        "source_url": "https://github.com/odysseus-dev/odysseus/blob/c21980f5a6d1cb84db8c8ab0f488cefc7764eb3f/static/index.html#L1219"
+      }
+    },
+    {
+      "id": "nobody",
+      "winner": "old",
+      "new_svg": "icons/nobody.svg",
+      "old": {
+        "original": "87a987546e53",
+        "path": "static/index.html",
+        "line": 1008,
+        "basis": "Button title",
+        "source_label": "Nobody mode active — click to deactivate",
+        "priority": 90,
+        "status": "source-label candidate",
+        "source_url": "https://github.com/odysseus-dev/odysseus/blob/c21980f5a6d1cb84db8c8ab0f488cefc7764eb3f/static/index.html#L1008"
+      }
+    },
+    {
+      "id": "plan",
+      "winner": "old",
+      "new_svg": "icons/plan.svg",
+      "old": {
+        "original": "671efd13b989",
+        "path": "static/js/chatRenderer.js",
+        "line": 54,
+        "basis": "Named SVG: update_plan",
+        "source_label": "update_plan",
+        "priority": 80,
+        "status": "source-label candidate",
+        "source_url": "https://github.com/odysseus-dev/odysseus/blob/c21980f5a6d1cb84db8c8ab0f488cefc7764eb3f/static/js/chatRenderer.js#L54"
+      }
+    },
+    {
+      "id": "model-switch",
+      "winner": "old",
+      "new_svg": "icons/model-switch.svg",
+      "old": {
+        "original": "896f7cfbf370",
+        "path": "static/index.html",
+        "line": 1074,
+        "basis": "Button title",
+        "source_label": "Switch model",
+        "priority": 90,
+        "status": "source-label candidate",
+        "source_url": "https://github.com/odysseus-dev/odysseus/blob/c21980f5a6d1cb84db8c8ab0f488cefc7764eb3f/static/index.html#L1074"
+      }
+    },
+    {
+      "id": "prompt-expand",
+      "winner": "old",
+      "new_svg": "icons/prompt-expand.svg",
+      "old": {
+        "original": "58673168aa79",
+        "path": "static/index.html",
+        "line": 1317,
+        "basis": "Button title",
+        "source_label": "AI expand — turn your notes into a full system prompt",
+        "priority": 90,
+        "status": "source-label candidate",
+        "source_url": "https://github.com/odysseus-dev/odysseus/blob/c21980f5a6d1cb84db8c8ab0f488cefc7764eb3f/static/index.html#L1317"
+      }
+    },
+    {
+      "id": "tool-call",
+      "winner": "old",
+      "new_svg": "icons/tool-call.svg",
+      "old": {
+        "original": "3dfb6141fa01",
+        "path": "static/js/compare/scoreboard.js",
+        "line": 13,
+        "basis": "Named SVG: agent",
+        "source_label": "agent",
+        "priority": 80,
+        "status": "source-label candidate",
+        "source_url": "https://github.com/odysseus-dev/odysseus/blob/c21980f5a6d1cb84db8c8ab0f488cefc7764eb3f/static/js/compare/scoreboard.js#L13"
+      }
+    },
+    {
+      "id": "model",
+      "winner": "old",
+      "new_svg": "icons/model.svg",
+      "old": {
+        "original": "c55d4ca64b7c",
+        "path": "static/js/cookbook.js",
+        "line": 1202,
+        "basis": "Button title",
+        "source_label": "Pick a model to see the exact install commands",
+        "priority": 90,
+        "status": "source-label candidate",
+        "source_url": "https://github.com/odysseus-dev/odysseus/blob/c21980f5a6d1cb84db8c8ab0f488cefc7764eb3f/static/js/cookbook.js#L1202"
+      }
+    },
+    {
+      "id": "model-add",
+      "winner": "new",
+      "new_svg": "icons/model-add.svg",
+      "old": {
+        "original": "d1079e2f2a76",
+        "path": "static/index.html",
+        "line": 1084,
+        "basis": "Button aria-label",
+        "source_label": "Add model endpoints",
+        "priority": 90,
+        "status": "source-label candidate",
+        "source_url": "https://github.com/odysseus-dev/odysseus/blob/c21980f5a6d1cb84db8c8ab0f488cefc7764eb3f/static/index.html#L1084"
+      }
+    },
+    {
+      "id": "provider",
+      "winner": "old",
+      "new_svg": "icons/provider.svg",
+      "old": {
+        "original": "202aa679f817",
+        "path": "static/index.html",
+        "line": 2361,
+        "basis": "Button title",
+        "source_label": "Pick provider",
+        "priority": 90,
+        "status": "source-label candidate",
+        "source_url": "https://github.com/odysseus-dev/odysseus/blob/c21980f5a6d1cb84db8c8ab0f488cefc7764eb3f/static/index.html#L2361"
+      }
+    },
+    {
+      "id": "endpoint",
+      "winner": "old",
+      "new_svg": "icons/endpoint.svg",
+      "old": {
+        "original": "text-eab0455a3fa5",
+        "path": "static/index.html",
+        "line": 2297,
+        "basis": "Literal button text",
+        "source_label": "Fill the default Ollama endpoint",
+        "priority": 60,
+        "status": "source-label candidate",
+        "source_url": "https://github.com/odysseus-dev/odysseus/blob/c21980f5a6d1cb84db8c8ab0f488cefc7764eb3f/static/index.html#L2297"
+      }
+    },
+    {
+      "id": "endpoint-test",
+      "winner": "old",
+      "new_svg": "icons/endpoint-test.svg",
+      "old": {
+        "original": "cb50d57999b8",
+        "path": "static/index.html",
+        "line": 2416,
+        "basis": "Button title",
+        "source_label": "Re-test every endpoint and refresh online status",
+        "priority": 90,
+        "status": "source-label candidate",
+        "source_url": "https://github.com/odysseus-dev/odysseus/blob/c21980f5a6d1cb84db8c8ab0f488cefc7764eb3f/static/index.html#L2416"
+      }
+    },
+    {
+      "id": "server",
+      "winner": "old",
+      "new_svg": "icons/server.svg",
+      "old": {
+        "original": "d9400abfded1",
+        "path": "static/js/cookbook.js",
+        "line": 3064,
+        "basis": "Button title",
+        "source_label": "Set up SSH key for this server",
+        "priority": 90,
+        "status": "source-label candidate",
+        "source_url": "https://github.com/odysseus-dev/odysseus/blob/c21980f5a6d1cb84db8c8ab0f488cefc7764eb3f/static/js/cookbook.js#L3064"
+      }
+    },
+    {
+      "id": "server-add",
+      "winner": "old",
+      "new_svg": "icons/server-add.svg",
+      "old": {
+        "original": "text-8e7e37936ac1",
+        "path": "static/js/cookbook.js",
+        "line": 3403,
+        "basis": "Literal button text",
+        "source_label": "Add server",
+        "priority": 60,
+        "status": "source-label candidate",
+        "source_url": "https://github.com/odysseus-dev/odysseus/blob/c21980f5a6d1cb84db8c8ab0f488cefc7764eb3f/static/js/cookbook.js#L3403"
+      }
+    },
+    {
+      "id": "cpu",
+      "winner": "old",
+      "new_svg": "icons/cpu.svg",
+      "old": {
+        "original": "text-bf4b0c03c646",
+        "path": "static/js/cookbook-hwfit.js",
+        "line": 302,
+        "basis": "Literal button text",
+        "source_label": "CPU / RAM only",
+        "priority": 60,
+        "status": "source-label candidate",
+        "source_url": "https://github.com/odysseus-dev/odysseus/blob/c21980f5a6d1cb84db8c8ab0f488cefc7764eb3f/static/js/cookbook-hwfit.js#L302"
+      }
+    },
+    {
+      "id": "gpu",
+      "winner": "old",
+      "new_svg": "icons/gpu.svg",
+      "old": {
+        "original": "text-d2e15d862606",
+        "path": "static/js/cookbook.js",
+        "line": 1223,
+        "basis": "Literal button text",
+        "source_label": "Install GPU wheel",
+        "priority": 60,
+        "status": "source-label candidate",
+        "source_url": "https://github.com/odysseus-dev/odysseus/blob/c21980f5a6d1cb84db8c8ab0f488cefc7764eb3f/static/js/cookbook.js#L1223"
+      }
+    },
+    {
+      "id": "container",
+      "winner": "old",
+      "new_svg": "icons/container.svg",
+      "old": {
+        "original": "text-e6169e958b37",
+        "path": "static/js/cookbook.js",
+        "line": 1293,
+        "basis": "Literal button text",
+        "source_label": "Docker",
+        "priority": 60,
+        "status": "source-label candidate",
+        "source_url": "https://github.com/odysseus-dev/odysseus/blob/c21980f5a6d1cb84db8c8ab0f488cefc7764eb3f/static/js/cookbook.js#L1293"
+      }
+    },
+    {
+      "id": "api-key",
+      "winner": "old",
+      "new_svg": "icons/api-key.svg",
+      "old": {
+        "original": "1622fb4462f7",
+        "path": "static/index.html",
+        "line": 2299,
+        "basis": "Button title",
+        "source_label": "Show / hide the API key field",
+        "priority": 90,
+        "status": "source-label candidate",
+        "source_url": "https://github.com/odysseus-dev/odysseus/blob/c21980f5a6d1cb84db8c8ab0f488cefc7764eb3f/static/index.html#L2299"
+      }
+    },
+    {
+      "id": "database",
+      "winner": "new",
+      "new_svg": "icons/database.svg",
+      "old": {
+        "original": "a85bc4fafd3b",
+        "path": "static/js/calendar.js",
+        "line": 1056,
+        "basis": "Button title",
+        "source_label": "Refresh from database",
+        "priority": 90,
+        "status": "source-label candidate",
+        "source_url": "https://github.com/odysseus-dev/odysseus/blob/c21980f5a6d1cb84db8c8ab0f488cefc7764eb3f/static/js/calendar.js#L1056"
+      }
+    },
+    {
+      "id": "checkpoint",
+      "winner": "old",
+      "new_svg": "icons/checkpoint.svg",
+      "old": {
+        "original": "text-7de106be712b",
+        "path": "static/js/settings.js",
+        "line": 2468,
+        "basis": "Literal button text",
+        "source_label": "Make Default",
+        "priority": 60,
+        "status": "source-label candidate",
+        "source_url": "https://github.com/odysseus-dev/odysseus/blob/c21980f5a6d1cb84db8c8ab0f488cefc7764eb3f/static/js/settings.js#L2468"
+      }
+    },
+    {
+      "id": "file",
+      "winner": "new",
+      "new_svg": "icons/file.svg",
+      "old": {
+        "original": "564f1ff0a51f",
+        "path": "static/js/editor/build/topbar.js",
+        "line": 18,
+        "basis": "Button title",
+        "source_label": "File actions",
+        "priority": 90,
+        "status": "source-label candidate",
+        "source_url": "https://github.com/odysseus-dev/odysseus/blob/c21980f5a6d1cb84db8c8ab0f488cefc7764eb3f/static/js/editor/build/topbar.js#L18"
+      }
+    },
+    {
+      "id": "folder",
+      "winner": "old",
+      "new_svg": "icons/folder.svg",
+      "old": {
+        "original": "ee76e360d1c7",
+        "path": "static/js/sessions.js",
+        "line": 603,
+        "basis": "Named SVG: _folderIcon",
+        "source_label": "_folderIcon",
+        "priority": 80,
+        "status": "source-label candidate",
+        "source_url": "https://github.com/odysseus-dev/odysseus/blob/c21980f5a6d1cb84db8c8ab0f488cefc7764eb3f/static/js/sessions.js#L603"
+      }
+    },
+    {
+      "id": "bold",
+      "winner": "new",
+      "new_svg": "icons/bold.svg",
+      "old": {
+        "original": "text-df7e70e50215",
+        "path": "static/js/document.js",
+        "line": 7574,
+        "basis": "Literal button text",
+        "source_label": "Bold (Ctrl+B)",
+        "priority": 60,
+        "status": "source-label candidate",
+        "source_url": "https://github.com/odysseus-dev/odysseus/blob/c21980f5a6d1cb84db8c8ab0f488cefc7764eb3f/static/js/document.js#L7574"
+      }
+    },
+    {
+      "id": "italic",
+      "winner": "new",
+      "new_svg": "icons/italic.svg",
+      "old": {
+        "original": "text-a83dd0ccbffe",
+        "path": "static/js/document.js",
+        "line": 7575,
+        "basis": "Literal button text",
+        "source_label": "Italic (Ctrl+I)",
+        "priority": 60,
+        "status": "source-label candidate",
+        "source_url": "https://github.com/odysseus-dev/odysseus/blob/c21980f5a6d1cb84db8c8ab0f488cefc7764eb3f/static/js/document.js#L7575"
+      }
+    },
+    {
+      "id": "underline",
+      "winner": "new",
+      "new_svg": "icons/underline.svg",
+      "old": {
+        "original": "text-a25513c7e0f6",
+        "path": "static/js/document.js",
+        "line": 7577,
+        "basis": "Literal button text",
+        "source_label": "Underline (Ctrl+U)",
+        "priority": 60,
+        "status": "source-label candidate",
+        "source_url": "https://github.com/odysseus-dev/odysseus/blob/c21980f5a6d1cb84db8c8ab0f488cefc7764eb3f/static/js/document.js#L7577"
+      }
+    },
+    {
+      "id": "strikethrough",
+      "winner": "new",
+      "new_svg": "icons/strikethrough.svg",
+      "old": {
+        "original": "text-8de0b3c47f11",
+        "path": "static/js/document.js",
+        "line": 7576,
+        "basis": "Literal button text",
+        "source_label": "Strikethrough (Ctrl+Shift+X)",
+        "priority": 60,
+        "status": "source-label candidate",
+        "source_url": "https://github.com/odysseus-dev/odysseus/blob/c21980f5a6d1cb84db8c8ab0f488cefc7764eb3f/static/js/document.js#L7576"
+      }
+    },
+    {
+      "id": "superscript",
+      "winner": "new",
+      "new_svg": "icons/superscript.svg",
+      "old": {
+        "original": "text-844ecc08164e",
+        "path": "static/js/document.js",
+        "line": 7578,
+        "basis": "Literal button text",
+        "source_label": "Superscript",
+        "priority": 60,
+        "status": "source-label candidate",
+        "source_url": "https://github.com/odysseus-dev/odysseus/blob/c21980f5a6d1cb84db8c8ab0f488cefc7764eb3f/static/js/document.js#L7578"
+      }
+    },
+    {
+      "id": "subscript",
+      "winner": "new",
+      "new_svg": "icons/subscript.svg",
+      "old": {
+        "original": "text-844ecc08164e",
+        "path": "static/js/document.js",
+        "line": 7579,
+        "basis": "Literal button text",
+        "source_label": "Subscript",
+        "priority": 60,
+        "status": "source-label candidate",
+        "source_url": "https://github.com/odysseus-dev/odysseus/blob/c21980f5a6d1cb84db8c8ab0f488cefc7764eb3f/static/js/document.js#L7579"
+      }
+    },
+    {
+      "id": "heading",
+      "winner": "new",
+      "new_svg": "icons/heading.svg",
+      "old": {
+        "original": "90be1febf1d2",
+        "path": "static/js/document.js",
+        "line": 7581,
+        "basis": "Button title",
+        "source_label": "Heading (Ctrl+Alt+1-6)",
+        "priority": 90,
+        "status": "source-label candidate",
+        "source_url": "https://github.com/odysseus-dev/odysseus/blob/c21980f5a6d1cb84db8c8ab0f488cefc7764eb3f/static/js/document.js#L7581"
+      }
+    },
+    {
+      "id": "font-family",
+      "winner": "new",
+      "new_svg": "icons/font-family.svg",
+      "old": {
+        "original": "90be1febf1d2",
+        "path": "static/js/document.js",
+        "line": 7582,
+        "basis": "Button aria-label",
+        "source_label": "Font family",
+        "priority": 90,
+        "status": "source-label candidate",
+        "source_url": "https://github.com/odysseus-dev/odysseus/blob/c21980f5a6d1cb84db8c8ab0f488cefc7764eb3f/static/js/document.js#L7582"
+      }
+    },
+    {
+      "id": "font-size",
+      "winner": "new",
+      "new_svg": "icons/font-size.svg",
+      "old": {
+        "original": "37ea9e198402",
+        "path": "static/js/document.js",
+        "line": 7571,
+        "basis": "Button aria-label",
+        "source_label": "Editor display size",
+        "priority": 90,
+        "status": "source-label candidate",
+        "source_url": "https://github.com/odysseus-dev/odysseus/blob/c21980f5a6d1cb84db8c8ab0f488cefc7764eb3f/static/js/document.js#L7571"
+      }
+    },
+    {
+      "id": "text-color",
+      "winner": "new",
+      "new_svg": "icons/text-color.svg",
+      "old": {
+        "original": "749e5b9e172e",
+        "path": "static/js/document.js",
+        "line": 7597,
+        "basis": "Button title",
+        "source_label": "Text color",
+        "priority": 90,
+        "status": "source-label candidate",
+        "source_url": "https://github.com/odysseus-dev/odysseus/blob/c21980f5a6d1cb84db8c8ab0f488cefc7764eb3f/static/js/document.js#L7597"
+      }
+    },
+    {
+      "id": "highlight",
+      "winner": "new",
+      "new_svg": "icons/highlight.svg",
+      "old": {
+        "original": "0557ce84b1d7",
+        "path": "static/js/document.js",
+        "line": 7598,
+        "basis": "Button title",
+        "source_label": "Highlight color",
+        "priority": 90,
+        "status": "source-label candidate",
+        "source_url": "https://github.com/odysseus-dev/odysseus/blob/c21980f5a6d1cb84db8c8ab0f488cefc7764eb3f/static/js/document.js#L7598"
+      }
+    },
+    {
+      "id": "list-bulleted",
+      "winner": "old",
+      "new_svg": "icons/list-bulleted.svg",
+      "old": {
+        "original": "da73fb32d0f1",
+        "path": "static/js/document.js",
+        "line": 7584,
+        "basis": "Button title",
+        "source_label": "Bulleted list",
+        "priority": 90,
+        "status": "source-label candidate",
+        "source_url": "https://github.com/odysseus-dev/odysseus/blob/c21980f5a6d1cb84db8c8ab0f488cefc7764eb3f/static/js/document.js#L7584"
+      }
+    },
+    {
+      "id": "indent",
+      "winner": "new",
+      "new_svg": "icons/indent.svg",
+      "old": {
+        "original": "6ea1468b81f7",
+        "path": "static/js/document.js",
+        "line": 7595,
+        "basis": "Button title",
+        "source_label": "Decrease indent (Ctrl+[)",
+        "priority": 90,
+        "status": "source-label candidate",
+        "source_url": "https://github.com/odysseus-dev/odysseus/blob/c21980f5a6d1cb84db8c8ab0f488cefc7764eb3f/static/js/document.js#L7595"
+      }
+    },
+    {
+      "id": "line-spacing",
+      "winner": "new",
+      "new_svg": "icons/line-spacing.svg",
+      "old": {
+        "original": "7f8fc2a60ccf",
+        "path": "static/js/document.js",
+        "line": 7594,
+        "basis": "Button title",
+        "source_label": "Line spacing",
+        "priority": 90,
+        "status": "source-label candidate",
+        "source_url": "https://github.com/odysseus-dev/odysseus/blob/c21980f5a6d1cb84db8c8ab0f488cefc7764eb3f/static/js/document.js#L7594"
+      }
+    },
+    {
+      "id": "blockquote",
+      "winner": "new",
+      "new_svg": "icons/blockquote.svg",
+      "old": {
+        "original": "91c1d7a349e1",
+        "path": "static/js/document.js",
+        "line": 7600,
+        "basis": "Button title",
+        "source_label": "Block quote",
+        "priority": 90,
+        "status": "source-label candidate",
+        "source_url": "https://github.com/odysseus-dev/odysseus/blob/c21980f5a6d1cb84db8c8ab0f488cefc7764eb3f/static/js/document.js#L7600"
+      }
+    },
+    {
+      "id": "separator",
+      "winner": "old",
+      "new_svg": "icons/separator.svg",
+      "old": {
+        "original": "cf6f1892d9a7",
+        "path": "static/js/document.js",
+        "line": 7602,
+        "basis": "Button title",
+        "source_label": "Insert separator",
+        "priority": 90,
+        "status": "source-label candidate",
+        "source_url": "https://github.com/odysseus-dev/odysseus/blob/c21980f5a6d1cb84db8c8ab0f488cefc7764eb3f/static/js/document.js#L7602"
+      }
+    },
+    {
+      "id": "page-break",
+      "winner": "old",
+      "new_svg": "icons/page-break.svg",
+      "old": {
+        "original": "8a9d60ff5591",
+        "path": "static/js/document.js",
+        "line": 7603,
+        "basis": "Button aria-label",
+        "source_label": "Page break",
+        "priority": 90,
+        "status": "source-label candidate",
+        "source_url": "https://github.com/odysseus-dev/odysseus/blob/c21980f5a6d1cb84db8c8ab0f488cefc7764eb3f/static/js/document.js#L7603"
+      }
+    },
+    {
+      "id": "text-box",
+      "winner": "new",
+      "new_svg": "icons/text-box.svg",
+      "old": {
+        "original": "text-e632b7095b0b",
+        "path": "frontend/src/features/notes/ui/drawing.js",
+        "line": 28,
+        "basis": "Literal button text",
+        "source_label": "Add text",
+        "priority": 60,
+        "status": "source-label candidate",
+        "source_url": "https://github.com/odysseus-dev/odysseus/blob/c21980f5a6d1cb84db8c8ab0f488cefc7764eb3f/frontend/src/features/notes/ui/drawing.js#L28"
+      }
+    },
+    {
+      "id": "find",
+      "winner": "old",
+      "new_svg": "icons/find.svg",
+      "old": {
+        "original": "9a787aa8bc4d",
+        "path": "static/js/document.js",
+        "line": 7607,
+        "basis": "Button aria-label",
+        "source_label": "Find",
+        "priority": 90,
+        "status": "source-label candidate",
+        "source_url": "https://github.com/odysseus-dev/odysseus/blob/c21980f5a6d1cb84db8c8ab0f488cefc7764eb3f/static/js/document.js#L7607"
+      }
+    },
+    {
+      "id": "find-replace",
+      "winner": "old",
+      "new_svg": "icons/find-replace.svg",
+      "old": {
+        "original": "e9fdf187e8cc",
+        "path": "static/js/document.js",
+        "line": 7629,
+        "basis": "Button aria-label",
+        "source_label": "Show replace",
+        "priority": 90,
+        "status": "source-label candidate",
+        "source_url": "https://github.com/odysseus-dev/odysseus/blob/c21980f5a6d1cb84db8c8ab0f488cefc7764eb3f/static/js/document.js#L7629"
+      }
+    },
+    {
+      "id": "diff",
+      "winner": "old",
+      "new_svg": "icons/diff.svg",
+      "old": {
+        "original": "bae7800b05b5",
+        "path": "static/js/document.js",
+        "line": 7572,
+        "basis": "Button title",
+        "source_label": "Compare changes",
+        "priority": 90,
+        "status": "source-label candidate",
+        "source_url": "https://github.com/odysseus-dev/odysseus/blob/c21980f5a6d1cb84db8c8ab0f488cefc7764eb3f/static/js/document.js#L7572"
+      }
+    },
+    {
+      "id": "outline",
+      "winner": "old",
+      "new_svg": "icons/outline.svg",
+      "old": {
+        "original": "58a15c5bd0f9",
+        "path": "static/js/document.js",
+        "line": 7608,
+        "basis": "Button aria-label",
+        "source_label": "Document outline",
+        "priority": 90,
+        "status": "source-label candidate",
+        "source_url": "https://github.com/odysseus-dev/odysseus/blob/c21980f5a6d1cb84db8c8ab0f488cefc7764eb3f/static/js/document.js#L7608"
+      }
+    },
+    {
+      "id": "note-new",
+      "winner": "old",
+      "new_svg": "icons/note-new.svg",
+      "old": {
+        "original": "eae1cc507356",
+        "path": "frontend/src/features/notes/ui/quickAdd.js",
+        "line": 20,
+        "basis": "Button aria-label",
+        "source_label": "Note",
+        "priority": 90,
+        "status": "source-label candidate",
+        "source_url": "https://github.com/odysseus-dev/odysseus/blob/c21980f5a6d1cb84db8c8ab0f488cefc7764eb3f/frontend/src/features/notes/ui/quickAdd.js#L20"
+      }
+    },
+    {
+      "id": "todo",
+      "winner": "old",
+      "new_svg": "icons/todo.svg",
+      "old": {
+        "original": "fb6d237d8ba0",
+        "path": "frontend/src/features/notes/ui/cardRendering.js",
+        "line": 175,
+        "basis": "Button aria-label",
+        "source_label": "Mark done",
+        "priority": 90,
+        "status": "source-label candidate",
+        "source_url": "https://github.com/odysseus-dev/odysseus/blob/c21980f5a6d1cb84db8c8ab0f488cefc7764eb3f/frontend/src/features/notes/ui/cardRendering.js#L175"
+      }
+    },
+    {
+      "id": "reminder",
+      "winner": "old",
+      "new_svg": "icons/reminder.svg",
+      "old": {
+        "original": "522ac8ec9c02",
+        "path": "frontend/src/features/notes/ui/editor.js",
+        "line": 49,
+        "basis": "Button title",
+        "source_label": "Remind me",
+        "priority": 90,
+        "status": "source-label candidate",
+        "source_url": "https://github.com/odysseus-dev/odysseus/blob/c21980f5a6d1cb84db8c8ab0f488cefc7764eb3f/frontend/src/features/notes/ui/editor.js#L49"
+      }
+    },
+    {
+      "id": "tag",
+      "winner": "old",
+      "new_svg": "icons/tag.svg",
+      "old": {
+        "original": "d9029098306e",
+        "path": "static/js/gallery.js",
+        "line": 3022,
+        "basis": "Named SVG: _tagIco",
+        "source_label": "_tagIco",
+        "priority": 80,
+        "status": "source-label candidate",
+        "source_url": "https://github.com/odysseus-dev/odysseus/blob/c21980f5a6d1cb84db8c8ab0f488cefc7764eb3f/static/js/gallery.js#L3022"
+      }
+    },
+    {
+      "id": "calendar-day",
+      "winner": "old",
+      "new_svg": "icons/calendar-day.svg",
+      "old": {
+        "original": "text-3d4869406552",
+        "path": "static/js/calendar.js",
+        "line": 546,
+        "basis": "Literal button text",
+        "source_label": "This event only",
+        "priority": 60,
+        "status": "source-label candidate",
+        "source_url": "https://github.com/odysseus-dev/odysseus/blob/c21980f5a6d1cb84db8c8ab0f488cefc7764eb3f/static/js/calendar.js#L546"
+      }
+    },
+    {
+      "id": "calendar-add",
+      "winner": "old",
+      "new_svg": "icons/calendar-add.svg",
+      "old": {
+        "original": "text-b911310c5eb5",
+        "path": "static/js/calendar.js",
+        "line": 978,
+        "basis": "Literal button text",
+        "source_label": "New calendar",
+        "priority": 60,
+        "status": "source-label candidate",
+        "source_url": "https://github.com/odysseus-dev/odysseus/blob/c21980f5a6d1cb84db8c8ab0f488cefc7764eb3f/static/js/calendar.js#L978"
+      }
+    },
+    {
+      "id": "event-add",
+      "winner": "old",
+      "new_svg": "icons/event-add.svg",
+      "old": {
+        "original": "text-f12949a75aa5",
+        "path": "static/js/calendar.js",
+        "line": 1058,
+        "basis": "Literal button text",
+        "source_label": "New event",
+        "priority": 60,
+        "status": "source-label candidate",
+        "source_url": "https://github.com/odysseus-dev/odysseus/blob/c21980f5a6d1cb84db8c8ab0f488cefc7764eb3f/static/js/calendar.js#L1058"
+      }
+    },
+    {
+      "id": "today",
+      "winner": "old",
+      "new_svg": "icons/today.svg",
+      "old": {
+        "original": "text-2b065c7c9ce4",
+        "path": "static/js/calendar.js",
+        "line": 1045,
+        "basis": "Literal button text",
+        "source_label": "Today",
+        "priority": 60,
+        "status": "source-label candidate",
+        "source_url": "https://github.com/odysseus-dev/odysseus/blob/c21980f5a6d1cb84db8c8ab0f488cefc7764eb3f/static/js/calendar.js#L1045"
+      }
+    },
+    {
+      "id": "schedule",
+      "winner": "old",
+      "new_svg": "icons/schedule.svg",
+      "old": {
+        "original": "text-698eab0611ad",
+        "path": "static/js/document.js",
+        "line": 6937,
+        "basis": "Literal button text",
+        "source_label": "In 1 hour",
+        "priority": 60,
+        "status": "source-label candidate",
+        "source_url": "https://github.com/odysseus-dev/odysseus/blob/c21980f5a6d1cb84db8c8ab0f488cefc7764eb3f/static/js/document.js#L6937"
+      }
+    },
+    {
+      "id": "task-run",
+      "winner": "old",
+      "new_svg": "icons/task-run.svg",
+      "old": {
+        "original": "39cfac8ba50e",
+        "path": "static/js/tasks.js",
+        "line": 2887,
+        "basis": "Button title",
+        "source_label": "Run this task again",
+        "priority": 90,
+        "status": "source-label candidate",
+        "source_url": "https://github.com/odysseus-dev/odysseus/blob/c21980f5a6d1cb84db8c8ab0f488cefc7764eb3f/static/js/tasks.js#L2887"
+      }
+    },
+    {
+      "id": "task-draft",
+      "winner": "old",
+      "new_svg": "icons/task-draft.svg",
+      "old": {
+        "original": "a827d09a5dc7",
+        "path": "static/js/tasks.js",
+        "line": 1270,
+        "basis": "Button title",
+        "source_label": "Draft a task with AI",
+        "priority": 90,
+        "status": "source-label candidate",
+        "source_url": "https://github.com/odysseus-dev/odysseus/blob/c21980f5a6d1cb84db8c8ab0f488cefc7764eb3f/static/js/tasks.js#L1270"
+      }
+    },
+    {
+      "id": "compose",
+      "winner": "new",
+      "new_svg": "icons/compose.svg",
+      "old": {
+        "original": "27f1350b4016",
+        "path": "static/index.html",
+        "line": 862,
+        "basis": "Button title",
+        "source_label": "Compose email",
+        "priority": 90,
+        "status": "source-label candidate",
+        "source_url": "https://github.com/odysseus-dev/odysseus/blob/c21980f5a6d1cb84db8c8ab0f488cefc7764eb3f/static/index.html#L862"
+      }
+    },
+    {
+      "id": "reply-all",
+      "winner": "old",
+      "new_svg": "icons/reply-all.svg",
+      "old": {
+        "original": "4dbaf3e41260",
+        "path": "static/js/emailLibrary/index.js",
+        "line": 6086,
+        "basis": "Button title",
+        "source_label": "Reply All",
+        "priority": 90,
+        "status": "source-label candidate",
+        "source_url": "https://github.com/odysseus-dev/odysseus/blob/c21980f5a6d1cb84db8c8ab0f488cefc7764eb3f/static/js/emailLibrary/index.js#L6086"
+      }
+    },
+    {
+      "id": "forward",
+      "winner": "old",
+      "new_svg": "icons/forward.svg",
+      "old": {
+        "original": "72bec9c4e61e",
+        "path": "static/js/emailLibrary/index.js",
+        "line": 6087,
+        "basis": "Button title",
+        "source_label": "Forward",
+        "priority": 90,
+        "status": "source-label candidate",
+        "source_url": "https://github.com/odysseus-dev/odysseus/blob/c21980f5a6d1cb84db8c8ab0f488cefc7764eb3f/static/js/emailLibrary/index.js#L6087"
+      }
+    },
+    {
+      "id": "send-later",
+      "winner": "new",
+      "new_svg": "icons/send-later.svg",
+      "old": {
+        "original": "5e64380d19bc",
+        "path": "static/js/document.js",
+        "line": 7659,
+        "basis": "Button title",
+        "source_label": "More send options",
+        "priority": 90,
+        "status": "source-label candidate",
+        "source_url": "https://github.com/odysseus-dev/odysseus/blob/c21980f5a6d1cb84db8c8ab0f488cefc7764eb3f/static/js/document.js#L7659"
+      }
+    },
+    {
+      "id": "attachment",
+      "winner": "old",
+      "new_svg": "icons/attachment.svg",
+      "old": {
+        "original": "a22a86744c85",
+        "path": "static/js/document.js",
+        "line": 7586,
+        "basis": "Button title",
+        "source_label": "Attach file",
+        "priority": 90,
+        "status": "source-label candidate",
+        "source_url": "https://github.com/odysseus-dev/odysseus/blob/c21980f5a6d1cb84db8c8ab0f488cefc7764eb3f/static/js/document.js#L7586"
+      }
+    },
+    {
+      "id": "attachments-download",
+      "winner": "old",
+      "new_svg": "icons/attachments-download.svg",
+      "old": {
+        "original": "200d6f1cfc9a",
+        "path": "static/js/emailLibrary/attachments.js",
+        "line": 383,
+        "basis": "Button title",
+        "source_label": "Download all attachments",
+        "priority": 90,
+        "status": "source-label candidate",
+        "source_url": "https://github.com/odysseus-dev/odysseus/blob/c21980f5a6d1cb84db8c8ab0f488cefc7764eb3f/static/js/emailLibrary/attachments.js#L383"
+      }
+    },
+    {
+      "id": "spam",
+      "winner": "new",
+      "new_svg": "icons/spam.svg",
+      "old": {
+        "original": "5cb5cbaa3df4",
+        "path": "static/js/emailInbox.js",
+        "line": 22,
+        "basis": "Named SVG: _spamIcon",
+        "source_label": "_spamIcon",
+        "priority": 80,
+        "status": "source-label candidate",
+        "source_url": "https://github.com/odysseus-dev/odysseus/blob/c21980f5a6d1cb84db8c8ab0f488cefc7764eb3f/static/js/emailInbox.js#L22"
+      }
+    },
+    {
+      "id": "unsubscribe",
+      "winner": "old",
+      "new_svg": "icons/unsubscribe.svg",
+      "old": {
+        "original": "a14dd14764a6",
+        "path": "static/js/emailLibrary/unsubscribe.js",
+        "line": 937,
+        "basis": "Button aria-label",
+        "source_label": "Show unsubscribe details",
+        "priority": 90,
+        "status": "source-label candidate",
+        "source_url": "https://github.com/odysseus-dev/odysseus/blob/c21980f5a6d1cb84db8c8ab0f488cefc7764eb3f/static/js/emailLibrary/unsubscribe.js#L937"
+      }
+    },
+    {
+      "id": "contact",
+      "winner": "old",
+      "new_svg": "icons/contact.svg",
+      "old": {
+        "original": "f4ff0d06a5d9",
+        "path": "static/js/chatRenderer.js",
+        "line": 46,
+        "basis": "Named SVG: manage_contact",
+        "source_label": "manage_contact",
+        "priority": 80,
+        "status": "source-label candidate",
+        "source_url": "https://github.com/odysseus-dev/odysseus/blob/c21980f5a6d1cb84db8c8ab0f488cefc7764eb3f/static/js/chatRenderer.js#L46"
+      }
+    },
+    {
+      "id": "recipients",
+      "winner": "old",
+      "new_svg": "icons/recipients.svg",
+      "old": {
+        "original": "2001f73ac5b1",
+        "path": "static/js/emailLibrary/index.js",
+        "line": 436,
+        "basis": "Button title",
+        "source_label": "Show Cc recipients",
+        "priority": 90,
+        "status": "source-label candidate",
+        "source_url": "https://github.com/odysseus-dev/odysseus/blob/c21980f5a6d1cb84db8c8ab0f488cefc7764eb3f/static/js/emailLibrary/index.js#L436"
+      }
+    },
+    {
+      "id": "bcc",
+      "winner": "old",
+      "new_svg": "icons/bcc.svg",
+      "old": {
+        "original": "345f38af6a26",
+        "path": "static/js/document.js",
+        "line": 7536,
+        "basis": "Button aria-label",
+        "source_label": "Hide Cc/Bcc",
+        "priority": 90,
+        "status": "source-label candidate",
+        "source_url": "https://github.com/odysseus-dev/odysseus/blob/c21980f5a6d1cb84db8c8ab0f488cefc7764eb3f/static/js/document.js#L7536"
+      }
+    },
+    {
+      "id": "play",
+      "winner": "new",
+      "new_svg": "icons/play.svg",
+      "old": {
+        "original": "0a90babbf8e0",
+        "path": "static/js/chat.js",
+        "line": 5822,
+        "basis": "Named SVG: ICON_PLAY_TTS",
+        "source_label": "ICON_PLAY_TTS",
+        "priority": 80,
+        "status": "source-label candidate",
+        "source_url": "https://github.com/odysseus-dev/odysseus/blob/c21980f5a6d1cb84db8c8ab0f488cefc7764eb3f/static/js/chat.js#L5822"
+      }
+    },
+    {
+      "id": "pause",
+      "winner": "new",
+      "new_svg": "icons/pause.svg",
+      "old": {
+        "original": "8efc77b745cb",
+        "path": "static/js/tasks.js",
+        "line": 923,
+        "basis": "Button aria-label",
+        "source_label": "Active - click to pause",
+        "priority": 90,
+        "status": "source-label candidate",
+        "source_url": "https://github.com/odysseus-dev/odysseus/blob/c21980f5a6d1cb84db8c8ab0f488cefc7764eb3f/static/js/tasks.js#L923"
+      }
+    },
+    {
+      "id": "transcript",
+      "winner": "old",
+      "new_svg": "icons/transcript.svg",
+      "old": {
+        "original": "5b314371dce6",
+        "path": "static/js/settings.js",
+        "line": 1422,
+        "basis": "Named SVG: tts",
+        "source_label": "tts",
+        "priority": 80,
+        "status": "source-label candidate",
+        "source_url": "https://github.com/odysseus-dev/odysseus/blob/c21980f5a6d1cb84db8c8ab0f488cefc7764eb3f/static/js/settings.js#L1422"
+      }
+    },
+    {
+      "id": "image",
+      "winner": "new",
+      "new_svg": "icons/image.svg",
+      "old": {
+        "original": "b0ad547e3b8d",
+        "path": "static/js/document.js",
+        "line": 7587,
+        "basis": "Button aria-label",
+        "source_label": "Insert image",
+        "priority": 90,
+        "status": "source-label candidate",
+        "source_url": "https://github.com/odysseus-dev/odysseus/blob/c21980f5a6d1cb84db8c8ab0f488cefc7764eb3f/static/js/document.js#L7587"
+      }
+    },
+    {
+      "id": "image-export",
+      "winner": "new",
+      "new_svg": "icons/image-export.svg",
+      "old": {
+        "original": "8034fd22bc11",
+        "path": "static/js/editor/build/topbar.js",
+        "line": 556,
+        "basis": "Button title",
+        "source_label": "Export an image to your computer",
+        "priority": 90,
+        "status": "source-label candidate",
+        "source_url": "https://github.com/odysseus-dev/odysseus/blob/c21980f5a6d1cb84db8c8ab0f488cefc7764eb3f/static/js/editor/build/topbar.js#L556"
+      }
+    },
+    {
+      "id": "album",
+      "winner": "old",
+      "new_svg": "icons/album.svg",
+      "old": {
+        "original": "30e24907258c",
+        "path": "static/js/gallery.js",
+        "line": 738,
+        "basis": "Button aria-label",
+        "source_label": "Album options",
+        "priority": 90,
+        "status": "source-label candidate",
+        "source_url": "https://github.com/odysseus-dev/odysseus/blob/c21980f5a6d1cb84db8c8ab0f488cefc7764eb3f/static/js/gallery.js#L738"
+      }
+    },
+    {
+      "id": "canvas",
+      "winner": "old",
+      "new_svg": "icons/canvas.svg",
+      "old": {
+        "original": "0eb8d75b74e7",
+        "path": "static/js/editor/build/topbar.js",
+        "line": 420,
+        "basis": "Button title",
+        "source_label": "Canvas view",
+        "priority": 90,
+        "status": "source-label candidate",
+        "source_url": "https://github.com/odysseus-dev/odysseus/blob/c21980f5a6d1cb84db8c8ab0f488cefc7764eb3f/static/js/editor/build/topbar.js#L420"
+      }
+    },
+    {
+      "id": "rotate-left",
+      "winner": "old",
+      "new_svg": "icons/rotate-left.svg",
+      "old": {
+        "original": "12a1bd5f4bb3",
+        "path": "static/js/gallery.js",
+        "line": 1650,
+        "basis": "Button aria-label",
+        "source_label": "Rotate left",
+        "priority": 90,
+        "status": "source-label candidate",
+        "source_url": "https://github.com/odysseus-dev/odysseus/blob/c21980f5a6d1cb84db8c8ab0f488cefc7764eb3f/static/js/gallery.js#L1650"
+      }
+    },
+    {
+      "id": "rotate-right",
+      "winner": "new",
+      "new_svg": "icons/rotate-right.svg",
+      "old": {
+        "original": "a5c555954f67",
+        "path": "static/js/editor/build/transform-popup.js",
+        "line": 108,
+        "basis": "Button aria-label",
+        "source_label": "Rotate 90 degrees",
+        "priority": 90,
+        "status": "source-label candidate",
+        "source_url": "https://github.com/odysseus-dev/odysseus/blob/c21980f5a6d1cb84db8c8ab0f488cefc7764eb3f/static/js/editor/build/transform-popup.js#L108"
+      }
+    },
+    {
+      "id": "zoom-in",
+      "winner": "new",
+      "new_svg": "icons/zoom-in.svg",
+      "old": {
+        "original": "text-a318c24216de",
+        "path": "static/js/calendar.js",
+        "line": 1689,
+        "basis": "Literal button text",
+        "source_label": "Zoom in",
+        "priority": 60,
+        "status": "source-label candidate",
+        "source_url": "https://github.com/odysseus-dev/odysseus/blob/c21980f5a6d1cb84db8c8ab0f488cefc7764eb3f/static/js/calendar.js#L1689"
+      }
+    },
+    {
+      "id": "brush",
+      "winner": "old",
+      "new_svg": "icons/brush.svg",
+      "old": {
+        "original": "bc525a607c13",
+        "path": "frontend/src/features/notes/ui/drawing.js",
+        "line": 19,
+        "basis": "Button title",
+        "source_label": "Brush",
+        "priority": 90,
+        "status": "source-label candidate",
+        "source_url": "https://github.com/odysseus-dev/odysseus/blob/c21980f5a6d1cb84db8c8ab0f488cefc7764eb3f/frontend/src/features/notes/ui/drawing.js#L19"
+      }
+    },
+    {
+      "id": "eraser",
+      "winner": "old",
+      "new_svg": "icons/eraser.svg",
+      "old": {
+        "original": "05e30337ac95",
+        "path": "frontend/src/features/notes/ui/drawing.js",
+        "line": 22,
+        "basis": "Button title",
+        "source_label": "Eraser",
+        "priority": 90,
+        "status": "source-label candidate",
+        "source_url": "https://github.com/odysseus-dev/odysseus/blob/c21980f5a6d1cb84db8c8ab0f488cefc7764eb3f/frontend/src/features/notes/ui/drawing.js#L22"
+      }
+    },
+    {
+      "id": "pen",
+      "winner": "old",
+      "new_svg": "icons/pen.svg",
+      "old": {
+        "original": "245ebd165781",
+        "path": "static/js/document.js",
+        "line": 3153,
+        "basis": "Named SVG: _penIco",
+        "source_label": "_penIco",
+        "priority": 80,
+        "status": "source-label candidate",
+        "source_url": "https://github.com/odysseus-dev/odysseus/blob/c21980f5a6d1cb84db8c8ab0f488cefc7764eb3f/static/js/document.js#L3153"
+      }
+    },
+    {
+      "id": "line",
+      "winner": "new",
+      "new_svg": "icons/line.svg",
+      "old": {
+        "original": "77837afb3318",
+        "path": "frontend/src/features/notes/ui/drawing.js",
+        "line": 30,
+        "basis": "Button title",
+        "source_label": "Line — click to cycle size",
+        "priority": 90,
+        "status": "source-label candidate",
+        "source_url": "https://github.com/odysseus-dev/odysseus/blob/c21980f5a6d1cb84db8c8ab0f488cefc7764eb3f/frontend/src/features/notes/ui/drawing.js#L30"
+      }
+    },
+    {
+      "id": "path",
+      "winner": "new",
+      "new_svg": "icons/path.svg",
+      "old": {
+        "original": "83e15a8b0cb2",
+        "path": "static/js/editor/build/controls.js",
+        "line": 19,
+        "basis": "Button title",
+        "source_label": "Cancel path (Escape)",
+        "priority": 90,
+        "status": "source-label candidate",
+        "source_url": "https://github.com/odysseus-dev/odysseus/blob/c21980f5a6d1cb84db8c8ab0f488cefc7764eb3f/static/js/editor/build/controls.js#L19"
+      }
+    },
+    {
+      "id": "polygon",
+      "winner": "new",
+      "new_svg": "icons/polygon.svg",
+      "old": {
+        "original": "2553900a234f",
+        "path": "static/js/editor/build/controls.js",
+        "line": 318,
+        "basis": "Button title",
+        "source_label": "Polygon",
+        "priority": 90,
+        "status": "source-label candidate",
+        "source_url": "https://github.com/odysseus-dev/odysseus/blob/c21980f5a6d1cb84db8c8ab0f488cefc7764eb3f/static/js/editor/build/controls.js#L318"
+      }
+    },
+    {
+      "id": "rectangle",
+      "winner": "new",
+      "new_svg": "icons/rectangle.svg",
+      "old": {
+        "original": "4f60ff9b08de",
+        "path": "static/js/editor/build/controls.js",
+        "line": 315,
+        "basis": "Button title",
+        "source_label": "Rectangle",
+        "priority": 90,
+        "status": "source-label candidate",
+        "source_url": "https://github.com/odysseus-dev/odysseus/blob/c21980f5a6d1cb84db8c8ab0f488cefc7764eb3f/static/js/editor/build/controls.js#L315"
+      }
+    },
+    {
+      "id": "ellipse",
+      "winner": "new",
+      "new_svg": "icons/ellipse.svg",
+      "old": {
+        "original": "47c54babe6bf",
+        "path": "static/js/editor/build/controls.js",
+        "line": 316,
+        "basis": "Button title",
+        "source_label": "Ellipse",
+        "priority": 90,
+        "status": "source-label candidate",
+        "source_url": "https://github.com/odysseus-dev/odysseus/blob/c21980f5a6d1cb84db8c8ab0f488cefc7764eb3f/static/js/editor/build/controls.js#L316"
+      }
+    },
+    {
+      "id": "shape-union",
+      "winner": "new",
+      "new_svg": "icons/shape-union.svg",
+      "old": {
+        "original": "text-6cf534820a60",
+        "path": "static/js/editor/build/topbar.js",
+        "line": 183,
+        "basis": "Literal button text",
+        "source_label": "Unite Shapes",
+        "priority": 60,
+        "status": "source-label candidate",
+        "source_url": "https://github.com/odysseus-dev/odysseus/blob/c21980f5a6d1cb84db8c8ab0f488cefc7764eb3f/static/js/editor/build/topbar.js#L183"
+      }
+    },
+    {
+      "id": "shape-subtract",
+      "winner": "new",
+      "new_svg": "icons/shape-subtract.svg",
+      "old": {
+        "original": "text-584dcb3450e2",
+        "path": "static/js/editor/build/topbar.js",
+        "line": 184,
+        "basis": "Literal button text",
+        "source_label": "Subtract Shapes",
+        "priority": 60,
+        "status": "source-label candidate",
+        "source_url": "https://github.com/odysseus-dev/odysseus/blob/c21980f5a6d1cb84db8c8ab0f488cefc7764eb3f/static/js/editor/build/topbar.js#L184"
+      }
+    },
+    {
+      "id": "shape-intersect",
+      "winner": "new",
+      "new_svg": "icons/shape-intersect.svg",
+      "old": {
+        "original": "1bb8d8ccb109",
+        "path": "static/js/editor/build/controls.js",
+        "line": 377,
+        "basis": "Button title",
+        "source_label": "Intersect selection",
+        "priority": 90,
+        "status": "source-label candidate",
+        "source_url": "https://github.com/odysseus-dev/odysseus/blob/c21980f5a6d1cb84db8c8ab0f488cefc7764eb3f/static/js/editor/build/controls.js#L377"
+      }
+    },
+    {
+      "id": "shape-exclude",
+      "winner": "new",
+      "new_svg": "icons/shape-exclude.svg",
+      "old": {
+        "original": "text-3f74740c9240",
+        "path": "static/js/editor/build/topbar.js",
+        "line": 186,
+        "basis": "Literal button text",
+        "source_label": "Exclude Shapes",
+        "priority": 60,
+        "status": "source-label candidate",
+        "source_url": "https://github.com/odysseus-dev/odysseus/blob/c21980f5a6d1cb84db8c8ab0f488cefc7764eb3f/static/js/editor/build/topbar.js#L186"
+      }
+    },
+    {
+      "id": "eyedropper",
+      "winner": "new",
+      "new_svg": "icons/eyedropper.svg",
+      "old": {
+        "original": "d40329d41bdf",
+        "path": "static/js/colorPicker.js",
+        "line": 135,
+        "basis": "Button title",
+        "source_label": "Eyedropper",
+        "priority": 90,
+        "status": "source-label candidate",
+        "source_url": "https://github.com/odysseus-dev/odysseus/blob/c21980f5a6d1cb84db8c8ab0f488cefc7764eb3f/static/js/colorPicker.js#L135"
+      }
+    },
+    {
+      "id": "paint-bucket",
+      "winner": "old",
+      "new_svg": "icons/paint-bucket.svg",
+      "old": {
+        "original": "text-033955d469b6",
+        "path": "static/js/editor/build/topbar.js",
+        "line": 188,
+        "basis": "Literal button text",
+        "source_label": "Fill",
+        "priority": 60,
+        "status": "source-label candidate",
+        "source_url": "https://github.com/odysseus-dev/odysseus/blob/c21980f5a6d1cb84db8c8ab0f488cefc7764eb3f/static/js/editor/build/topbar.js#L188"
+      }
+    },
+    {
+      "id": "gradient",
+      "winner": "new",
+      "new_svg": "icons/gradient.svg",
+      "old": {
+        "original": "text-5dec20debaf6",
+        "path": "static/js/editor/build/controls.js",
+        "line": 178,
+        "basis": "Literal button text",
+        "source_label": "Add stop",
+        "priority": 60,
+        "status": "source-label candidate",
+        "source_url": "https://github.com/odysseus-dev/odysseus/blob/c21980f5a6d1cb84db8c8ab0f488cefc7764eb3f/static/js/editor/build/controls.js#L178"
+      }
+    },
+    {
+      "id": "color-swap",
+      "winner": "new",
+      "new_svg": "icons/color-swap.svg",
+      "old": {
+        "original": "cb95e3e572b1",
+        "path": "static/js/editor/build/toolbar.js",
+        "line": 295,
+        "basis": "Button aria-label",
+        "source_label": "Swap colors",
+        "priority": 90,
+        "status": "source-label candidate",
+        "source_url": "https://github.com/odysseus-dev/odysseus/blob/c21980f5a6d1cb84db8c8ab0f488cefc7764eb3f/static/js/editor/build/toolbar.js#L295"
+      }
+    },
+    {
+      "id": "layer",
+      "winner": "old",
+      "new_svg": "icons/layer.svg",
+      "old": {
+        "original": "41c9293f1d5e",
+        "path": "static/js/editor/build/topbar.js",
+        "line": 154,
+        "basis": "Button title",
+        "source_label": "Layer actions",
+        "priority": 90,
+        "status": "source-label candidate",
+        "source_url": "https://github.com/odysseus-dev/odysseus/blob/c21980f5a6d1cb84db8c8ab0f488cefc7764eb3f/static/js/editor/build/topbar.js#L154"
+      }
+    },
+    {
+      "id": "layer-new",
+      "winner": "old",
+      "new_svg": "icons/layer-new.svg",
+      "old": {
+        "original": "2fbafd4a9b61",
+        "path": "static/js/editor/build/controls.js",
+        "line": 907,
+        "basis": "Button aria-label",
+        "source_label": "New layer",
+        "priority": 90,
+        "status": "source-label candidate",
+        "source_url": "https://github.com/odysseus-dev/odysseus/blob/c21980f5a6d1cb84db8c8ab0f488cefc7764eb3f/static/js/editor/build/controls.js#L907"
+      }
+    },
+    {
+      "id": "layer-duplicate",
+      "winner": "old",
+      "new_svg": "icons/layer-duplicate.svg",
+      "old": {
+        "original": "text-fd683441fefa",
+        "path": "static/js/editor/build/topbar.js",
+        "line": 161,
+        "basis": "Literal button text",
+        "source_label": "Duplicate LayerCtrl+J",
+        "priority": 60,
+        "status": "source-label candidate",
+        "source_url": "https://github.com/odysseus-dev/odysseus/blob/c21980f5a6d1cb84db8c8ab0f488cefc7764eb3f/static/js/editor/build/topbar.js#L161"
+      }
+    },
+    {
+      "id": "layer-delete",
+      "winner": "old",
+      "new_svg": "icons/layer-delete.svg",
+      "old": {
+        "original": "text-784e4033ddd6",
+        "path": "static/js/editor/build/topbar.js",
+        "line": 165,
+        "basis": "Literal button text",
+        "source_label": "Delete LayerDel",
+        "priority": 60,
+        "status": "source-label candidate",
+        "source_url": "https://github.com/odysseus-dev/odysseus/blob/c21980f5a6d1cb84db8c8ab0f488cefc7764eb3f/static/js/editor/build/topbar.js#L165"
+      }
+    },
+    {
+      "id": "layer-group",
+      "winner": "old",
+      "new_svg": "icons/layer-group.svg",
+      "old": {
+        "original": "text-e373466eb8a2",
+        "path": "static/js/editor/build/topbar.js",
+        "line": 162,
+        "basis": "Literal button text",
+        "source_label": "Group Selected",
+        "priority": 60,
+        "status": "source-label candidate",
+        "source_url": "https://github.com/odysseus-dev/odysseus/blob/c21980f5a6d1cb84db8c8ab0f488cefc7764eb3f/static/js/editor/build/topbar.js#L162"
+      }
+    },
+    {
+      "id": "layer-up",
+      "winner": "old",
+      "new_svg": "icons/layer-up.svg",
+      "old": {
+        "original": "text-1816a3240fe1",
+        "path": "static/js/editor/build/topbar.js",
+        "line": 168,
+        "basis": "Literal button text",
+        "source_label": "Bring Forward",
+        "priority": 60,
+        "status": "source-label candidate",
+        "source_url": "https://github.com/odysseus-dev/odysseus/blob/c21980f5a6d1cb84db8c8ab0f488cefc7764eb3f/static/js/editor/build/topbar.js#L168"
+      }
+    },
+    {
+      "id": "layer-down",
+      "winner": "old",
+      "new_svg": "icons/layer-down.svg",
+      "old": {
+        "original": "text-64a872d15087",
+        "path": "static/js/editor/build/topbar.js",
+        "line": 169,
+        "basis": "Literal button text",
+        "source_label": "Send Backward",
+        "priority": 60,
+        "status": "source-label candidate",
+        "source_url": "https://github.com/odysseus-dev/odysseus/blob/c21980f5a6d1cb84db8c8ab0f488cefc7764eb3f/static/js/editor/build/topbar.js#L169"
+      }
+    },
+    {
+      "id": "layer-front",
+      "winner": "old",
+      "new_svg": "icons/layer-front.svg",
+      "old": {
+        "original": "text-ce67c6954ace",
+        "path": "static/js/editor/build/topbar.js",
+        "line": 167,
+        "basis": "Literal button text",
+        "source_label": "Bring to Front",
+        "priority": 60,
+        "status": "source-label candidate",
+        "source_url": "https://github.com/odysseus-dev/odysseus/blob/c21980f5a6d1cb84db8c8ab0f488cefc7764eb3f/static/js/editor/build/topbar.js#L167"
+      }
+    },
+    {
+      "id": "layer-back",
+      "winner": "old",
+      "new_svg": "icons/layer-back.svg",
+      "old": {
+        "original": "text-33e1c6b9be0f",
+        "path": "static/js/editor/build/topbar.js",
+        "line": 170,
+        "basis": "Literal button text",
+        "source_label": "Send to Back",
+        "priority": 60,
+        "status": "source-label candidate",
+        "source_url": "https://github.com/odysseus-dev/odysseus/blob/c21980f5a6d1cb84db8c8ab0f488cefc7764eb3f/static/js/editor/build/topbar.js#L170"
+      }
+    },
+    {
+      "id": "merge-down",
+      "winner": "new",
+      "new_svg": "icons/merge-down.svg",
+      "old": {
+        "original": "2c435eb16567",
+        "path": "static/js/editor/build/controls.js",
+        "line": 913,
+        "basis": "Button aria-label",
+        "source_label": "Merge down",
+        "priority": 90,
+        "status": "source-label candidate",
+        "source_url": "https://github.com/odysseus-dev/odysseus/blob/c21980f5a6d1cb84db8c8ab0f488cefc7764eb3f/static/js/editor/build/controls.js#L913"
+      }
+    },
+    {
+      "id": "merge-visible",
+      "winner": "new",
+      "new_svg": "icons/merge-visible.svg",
+      "old": {
+        "original": "106ff89fd1b9",
+        "path": "static/js/editor/build/controls.js",
+        "line": 916,
+        "basis": "Button aria-label",
+        "source_label": "Merge all",
+        "priority": 90,
+        "status": "source-label candidate",
+        "source_url": "https://github.com/odysseus-dev/odysseus/blob/c21980f5a6d1cb84db8c8ab0f488cefc7764eb3f/static/js/editor/build/controls.js#L916"
+      }
+    },
+    {
+      "id": "flatten",
+      "winner": "new",
+      "new_svg": "icons/flatten.svg",
+      "old": {
+        "original": "d7b14edd7bd7",
+        "path": "static/js/editor/build/controls.js",
+        "line": 919,
+        "basis": "Button aria-label",
+        "source_label": "Flatten copy",
+        "priority": 90,
+        "status": "source-label candidate",
+        "source_url": "https://github.com/odysseus-dev/odysseus/blob/c21980f5a6d1cb84db8c8ab0f488cefc7764eb3f/static/js/editor/build/controls.js#L919"
+      }
+    },
+    {
+      "id": "rasterize",
+      "winner": "new",
+      "new_svg": "icons/rasterize.svg",
+      "old": {
+        "original": "text-b37a1ce84fe7",
+        "path": "static/js/editor/build/controls.js",
+        "line": 310,
+        "basis": "Literal button text",
+        "source_label": "Rasterize",
+        "priority": 60,
+        "status": "source-label candidate",
+        "source_url": "https://github.com/odysseus-dev/odysseus/blob/c21980f5a6d1cb84db8c8ab0f488cefc7764eb3f/static/js/editor/build/controls.js#L310"
+      }
+    },
+    {
+      "id": "lock",
+      "winner": "new",
+      "new_svg": "icons/lock.svg",
+      "old": {
+        "original": "08093d386f92",
+        "path": "static/js/editor/build/controls.js",
+        "line": 896,
+        "basis": "Button aria-label",
+        "source_label": "Toggle selected lock",
+        "priority": 90,
+        "status": "source-label candidate",
+        "source_url": "https://github.com/odysseus-dev/odysseus/blob/c21980f5a6d1cb84db8c8ab0f488cefc7764eb3f/static/js/editor/build/controls.js#L896"
+      }
+    },
+    {
+      "id": "unlock",
+      "winner": "new",
+      "new_svg": "icons/unlock.svg",
+      "old": {
+        "original": "text-4ac709aa58bc",
+        "path": "static/js/settings.js",
+        "line": 4499,
+        "basis": "Literal button text",
+        "source_label": "Unlock",
+        "priority": 60,
+        "status": "source-label candidate",
+        "source_url": "https://github.com/odysseus-dev/odysseus/blob/c21980f5a6d1cb84db8c8ab0f488cefc7764eb3f/static/js/settings.js#L4499"
+      }
+    },
+    {
+      "id": "eye",
+      "winner": "old",
+      "new_svg": "icons/eye.svg",
+      "old": {
+        "original": "f6f2bfdc8cf9",
+        "path": "static/js/editor/build/controls.js",
+        "line": 893,
+        "basis": "Button aria-label",
+        "source_label": "Toggle selected visibility",
+        "priority": 90,
+        "status": "source-label candidate",
+        "source_url": "https://github.com/odysseus-dev/odysseus/blob/c21980f5a6d1cb84db8c8ab0f488cefc7764eb3f/static/js/editor/build/controls.js#L893"
+      }
+    },
+    {
+      "id": "eye-off",
+      "winner": "old",
+      "new_svg": "icons/eye-off.svg",
+      "old": {
+        "original": "929d8ed71ba4",
+        "path": "static/js/document.js",
+        "line": 7433,
+        "basis": "Button aria-label",
+        "source_label": "Hide panel",
+        "priority": 90,
+        "status": "source-label candidate",
+        "source_url": "https://github.com/odysseus-dev/odysseus/blob/c21980f5a6d1cb84db8c8ab0f488cefc7764eb3f/static/js/document.js#L7433"
+      }
+    },
+    {
+      "id": "mask",
+      "winner": "new",
+      "new_svg": "icons/mask.svg",
+      "old": {
+        "original": "ae47743aff5c",
+        "path": "static/js/editor/build/controls.js",
+        "line": 665,
+        "basis": "Button title",
+        "source_label": "Hide mask",
+        "priority": 90,
+        "status": "source-label candidate",
+        "source_url": "https://github.com/odysseus-dev/odysseus/blob/c21980f5a6d1cb84db8c8ab0f488cefc7764eb3f/static/js/editor/build/controls.js#L665"
+      }
+    },
+    {
+      "id": "mask-add",
+      "winner": "new",
+      "new_svg": "icons/mask-add.svg",
+      "old": {
+        "original": "text-8ea6d7812ffd",
+        "path": "static/js/editor/build/topbar.js",
+        "line": 180,
+        "basis": "Literal button text",
+        "source_label": "Add a mask that reveals the whole layer",
+        "priority": 60,
+        "status": "source-label candidate",
+        "source_url": "https://github.com/odysseus-dev/odysseus/blob/c21980f5a6d1cb84db8c8ab0f488cefc7764eb3f/static/js/editor/build/topbar.js#L180"
+      }
+    },
+    {
+      "id": "mask-invert",
+      "winner": "new",
+      "new_svg": "icons/mask-invert.svg",
+      "old": {
+        "original": "edceef5d780a",
+        "path": "static/js/editor/build/controls.js",
+        "line": 669,
+        "basis": "Button title",
+        "source_label": "Invert mask",
+        "priority": 90,
+        "status": "source-label candidate",
+        "source_url": "https://github.com/odysseus-dev/odysseus/blob/c21980f5a6d1cb84db8c8ab0f488cefc7764eb3f/static/js/editor/build/controls.js#L669"
+      }
+    },
+    {
+      "id": "mask-clear",
+      "winner": "new",
+      "new_svg": "icons/mask-clear.svg",
+      "old": {
+        "original": "138bdfbc1f4b",
+        "path": "static/js/editor/build/controls.js",
+        "line": 673,
+        "basis": "Button title",
+        "source_label": "Clear mask",
+        "priority": 90,
+        "status": "source-label candidate",
+        "source_url": "https://github.com/odysseus-dev/odysseus/blob/c21980f5a6d1cb84db8c8ab0f488cefc7764eb3f/static/js/editor/build/controls.js#L673"
+      }
+    },
+    {
+      "id": "selection",
+      "winner": "new",
+      "new_svg": "icons/selection.svg",
+      "old": {
+        "original": "5a2053b9a677",
+        "path": "static/js/editor/build/controls.js",
+        "line": 18,
+        "basis": "Button title",
+        "source_label": "Close path and make selection (Enter)",
+        "priority": 90,
+        "status": "source-label candidate",
+        "source_url": "https://github.com/odysseus-dev/odysseus/blob/c21980f5a6d1cb84db8c8ab0f488cefc7764eb3f/static/js/editor/build/controls.js#L18"
+      }
+    },
+    {
+      "id": "marquee-rectangle",
+      "winner": "old",
+      "new_svg": "icons/marquee-rectangle.svg",
+      "old": {
+        "original": "1e7d2e36e196",
+        "path": "static/js/editor/build/controls.js",
+        "line": 368,
+        "basis": "Button title",
+        "source_label": "Rectangular marquee",
+        "priority": 90,
+        "status": "source-label candidate",
+        "source_url": "https://github.com/odysseus-dev/odysseus/blob/c21980f5a6d1cb84db8c8ab0f488cefc7764eb3f/static/js/editor/build/controls.js#L368"
+      }
+    },
+    {
+      "id": "marquee-ellipse",
+      "winner": "old",
+      "new_svg": "icons/marquee-ellipse.svg",
+      "old": {
+        "original": "60ff615dfd0b",
+        "path": "static/js/editor/build/controls.js",
+        "line": 371,
+        "basis": "Button title",
+        "source_label": "Elliptical marquee",
+        "priority": 90,
+        "status": "source-label candidate",
+        "source_url": "https://github.com/odysseus-dev/odysseus/blob/c21980f5a6d1cb84db8c8ab0f488cefc7764eb3f/static/js/editor/build/controls.js#L371"
+      }
+    },
+    {
+      "id": "magnetic-lasso",
+      "winner": "new",
+      "new_svg": "icons/magnetic-lasso.svg",
+      "old": {
+        "original": "c5c07f0faada",
+        "path": "static/js/editor/build/controls.js",
+        "line": 416,
+        "basis": "Button aria-label",
+        "source_label": "More lasso options (feather, edge stroke, magnetic)",
+        "priority": 90,
+        "status": "source-label candidate",
+        "source_url": "https://github.com/odysseus-dev/odysseus/blob/c21980f5a6d1cb84db8c8ab0f488cefc7764eb3f/static/js/editor/build/controls.js#L416"
+      }
+    },
+    {
+      "id": "quick-select",
+      "winner": "new",
+      "new_svg": "icons/quick-select.svg",
+      "old": {
+        "original": "735bd007ae2b",
+        "path": "static/js/editor/build/controls.js",
+        "line": 565,
+        "basis": "Button aria-label",
+        "source_label": "More Quick Select options (help)",
+        "priority": 90,
+        "status": "source-label candidate",
+        "source_url": "https://github.com/odysseus-dev/odysseus/blob/c21980f5a6d1cb84db8c8ab0f488cefc7764eb3f/static/js/editor/build/controls.js#L565"
+      }
+    },
+    {
+      "id": "object-select",
+      "winner": "old",
+      "new_svg": "icons/object-select.svg",
+      "old": {
+        "original": "735bd007ae2b",
+        "path": "static/js/editor/build/controls.js",
+        "line": 604,
+        "basis": "Button aria-label",
+        "source_label": "More Object Select options (help)",
+        "priority": 90,
+        "status": "source-label candidate",
+        "source_url": "https://github.com/odysseus-dev/odysseus/blob/c21980f5a6d1cb84db8c8ab0f488cefc7764eb3f/static/js/editor/build/controls.js#L604"
+      }
+    },
+    {
+      "id": "subject-select",
+      "winner": "new",
+      "new_svg": "icons/subject-select.svg",
+      "old": {
+        "original": "text-68971283841a",
+        "path": "static/js/editor/build/topbar.js",
+        "line": 230,
+        "basis": "Literal button text",
+        "source_label": "Subject",
+        "priority": 60,
+        "status": "source-label candidate",
+        "source_url": "https://github.com/odysseus-dev/odysseus/blob/c21980f5a6d1cb84db8c8ab0f488cefc7764eb3f/static/js/editor/build/topbar.js#L230"
+      }
+    },
+    {
+      "id": "harmonize",
+      "winner": "new",
+      "new_svg": "icons/harmonize.svg",
+      "old": {
+        "original": "text-5d815169fcad",
+        "path": "static/js/editor/build/controls.js",
+        "line": 819,
+        "basis": "Literal button text",
+        "source_label": "Harmonize",
+        "priority": 60,
+        "status": "source-label candidate",
+        "source_url": "https://github.com/odysseus-dev/odysseus/blob/c21980f5a6d1cb84db8c8ab0f488cefc7764eb3f/static/js/editor/build/controls.js#L819"
+      }
+    },
+    {
+      "id": "skew",
+      "winner": "new",
+      "new_svg": "icons/skew.svg",
+      "old": {
+        "original": "text-a318c24216de",
+        "path": "static/js/editor/build/transform-popup.js",
+        "line": 73,
+        "basis": "Literal button text",
+        "source_label": "Skew X +1°",
+        "priority": 60,
+        "status": "source-label candidate",
+        "source_url": "https://github.com/odysseus-dev/odysseus/blob/c21980f5a6d1cb84db8c8ab0f488cefc7764eb3f/static/js/editor/build/transform-popup.js#L73"
+      }
+    },
+    {
+      "id": "perspective",
+      "winner": "new",
+      "new_svg": "icons/perspective.svg",
+      "old": {
+        "original": "text-a318c24216de",
+        "path": "static/js/editor/build/transform-popup.js",
+        "line": 89,
+        "basis": "Literal button text",
+        "source_label": "Perspective X +1",
+        "priority": 60,
+        "status": "source-label candidate",
+        "source_url": "https://github.com/odysseus-dev/odysseus/blob/c21980f5a6d1cb84db8c8ab0f488cefc7764eb3f/static/js/editor/build/transform-popup.js#L89"
+      }
+    },
+    {
+      "id": "snapshot",
+      "winner": "new",
+      "new_svg": "icons/snapshot.svg",
+      "old": {
+        "original": "7c32f3fac6d6",
+        "path": "static/js/editor/history-panel.js",
+        "line": 215,
+        "basis": "Named SVG: SNAPSHOT_ICON",
+        "source_label": "SNAPSHOT_ICON",
+        "priority": 80,
+        "status": "source-label candidate",
+        "source_url": "https://github.com/odysseus-dev/odysseus/blob/c21980f5a6d1cb84db8c8ab0f488cefc7764eb3f/static/js/editor/history-panel.js#L215"
+      }
+    },
+    {
+      "id": "history",
+      "winner": "new",
+      "new_svg": "icons/history.svg",
+      "old": {
+        "original": "646aebb4eb2a",
+        "path": "static/index.html",
+        "line": 1015,
+        "basis": "Button title",
+        "source_label": "Enable Nobody mode — no memory or skill injection, no history saved",
+        "priority": 90,
+        "status": "source-label candidate",
+        "source_url": "https://github.com/odysseus-dev/odysseus/blob/c21980f5a6d1cb84db8c8ab0f488cefc7764eb3f/static/index.html#L1015"
+      }
+    },
+    {
+      "id": "histogram",
+      "winner": "new",
+      "new_svg": "icons/histogram.svg",
+      "old": {
+        "original": "text-3b4d8886df02",
+        "path": "static/js/editor/build/topbar.js",
+        "line": 82,
+        "basis": "Literal button text",
+        "source_label": "Equalize the histogram of the active layer",
+        "priority": 60,
+        "status": "source-label candidate",
+        "source_url": "https://github.com/odysseus-dev/odysseus/blob/c21980f5a6d1cb84db8c8ab0f488cefc7764eb3f/static/js/editor/build/topbar.js#L82"
+      }
+    },
+    {
+      "id": "hue-saturation",
+      "winner": "new",
+      "new_svg": "icons/hue-saturation.svg",
+      "old": {
+        "original": "text-38c2122e1e24",
+        "path": "static/js/editor/build/topbar.js",
+        "line": 142,
+        "basis": "Literal button text",
+        "source_label": "RGB Color",
+        "priority": 60,
+        "status": "source-label candidate",
+        "source_url": "https://github.com/odysseus-dev/odysseus/blob/c21980f5a6d1cb84db8c8ab0f488cefc7764eb3f/static/js/editor/build/topbar.js#L142"
+      }
+    },
+    {
+      "id": "black-white",
+      "winner": "new",
+      "new_svg": "icons/black-white.svg",
+      "old": {
+        "original": "text-93638ea9e0b0",
+        "path": "static/js/editor/build/topbar.js",
+        "line": 143,
+        "basis": "Literal button text",
+        "source_label": "Grayscale",
+        "priority": 60,
+        "status": "source-label candidate",
+        "source_url": "https://github.com/odysseus-dev/odysseus/blob/c21980f5a6d1cb84db8c8ab0f488cefc7764eb3f/static/js/editor/build/topbar.js#L143"
+      }
+    },
+    {
+      "id": "invert",
+      "winner": "new",
+      "new_svg": "icons/invert.svg",
+      "old": {
+        "original": "text-7e04f2ffb933",
+        "path": "static/js/editor/build/topbar.js",
+        "line": 96,
+        "basis": "Literal button text",
+        "source_label": "Invert",
+        "priority": 60,
+        "status": "source-label candidate",
+        "source_url": "https://github.com/odysseus-dev/odysseus/blob/c21980f5a6d1cb84db8c8ab0f488cefc7764eb3f/static/js/editor/build/topbar.js#L96"
+      }
+    },
+    {
+      "id": "desaturate",
+      "winner": "new",
+      "new_svg": "icons/desaturate.svg",
+      "old": {
+        "original": "text-79b92c97ee7a",
+        "path": "static/js/editor/build/topbar.js",
+        "line": 78,
+        "basis": "Literal button text",
+        "source_label": "Desaturate",
+        "priority": 60,
+        "status": "source-label candidate",
+        "source_url": "https://github.com/odysseus-dev/odysseus/blob/c21980f5a6d1cb84db8c8ab0f488cefc7764eb3f/static/js/editor/build/topbar.js#L78"
+      }
+    },
+    {
+      "id": "auto-tone",
+      "winner": "new",
+      "new_svg": "icons/auto-tone.svg",
+      "old": {
+        "original": "text-f25557d5d134",
+        "path": "static/js/editor/build/topbar.js",
+        "line": 79,
+        "basis": "Literal button text",
+        "source_label": "Auto Tone",
+        "priority": 60,
+        "status": "source-label candidate",
+        "source_url": "https://github.com/odysseus-dev/odysseus/blob/c21980f5a6d1cb84db8c8ab0f488cefc7764eb3f/static/js/editor/build/topbar.js#L79"
+      }
+    },
+    {
+      "id": "auto-contrast",
+      "winner": "new",
+      "new_svg": "icons/auto-contrast.svg",
+      "old": {
+        "original": "text-d01edfcf18fb",
+        "path": "static/js/editor/build/topbar.js",
+        "line": 80,
+        "basis": "Literal button text",
+        "source_label": "Auto Contrast",
+        "priority": 60,
+        "status": "source-label candidate",
+        "source_url": "https://github.com/odysseus-dev/odysseus/blob/c21980f5a6d1cb84db8c8ab0f488cefc7764eb3f/static/js/editor/build/topbar.js#L80"
+      }
+    },
+    {
+      "id": "auto-color",
+      "winner": "new",
+      "new_svg": "icons/auto-color.svg",
+      "old": {
+        "original": "text-f3ef3209b78a",
+        "path": "static/js/editor/build/topbar.js",
+        "line": 81,
+        "basis": "Literal button text",
+        "source_label": "Auto Color",
+        "priority": 60,
+        "status": "source-label candidate",
+        "source_url": "https://github.com/odysseus-dev/odysseus/blob/c21980f5a6d1cb84db8c8ab0f488cefc7764eb3f/static/js/editor/build/topbar.js#L81"
+      }
+    },
+    {
+      "id": "blur",
+      "winner": "new",
+      "new_svg": "icons/blur.svg",
+      "old": {
+        "original": "text-7d0ea5865216",
+        "path": "static/js/editor/build/topbar.js",
+        "line": 291,
+        "basis": "Literal button text",
+        "source_label": "Soft Blur",
+        "priority": 60,
+        "status": "source-label candidate",
+        "source_url": "https://github.com/odysseus-dev/odysseus/blob/c21980f5a6d1cb84db8c8ab0f488cefc7764eb3f/static/js/editor/build/topbar.js#L291"
+      }
+    },
+    {
+      "id": "sharpen",
+      "winner": "new",
+      "new_svg": "icons/sharpen.svg",
+      "old": {
+        "original": "text-ac6f0be1274c",
+        "path": "static/js/editor/build/controls.js",
+        "line": 756,
+        "basis": "Literal button text",
+        "source_label": "Sharpen",
+        "priority": 60,
+        "status": "source-label candidate",
+        "source_url": "https://github.com/odysseus-dev/odysseus/blob/c21980f5a6d1cb84db8c8ab0f488cefc7764eb3f/static/js/editor/build/controls.js#L756"
+      }
+    },
+    {
+      "id": "drop-shadow",
+      "winner": "new",
+      "new_svg": "icons/drop-shadow.svg",
+      "old": {
+        "original": "text-30e1d850b0e3",
+        "path": "static/js/editor/build/topbar.js",
+        "line": 293,
+        "basis": "Literal button text",
+        "source_label": "Soft Shadow",
+        "priority": 60,
+        "status": "source-label candidate",
+        "source_url": "https://github.com/odysseus-dev/odysseus/blob/c21980f5a6d1cb84db8c8ab0f488cefc7764eb3f/static/js/editor/build/topbar.js#L293"
+      }
+    },
+    {
+      "id": "browser",
+      "winner": "old",
+      "new_svg": "icons/browser.svg",
+      "old": {
+        "original": "0c1005e09c9b",
+        "path": "static/js/chatRenderer.js",
+        "line": 44,
+        "basis": "Named SVG: private_browser",
+        "source_label": "private_browser",
+        "priority": 80,
+        "status": "source-label candidate",
+        "source_url": "https://github.com/odysseus-dev/odysseus/blob/c21980f5a6d1cb84db8c8ab0f488cefc7764eb3f/static/js/chatRenderer.js#L44"
+      }
+    },
+    {
+      "id": "web-search",
+      "winner": "old",
+      "new_svg": "icons/web-search.svg",
+      "old": {
+        "original": "d2615ef58e68",
+        "path": "static/index.html",
+        "line": 1172,
+        "basis": "Button aria-label",
+        "source_label": "Web search",
+        "priority": 90,
+        "status": "source-label candidate",
+        "source_url": "https://github.com/odysseus-dev/odysseus/blob/c21980f5a6d1cb84db8c8ab0f488cefc7764eb3f/static/index.html#L1172"
+      }
+    },
+    {
+      "id": "report",
+      "winner": "old",
+      "new_svg": "icons/report.svg",
+      "old": {
+        "original": "65e1d817d417",
+        "path": "static/js/tasks.js",
+        "line": 2577,
+        "basis": "Button title",
+        "source_label": "Open the visual research report",
+        "priority": 90,
+        "status": "source-label candidate",
+        "source_url": "https://github.com/odysseus-dev/odysseus/blob/c21980f5a6d1cb84db8c8ab0f488cefc7764eb3f/static/js/tasks.js#L2577"
+      }
+    },
+    {
+      "id": "research-parallel",
+      "winner": "new",
+      "new_svg": "icons/research-parallel.svg",
+      "old": {
+        "original": "e37301e7e65f",
+        "path": "static/js/compare/icons.js",
+        "line": 18,
+        "basis": "Named SVG: ICON_PARALLEL",
+        "source_label": "ICON_PARALLEL",
+        "priority": 80,
+        "status": "source-label candidate",
+        "source_url": "https://github.com/odysseus-dev/odysseus/blob/c21980f5a6d1cb84db8c8ab0f488cefc7764eb3f/static/js/compare/icons.js#L18"
+      }
+    },
+    {
+      "id": "research-sequential",
+      "winner": "new",
+      "new_svg": "icons/research-sequential.svg",
+      "old": {
+        "original": "b31463952422",
+        "path": "static/js/compare/icons.js",
+        "line": 19,
+        "basis": "Named SVG: ICON_SEQUENTIAL",
+        "source_label": "ICON_SEQUENTIAL",
+        "priority": 80,
+        "status": "source-label candidate",
+        "source_url": "https://github.com/odysseus-dev/odysseus/blob/c21980f5a6d1cb84db8c8ab0f488cefc7764eb3f/static/js/compare/icons.js#L19"
+      }
+    },
+    {
+      "id": "rag",
+      "winner": "old",
+      "new_svg": "icons/rag.svg",
+      "old": {
+        "original": "50d7bd0e540b",
+        "path": "static/index.html",
+        "line": 1205,
+        "basis": "Button title",
+        "source_label": "RAG active — click to deactivate",
+        "priority": 90,
+        "status": "source-label candidate",
+        "source_url": "https://github.com/odysseus-dev/odysseus/blob/c21980f5a6d1cb84db8c8ab0f488cefc7764eb3f/static/index.html#L1205"
+      }
+    },
+    {
+      "id": "memory-search",
+      "winner": "new",
+      "new_svg": "icons/memory-search.svg",
+      "old": {
+        "original": "6e4f204c1f1a",
+        "path": "static/js/chatRenderer.js",
+        "line": 31,
+        "basis": "Named SVG: search_memory",
+        "source_label": "search_memory",
+        "priority": 80,
+        "status": "source-label candidate",
+        "source_url": "https://github.com/odysseus-dev/odysseus/blob/c21980f5a6d1cb84db8c8ab0f488cefc7764eb3f/static/js/chatRenderer.js#L31"
+      }
+    },
+    {
+      "id": "skill-add",
+      "winner": "new",
+      "new_svg": "icons/skill-add.svg",
+      "old": {
+        "original": "text-f01ec050eca5",
+        "path": "static/index.html",
+        "line": 430,
+        "basis": "Literal button text",
+        "source_label": "Add Skill",
+        "priority": 60,
+        "status": "source-label candidate",
+        "source_url": "https://github.com/odysseus-dev/odysseus/blob/c21980f5a6d1cb84db8c8ab0f488cefc7764eb3f/static/index.html#L430"
+      }
+    },
+    {
+      "id": "skill-test",
+      "winner": "new",
+      "new_svg": "icons/skill-test.svg",
+      "old": {
+        "original": "text-532eaabd9574",
+        "path": "static/js/admin.js",
+        "line": 3581,
+        "basis": "Literal button text",
+        "source_label": "Test",
+        "priority": 60,
+        "status": "source-label candidate",
+        "source_url": "https://github.com/odysseus-dev/odysseus/blob/c21980f5a6d1cb84db8c8ab0f488cefc7764eb3f/static/js/admin.js#L3581"
+      }
+    },
+    {
+      "id": "sliders",
+      "winner": "new",
+      "new_svg": "icons/sliders.svg",
+      "old": {
+        "original": "f4d0abcbd924",
+        "path": "static/js/cookbook.js",
+        "line": 3240,
+        "basis": "Button title",
+        "source_label": "Set hardware manually",
+        "priority": 90,
+        "status": "source-label candidate",
+        "source_url": "https://github.com/odysseus-dev/odysseus/blob/c21980f5a6d1cb84db8c8ab0f488cefc7764eb3f/static/js/cookbook.js#L3240"
+      }
+    },
+    {
+      "id": "keyboard",
+      "winner": "new",
+      "new_svg": "icons/keyboard.svg",
+      "old": {
+        "original": "773efde90674",
+        "path": "static/js/editor/build/topbar.js",
+        "line": 524,
+        "basis": "Button title",
+        "source_label": "Keyboard shortcuts (?)",
+        "priority": 90,
+        "status": "source-label candidate",
+        "source_url": "https://github.com/odysseus-dev/odysseus/blob/c21980f5a6d1cb84db8c8ab0f488cefc7764eb3f/static/js/editor/build/topbar.js#L524"
+      }
+    },
+    {
+      "id": "error",
+      "winner": "old",
+      "new_svg": "icons/error.svg",
+      "old": {
+        "original": "text-be4bd5677277",
+        "path": "static/js/tasks.js",
+        "line": 2310,
+        "basis": "Literal button text",
+        "source_label": "errors",
+        "priority": 60,
+        "status": "source-label candidate",
+        "source_url": "https://github.com/odysseus-dev/odysseus/blob/c21980f5a6d1cb84db8c8ab0f488cefc7764eb3f/static/js/tasks.js#L2310"
+      }
+    },
+    {
+      "id": "login",
+      "winner": "old",
+      "new_svg": "icons/login.svg",
+      "old": {
+        "original": "text-bf8a9eab9e7e",
+        "path": "static/js/admin.js",
+        "line": 1097,
+        "basis": "Literal button text",
+        "source_label": "Reconnect",
+        "priority": 60,
+        "status": "source-label candidate",
+        "source_url": "https://github.com/odysseus-dev/odysseus/blob/c21980f5a6d1cb84db8c8ab0f488cefc7764eb3f/static/js/admin.js#L1097"
+      }
+    },
+    {
+      "id": "logout",
+      "winner": "new",
+      "new_svg": "icons/logout.svg",
+      "old": {
+        "original": "text-d0527e4b3d65",
+        "path": "static/js/settings.js",
+        "line": 4501,
+        "basis": "Literal button text",
+        "source_label": "Logout",
+        "priority": 60,
+        "status": "source-label candidate",
+        "source_url": "https://github.com/odysseus-dev/odysseus/blob/c21980f5a6d1cb84db8c8ab0f488cefc7764eb3f/static/js/settings.js#L4501"
+      }
+    },
+    {
+      "id": "user-add",
+      "winner": "new",
+      "new_svg": "icons/user-add.svg",
+      "old": {
+        "original": "text-115a26b51cc7",
+        "path": "static/index.html",
+        "line": 2273,
+        "basis": "Literal button text",
+        "source_label": "Add User",
+        "priority": 60,
+        "status": "source-label candidate",
+        "source_url": "https://github.com/odysseus-dev/odysseus/blob/c21980f5a6d1cb84db8c8ab0f488cefc7764eb3f/static/index.html#L2273"
+      }
+    },
+    {
+      "id": "password",
+      "winner": "old",
+      "new_svg": "icons/password.svg",
+      "old": {
+        "original": "text-557be0dabba6",
+        "path": "static/index.html",
+        "line": 2117,
+        "basis": "Literal button text",
+        "source_label": "Update Password",
+        "priority": 60,
+        "status": "source-label candidate",
+        "source_url": "https://github.com/odysseus-dev/odysseus/blob/c21980f5a6d1cb84db8c8ab0f488cefc7764eb3f/static/index.html#L2117"
+      }
+    },
+    {
+      "id": "password-show",
+      "winner": "new",
+      "new_svg": "icons/password-show.svg",
+      "old": {
+        "original": "7af345538dce",
+        "path": "static/login.html",
+        "line": 298,
+        "basis": "Button aria-label",
+        "source_label": "Show password",
+        "priority": 90,
+        "status": "source-label candidate",
+        "source_url": "https://github.com/odysseus-dev/odysseus/blob/c21980f5a6d1cb84db8c8ab0f488cefc7764eb3f/static/login.html#L298"
+      }
+    },
+    {
+      "id": "token-revoke",
+      "winner": "old",
+      "new_svg": "icons/token-revoke.svg",
+      "old": {
+        "original": "text-87e6d00bbf53",
+        "path": "static/js/admin.js",
+        "line": 3441,
+        "basis": "Literal button text",
+        "source_label": "Revoke",
+        "priority": 60,
+        "status": "source-label candidate",
+        "source_url": "https://github.com/odysseus-dev/odysseus/blob/c21980f5a6d1cb84db8c8ab0f488cefc7764eb3f/static/js/admin.js#L3441"
+      }
+    },
+    {
+      "id": "mfa-enable",
+      "winner": "old",
+      "new_svg": "icons/mfa-enable.svg",
+      "old": {
+        "original": "text-5e8d0ce9088e",
+        "path": "static/js/settings.js",
+        "line": 1797,
+        "basis": "Literal button text",
+        "source_label": "Set Up 2FA",
+        "priority": 60,
+        "status": "source-label candidate",
+        "source_url": "https://github.com/odysseus-dev/odysseus/blob/c21980f5a6d1cb84db8c8ab0f488cefc7764eb3f/static/js/settings.js#L1797"
+      }
+    },
+    {
+      "id": "logs",
+      "winner": "old",
+      "new_svg": "icons/logs.svg",
+      "old": {
+        "original": "text-40e1dc115a0b",
+        "path": "static/index.html",
+        "line": 2506,
+        "basis": "Literal button text",
+        "source_label": "Terminal logs",
+        "priority": 60,
+        "status": "source-label candidate",
+        "source_url": "https://github.com/odysseus-dev/odysseus/blob/c21980f5a6d1cb84db8c8ab0f488cefc7764eb3f/static/index.html#L2506"
+      }
+    },
+    {
+      "id": "permissions",
+      "winner": "old",
+      "new_svg": "icons/permissions.svg",
+      "old": {
+        "original": "text-abccc78cc93c",
+        "path": "static/js/admin.js",
+        "line": 3440,
+        "basis": "Literal button text",
+        "source_label": "Permissions",
+        "priority": 60,
+        "status": "source-label candidate",
+        "source_url": "https://github.com/odysseus-dev/odysseus/blob/c21980f5a6d1cb84db8c8ab0f488cefc7764eb3f/static/js/admin.js#L3440"
+      }
+    },
+    {
+      "id": "data-wipe",
+      "winner": "old",
+      "new_svg": "icons/data-wipe.svg",
+      "old": {
+        "original": "58614be41b4a",
+        "path": "static/index.html",
+        "line": 2657,
+        "basis": "Button aria-label",
+        "source_label": "Delete everything",
+        "priority": 90,
+        "status": "source-label candidate",
+        "source_url": "https://github.com/odysseus-dev/odysseus/blob/c21980f5a6d1cb84db8c8ab0f488cefc7764eb3f/static/index.html#L2657"
+      }
+    },
+    {
+      "id": "plugin",
+      "winner": "old",
+      "new_svg": "icons/plugin.svg",
+      "old": {
+        "original": "54fcd3d14326",
+        "path": "static/js/editor/build/topbar.js",
+        "line": 460,
+        "basis": "Button title",
+        "source_label": "Plugins",
+        "priority": 90,
+        "status": "source-label candidate",
+        "source_url": "https://github.com/odysseus-dev/odysseus/blob/c21980f5a6d1cb84db8c8ab0f488cefc7764eb3f/static/js/editor/build/topbar.js#L460"
+      }
+    },
+    {
+      "id": "api",
+      "winner": "old",
+      "new_svg": "icons/api.svg",
+      "old": {
+        "original": "a05a935d286c",
+        "path": "static/js/settings.js",
+        "line": 3399,
+        "basis": "Named SVG: _apiCustomIco",
+        "source_label": "_apiCustomIco",
+        "priority": 80,
+        "status": "source-label candidate",
+        "source_url": "https://github.com/odysseus-dev/odysseus/blob/c21980f5a6d1cb84db8c8ab0f488cefc7764eb3f/static/js/settings.js#L3399"
+      }
+    },
+    {
+      "id": "network-scan",
+      "winner": "old",
+      "new_svg": "icons/network-scan.svg",
+      "old": {
+        "original": "26b41a920b59",
+        "path": "static/index.html",
+        "line": 2295,
+        "basis": "Button title",
+        "source_label": "Scan your network for running model servers",
+        "priority": 90,
+        "status": "source-label candidate",
+        "source_url": "https://github.com/odysseus-dev/odysseus/blob/c21980f5a6d1cb84db8c8ab0f488cefc7764eb3f/static/index.html#L2295"
+      }
+    },
+    {
+      "id": "data-export",
+      "winner": "old",
+      "new_svg": "icons/data-export.svg",
+      "old": {
+        "original": "text-2ed227401538",
+        "path": "static/index.html",
+        "line": 2577,
+        "basis": "Literal button text",
+        "source_label": "Export Data",
+        "priority": 60,
+        "status": "source-label candidate",
+        "source_url": "https://github.com/odysseus-dev/odysseus/blob/c21980f5a6d1cb84db8c8ab0f488cefc7764eb3f/static/index.html#L2577"
+      }
+    },
+    {
+      "id": "data-import",
+      "winner": "old",
+      "new_svg": "icons/data-import.svg",
+      "old": {
+        "original": "text-f297587645cd",
+        "path": "static/index.html",
+        "line": 2578,
+        "basis": "Literal button text",
+        "source_label": "Import Data",
+        "priority": 60,
+        "status": "source-label candidate",
+        "source_url": "https://github.com/odysseus-dev/odysseus/blob/c21980f5a6d1cb84db8c8ab0f488cefc7764eb3f/static/index.html#L2578"
+      }
+    },
+    {
+      "id": "file-psd",
+      "winner": "old",
+      "new_svg": "icons/file-psd.svg",
+      "old": {
+        "original": "text-6558038e726e",
+        "path": "static/js/editor/export-dialog.js",
+        "line": 100,
+        "basis": "Literal button text",
+        "source_label": "PSD",
+        "priority": 60,
+        "status": "source-label candidate",
+        "source_url": "https://github.com/odysseus-dev/odysseus/blob/c21980f5a6d1cb84db8c8ab0f488cefc7764eb3f/static/js/editor/export-dialog.js#L100"
+      }
+    },
+    {
+      "id": "search-searxng",
+      "winner": "old",
+      "new_svg": "icons/search-searxng.svg",
+      "old": {
+        "original": "0a81f128e520",
+        "path": "static/js/searchProviderIcons.js",
+        "line": 3,
+        "basis": "Inspected literal",
+        "source_label": "Search searxng",
+        "priority": 100,
+        "status": "source-label candidate",
+        "source_url": "https://github.com/odysseus-dev/odysseus/blob/c21980f5a6d1cb84db8c8ab0f488cefc7764eb3f/static/js/searchProviderIcons.js#L3"
+      }
+    },
+    {
+      "id": "search-duckduckgo",
+      "winner": "old",
+      "new_svg": "icons/search-duckduckgo.svg",
+      "old": {
+        "original": "69d2b7007377",
+        "path": "static/js/searchProviderIcons.js",
+        "line": 4,
+        "basis": "Inspected literal",
+        "source_label": "Search duckduckgo",
+        "priority": 100,
+        "status": "source-label candidate",
+        "source_url": "https://github.com/odysseus-dev/odysseus/blob/c21980f5a6d1cb84db8c8ab0f488cefc7764eb3f/static/js/searchProviderIcons.js#L4"
+      }
+    },
+    {
+      "id": "search-brave",
+      "winner": "old",
+      "new_svg": "icons/search-brave.svg",
+      "old": {
+        "original": "f0e35a5b7bd8",
+        "path": "static/js/searchProviderIcons.js",
+        "line": 5,
+        "basis": "Inspected literal",
+        "source_label": "Search brave",
+        "priority": 100,
+        "status": "source-label candidate",
+        "source_url": "https://github.com/odysseus-dev/odysseus/blob/c21980f5a6d1cb84db8c8ab0f488cefc7764eb3f/static/js/searchProviderIcons.js#L5"
+      }
+    },
+    {
+      "id": "search-google",
+      "winner": "old",
+      "new_svg": "icons/search-google.svg",
+      "old": {
+        "original": "03ab913fd36c",
+        "path": "static/js/searchProviderIcons.js",
+        "line": 6,
+        "basis": "Inspected literal",
+        "source_label": "Search google",
+        "priority": 100,
+        "status": "source-label candidate",
+        "source_url": "https://github.com/odysseus-dev/odysseus/blob/c21980f5a6d1cb84db8c8ab0f488cefc7764eb3f/static/js/searchProviderIcons.js#L6"
+      }
+    },
+    {
+      "id": "search-tavily",
+      "winner": "old",
+      "new_svg": "icons/search-tavily.svg",
+      "old": {
+        "original": "bc7a420b0c4e",
+        "path": "static/js/searchProviderIcons.js",
+        "line": 7,
+        "basis": "Inspected literal",
+        "source_label": "Search tavily",
+        "priority": 100,
+        "status": "source-label candidate",
+        "source_url": "https://github.com/odysseus-dev/odysseus/blob/c21980f5a6d1cb84db8c8ab0f488cefc7764eb3f/static/js/searchProviderIcons.js#L7"
+      }
+    },
+    {
+      "id": "search-serper",
+      "winner": "old",
+      "new_svg": "icons/search-serper.svg",
+      "old": {
+        "original": "4f587c4fb0f8",
+        "path": "static/js/searchProviderIcons.js",
+        "line": 8,
+        "basis": "Inspected literal",
+        "source_label": "Search serper",
+        "priority": 100,
+        "status": "source-label candidate",
+        "source_url": "https://github.com/odysseus-dev/odysseus/blob/c21980f5a6d1cb84db8c8ab0f488cefc7764eb3f/static/js/searchProviderIcons.js#L8"
+      }
+    },
+    {
+      "id": "search-disabled",
+      "winner": "old",
+      "new_svg": "icons/search-disabled.svg",
+      "old": {
+        "original": "584c9960b930",
+        "path": "static/js/searchProviderIcons.js",
+        "line": 9,
+        "basis": "Inspected literal",
+        "source_label": "Search disabled",
+        "priority": 100,
+        "status": "source-label candidate",
+        "source_url": "https://github.com/odysseus-dev/odysseus/blob/c21980f5a6d1cb84db8c8ab0f488cefc7764eb3f/static/js/searchProviderIcons.js#L9"
+      }
+    },
+    {
+      "id": "shell-host",
+      "winner": "old",
+      "new_svg": "icons/shell-host.svg",
+      "old": {
+        "original": "afe5a78b0d58",
+        "path": "static/js/chatRenderer.js",
+        "line": 49,
+        "basis": "Named SVG: host_shell",
+        "source_label": "host_shell",
+        "priority": 80,
+        "status": "source-label candidate",
+        "source_url": "https://github.com/odysseus-dev/odysseus/blob/c21980f5a6d1cb84db8c8ab0f488cefc7764eb3f/static/js/chatRenderer.js#L49"
+      }
+    },
+    {
+      "id": "clear-formatting",
+      "winner": "old",
+      "new_svg": "icons/clear-formatting.svg",
+      "old": {
+        "original": "6bcbdb3c3654",
+        "path": "static/js/document.js",
+        "line": 7605,
+        "basis": "Button title",
+        "source_label": "Clear formatting",
+        "priority": 90,
+        "status": "source-label candidate",
+        "source_url": "https://github.com/odysseus-dev/odysseus/blob/c21980f5a6d1cb84db8c8ab0f488cefc7764eb3f/static/js/document.js#L7605"
+      }
+    },
+    {
+      "id": "ai-writing",
+      "winner": "new",
+      "new_svg": "icons/ai-writing.svg",
+      "old": {
+        "original": "c5580151feb1",
+        "path": "static/js/document.js",
+        "line": 7570,
+        "basis": "Button aria-label",
+        "source_label": "Writing tools",
+        "priority": 90,
+        "status": "source-label candidate",
+        "source_url": "https://github.com/odysseus-dev/odysseus/blob/c21980f5a6d1cb84db8c8ab0f488cefc7764eb3f/static/js/document.js#L7570"
+      }
+    },
+    {
+      "id": "aspect-ratio",
+      "winner": "new",
+      "new_svg": "icons/aspect-ratio.svg",
+      "old": {
+        "original": "6a7b42605d6e",
+        "path": "static/js/editor/build/controls.js",
+        "line": 389,
+        "basis": "Button aria-label",
+        "source_label": "Swap width and height",
+        "priority": 90,
+        "status": "source-label candidate",
+        "source_url": "https://github.com/odysseus-dev/odysseus/blob/c21980f5a6d1cb84db8c8ab0f488cefc7764eb3f/static/js/editor/build/controls.js#L389"
+      }
+    },
+    {
+      "id": "crop-landscape",
+      "winner": "new",
+      "new_svg": "icons/crop-landscape.svg",
+      "old": {
+        "original": "52491436adfb",
+        "path": "static/js/research/panel.js",
+        "line": 1392,
+        "basis": "Named SVG: landscape",
+        "source_label": "landscape",
+        "priority": 80,
+        "status": "source-label candidate",
+        "source_url": "https://github.com/odysseus-dev/odysseus/blob/c21980f5a6d1cb84db8c8ab0f488cefc7764eb3f/static/js/research/panel.js#L1392"
+      }
+    },
+    {
+      "id": "selection-add",
+      "winner": "new",
+      "new_svg": "icons/selection-add.svg",
+      "old": {
+        "original": "23b95bc3165f",
+        "path": "static/js/editor/build/controls.js",
+        "line": 403,
+        "basis": "Button title",
+        "source_label": "Add selection to mask",
+        "priority": 90,
+        "status": "source-label candidate",
+        "source_url": "https://github.com/odysseus-dev/odysseus/blob/c21980f5a6d1cb84db8c8ab0f488cefc7764eb3f/static/js/editor/build/controls.js#L403"
+      }
+    },
+    {
+      "id": "selection-invert",
+      "winner": "new",
+      "new_svg": "icons/selection-invert.svg",
+      "old": {
+        "original": "1a25b230d01f",
+        "path": "static/js/editor/build/controls.js",
+        "line": 400,
+        "basis": "Button title",
+        "source_label": "Invert selection",
+        "priority": 90,
+        "status": "source-label candidate",
+        "source_url": "https://github.com/odysseus-dev/odysseus/blob/c21980f5a6d1cb84db8c8ab0f488cefc7764eb3f/static/js/editor/build/controls.js#L400"
+      }
+    },
+    {
+      "id": "selection-save",
+      "winner": "old",
+      "new_svg": "icons/selection-save.svg",
+      "old": {
+        "original": "e7029cb3e03d",
+        "path": "static/js/editor/build/topbar.js",
+        "line": 239,
+        "basis": "Button aria-label",
+        "source_label": "Save current selection",
+        "priority": 90,
+        "status": "source-label candidate",
+        "source_url": "https://github.com/odysseus-dev/odysseus/blob/c21980f5a6d1cb84db8c8ab0f488cefc7764eb3f/static/js/editor/build/topbar.js#L239"
+      }
+    },
+    {
+      "id": "selection-reselect",
+      "winner": "new",
+      "new_svg": "icons/selection-reselect.svg",
+      "old": {
+        "original": "text-82ab787f5a1f",
+        "path": "static/js/editor/build/topbar.js",
+        "line": 218,
+        "basis": "Literal button text",
+        "source_label": "Reselect",
+        "priority": 60,
+        "status": "source-label candidate",
+        "source_url": "https://github.com/odysseus-dev/odysseus/blob/c21980f5a6d1cb84db8c8ab0f488cefc7764eb3f/static/js/editor/build/topbar.js#L218"
+      }
+    },
+    {
+      "id": "selection-grow",
+      "winner": "new",
+      "new_svg": "icons/selection-grow.svg",
+      "old": {
+        "original": "text-b97dc5270c17",
+        "path": "static/js/editor/build/topbar.js",
+        "line": 228,
+        "basis": "Literal button text",
+        "source_label": "Grow",
+        "priority": 60,
+        "status": "source-label candidate",
+        "source_url": "https://github.com/odysseus-dev/odysseus/blob/c21980f5a6d1cb84db8c8ab0f488cefc7764eb3f/static/js/editor/build/topbar.js#L228"
+      }
+    },
+    {
+      "id": "selection-similar",
+      "winner": "new",
+      "new_svg": "icons/selection-similar.svg",
+      "old": {
+        "original": "text-3f63a3abbcd6",
+        "path": "static/js/editor/build/topbar.js",
+        "line": 229,
+        "basis": "Literal button text",
+        "source_label": "Similar",
+        "priority": 60,
+        "status": "source-label candidate",
+        "source_url": "https://github.com/odysseus-dev/odysseus/blob/c21980f5a6d1cb84db8c8ab0f488cefc7764eb3f/static/js/editor/build/topbar.js#L229"
+      }
+    },
+    {
+      "id": "align-distribute",
+      "winner": "new",
+      "new_svg": "icons/align-distribute.svg",
+      "old": {
+        "original": "697af1723050",
+        "path": "static/js/editor/build/controls.js",
+        "line": 899,
+        "basis": "Button aria-label",
+        "source_label": "Align or distribute selected layers",
+        "priority": 90,
+        "status": "source-label candidate",
+        "source_url": "https://github.com/odysseus-dev/odysseus/blob/c21980f5a6d1cb84db8c8ab0f488cefc7764eb3f/static/js/editor/build/controls.js#L899"
+      }
+    },
+    {
+      "id": "transform-width",
+      "winner": "new",
+      "new_svg": "icons/transform-width.svg",
+      "old": {
+        "original": "text-a318c24216de",
+        "path": "static/js/editor/build/transform-popup.js",
+        "line": 48,
+        "basis": "Literal button text",
+        "source_label": "Increase width",
+        "priority": 60,
+        "status": "source-label candidate",
+        "source_url": "https://github.com/odysseus-dev/odysseus/blob/c21980f5a6d1cb84db8c8ab0f488cefc7764eb3f/static/js/editor/build/transform-popup.js#L48"
+      }
+    },
+    {
+      "id": "transform-height",
+      "winner": "new",
+      "new_svg": "icons/transform-height.svg",
+      "old": {
+        "original": "text-a318c24216de",
+        "path": "static/js/editor/build/transform-popup.js",
+        "line": 56,
+        "basis": "Literal button text",
+        "source_label": "Increase height",
+        "priority": 60,
+        "status": "source-label candidate",
+        "source_url": "https://github.com/odysseus-dev/odysseus/blob/c21980f5a6d1cb84db8c8ab0f488cefc7764eb3f/static/js/editor/build/transform-popup.js#L56"
+      }
+    },
+    {
+      "id": "image-generate",
+      "winner": "new",
+      "new_svg": "icons/image-generate.svg",
+      "old": {
+        "original": "2e6270d815bf",
+        "path": "static/js/chatRenderer.js",
+        "line": 51,
+        "basis": "Named SVG: generate_image",
+        "source_label": "generate_image",
+        "priority": 80,
+        "status": "source-label candidate",
+        "source_url": "https://github.com/odysseus-dev/odysseus/blob/c21980f5a6d1cb84db8c8ab0f488cefc7764eb3f/static/js/chatRenderer.js#L51"
+      }
+    },
+    {
+      "id": "file-png",
+      "winner": "new",
+      "new_svg": "icons/file-png.svg",
+      "old": {
+        "original": "text-796120837694",
+        "path": "static/js/editor/export-dialog.js",
+        "line": 97,
+        "basis": "Literal button text",
+        "source_label": "PNG",
+        "priority": 60,
+        "status": "source-label candidate",
+        "source_url": "https://github.com/odysseus-dev/odysseus/blob/c21980f5a6d1cb84db8c8ab0f488cefc7764eb3f/static/js/editor/export-dialog.js#L97"
+      }
+    },
+    {
+      "id": "file-jpeg",
+      "winner": "new",
+      "new_svg": "icons/file-jpeg.svg",
+      "old": {
+        "original": "text-f4dc1c96a30f",
+        "path": "static/js/editor/export-dialog.js",
+        "line": 98,
+        "basis": "Literal button text",
+        "source_label": "JPEG",
+        "priority": 60,
+        "status": "source-label candidate",
+        "source_url": "https://github.com/odysseus-dev/odysseus/blob/c21980f5a6d1cb84db8c8ab0f488cefc7764eb3f/static/js/editor/export-dialog.js#L98"
+      }
+    }
+  ]
+}

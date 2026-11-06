@@ -226,3 +226,12 @@ html {
 :root.density-spacious .msg { padding: 14px 18px; margin-bottom: 12px; }
 :root.density-spacious .list-item { padding: 8px 12px; }
 :root.density-spacious .sidebar .section { padding: 0; }
+
+/* Optional semantic icons retain labels and the existing component layout. */
+.ody-ui-icon { flex-shrink:0; vertical-align:-.15em; }
+.ody-ui-label { display:inline-flex; align-items:center; gap:6px; min-width:0; }
+.ody-ui-with-label { display:inline-flex; align-items:center; justify-content:center; gap:6px; }
+.ody-ui-color-mark { display:inline-flex; align-items:center; line-height:0; }
+#hamburger-btn > .ody-ui-icon { display:none; }
+#hamburger-btn[aria-expanded="true"] > .ody-ui-icon { display:block; }
+#hamburger-btn[aria-expanded="true"] > .sidebar-menu-icon { display:none; }

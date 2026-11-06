@@ -18,7 +18,7 @@ import {
 // No leading icon on the signature fold — the user explicitly does not
 // want a star/emoji-style glyph in this header.
 export const _SIG_ICON = '';
-export const _QUOTE_ICON = '<svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 17 4 12 9 7"/><path d="M20 18v-2a4 4 0 0 0-4-4H4"/></svg>';
+export const _QUOTE_ICON = '<svg width="11" height="11" class="ody-ui-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" data-ui-icon="quote"><path d="M4 5h6v7H6c0 4-1 5-3 6M14 5h6v7h-4c0 4-1 5-3 6"/></svg>';
 
 // HTML-escape used by `_extractQuoteMeta`. Inlined here (rather than
 // imported from utils) so this module remains free of cross-file links.

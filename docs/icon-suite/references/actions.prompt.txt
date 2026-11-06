@@ -1,0 +1,7 @@
+Use case: logo-brand
+Asset type: one action and layout icon-family reference board for the Odysseus SVG suite
+Primary request: a consistent contact sheet of 30 compact monochrome UI line icons: add, subtract, close, check, copy, scissors cut, clipboard paste, pencil edit, trash, archive box, restore, download, upload, floppy save, refresh arrows, undo, redo, filter funnel, sort, pushpin, star favorite, share, chain link, external link, move four arrows, drag dots, split panels, grid, list, dock panel.
+Style/medium: precise flat vector outlines on a 24x24 logical grid, 2-unit uniform stroke, rounded caps and joins, lightly rounded rectangular corners, strong familiar silhouettes. Match a simple line-icon system used by an AI workbench.
+Composition/framing: 6-column by 5-row grid with generous cell gutters and a small plain identification label below each icon.
+Color palette: one dark ink only; genuinely transparent background.
+Constraints: icons must be legible at 14–24 px, about 2 units of glyph padding. No colored fills, gradients, texture, shadow, photorealism, illustrative backgrounds or decorative frames. These are references for manual SVG reconstruction and CSS currentColor recoloring.

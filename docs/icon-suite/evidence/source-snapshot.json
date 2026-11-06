@@ -1,0 +1,1208 @@
+{
+  "sha": "c21980f5a6d1cb84db8c8ab0f488cefc7764eb3f",
+  "files": {
+    "frontend/src/features/notes/application/agentActions.js": {
+      "sha256": "76de35ac93d72edb5dcd295e85c704af9b3f08c2fe9fdc56e0bcbebd4b322fd8"
+    },
+    "frontend/src/features/notes/application/cardOperations.js": {
+      "sha256": "37021f9643f6a3299d36b6021783a559e60ad84848ac2b12f0980b5034b6b9c4"
+    },
+    "frontend/src/features/notes/application/checklistOperations.js": {
+      "sha256": "fe3033db6ef316c6b15c6b01c0f202ee76a61ea2c5b6952b20144660ff17eb54"
+    },
+    "frontend/src/features/notes/application/deletion.js": {
+      "sha256": "85fc592724524bb5ff37d7e5e58a68fda9d7e645810b6c87a2d4dd3cb41f9dd5"
+    },
+    "frontend/src/features/notes/application/drafts.js": {
+      "sha256": "ce38e7976ee315b198baebffe45f9a1f4e63d87affd9898ed5cf4bde37b903e7"
+    },
+    "frontend/src/features/notes/application/queries.js": {
+      "sha256": "6210915184c30f73911f144fe0d12a9935d6f2ce42cb2aaf6aeaa75614ca51a2"
+    },
+    "frontend/src/features/notes/application/reminders.js": {
+      "sha256": "0da923790f4036d5fe354df4e529feb4b96e178495cb951f269093c0a8347e4e"
+    },
+    "frontend/src/features/notes/application/selection.js": {
+      "sha256": "8f95d086fc2e60beae32b9e9debba41b35448e1c5b4ac78e4989652ef2d44e35"
+    },
+    "frontend/src/features/notes/application/state.js": {
+      "sha256": "4ceb424b3b6e30a5f507804f42051be02390d4ce1f03ef284094e48825cde5c3"
+    },
+    "frontend/src/features/notes/application/submission.js": {
+      "sha256": "1c5d5af833aab91f71a34c11535885eb7bf9f751de5aa89f79defe0f696f20fb"
+    },
+    "frontend/src/features/notes/application/workflows.js": {
+      "sha256": "1d58ea2d495c8d301c550eb9ba7f627c515a8784bcd105558d941522965e77b0"
+    },
+    "frontend/src/features/notes/domain/noteRules.js": {
+      "sha256": "9ddbfb20e0a5564dd83365ad498286d68ef03fd60d632619ad4d9656e2f73c95"
+    },
+    "frontend/src/features/notes/domain/recurrence.js": {
+      "sha256": "946ef7a98b0a2dbe329e8259250af11a11702c74fd997e17fb3aff007fbe40c9"
+    },
+    "frontend/src/features/notes/index.js": {
+      "sha256": "25cf3a1cef5dbac0840aef513ffa010a9b08d206de96ce2527e6159a5454b555"
+    },
+    "frontend/src/features/notes/infrastructure/http.js": {
+      "sha256": "8b186bbfbb003b8d738c80713e1cbb5c6924ee14119929c5ea65707b46076b0c"
+    },
+    "frontend/src/features/notes/infrastructure/notifications.js": {
+      "sha256": "c7552d1f4600ae721437892fc0a1e5a0332abe30082bd943cd13a379c9514fec"
+    },
+    "frontend/src/features/notes/infrastructure/storage.js": {
+      "sha256": "ff91a55c55fbdd876c69d9ec10e4e992104c95b6d12d752d9745193fccbc646a"
+    },
+    "frontend/src/features/notes/ui/cardChecklist.js": {
+      "sha256": "4ff6d69d04547a0325041f774c3bf0707d8b67982d59a221127e07dc9b01383c"
+    },
+    "frontend/src/features/notes/ui/cardInteractions.js": {
+      "sha256": "f8aa059a39f9bc7ebc6b78d53eec7488fad458bdf3afb74d90fb3c10f1aac52d"
+    },
+    "frontend/src/features/notes/ui/cardRendering.js": {
+      "sha256": "4ff661a65d88e810f346260a354070dba325d6beaa57d1c4e82e8bf09b894538"
+    },
+    "frontend/src/features/notes/ui/cardReorder.js": {
+      "sha256": "113d4457f25291d15afb7fb6775ea063f24c9dac51bb0d262787c9e40705235b"
+    },
+    "frontend/src/features/notes/ui/checklist.js": {
+      "sha256": "eecafbd92076209fa41826820125fbe9ffa757d6d1bff018e9acc2ede2a18e72"
+    },
+    "frontend/src/features/notes/ui/checklistReorder.js": {
+      "sha256": "155ea3d70e653f38a62ff50fc5be6aee019d42e86d28753da9edb258ac7c93e1"
+    },
+    "frontend/src/features/notes/ui/clipboard.js": {
+      "sha256": "5462fea63a2aa9d1fc07dca91b462f6ff24f352b05d99ea6feb437469c0e1f3e"
+    },
+    "frontend/src/features/notes/ui/colors.js": {
+      "sha256": "2619e5f8b15eb3057330ef220abe6bc354a496effc0df3d89385cdfef9242c86"
+    },
+    "frontend/src/features/notes/ui/draftEditor.js": {
+      "sha256": "11cf24e7e8e8954d764cb58d786fa6f6d71f84f1c6c5ba644d761e28cfdbaedf"
+    },
+    "frontend/src/features/notes/ui/drawing.js": {
+      "sha256": "f55d4eff7f550e183ecf240a45002936063dbb4eae153e11834da4cb6bd13d35"
+    },
+    "frontend/src/features/notes/ui/editor.js": {
+      "sha256": "1d7efadf52fa0d9fe2cd07c303c09357d22ee53d5a00200498f511ebb25fbc83"
+    },
+    "frontend/src/features/notes/ui/filters.js": {
+      "sha256": "3946b8324ad8f0212621e526479668308e48b799bf0dbb608e5cd4626f6c1f03"
+    },
+    "frontend/src/features/notes/ui/layout.js": {
+      "sha256": "a893d09e96fb98d13db8ae5c3fb8c5e7a040c62031dd961396a18b7ae2a82a38"
+    },
+    "frontend/src/features/notes/ui/lifecycle.js": {
+      "sha256": "8d8c62a87d4df134d3b9dd97eaf59d02c52f1a38f6bc2e109e8426081d453a8d"
+    },
+    "frontend/src/features/notes/ui/mobileEditor.js": {
+      "sha256": "62ad9408cb139143168f2c5834ec56b83264c4daed3e84fa9b4b0a281712144c"
+    },
+    "frontend/src/features/notes/ui/mobileReorder.js": {
+      "sha256": "2a3ccbad103dcc880e4baf2b3aa3ece4df7b73752bd30078185f03227585148f"
+    },
+    "frontend/src/features/notes/ui/panel.js": {
+      "sha256": "8cc7f5dfe30961e75191fe394064a0fc7d9b1f739ee784bf1e044406b2d01279"
+    },
+    "frontend/src/features/notes/ui/quickAdd.js": {
+      "sha256": "8aa081cb7341d9a67ef46c74da49aebd729e9b53a73d618b81c89566c874b507"
+    },
+    "frontend/src/features/notes/ui/reminderDisplay.js": {
+      "sha256": "8a4f23a013f06876894e6544b49540b288007d0d7e4cddca955978588f47a64a"
+    },
+    "frontend/src/features/notes/ui/reminderPicker.js": {
+      "sha256": "cb043be801ab40cf8141af6ff1ad788e69fef57a87960ca992071ad9ad29ad90"
+    },
+    "frontend/src/features/notes/ui/selection.js": {
+      "sha256": "38f12ba7771589aa427f054f48919569dcee9abe0246e02b9767202adb854cdc"
+    },
+    "frontend/src/features/notes/ui/text.js": {
+      "sha256": "5890c8e1315e2082acb0478429dc2e60f56cc27691c67080fa16597873638017"
+    },
+    "frontend/src/features/notes/ui/toolbar.js": {
+      "sha256": "d2655ef163825ce6c40d8ef46bc9dfc63a2aa19fb1a7e10b28002f79cb0db409"
+    },
+    "frontend/src/features/notes/ui/windowLayout.js": {
+      "sha256": "a0aa203e87814d0eebebb6b049776c3efd576f4a5c6e17e486c8a2893c9c21df"
+    },
+    "frontend/src/package.json": {
+      "sha256": "609158e6c5fbc237939fa3ddf7faab80ab690bdc0c8d584414a885130103c4e8"
+    },
+    "frontend/src/shared/actionMenuOrder.js": {
+      "sha256": "e17baec5d6ac381ce6234ab6f028a8208487280dd07d6950a3469f8488809684"
+    },
+    "frontend/src/shared/ui/confetti.js": {
+      "sha256": "68f0cbe07c7b61fcaf92920cd47042c576ab27fd9553c971cff45c595c25d80a"
+    },
+    "static/css/00-tokens.css": {
+      "sha256": "74fcf9fbb415cc3fc2e8ebd1f98d36d042ab04669c18a08d1943f9a77082f3d1"
+    },
+    "static/css/01-agent-chat.css": {
+      "sha256": "bc3b225213654b8c78e0ecec24e40c1c9ae756e6c16ef5fd16a3c2bc1ed6d1cd"
+    },
+    "static/css/02-compare.css": {
+      "sha256": "4dc2c64965d6b66488ae42c3fc46a8dc068708abc3653c578a2268d832325c83"
+    },
+    "static/css/03-agent-chat.css": {
+      "sha256": "8a507a7d81f8525aa85e51e8475489dc1ca81912bea863bea6667fcc232c92d2"
+    },
+    "static/css/04-memory.css": {
+      "sha256": "453d7d20f50c051a043509776c54e624545a9d565102c2dda9eb52167bc151d0"
+    },
+    "static/css/05-documents.css": {
+      "sha256": "2349cee24a7b945fe74208b24206858c753ad260d7992634def70192f5999338"
+    },
+    "static/css/06-admin-settings.css": {
+      "sha256": "15e47dda679350ec3def6d05334829bb3da4c342a6578feb2ee283c4919c26b8"
+    },
+    "static/css/07-documents.css": {
+      "sha256": "9ebbca2206660aa82de9b7f69e32ca613e54eba6f8992f54dbe453bb6a6f9700"
+    },
+    "static/css/08-skills.css": {
+      "sha256": "4cc8d31fde44ebeab97dd9e632ecce3c3c4dd7846eecf59752993137dc630ebc"
+    },
+    "static/css/09-gallery.css": {
+      "sha256": "b1d8725e25624c084b389a3da457a51931ff1b844d83e040679cea698913c065"
+    },
+    "static/css/10-cookbook.css": {
+      "sha256": "dc3f4bcefba68b7c9e3ecbf4015f7bafa8da31b941ca7486fca07ba20fb80b6a"
+    },
+    "static/css/11-tasks.css": {
+      "sha256": "fb87b3bbd32d9f4d70e10eef843b8ec7a89d3618211f3eced9deedf6e892e907"
+    },
+    "static/css/12-gallery.css": {
+      "sha256": "23738c3724374a55fb5fe1ff2680cd5a230a1a50d68c0c3c3957813c5ec38f55"
+    },
+    "static/css/13-image-editor.css": {
+      "sha256": "e4cad901899aab77c0b6387bb94e83ac6a015be0c0c9019a7b142771941b3286"
+    },
+    "static/css/14-email.css": {
+      "sha256": "8c35714a8a23fe806200a3af9e576d00a7c6570ca0ac224c6264a073f67de5bd"
+    },
+    "static/css/15-notes.css": {
+      "sha256": "d29b319df2fb686dc56f2c7d2a27019a342bc9c7b05c2c773331e83d275747f5"
+    },
+    "static/css/16-calendar.css": {
+      "sha256": "e73640982a869a8b1e656b9189ffe7160dd8432fa176535bce7f3c4301d9c246"
+    },
+    "static/css/17-research.css": {
+      "sha256": "1a4884f2a92fd224a3e6f2fbbfe8cab09f187f4825b652c26aca22c6e89e4bdc"
+    },
+    "static/css/cookbook-research-memory-settings.css": {
+      "sha256": "5e39d9ef9a1d4392b77e3be5d620e205d7ace171cdf033e9ead5461ecca54055"
+    },
+    "static/css/documents-gallery-editor.css": {
+      "sha256": "6a78935c6aad1bae6378dc3569daaf7397d8c68b100c6babb1bb9e6fd84bb8e6"
+    },
+    "static/css/email-calendar-notes-tasks.css": {
+      "sha256": "3dfc2eff3b4437e0b0f71efcc876e6dae19ac8cab306631b6091c6b8d809f414"
+    },
+    "static/index.html": {
+      "sha256": "7f9d53a1a74cf6fdd4db8ef0891dcb583d079b41f2d3cbc4953bf18346c4de5c"
+    },
+    "static/js/a11y.js": {
+      "sha256": "dd8e5cfa60edb6f7a87461bcaa642fe016f8d5b109abe0c4e49d2115190562ab"
+    },
+    "static/js/actionMenuOrder.js": {
+      "sha256": "e17baec5d6ac381ce6234ab6f028a8208487280dd07d6950a3469f8488809684"
+    },
+    "static/js/admin.js": {
+      "sha256": "5e91ce7cec77d0c331e41c4d293beb70a12bd4e19ec84e3d48c94843fc54b36d"
+    },
+    "static/js/appConfig.js": {
+      "sha256": "ad1535e8c9da8a3db214fed3a90dc38f4a5d2ad866fee3e4047f711d638ce3b2"
+    },
+    "static/js/assistant.js": {
+      "sha256": "31ff8771770a7775c65c86dd3d302909b19881c895ad2a36f294dbc6c03fc120"
+    },
+    "static/js/backgroundToolJobs.js": {
+      "sha256": "e933f6b7e378405af4a818c34a278f7d4189eca9dadd200be03c046ea12846c1"
+    },
+    "static/js/calendar/reminders.js": {
+      "sha256": "79bf7cbad4da67938a14672b4d7265ff19b1f719b1786092b3f09590975f143d"
+    },
+    "static/js/calendar/utils.js": {
+      "sha256": "faef1f3a9440c4aa3e0905e9df4e41de29cf5812884c2ee59240e83dcb35951e"
+    },
+    "static/js/calendar.js": {
+      "sha256": "50ce8d4143729f2b9a29dae90477d80c8159f0f07af8498f2eef7e4496360261"
+    },
+    "static/js/censor.js": {
+      "sha256": "3aac53189c7d54d94483e7b1fc8bfde01ae59f09f5a484bfff4b7c6c1c8620b4"
+    },
+    "static/js/chat.js": {
+      "sha256": "22a5e94ac94ab9117a100ba5c8b786e978a3d6a10d484366ec775be2a93295ef"
+    },
+    "static/js/chatModelProvenance.js": {
+      "sha256": "704e2247703695bebda7f7f3a1d7849f7896ff82bba089abbb23485c3a37fb80"
+    },
+    "static/js/chatRenderer.js": {
+      "sha256": "ce2d43e1620ea862a7a295d7f21d26a3710e63768987f7cda3d8bab16d97b7c3"
+    },
+    "static/js/chatStream.js": {
+      "sha256": "a56a28cefdabf672c6a915f74b18f01f855af0a9581bcdbdbf5ad9075d3906fa"
+    },
+    "static/js/chatStreamErrors.js": {
+      "sha256": "dee55e32e2fe726abb04f20d0a8655402cddcf48a8c3cc9be5a0c21d958c2431"
+    },
+    "static/js/chatgptSubscriptionUsage.js": {
+      "sha256": "b84f1ddc9b5b947d21c6423452607eee36dfe9aa5045bb272a7fa9295120dbdc"
+    },
+    "static/js/chipScroll.js": {
+      "sha256": "f63b3cb94302f3ff77dbbdd59385ac6e2570bff2187c49b7d560131ab2a2f6b0"
+    },
+    "static/js/codeRunner.js": {
+      "sha256": "1203a4547d44b0d48fc7a9848bb4a6870bcba205affe04f4cf066c76b82357c0"
+    },
+    "static/js/color/hex.js": {
+      "sha256": "aecac275272b5c0df87a46e93e2ac839ecea93b4287382a41309ac1f60073bd5"
+    },
+    "static/js/colorPicker.js": {
+      "sha256": "cd529ac296baa8a9f826a55562439272dc85430070c82c2860cde94eceb40aa9"
+    },
+    "static/js/compare/icons.js": {
+      "sha256": "c63c9faca3aea0b710acba93734baed37e78d9e2b1357d5b42195abbefbf104d"
+    },
+    "static/js/compare/index.js": {
+      "sha256": "19c8157ceb52bb8090588c64eb6bed98c4039f34f25cd0eebea746172e84933a"
+    },
+    "static/js/compare/models.js": {
+      "sha256": "93caf1d2278ea50b3658309e66c7ec5a9e0b6a3eab823be99a5c13303feb63a0"
+    },
+    "static/js/compare/panes.js": {
+      "sha256": "613c20048b98fbfa2835a3bbbd9a9c431073c3672d7cfe9e13ebfcd2cb1adac9"
+    },
+    "static/js/compare/probe.js": {
+      "sha256": "6e2c72c8323cd4516d644218f6d5955a6b4f21cbd70a79799d17b127c2810dd7"
+    },
+    "static/js/compare/scoreboard.js": {
+      "sha256": "bec4d93c4005eb7df571a6763e8939295cd1743c35be1c960705db74cf34ad82"
+    },
+    "static/js/compare/selector.js": {
+      "sha256": "0b1531d8e39a0ac92584f0d2f71de2565cd43af0c48f5c6dbf19acd282908a42"
+    },
+    "static/js/compare/sse.js": {
+      "sha256": "a5c1bc04bd02e4617b625211f6fa4875140e6fdcc60c52aac9fd77eb6d433c15"
+    },
+    "static/js/compare/state.js": {
+      "sha256": "84d23dc14870ef7781ca993edf7a314397f63e002fee33aee9f79fdc108d0858"
+    },
+    "static/js/compare/stream.js": {
+      "sha256": "2b7b455fbab1a9379d38c177bf18863b5d9fdbb8d210e552225d628cf9d4b01a"
+    },
+    "static/js/compare/vote.js": {
+      "sha256": "fa31d673c40f973490e9fac52130b4a915b944a7abdd217a9bd8d57e66d57ca6"
+    },
+    "static/js/composerArrowUpRecall.js": {
+      "sha256": "2392e19ae561dcad2f1d26b5c1947a5e78141e411c86d9a392cf11ef21482fac"
+    },
+    "static/js/cookbook-deps-recipes.js": {
+      "sha256": "d8244e2978d353386363d31573000c46efe8df6ed6ab7b36e0ac53a155ddc8bc"
+    },
+    "static/js/cookbook-diagnosis.js": {
+      "sha256": "41480f44cc6e87533dc4853122ab9f5cc3074568f58689fe0cdfbd6dec4b4cf7"
+    },
+    "static/js/cookbook-hwfit.js": {
+      "sha256": "706272b6de944de1f1d196b623727fa113e7d4a23f31054a540b59c82cec934e"
+    },
+    "static/js/cookbook.js": {
+      "sha256": "cc019470ff645412d9372a4cf55ab558c025ea78c941a304da5617b76d05497f"
+    },
+    "static/js/cookbookDownload.js": {
+      "sha256": "1b0f3ed4dcac8e89862391ccf5fb1daa082b0055ce62506cb41530f07a6b7719"
+    },
+    "static/js/cookbookPorts.js": {
+      "sha256": "670722c1e55457e27ce9b9b901f4cebe67e6373ac7f721688ec53be1a0cf9e00"
+    },
+    "static/js/cookbookProgressSignal.js": {
+      "sha256": "9b0c7230cd21d91af19d86aa94b1b52bfe2a33a60556fbe622cb64029646fec7"
+    },
+    "static/js/cookbookRunning.js": {
+      "sha256": "8e2f2d2b93bbde8d7381f65c27ac711c16cef1e92d0fedcfe6feb021b3993909"
+    },
+    "static/js/cookbookSchedule.js": {
+      "sha256": "c2962650a359ef675a870d305f0334850983c650e4734ee787918e50b324e350"
+    },
+    "static/js/cookbookServe.js": {
+      "sha256": "ac3a4456ee93025dc3e0589acb031a22d4bf758a03baf50919d5a40ac9287037"
+    },
+    "static/js/document.js": {
+      "sha256": "4ddd9ea7cb00cea27fa6b0d8d863770068b34c55f0211ffe0f2d67a2a0a2013b"
+    },
+    "static/js/documentLibrary.js": {
+      "sha256": "d6f06427c5759ceb8370abe6fc74c379c9b2a48dc1c6ccd91a4d994b6cb4c026"
+    },
+    "static/js/documentOutline.js": {
+      "sha256": "972f8aa6e2c65cc6d86ffe8b5f5a3bfdef82c35799c74631868de03a8eb8e319"
+    },
+    "static/js/documentStats.js": {
+      "sha256": "c472c1a1eeac1f50606df5f75af2d8a018396a97de8384bfa95d82fa5a232447"
+    },
+    "static/js/dragSort.js": {
+      "sha256": "951d0691519266ee9acc19491571c88448cc8aca6d031ace739443aedb4558a7"
+    },
+    "static/js/editor/actions-panel.js": {
+      "sha256": "1938e966df7ec024456cc6a2e801f831c657b2b514c11557cc2391c5ad1ef95e"
+    },
+    "static/js/editor/adjustment-layer.js": {
+      "sha256": "92b84b72d71b1b5cab2a188e775c24c1bc3fa300b6bb5b1188dbb90d588787f8"
+    },
+    "static/js/editor/adjustments-worker.js": {
+      "sha256": "07391633edfb39c452b50a63fff3076098b8ee38671e9381c4d035e96516f0ac"
+    },
+    "static/js/editor/ai-inpaint.js": {
+      "sha256": "6f145c1b53936ab6ff0219a6024cd47946e44e80a52113643b0bf0bf6725808a"
+    },
+    "static/js/editor/ai-models.js": {
+      "sha256": "722071197586c9797d92cb91f65d9217473e6bfda29340b0df668744243eeb3d"
+    },
+    "static/js/editor/ai-operation.js": {
+      "sha256": "015f9b612d3880509373b1d8cd8ab113736fcee748c0025c04259aca8de75039"
+    },
+    "static/js/editor/ai-rembg.js": {
+      "sha256": "9baad2daea2a5c28d8331d1834fe16ae51b22a74f274bc661652ac40de5176dc"
+    },
+    "static/js/editor/ai-settings.js": {
+      "sha256": "1eafca71282196da5b5219eb8e15ec5e2501e6081693caf3d6ca7dc8365de59b"
+    },
+    "static/js/editor/ai-tool-runner.js": {
+      "sha256": "e98c61a88c2dba556992fb4dc53216f782685b12e104c6257015d2b022c33c2b"
+    },
+    "static/js/editor/ai-tools-misc.js": {
+      "sha256": "20eeeef388ccd7ca10380ee81b8af705eb31252aa8cef2ca23cc378076159fcb"
+    },
+    "static/js/editor/aspect-fit.js": {
+      "sha256": "bf85f64b4ebde17ebc807874db21b0af51289198ef9cd3f109d28bbf61e1d474"
+    },
+    "static/js/editor/batch-runner.js": {
+      "sha256": "5dfcb57b49e2e7e1ea5ce0382396e049d83f41a26a95c332b5f8084a7436e61e"
+    },
+    "static/js/editor/blend-modes.js": {
+      "sha256": "eec430ad0aa237d5e723efab43d04e08516c0cd47daf120055ddd5c87375df8f"
+    },
+    "static/js/editor/brush-engine.js": {
+      "sha256": "288aa3f72723cc12d9e28da82f59b392734597ecea744f5831edfb06e60314fb"
+    },
+    "static/js/editor/brush-presets.js": {
+      "sha256": "09fe75ed12bd17e6f36dd6c0bb2e7a71f4464a77e411cda7d2a807f30f3752ac"
+    },
+    "static/js/editor/build/command-palette.js": {
+      "sha256": "0e9ca12ca3fedd1a660deab13cc548bb5b8787272a21515386dde1790cae9dc6"
+    },
+    "static/js/editor/build/controls.js": {
+      "sha256": "a0686ef3ee2fcf511c1291d4557e685e55608bd1207fae3762275b55f277e1c3"
+    },
+    "static/js/editor/build/dock.js": {
+      "sha256": "fd4ff39bbdcb19ab8d839b6a482edb3f4b2c571385ba760c6da5cfccabe95918"
+    },
+    "static/js/editor/build/options-bar.js": {
+      "sha256": "93d847dee4e91f50b1331518754add6199e148f071131f8f267af7702a4a3d48"
+    },
+    "static/js/editor/build/popups.js": {
+      "sha256": "80f1608d3f47ff17ef9339d04e5f8c7a719d81f96f89717d9b367374094e8423"
+    },
+    "static/js/editor/build/right-panel.js": {
+      "sha256": "a514ffac54060aee745cee8a5192d0df2b4c26a515d9389f697f9e4ef42634fb"
+    },
+    "static/js/editor/build/toolbar.js": {
+      "sha256": "2f255b7c3b6804520c1d75e5f84fc777bc816bdb5636f2ae3ba8d76c26873cfc"
+    },
+    "static/js/editor/build/topbar.js": {
+      "sha256": "738147b739e37037cc32c566f0e4bb04d7d56aa49366db844c7ee182f1acd3be"
+    },
+    "static/js/editor/build/transform-popup.js": {
+      "sha256": "2769ec4f4d3a29eb08309c51fd83b01677f4689b9b525c293d854cb70252cb1b"
+    },
+    "static/js/editor/canvas-context-menu.js": {
+      "sha256": "224e79f323181f53dbed74609ab118763355a8cd4a4027914b679fcc85e0b767"
+    },
+    "static/js/editor/canvas-coords.js": {
+      "sha256": "d8ce4c8abb6291ffdd91a379cae8b6f2da31a58953389be83ba9f127671a47d0"
+    },
+    "static/js/editor/canvas-events.js": {
+      "sha256": "e1253db209b6d68c26cc4c785ca654044600446e59fcda22e4ce00fbc348baf5"
+    },
+    "static/js/editor/canvas-navigation.js": {
+      "sha256": "17cf3a598306ad95fab9d001db5bc0810597f8b00d4b1fc594ad7e8e1752ac6a"
+    },
+    "static/js/editor/canvas-transforms.js": {
+      "sha256": "b25268294cbe91b862acb8f656eb698e90a2bd95eef78526e78b5bb78a028539"
+    },
+    "static/js/editor/checkerboard.js": {
+      "sha256": "d5652f52e98bba16ef7be5a64d54cf329506f92126eed4d549ca07983535722c"
+    },
+    "static/js/editor/clipboard-and-drop.js": {
+      "sha256": "e502fe9233f06158ba73b96c16c9e0e087325d0ac4a0b7c4f90ec19fe2e3265f"
+    },
+    "static/js/editor/color-mode.js": {
+      "sha256": "eb83ddc32e10ea2ab2b686d225ee6752dc5df5675c9d94058fb46ec55058ca26"
+    },
+    "static/js/editor/composite-helpers.js": {
+      "sha256": "409c131e85da9739c7abc343ff4bf0a05a50a252884c39ecf75bf02e95c2f9c3"
+    },
+    "static/js/editor/control-kit.js": {
+      "sha256": "8de3088a735e9e537d1da6c6bd68565ed8aa83655eb38a63674ace734ad12636"
+    },
+    "static/js/editor/direct-manipulation-session.js": {
+      "sha256": "f5d89b762b3f4e5e75c388eefa9c97d5591f7f8a8167795bb41ef88d904cd21d"
+    },
+    "static/js/editor/document-codec.js": {
+      "sha256": "4351f8ae0b5f66dd9042bdc1bbfb46dec957db92e695d1fae31c64a42e9a1dad"
+    },
+    "static/js/editor/document-geometry.js": {
+      "sha256": "0f7a32da82fefb7fab38f6cbc032ffc38ed909a2e0885a6efab26ad9f766f5f7"
+    },
+    "static/js/editor/draggable-dialog.js": {
+      "sha256": "51dd20ca0eb37e3006cdd09c65c8cb4c2e87b26f01b3088cda1394936001fa2b"
+    },
+    "static/js/editor/editor-agent.js": {
+      "sha256": "a268abea06018736f7c93164990c797bfe0169b8db24e168d0d39bd9e4d57e19"
+    },
+    "static/js/editor/editor-bridge.js": {
+      "sha256": "5efd953326aef5b07de53f46213b4d65ac375ba120b68f5cd14276ba0699c11b"
+    },
+    "static/js/editor/editor-control.js": {
+      "sha256": "67de80126e13afc9600543cdddd45d652f0fb0cdd34f29cce265c60f028d4ccd"
+    },
+    "static/js/editor/effects-worker.js": {
+      "sha256": "e38b02d5d237fe962d91f609d558e4b1d59b51462a478852f0ed2116a519ad33"
+    },
+    "static/js/editor/effects.js": {
+      "sha256": "3d9a5d1140446efdc4e28ff426f34e7518524a3c74df8bc2b5da64b2b05f7c6b"
+    },
+    "static/js/editor/export-dialog.js": {
+      "sha256": "928e8590e541f14a69331020183a30855358c4f7ab3e50961d3fae96db316477"
+    },
+    "static/js/editor/filters/blur.js": {
+      "sha256": "e98b35708027993e2651f4a4f6f62a8b6738b735752fc74a496012874f5b8684"
+    },
+    "static/js/editor/filters/dehaze.js": {
+      "sha256": "16a6df25ee3336736b8a6c3f5d1e69a14af6d05eec801d6ca180ba845a8bcffb"
+    },
+    "static/js/editor/filters/edge-feather.js": {
+      "sha256": "7355b6e8c1abc4a95c7e57fea65c1e388cbc015f6f68c4c1d3ddccb8af83d3bf"
+    },
+    "static/js/editor/filters/effects.js": {
+      "sha256": "0a04a8be3d7e30a34c1bc3ebceb82485b9ed8a5a3f36caf58ea365f1b3093bb8"
+    },
+    "static/js/editor/fx/adj-popup.js": {
+      "sha256": "d834dbc394ca2684b7999af38c1b295d2334bdf199f12595ccd7768323854eed"
+    },
+    "static/js/editor/fx/cube-lut.js": {
+      "sha256": "93ef1361be335695c7474ecd7dd58d63394abcfff364328de69996c81c7ec156"
+    },
+    "static/js/editor/fx/develop.js": {
+      "sha256": "b5165bf090b852d89beae5ba0919d1edf72cc7d98746394240e2a0a592444ea8"
+    },
+    "static/js/editor/fx/filter-string.js": {
+      "sha256": "420866d4c12524146e67f8b4a249ef6ad77b4cdd82fe29d64ad8d380b70e5f70"
+    },
+    "static/js/editor/fx/histogram.js": {
+      "sha256": "e6194bd1c31c832775473e15bdc79226b4b0b9b9a8db2405cb08226c69d66ee1"
+    },
+    "static/js/editor/fx/pixel-pass.js": {
+      "sha256": "c30d72e30d315ec8b2882f499bdcbb673e2b79f42bacf30b0cf670f80bdd1c1c"
+    },
+    "static/js/editor/gradient-stops.js": {
+      "sha256": "021dddd2c08d4fcee1d36e1a126fa1bcfce6358177d3e09a9e69c064262baa7b"
+    },
+    "static/js/editor/harmonize-masks.js": {
+      "sha256": "57725a20ebc1f1b86b18f05ace1258b5db8c2fc04b4d803ab802d328347de386"
+    },
+    "static/js/editor/history-budget.js": {
+      "sha256": "353149b3195b308c87235baf169ba5fc448f0b3f251da7ef11ce0f520fd74a27"
+    },
+    "static/js/editor/history-panel.js": {
+      "sha256": "76157cbf022291949aea83fa241ce7bba0807d4e08644a13c5ba5ed57bab09a4"
+    },
+    "static/js/editor/image-generation.js": {
+      "sha256": "716ee0d7077de9b6bb9e91621ee38ae328a3da0db0d0c1b67a6a91ff1e3ddb36"
+    },
+    "static/js/editor/image-result-geometry.js": {
+      "sha256": "8ddb74404545778b84ccece45a940c2f8f94ed8b967a15ab1d89a3e028cfb884"
+    },
+    "static/js/editor/keyboard-shortcuts.js": {
+      "sha256": "49df45d01463269d88956c6ed63006ac6f4b8d33c5369f30c421dfb496e98abd"
+    },
+    "static/js/editor/layer-clipping.js": {
+      "sha256": "64ee780241610aeab1e0e3e42199bcd8cf54fbea7c068e9871499e97758fe11e"
+    },
+    "static/js/editor/layer-geometry.js": {
+      "sha256": "4f2e57b104f4f6e37179125120e3ca05c858eab4b49502ad55c29af5335b17be"
+    },
+    "static/js/editor/layer-groups.js": {
+      "sha256": "cef88c0fabdaf97b319a81041853c5ca2e6b0fdbf216ca2c9c22721b21ecd52b"
+    },
+    "static/js/editor/layer-helpers.js": {
+      "sha256": "c10fa434284e6f07db117439657381edb07a6555cb086329631fe77d7616d62e"
+    },
+    "static/js/editor/layer-hit-test.js": {
+      "sha256": "675cca6405549a9c7939717660d263f8e3a0aeadd613658eafd2d0ef55c0daf2"
+    },
+    "static/js/editor/layer-panel.js": {
+      "sha256": "001ed02b0a1c7c13e008bd273304b713a39890e74590f087122babe781e2865f"
+    },
+    "static/js/editor/layer-selection.js": {
+      "sha256": "aa1b278d04ddd3006bfec11be48bb296a322035303a40d48e173348b30df46ae"
+    },
+    "static/js/editor/layer-style-menu.js": {
+      "sha256": "f5cc3e2c1aa9a64824901a55886c855bafa1f6a203888f94e90ff34af1f9bcfd"
+    },
+    "static/js/editor/layer-styles.js": {
+      "sha256": "108cc0328abe85761a38604081beed4484f7139a6092bf63b2814d54038ea3d1"
+    },
+    "static/js/editor/look-recipes.js": {
+      "sha256": "48c02ac00044820a5a068d24013fe9a403f1ac1a28204caa2ca707375708c0e5"
+    },
+    "static/js/editor/mask-ops.js": {
+      "sha256": "5331c9ec64d589fbb55b740caed8058144631674098620a46fbdd8ee14d09134"
+    },
+    "static/js/editor/mask-utils.js": {
+      "sha256": "ddb2becc4047bc029b636e373faf9b23f8641a95cfde3e9a126b127fbacfb415"
+    },
+    "static/js/editor/multi-transform.js": {
+      "sha256": "f6733274c8e159a95ead323b6a3e7aa980c04db08f6ec3d6841bb572750a5340"
+    },
+    "static/js/editor/nl-edit.js": {
+      "sha256": "5b896e0c709e9d0cc06af49441ea5bafdc61682b099d6ff6572ec3309074a54a"
+    },
+    "static/js/editor/panel-visibility.js": {
+      "sha256": "c6abdf09531171281fb90720498f82442e4b2dd5197f5f62b00042b4a1cd4cd3"
+    },
+    "static/js/editor/panels/panels.js": {
+      "sha256": "f8c430e9522f742ed95b213dca3dcbb8a9edbb8fdce38dac49dee2f66b9932da"
+    },
+    "static/js/editor/panels/studio-panels.js": {
+      "sha256": "79b6f172a5af250270590bace58caa64da3186d477100237bb4eab267161cabb"
+    },
+    "static/js/editor/patch-ops.js": {
+      "sha256": "e4cfc37255429e7c9077a67556752e0af67f9fcf877b0ddbba7c65072fc64b20"
+    },
+    "static/js/editor/path-geometry.js": {
+      "sha256": "a47877224148fa767c76fac0e77441b150a6c529cbcd857668e658adf6a0b8b4"
+    },
+    "static/js/editor/perspective-crop.js": {
+      "sha256": "920cae6886581662dd6c4260977b5cdd04ee2e8e11fb151da4cc19ff0eaa48e2"
+    },
+    "static/js/editor/perspective-warp.js": {
+      "sha256": "bd90c9d8d89ef768f5c50d828de55cc62e88dde6381379322029a6e2accd00e2"
+    },
+    "static/js/editor/placed-layer.js": {
+      "sha256": "85ef8e1b421980e6b403704ae4d597a88af0ea8e33d6c8b960d52a148760469a"
+    },
+    "static/js/editor/precision-guides.js": {
+      "sha256": "71d520f5929c8162c3c7a3b23ad724646d8e40913b39131a2a93356c478856df"
+    },
+    "static/js/editor/preflight.js": {
+      "sha256": "66b2403cac2b88d277db0f36945b7fa50f9fb2915463b0b8aa8390a29b2ba025"
+    },
+    "static/js/editor/psd.js": {
+      "sha256": "c2310df8d03e9a0ee480302443be27d5a578d6f0f474029591b9f79f84b48b55"
+    },
+    "static/js/editor/quick-edit-job.js": {
+      "sha256": "da3c6b74294db36e8d3d3184bdc96545b53484c738237826ee3018d660f42906"
+    },
+    "static/js/editor/render-cancellation.js": {
+      "sha256": "8c5b4d39fca78add2207e26a9af87e622b1e8d2ad19085cf023d867f2e419f40"
+    },
+    "static/js/editor/retouch.js": {
+      "sha256": "14dc5a86fb046afe82ccd3c6e93dfd99b95e1ca691f4b95c346b692f8d8bad81"
+    },
+    "static/js/editor/scroll-affordance.js": {
+      "sha256": "5a4c019f36b7ddcd5da61fcd5110cf457398e1573dca621ed250892ddd3f6f8b"
+    },
+    "static/js/editor/select-and-mask.js": {
+      "sha256": "0544353875dbe784807bd49310b42e49b8e7b168f3c882e4e7d295c28eb69566"
+    },
+    "static/js/editor/select-subject.js": {
+      "sha256": "1725e7a6d5bce9136c3b16effe9dd1ea8dfdc6d0491e468b462afe097218541a"
+    },
+    "static/js/editor/selection-mask.js": {
+      "sha256": "52b3317848ec61a421fabbfb924bbd3f150ed61f362e706f903a55b6517186bb"
+    },
+    "static/js/editor/selection-modifiers.js": {
+      "sha256": "e1ba50731811aeaf6593251c2e3311515b3541449609dd19e4b4b031873f13da"
+    },
+    "static/js/editor/serialization-worker.js": {
+      "sha256": "31282445125b0d3eb5551db97cea9ff95e94cc515780be0b51118da280da359c"
+    },
+    "static/js/editor/shape-boolean.js": {
+      "sha256": "25ac4949aa260def4d0530f9eecf9dbb29c603d9808fc41994276a83a72abb3d"
+    },
+    "static/js/editor/shape-layer.js": {
+      "sha256": "a5f4745a54eb974221b615189b148ea459b64a26945489934263abe2a868055c"
+    },
+    "static/js/editor/shortcuts-popover.js": {
+      "sha256": "a756b066c179ded6bb27617b3aa36de73a6d7cdb96e3a2644149b9d1648c2f80"
+    },
+    "static/js/editor/slider-ux.js": {
+      "sha256": "2a0496d217bce4e39a14fcbf3c9640f03e5ff6eb9cf1fbf6d258126d2d3bf50e"
+    },
+    "static/js/editor/snap.js": {
+      "sha256": "f0a535a3135702cc5fa8e0c6b4cf72c58901cb85340597959057a892b08f0620"
+    },
+    "static/js/editor/state.js": {
+      "sha256": "65bb588d648a88b9c63be2c5719efe9b581ee91703771902d61e4fd8294ef12d"
+    },
+    "static/js/editor/stroke-pipeline.js": {
+      "sha256": "4958e990b13bf54c5ce10c816d43c541228b4b1d2970bb2a1dfd81e61724de89"
+    },
+    "static/js/editor/stroke-tool-sliders.js": {
+      "sha256": "b65a1125ece6dad10550de4a0b397e3fcc3234baa17b4642e9e5b996e94558ca"
+    },
+    "static/js/editor/submenu-toggles.js": {
+      "sha256": "fc87cead2dafdddea22e7dbf0fa64226306655308baab67b860eafc363afcdc2"
+    },
+    "static/js/editor/text-edit-overlay.js": {
+      "sha256": "0625f1a4c5d4c421ea266592fe9bccbd967c763626c9a7dde8f1fd62bdedde30"
+    },
+    "static/js/editor/text-layer.js": {
+      "sha256": "3ab1fc6517d3e6fb2a0ef3bf75c97e72a6ad3e10206ebcaa76f38147f399a672"
+    },
+    "static/js/editor/thumbnail-worker.js": {
+      "sha256": "c5b54b815baec5dfcfa6bbac4c7caf094228a312a0ae7a1efa17e4e93c1a6484"
+    },
+    "static/js/editor/tool-shortcuts.js": {
+      "sha256": "6e13b1283d922e95c70d961dfd725761463fb1022e5e58618ee66083c0ef5a28"
+    },
+    "static/js/editor/tools/bucket.js": {
+      "sha256": "1f6bcce43ffe70c71d77d40a7b8457c2116b891d0eed685eeca02c768a08e813"
+    },
+    "static/js/editor/tools/clone.js": {
+      "sha256": "cc750e89acad216ac9d8057bed2cb5c84498773cdb707909717e4511eae2dd56"
+    },
+    "static/js/editor/tools/color-range.js": {
+      "sha256": "440dbef476af99e8b0bdedeb9c47e267ee7002bbb8c29277a359b5fb47b302c5"
+    },
+    "static/js/editor/tools/crop.js": {
+      "sha256": "9a08fda519199a24ff7cd99228685e255b1ebf425808be925be2d81ec708707a"
+    },
+    "static/js/editor/tools/eyedropper.js": {
+      "sha256": "73bce878d0446be7092faffa5c4d1ede6fd507acfa1fa75b25c97159d18828dd"
+    },
+    "static/js/editor/tools/flood-fill.js": {
+      "sha256": "ce87215fe052b259fceb341dd66fb0b0e0d56c16e1266690b31e22f90ceabb3d"
+    },
+    "static/js/editor/tools/gradient.js": {
+      "sha256": "69b9a960635f85029d1e8add17612b67d82e27cfe3e47117596e1c43ebd7e42e"
+    },
+    "static/js/editor/tools/lasso-mask.js": {
+      "sha256": "b2e8978dd475e430c2569ff820e2cd1cc0da54ad75a5299c80d259eefd5e3a82"
+    },
+    "static/js/editor/tools/lasso.js": {
+      "sha256": "0bd3ba01f06dd127c13b2321299c7d2b8c8fdbafa3b564113bae60833ec83a49"
+    },
+    "static/js/editor/tools/liquify.js": {
+      "sha256": "87de797fdbc086b4f9f03928c92bba6bca19a64522cff0ff78e96a5fa08615a7"
+    },
+    "static/js/editor/tools/marquee.js": {
+      "sha256": "35a5531c3a65189b4db4842bdfa9a3979544e9bc3256d0c761ddaef183321517"
+    },
+    "static/js/editor/tools/move.js": {
+      "sha256": "2cd45e81ac0f0af396f00f7714360f15ca1b9a1daddf041d5b093b8b1e9303e0"
+    },
+    "static/js/editor/tools/object-select.js": {
+      "sha256": "89316a74fdae94b0ba4f27cf54d16e138ebf88c9df4e9ec7baec657a028b8fcd"
+    },
+    "static/js/editor/tools/patch.js": {
+      "sha256": "f7cc588bd1fa3e496ec72887ad5df916e9bcdfffdad876aecb38429e9018c340"
+    },
+    "static/js/editor/tools/pen-path.js": {
+      "sha256": "b28d608f626403b20c29280be81146dd5d34cf3f5eba8c60a9289460543c7514"
+    },
+    "static/js/editor/tools/pen-selection.js": {
+      "sha256": "71dc5efd3576ebeb96e9086589ebbe313faf4354a9469f2fd1f6fb1c4c296df3"
+    },
+    "static/js/editor/tools/perspective-crop.js": {
+      "sha256": "56497ccd646ecca4a3160883f0bc71bd59157a028aa1e20e5509dee9b33573b6"
+    },
+    "static/js/editor/tools/quick-select.js": {
+      "sha256": "2e2c959033d96e74a85f9d831cc2971d1f6ce7f7afc521ff691710706fccddfe"
+    },
+    "static/js/editor/tools/stroke.js": {
+      "sha256": "7e1dea7a6c5368eb2234186c52b5eec560da6e29e1e9e0f7c18d7cbf44532d7c"
+    },
+    "static/js/editor/tools/transform-drag.js": {
+      "sha256": "6f314139d5d58d0eb4788cb2a7954056cd32eb9174dfd403d7b8b0c46e2725be"
+    },
+    "static/js/editor/tools/transform-handles.js": {
+      "sha256": "ca39e55735ec95df0c03dd3af88052f0f5714da9e366682b82db4086488fa18f"
+    },
+    "static/js/editor/tools/transform-session.js": {
+      "sha256": "7d5ed15edfb4d3411caf1366c132a6b4eef0b5e372aa683af08f68d80ae24463"
+    },
+    "static/js/editor/tools/wand.js": {
+      "sha256": "d19b592823e4f9218c8ed84c1a1f52879712cf578cb65b25968b0f348f463205"
+    },
+    "static/js/editor/transform-frame-geometry.js": {
+      "sha256": "2c377f50336d2a1f279e3af75df6f8132515302aefaba8ada939eaf3a83da000"
+    },
+    "static/js/editor/wire-extra-menus.js": {
+      "sha256": "81bbbd497281781848d1f5b90f981dd1ccd83020a325ce4ec3df21f5eb7214f4"
+    },
+    "static/js/editor/wire-import.js": {
+      "sha256": "81825668fcba9952a24aa8155e33ff49745a232bb76dc70fadd963fe952c7df0"
+    },
+    "static/js/editor/wire-inpaint-controls.js": {
+      "sha256": "f1b4bc5ba3f24e3a75c36552d937f5b1f1c3eab304c72124344460178da459ed"
+    },
+    "static/js/editor/wire-merge-buttons.js": {
+      "sha256": "5ece820c7a19020e4caff0ddaa4269dcc559fe856b0c84046e57851dd4aba388"
+    },
+    "static/js/editor/wire-selection-controls.js": {
+      "sha256": "8d2a91b7542050822d18676401b500e9a2832537d738970cd00e85fbd3f70574"
+    },
+    "static/js/editor/wire-topbar-menus.js": {
+      "sha256": "15bd679c91cdc4ce4456f6ab016d8a8b0d8579e5250032b4648c1e1aecfe2e0d"
+    },
+    "static/js/editor/wire-topbar-overflow.js": {
+      "sha256": "ef37bad6a33b9ecef266dfe5d4f9d64cd6aaa47cd0b761859dbc36aa818de77e"
+    },
+    "static/js/editor/wire-topbar.js": {
+      "sha256": "a87d34680051f37c95fcc582bb9f61bcff15ac504e8b6c0f651e7765608c02b8"
+    },
+    "static/js/editor/wire-view-menu.js": {
+      "sha256": "d05c0058e221ecd863090db82b0b5baf9962fda5b9be75693b0ee338157912d3"
+    },
+    "static/js/editor/workspaces.js": {
+      "sha256": "502a1f9ba68f21b99dbc61c280ddfed7e0f06eb7718135c99b5752bde294c58d"
+    },
+    "static/js/emailInbox.js": {
+      "sha256": "6040036e7e41f14cb2733c7aa4385d2db3881c0f483938a6e535c8102311cc48"
+    },
+    "static/js/emailLibrary/aiReply.js": {
+      "sha256": "c04416b03fa0d7d785a1c6c1af4f47ceeddf0a936f051790fc91ffe4baeafa2b"
+    },
+    "static/js/emailLibrary/attachments.js": {
+      "sha256": "bea397704b318b2b77377fdb33b63a56558bf5a487898dfc1aca96628882fb7f"
+    },
+    "static/js/emailLibrary/bodyRender.js": {
+      "sha256": "18bae4b50a7e9a52264bc29eb85fa3bc96c9329f92d4070aa8ac452ec2e54d66"
+    },
+    "static/js/emailLibrary/index.js": {
+      "sha256": "ff8f71e24054c8925f00daa7b85403fdff91b78a33a84fa27cfa7a5e8f9029b1"
+    },
+    "static/js/emailLibrary/menus.js": {
+      "sha256": "b2d7ff215955d84fc7382d0eba4b86e64f86689c2fbed3941de1fb5a402f61c3"
+    },
+    "static/js/emailLibrary/reader.js": {
+      "sha256": "873a16a5f728b4ae966d41a4e6c3f1b2e7d2579177ad4527b5cb25943eeb0bfc"
+    },
+    "static/js/emailLibrary/replyRecipients.js": {
+      "sha256": "bb6e4b9921b674c0af972f3feb4daa6500a6fa49f004a4e2ca826a0b576e3076"
+    },
+    "static/js/emailLibrary/settingsPage.js": {
+      "sha256": "34753d607134e00c3ccd66a4900afeb097aaae68449ba87772fe7df802f2cefa"
+    },
+    "static/js/emailLibrary/signatureFold.js": {
+      "sha256": "f13297a3611bcceb57b39fe5d1482f1a70dfa7218b712ae70dce241d58bcd20f"
+    },
+    "static/js/emailLibrary/state.js": {
+      "sha256": "ff65324951d25c1fabeb1d29527fcb60103c0036b81a8ccc913b5707a4b75f82"
+    },
+    "static/js/emailLibrary/unsubscribe.js": {
+      "sha256": "3473644b24e30683fead8df0bfcf4ecb34cd3862ae6100d254048c5708289945"
+    },
+    "static/js/emailLibrary/utils.js": {
+      "sha256": "517b8f725952661883eef9b85147c84cf128c1137a35577bec685954d2acc35e"
+    },
+    "static/js/emailLibrary.js": {
+      "sha256": "b86d7ee3cfc61221f3a7d6de76fc0612ee6c5b406e8a96b318be4ada9ca3e96a"
+    },
+    "static/js/emailReplyStream.js": {
+      "sha256": "64d8bfc31ec153c80ec13993022f311c2cbd2e78098e5ab170d561a7af75874d"
+    },
+    "static/js/emailShared.js": {
+      "sha256": "ee339159190a322f0d4a9339993520d072e75c8db0c6d4ec468c82a54eb97f64"
+    },
+    "static/js/emojiPicker.js": {
+      "sha256": "a8ad0e1dbe8d16c54a534a319ab80aa63d60763204f2f298e141ecd528be7f36"
+    },
+    "static/js/emojiShortcodes.js": {
+      "sha256": "186c18a803d327a7e8e20f70ff912472fe08106f7068932d8d6698e4b907822d"
+    },
+    "static/js/escMenuStack.js": {
+      "sha256": "db71b124a18525148bdf150f79812697b027c61636420ded3a0b4ee5b21e1b9b"
+    },
+    "static/js/features/notes/application/agentActions.js": {
+      "sha256": "76de35ac93d72edb5dcd295e85c704af9b3f08c2fe9fdc56e0bcbebd4b322fd8"
+    },
+    "static/js/features/notes/application/cardOperations.js": {
+      "sha256": "37021f9643f6a3299d36b6021783a559e60ad84848ac2b12f0980b5034b6b9c4"
+    },
+    "static/js/features/notes/application/checklistOperations.js": {
+      "sha256": "fe3033db6ef316c6b15c6b01c0f202ee76a61ea2c5b6952b20144660ff17eb54"
+    },
+    "static/js/features/notes/application/deletion.js": {
+      "sha256": "85fc592724524bb5ff37d7e5e58a68fda9d7e645810b6c87a2d4dd3cb41f9dd5"
+    },
+    "static/js/features/notes/application/drafts.js": {
+      "sha256": "ce38e7976ee315b198baebffe45f9a1f4e63d87affd9898ed5cf4bde37b903e7"
+    },
+    "static/js/features/notes/application/queries.js": {
+      "sha256": "6210915184c30f73911f144fe0d12a9935d6f2ce42cb2aaf6aeaa75614ca51a2"
+    },
+    "static/js/features/notes/application/reminders.js": {
+      "sha256": "0da923790f4036d5fe354df4e529feb4b96e178495cb951f269093c0a8347e4e"
+    },
+    "static/js/features/notes/application/selection.js": {
+      "sha256": "8f95d086fc2e60beae32b9e9debba41b35448e1c5b4ac78e4989652ef2d44e35"
+    },
+    "static/js/features/notes/application/state.js": {
+      "sha256": "4ceb424b3b6e30a5f507804f42051be02390d4ce1f03ef284094e48825cde5c3"
+    },
+    "static/js/features/notes/application/submission.js": {
+      "sha256": "1c5d5af833aab91f71a34c11535885eb7bf9f751de5aa89f79defe0f696f20fb"
+    },
+    "static/js/features/notes/application/workflows.js": {
+      "sha256": "1d58ea2d495c8d301c550eb9ba7f627c515a8784bcd105558d941522965e77b0"
+    },
+    "static/js/features/notes/domain/noteRules.js": {
+      "sha256": "9ddbfb20e0a5564dd83365ad498286d68ef03fd60d632619ad4d9656e2f73c95"
+    },
+    "static/js/features/notes/domain/recurrence.js": {
+      "sha256": "946ef7a98b0a2dbe329e8259250af11a11702c74fd997e17fb3aff007fbe40c9"
+    },
+    "static/js/features/notes/index.js": {
+      "sha256": "25cf3a1cef5dbac0840aef513ffa010a9b08d206de96ce2527e6159a5454b555"
+    },
+    "static/js/features/notes/infrastructure/http.js": {
+      "sha256": "8b186bbfbb003b8d738c80713e1cbb5c6924ee14119929c5ea65707b46076b0c"
+    },
+    "static/js/features/notes/infrastructure/notifications.js": {
+      "sha256": "c7552d1f4600ae721437892fc0a1e5a0332abe30082bd943cd13a379c9514fec"
+    },
+    "static/js/features/notes/infrastructure/storage.js": {
+      "sha256": "ff91a55c55fbdd876c69d9ec10e4e992104c95b6d12d752d9745193fccbc646a"
+    },
+    "static/js/features/notes/ui/cardChecklist.js": {
+      "sha256": "4ff6d69d04547a0325041f774c3bf0707d8b67982d59a221127e07dc9b01383c"
+    },
+    "static/js/features/notes/ui/cardInteractions.js": {
+      "sha256": "f8aa059a39f9bc7ebc6b78d53eec7488fad458bdf3afb74d90fb3c10f1aac52d"
+    },
+    "static/js/features/notes/ui/cardRendering.js": {
+      "sha256": "4ff661a65d88e810f346260a354070dba325d6beaa57d1c4e82e8bf09b894538"
+    },
+    "static/js/features/notes/ui/cardReorder.js": {
+      "sha256": "113d4457f25291d15afb7fb6775ea063f24c9dac51bb0d262787c9e40705235b"
+    },
+    "static/js/features/notes/ui/checklist.js": {
+      "sha256": "eecafbd92076209fa41826820125fbe9ffa757d6d1bff018e9acc2ede2a18e72"
+    },
+    "static/js/features/notes/ui/checklistReorder.js": {
+      "sha256": "155ea3d70e653f38a62ff50fc5be6aee019d42e86d28753da9edb258ac7c93e1"
+    },
+    "static/js/features/notes/ui/clipboard.js": {
+      "sha256": "5462fea63a2aa9d1fc07dca91b462f6ff24f352b05d99ea6feb437469c0e1f3e"
+    },
+    "static/js/features/notes/ui/colors.js": {
+      "sha256": "2619e5f8b15eb3057330ef220abe6bc354a496effc0df3d89385cdfef9242c86"
+    },
+    "static/js/features/notes/ui/draftEditor.js": {
+      "sha256": "11cf24e7e8e8954d764cb58d786fa6f6d71f84f1c6c5ba644d761e28cfdbaedf"
+    },
+    "static/js/features/notes/ui/drawing.js": {
+      "sha256": "f55d4eff7f550e183ecf240a45002936063dbb4eae153e11834da4cb6bd13d35"
+    },
+    "static/js/features/notes/ui/editor.js": {
+      "sha256": "1d7efadf52fa0d9fe2cd07c303c09357d22ee53d5a00200498f511ebb25fbc83"
+    },
+    "static/js/features/notes/ui/filters.js": {
+      "sha256": "3946b8324ad8f0212621e526479668308e48b799bf0dbb608e5cd4626f6c1f03"
+    },
+    "static/js/features/notes/ui/layout.js": {
+      "sha256": "a893d09e96fb98d13db8ae5c3fb8c5e7a040c62031dd961396a18b7ae2a82a38"
+    },
+    "static/js/features/notes/ui/lifecycle.js": {
+      "sha256": "8d8c62a87d4df134d3b9dd97eaf59d02c52f1a38f6bc2e109e8426081d453a8d"
+    },
+    "static/js/features/notes/ui/mobileEditor.js": {
+      "sha256": "62ad9408cb139143168f2c5834ec56b83264c4daed3e84fa9b4b0a281712144c"
+    },
+    "static/js/features/notes/ui/mobileReorder.js": {
+      "sha256": "2a3ccbad103dcc880e4baf2b3aa3ece4df7b73752bd30078185f03227585148f"
+    },
+    "static/js/features/notes/ui/panel.js": {
+      "sha256": "8cc7f5dfe30961e75191fe394064a0fc7d9b1f739ee784bf1e044406b2d01279"
+    },
+    "static/js/features/notes/ui/quickAdd.js": {
+      "sha256": "8aa081cb7341d9a67ef46c74da49aebd729e9b53a73d618b81c89566c874b507"
+    },
+    "static/js/features/notes/ui/reminderDisplay.js": {
+      "sha256": "8a4f23a013f06876894e6544b49540b288007d0d7e4cddca955978588f47a64a"
+    },
+    "static/js/features/notes/ui/reminderPicker.js": {
+      "sha256": "cb043be801ab40cf8141af6ff1ad788e69fef57a87960ca992071ad9ad29ad90"
+    },
+    "static/js/features/notes/ui/selection.js": {
+      "sha256": "38f12ba7771589aa427f054f48919569dcee9abe0246e02b9767202adb854cdc"
+    },
+    "static/js/features/notes/ui/text.js": {
+      "sha256": "5890c8e1315e2082acb0478429dc2e60f56cc27691c67080fa16597873638017"
+    },
+    "static/js/features/notes/ui/toolbar.js": {
+      "sha256": "d2655ef163825ce6c40d8ef46bc9dfc63a2aa19fb1a7e10b28002f79cb0db409"
+    },
+    "static/js/features/notes/ui/windowLayout.js": {
+      "sha256": "a0aa203e87814d0eebebb6b049776c3efd576f4a5c6e17e486c8a2893c9c21df"
+    },
+    "static/js/fileHandler.js": {
+      "sha256": "8a95c49444858b9a234b4c6de3f5aef0630cb758d2c7d0c40302fa0fa21c8e3e"
+    },
+    "static/js/gallery.js": {
+      "sha256": "d8acbdfec0174b67941b580a8d3ffcc265bd72945791a23f96f6415f9b746cff"
+    },
+    "static/js/galleryEditor.js": {
+      "sha256": "17848d85be505da297e0cd63d16057472f6c4874c9f0b793a62dfef93e7bdf48"
+    },
+    "static/js/generatedImageResult.js": {
+      "sha256": "ad1825f7bfb30e7221df5737a0ce320f0f551cf16cc4453c9822845f38312a79"
+    },
+    "static/js/group.js": {
+      "sha256": "ee25509e0c1e7443f3c63e66dbc041c7dba3a6d210235da6cc4579c77e0346e0"
+    },
+    "static/js/init.js": {
+      "sha256": "bbcc26cf77271081e785ad0bdc868b37c592f40248654838432a83a04b921ff7"
+    },
+    "static/js/keyboard-shortcuts.js": {
+      "sha256": "f70485476ad93f5f08d949a07ffcc89d580a2cc3c2785745c1cf80b20803de67"
+    },
+    "static/js/langIcons.js": {
+      "sha256": "aa90ae32954ca83a70430918031539445a4859d2ad019b2b0b911cef0197750b"
+    },
+    "static/js/liveThinkingThrottle.js": {
+      "sha256": "ce3191ef55c7c22d2bcc45c3017df36879d79f245f76172601a7a86c2ccde214"
+    },
+    "static/js/markdown/tableRow.js": {
+      "sha256": "832c1f38586d33d1807f9391d5987de0caf56724f15563a3922d04f3b4a48c0d"
+    },
+    "static/js/markdown.js": {
+      "sha256": "cf7a734ab5ae5f5801f05bd3b963a6d3df1582c6198becab2ead81eec4949d89"
+    },
+    "static/js/memory.js": {
+      "sha256": "800a123492370ac142ece2e539a843cd8a5e9117b259a0628144b05044f892a1"
+    },
+    "static/js/mobileBulkSelect.js": {
+      "sha256": "8f2162c357de056241266bf1c744516bac04d92e5702aa2ec130f6e267c8cd03"
+    },
+    "static/js/modalManager.js": {
+      "sha256": "3c8564c54565a44b1a43766562edca94e24aeaa4875727fa0f4d8ed57db97730"
+    },
+    "static/js/modalSnap.js": {
+      "sha256": "fa4a5e1137d364948a4a5967088ecf7cb5e10269c4742c65a9c394133301bfc9"
+    },
+    "static/js/modalVisibility.js": {
+      "sha256": "a6fecb8ba9e7e8fcb0432f21be98726a3065eb85af2ec71e901ae2671c53abe5"
+    },
+    "static/js/model/matchKey.js": {
+      "sha256": "3aa31acccee5dff62ba8356644bcd77a2350e07e675b55454acf0ae96660c49b"
+    },
+    "static/js/modelPicker.js": {
+      "sha256": "6b481b684a042f157a06f93bedcead068bc3956722b975f32ed250ecd8609e0a"
+    },
+    "static/js/modelSort.js": {
+      "sha256": "c17535335277f55e79db4676a9117e02958e4f2138b5332c34d0a0794b1ab241"
+    },
+    "static/js/models.js": {
+      "sha256": "17dd46e038975850de842c5e2482874ec5b270acacc57d3f08a02c7e592c55fc"
+    },
+    "static/js/notes.js": {
+      "sha256": "7f1a7961d586767298672fad71a0d627389e185f0fb28792a04d0b987e1d5c5c"
+    },
+    "static/js/package.json": {
+      "sha256": "5a065fe7d8eab2a582f428e11c2ea63aaf70607a54f69cfd5c711b5c53d91b32"
+    },
+    "static/js/panels.js": {
+      "sha256": "ed69e512fc6de3db8aea31fc9235f805d6227116521c955bcf0975815fe458ce"
+    },
+    "static/js/platform.js": {
+      "sha256": "e1164859e396d67724e6a10c0e7ee0635dd6524f07e35c636d5839a3bcfea745"
+    },
+    "static/js/presets.js": {
+      "sha256": "bf83748833dc810a1a46f5228c0c2cdb4940a64373f9c34b04389ec6f7ff26db"
+    },
+    "static/js/providerDeviceFlow.js": {
+      "sha256": "32a91bc7851f13025415b7e3c273b7815b8cff2ce2810453b750089f77981050"
+    },
+    "static/js/providers.js": {
+      "sha256": "469cb797fd3e0fbe861b0be8cda99b2047de44d694878dfe76b395e8fcf06e4c"
+    },
+    "static/js/rag.js": {
+      "sha256": "a2249f62d9f0b9082434cc805fd571c07d2bde613a65cf47137d193bbec63056"
+    },
+    "static/js/research/jobs.js": {
+      "sha256": "dc12cb127ddfe1406c849a2d8bcab431cc77aa8d2017837c5474022c992d99ff"
+    },
+    "static/js/research/panel.js": {
+      "sha256": "dc563babb541bd02ab011501b6d6760df16851458f973cdd29f6e6e8499670ac"
+    },
+    "static/js/researchSynapse.js": {
+      "sha256": "e1bd26c9334420533ce599e1c728fab7d6bc4dbfc0d0aa4f0ce03aa4ff0d5653"
+    },
+    "static/js/search-chat.js": {
+      "sha256": "99aa2941be1d2a652f8ccefcff449c74bf306a7a92627609cc0140be756e6c83"
+    },
+    "static/js/search.js": {
+      "sha256": "09daff437e15905549db2ed302da4f68b7c7b32b316d53cf57b12574fa66bad3"
+    },
+    "static/js/searchProviderIcons.js": {
+      "sha256": "a6e10672f705b8ab17d48b1bc586cddbed30356ce86f35c561c0b3f74d9deb2a"
+    },
+    "static/js/section-management.js": {
+      "sha256": "c9df433f36f73afb1ffe4c5ed22d6bd7e5028e2fd0e637bd38c6b39bb54ff1a5"
+    },
+    "static/js/sessions.js": {
+      "sha256": "a84b65897081a0c5d1e25f613ea1a52f470883235f66d38da5ba8c9e417b6159"
+    },
+    "static/js/settings/agent.js": {
+      "sha256": "ffd01dffdf359501ab57dc58474c7b106d85a5d081715b3609161adf8830cdef"
+    },
+    "static/js/settings/api.js": {
+      "sha256": "b5a8eab1961e457159a733f4876405f5958883e5ee6610d218d6529d493601a1"
+    },
+    "static/js/settings/dom.js": {
+      "sha256": "a2ba0cb638b2060eeca8cfc10f045b01916f114b80a74d4869a585af10909df9"
+    },
+    "static/js/settings/imageModels.js": {
+      "sha256": "47071511686a05bbbe240d57e9de72880c5725ef60097cb22495cff98ec99a53"
+    },
+    "static/js/settings/imagePreferences.js": {
+      "sha256": "7630a8e46932c598d1c82b6046e02288f2c8bff2b7bd507a418d61f8a5f0433f"
+    },
+    "static/js/settings/lifecycle.js": {
+      "sha256": "1971f3f708447ae8eec71b6e64f55a7823b77d85572a1cfeebe2fddc1f7356e3"
+    },
+    "static/js/settings/navigation.js": {
+      "sha256": "ea1ae2a627bb112eeb0dcbe187ca12578fb4c69a56571b5385473a608c5da731"
+    },
+    "static/js/settings/oauthReturn.js": {
+      "sha256": "7d24f9a9bc8afa4428af8ff164b046ba68ecd1f360bbb4060d43709b08758512"
+    },
+    "static/js/settings/peek.js": {
+      "sha256": "b8f63f2522c479e0416d985ab01a5cdbf648d20259282a73eac6b91f154c6fc5"
+    },
+    "static/js/settings/registry.js": {
+      "sha256": "de17d14880231a91e1a0e483c9cc4c232c77ca2c6dea36a894121d931a7b5a79"
+    },
+    "static/js/settings/search.js": {
+      "sha256": "b0a95392b08d5ec346bf7fd6eb12ac12f0eafec09510c93e3282c0e3e5165a4c"
+    },
+    "static/js/settings/shell.js": {
+      "sha256": "bd45c9d41a77ffe6386ba10d28ca776efcc1ade4e66d6e753c1c3978339d6c3e"
+    },
+    "static/js/settings/sidebar.js": {
+      "sha256": "ffe706ec4ea587e28f9315089f3748cb82ebf6beb37ed5e93c8205cfbd37cd47"
+    },
+    "static/js/settings/speech.js": {
+      "sha256": "462c45aec1eba54cd739ed37bc8bf04f1ceb45419d610dfac343291189648f64"
+    },
+    "static/js/settings/writingStyle.js": {
+      "sha256": "ec2597a3893df3a57b6d944c0e7c3dff1ddb44284e2f709ced789ae860179ee7"
+    },
+    "static/js/settings.js": {
+      "sha256": "7ad25c4eb8fcd12bfd0b86c417449526cab96d0da8160377c9d72fc43d3bbc7b"
+    },
+    "static/js/shared/ui/confetti.js": {
+      "sha256": "68f0cbe07c7b61fcaf92920cd47042c576ab27fd9553c971cff45c595c25d80a"
+    },
+    "static/js/sidebar-layout.js": {
+      "sha256": "30c7ae0a1d456ab180fbadefed50195bc28fad60d6a09ef85398dd1ec75abb66"
+    },
+    "static/js/signature.js": {
+      "sha256": "2b8224952e1a36828229ca049270f1fc25909c5cbac63d54d0af5ab20dd32e18"
+    },
+    "static/js/skills.js": {
+      "sha256": "6ba8e17866f6f25abd6a2e6ef6188a2eb550e4d624ac215fd951f6d2a6dc4879"
+    },
+    "static/js/skillsMetrics.js": {
+      "sha256": "5b7cfc72a764cbe3c19038aaf4fb528828b867bf4f017d8eadeb97ac031bdb18"
+    },
+    "static/js/slashAutocomplete.js": {
+      "sha256": "e8aa19f049bd03c2e9c814417832318740ebf0ae0420a656ef96808838da498a"
+    },
+    "static/js/slashCommands.js": {
+      "sha256": "7864aa99233feb16b85445233b244750d05b08fa106f572ca9184427139e693d"
+    },
+    "static/js/spinner.js": {
+      "sha256": "9693dae331d00b9f279f81eef2cde8008f353bfb269954f6b3e044b993ed3513"
+    },
+    "static/js/startupShell.js": {
+      "sha256": "214c3ad6fb99215d7cb8d48d1a40922a1504fbb05da24f9fa562f96a3cb575d2"
+    },
+    "static/js/storage.js": {
+      "sha256": "fb0d4c941787209b29dd1c954f4a85311de4ed8a38b8406e651cc719181d590b"
+    },
+    "static/js/streamingRenderer.js": {
+      "sha256": "b429fad812589fc17a5c2ba4492b900cf5cbd7faf2c59cb95b98646b38f7c219"
+    },
+    "static/js/streamingSegmenter.js": {
+      "sha256": "2d0d37779dad685d466cd64cf8a22282bf238dd8426a0d3ac46820f58bbd4b82"
+    },
+    "static/js/tasks.js": {
+      "sha256": "7e881e07620c0b3193b7170b616f1b071977843437e28d93c7358f5e19785f94"
+    },
+    "static/js/theme.js": {
+      "sha256": "9986dd5730a66d6d5b93937fad76c5c6a055b06b3887ca08dc1a217da871923b"
+    },
+    "static/js/tileManager.js": {
+      "sha256": "4b1cade4d4f3d74bf545a3abf10e59b27d7c8f0843d126b4792cfcaa5bac74b6"
+    },
+    "static/js/toolWindowZOrder.js": {
+      "sha256": "e141e0f260735ab80723a57c5f172fb2762a1adf69378411c0777e364b66e521"
+    },
+    "static/js/tourAutoplay.js": {
+      "sha256": "525820f72c76e4d8804cbd18fb346f354bffa94f33c4e0c373f2913b2ebdac61"
+    },
+    "static/js/tourHintDismiss.js": {
+      "sha256": "6380d8647e324c44b16d676f56463fac72dd75a34279a2fd9005ccdd1e2dcd29"
+    },
+    "static/js/tourHints.js": {
+      "sha256": "45e5d213acfa5476bf8cb5944de9b0957ee05040ab932b0a195ae48cf9b15d41"
+    },
+    "static/js/tts-ai.js": {
+      "sha256": "13286dba80931cc0b980e0f41ff74f324b156ca6aa29ec21563335ce97dfd203"
+    },
+    "static/js/turnRendering.js": {
+      "sha256": "6a167d33bfe795378f3d2c15dd75d080019664e26e70eb52ce0278f787a2b07e"
+    },
+    "static/js/ui.js": {
+      "sha256": "2f6024fafdb365ac667d9c1b58ecfa3b27a1b6cc963584a5456d0020101afd1a"
+    },
+    "static/js/ui_visibility.js": {
+      "sha256": "b6165259e9aec27807b3c570a7aafb1b2e2c017ea0adca6b007cb655191a9c83"
+    },
+    "static/js/util/ordinal.js": {
+      "sha256": "61f24d8116054d5770a4487d5ba71fb089a67761ea5ada6c30e1d964ed7c1857"
+    },
+    "static/js/voiceRecorder.js": {
+      "sha256": "b137f89a6e6de7c0427b92504d5140fc79808e0d4a35965d03a909b11fcaa916"
+    },
+    "static/js/windowDrag.js": {
+      "sha256": "7bfc9bdefb8ae417bd1365c896ed1344a480b1952b5e738d18f3d2a760677b5d"
+    },
+    "static/js/windowResize.js": {
+      "sha256": "c25be555a8590d1e35e318c7313caa700fdb2ccbff9b06f61acd14886de15374"
+    },
+    "static/js/workspace.js": {
+      "sha256": "5d63aa2be13ef64344b7052e31ab770e193eafc11af6073ee7ae677a1de8e0b5"
+    },
+    "static/login.html": {
+      "sha256": "3ca44e8fd8c2d2b945469877b8bf9c87f6d31e5c42f9e88c7cbe847b1214c70a"
+    },
+    "static/modal-control-variants.html": {
+      "sha256": "9fcb85e511e9638922064c895e3ccf321496d2d79cf300ae34d0b2bbac3466df"
+    },
+    "static/research-ascii-variants.html": {
+      "sha256": "f9f72cf3dc1b9636d3aa060850f8c0c8bd07d2d34c9dadc840ab3fc8223e81d8"
+    },
+    "static/test-fixtures/browser-catalog.html": {
+      "sha256": "e2b2ba2d775298402e4265edbc5bfebdb66836ba7e732d9ec4567f100e03989c"
+    },
+    "static/wave-variants.html": {
+      "sha256": "f67a48f6e683c805414846dc045ef96c825fb0a194081b643476026498dbb80a"
+    },
+    "static/whirlpool-variants.html": {
+      "sha256": "bdda4e410f6f8467c5e32a9f00678758e84b92eafd6afa2083bafba392d6282c"
+    }
+  }
+}

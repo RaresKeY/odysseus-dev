@@ -2,6 +2,7 @@
 document tab strip. These assert against the source + the full CSS cascade
 the browser loads (via tests.helpers.stylesheets.app_css)."""
 from pathlib import Path
+import re
 
 from tests.helpers.stylesheets import app_css
 
@@ -71,7 +72,13 @@ def test_import_and_save_live_in_the_topbar_row():
     assert "header.querySelectorAll('.ge-header-max-btn').forEach((stale) => stale.remove());" in GALLERY
     assert "document.querySelectorAll('.ge-header-max-btn').forEach((btn) => btn.remove());" in GALLERY
     # ...and the maximize glyph is centred by CSS, not an inline nudge.
-    assert 'stroke-linejoin="round"><polyline points="15 3 21 3 21 9"' in TOPBAR
+    button = re.search(r'<button\b[^>]*id="ge-maximize-toggle"[^>]*>(.*?)</button>', TOPBAR, re.S)
+    assert button
+    svg = re.search(r'<svg\b([^>]*)>(.*?)</svg>', button.group(1), re.S)
+    assert svg and 'viewBox="0 0 24 24"' in svg.group(1)
+    assert 'data-ui-icon="maximize"' in svg.group(1)
+    assert not re.search(r'\b(?:style|transform)=', svg.group(1))
+    assert re.search(r'<(?:rect|path|polyline)\b', svg.group(2))
 
 
 def test_save_menu_has_a_png_option():

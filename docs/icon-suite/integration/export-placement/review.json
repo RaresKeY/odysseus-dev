@@ -1,0 +1,296 @@
+{
+  "pass": true,
+  "states": 8,
+  "measurements": [
+    {
+      "button": {
+        "x": 1004.25,
+        "y": 452.75,
+        "width": 28,
+        "height": 29
+      },
+      "svg": {
+        "x": 1015.25,
+        "y": 458.25,
+        "width": 14,
+        "height": 14
+      },
+      "width": {
+        "x": 891.5,
+        "y": 452.75,
+        "width": 107.75,
+        "height": 29
+      },
+      "height": {
+        "x": 1037.25,
+        "y": 452.75,
+        "width": 107.75,
+        "height": 29
+      },
+      "padding": "0px 10px",
+      "display": "block",
+      "dx": 4,
+      "dy": -2,
+      "inputDy": 0,
+      "locked": "true",
+      "contained": true,
+      "fits": true,
+      "scene": "before-desktop-locked"
+    },
+    {
+      "button": {
+        "x": 1004.25,
+        "y": 452.75,
+        "width": 28,
+        "height": 29
+      },
+      "svg": {
+        "x": 1015.25,
+        "y": 458.25,
+        "width": 14,
+        "height": 14
+      },
+      "width": {
+        "x": 891.5,
+        "y": 452.75,
+        "width": 107.75,
+        "height": 29
+      },
+      "height": {
+        "x": 1037.25,
+        "y": 452.75,
+        "width": 107.75,
+        "height": 29
+      },
+      "padding": "0px 10px",
+      "display": "block",
+      "dx": 4,
+      "dy": -2,
+      "inputDy": 0,
+      "locked": "false",
+      "contained": true,
+      "fits": true,
+      "scene": "before-desktop-unlocked"
+    },
+    {
+      "button": {
+        "x": 181,
+        "y": 628.21875,
+        "width": 28,
+        "height": 29
+      },
+      "svg": {
+        "x": 192,
+        "y": 633.71875,
+        "width": 14,
+        "height": 14
+      },
+      "width": {
+        "x": 19,
+        "y": 628.21875,
+        "width": 157,
+        "height": 29
+      },
+      "height": {
+        "x": 214,
+        "y": 628.21875,
+        "width": 157,
+        "height": 29
+      },
+      "padding": "0px 10px",
+      "display": "block",
+      "dx": 4,
+      "dy": -2,
+      "inputDy": 0,
+      "locked": "true",
+      "contained": true,
+      "fits": true,
+      "scene": "before-mobile-locked"
+    },
+    {
+      "button": {
+        "x": 181,
+        "y": 628.21875,
+        "width": 28,
+        "height": 29
+      },
+      "svg": {
+        "x": 192,
+        "y": 633.71875,
+        "width": 14,
+        "height": 14
+      },
+      "width": {
+        "x": 19,
+        "y": 628.21875,
+        "width": 157,
+        "height": 29
+      },
+      "height": {
+        "x": 214,
+        "y": 628.21875,
+        "width": 157,
+        "height": 29
+      },
+      "padding": "0px 10px",
+      "display": "block",
+      "dx": 4,
+      "dy": -2,
+      "inputDy": 0,
+      "locked": "false",
+      "contained": true,
+      "fits": true,
+      "scene": "before-mobile-unlocked"
+    },
+    {
+      "button": {
+        "x": 1004.25,
+        "y": 452.75,
+        "width": 28,
+        "height": 29
+      },
+      "svg": {
+        "x": 1011.25,
+        "y": 460.25,
+        "width": 14,
+        "height": 14
+      },
+      "width": {
+        "x": 891.5,
+        "y": 452.75,
+        "width": 107.75,
+        "height": 29
+      },
+      "height": {
+        "x": 1037.25,
+        "y": 452.75,
+        "width": 107.75,
+        "height": 29
+      },
+      "padding": "0px",
+      "display": "grid",
+      "dx": 0,
+      "dy": 0,
+      "inputDy": 0,
+      "locked": "true",
+      "contained": true,
+      "fits": true,
+      "scene": "after-desktop-locked"
+    },
+    {
+      "button": {
+        "x": 1004.25,
+        "y": 452.75,
+        "width": 28,
+        "height": 29
+      },
+      "svg": {
+        "x": 1011.25,
+        "y": 460.25,
+        "width": 14,
+        "height": 14
+      },
+      "width": {
+        "x": 891.5,
+        "y": 452.75,
+        "width": 107.75,
+        "height": 29
+      },
+      "height": {
+        "x": 1037.25,
+        "y": 452.75,
+        "width": 107.75,
+        "height": 29
+      },
+      "padding": "0px",
+      "display": "grid",
+      "dx": 0,
+      "dy": 0,
+      "inputDy": 0,
+      "locked": "false",
+      "contained": true,
+      "fits": true,
+      "scene": "after-desktop-unlocked"
+    },
+    {
+      "button": {
+        "x": 181,
+        "y": 628.21875,
+        "width": 28,
+        "height": 29
+      },
+      "svg": {
+        "x": 188,
+        "y": 635.71875,
+        "width": 14,
+        "height": 14
+      },
+      "width": {
+        "x": 19,
+        "y": 628.21875,
+        "width": 157,
+        "height": 29
+      },
+      "height": {
+        "x": 214,
+        "y": 628.21875,
+        "width": 157,
+        "height": 29
+      },
+      "padding": "0px",
+      "display": "grid",
+      "dx": 0,
+      "dy": 0,
+      "inputDy": 0,
+      "locked": "true",
+      "contained": true,
+      "fits": true,
+      "scene": "after-mobile-locked"
+    },
+    {
+      "button": {
+        "x": 181,
+        "y": 628.21875,
+        "width": 28,
+        "height": 29
+      },
+      "svg": {
+        "x": 188,
+        "y": 635.71875,
+        "width": 14,
+        "height": 14
+      },
+      "width": {
+        "x": 19,
+        "y": 628.21875,
+        "width": 157,
+        "height": 29
+      },
+      "height": {
+        "x": 214,
+        "y": 628.21875,
+        "width": 157,
+        "height": 29
+      },
+      "padding": "0px",
+      "display": "grid",
+      "dx": 0,
+      "dy": 0,
+      "inputDy": 0,
+      "locked": "false",
+      "contained": true,
+      "fits": true,
+      "scene": "after-mobile-unlocked"
+    }
+  ],
+  "keyboard_toggle": "passed",
+  "locked_dimensions": "passed",
+  "independent_dimensions": "passed",
+  "capture": "real export-dialog owner on authenticated app with pinned before and current after stylesheets",
+  "source_base": "e6a5aa97248b1a925f81e7eef50f6c6f370bb739",
+  "request": "879f68e8cfa84d6c844a269bd8ce87d6",
+  "pytest_passes": 8,
+  "choice_contract": "f43743cd13674762a94da11ea0279add: pass",
+  "cache_name": "odysseus-v1141-pr40-editor-precache",
+  "stylesheet_sha256": "4b19d339d3ee129e897fd0de3ce4abcb6554ec2b531fcb4ffa83f1034c58064d"
+}

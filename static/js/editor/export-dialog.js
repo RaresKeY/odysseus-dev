@@ -94,8 +94,8 @@ export function openExportDialog({
           <div class="ge-export-fields">
             <label class="ge-export-field"><span>Filename</span><input id="ge-export-filename" type="text" value="${String(defaultName).replace(/[<>&"']/g, '')}" /></label>
             <div class="ge-export-field"><span>Format</span><div class="ge-export-format" role="group" aria-label="Export format">
-              <button type="button" class="active" data-format="png">PNG</button>
-              <button type="button" data-format="jpeg">JPEG</button>
+              <button type="button" class="active ody-ui-with-label" data-format="png"><svg width="14" height="14" class="ody-ui-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" data-ui-icon="file-png"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="16" cy="8" r="2"/><path d="m3 18 6-7 4 5 3-3 5 6"/></svg><span class="ody-ui-label-text">PNG</span></button>
+              <button type="button" data-format="jpeg" class="ody-ui-with-label"><svg width="14" height="14" class="ody-ui-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" data-ui-icon="file-jpeg"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="16" cy="8" r="2"/><path d="m3 18 6-7 4 5 3-3 5 6"/></svg><span class="ody-ui-label-text">JPEG</span></button>
               <button type="button" data-format="webp">WebP</button>
               <button type="button" data-format="psd">PSD</button>
             </div></div>

@@ -1,0 +1,7 @@
+Use case: logo-brand
+Asset type: one model, agent and hardware icon-family reference contact sheet for Odysseus
+Primary request: a coherent board with 30 monochrome UI icons in reading order: model cube, stacked server, endpoint connector, CPU chip, GPU card with fan, RAM module, hard drive, network nodes, container, cloud model, database cylinder, sliders parameters, speed gauge, stopwatch latency, terminal, code brackets, send upward arrow, stop square, conversation branch, merge branches, thinking bubble, reasoning lightbulb, context pie gauge, plan checklist, theatre persona mask, group chat, shield approval, key, task background job, token hexagon.
+Style/medium: the same simple optical system throughout: 24x24 logical grid, 2-unit uniform dark outline, rounded line caps and joins, modest corner radii, about 2 units of padding. Functional and easily recognized at 14–24 px.
+Composition/framing: 6 columns by 5 rows, generous spacing, small plain text labels under each glyph.
+Scene/backdrop: truly transparent.
+Constraints: only a single dark ink; no colored paint, gradients, shadows, realistic rendering, background panels, branded vendor logos or decoration. Small solid dots and a solid stop glyph are allowed. A base icon with a small corner badge may indicate a variant. This is a design reference for hand-authored currentColor SVGs.

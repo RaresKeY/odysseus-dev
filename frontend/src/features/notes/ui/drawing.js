@@ -25,9 +25,9 @@ export function createDrawing({
         <button type="button" class="note-form-draw-undo" title="Undo" aria-label="Undo">
           <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 14 4 9 9 4"></polyline><path d="M4 9h11a5 5 0 0 1 5 5v0a5 5 0 0 1-5 5H9"></path></svg>
         </button>
-        <button type="button" class="note-form-draw-text" title="Add text — click to cycle size" aria-label="Add text">T<span class="note-form-draw-text-badge"></span></button>
+        <button type="button" class="note-form-draw-text" title="Add text — click to cycle size" aria-label="Add text"><svg width="13" height="13" class="ody-ui-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" data-ui-icon="text-box"><rect x="3" y="3" width="18" height="18" rx="2"/><path d="M7 8h10M12 8v9M9 17h6"/></svg><span class="note-form-draw-text-badge"></span></button>
         <button type="button" class="note-form-draw-line" title="Line — click to cycle size">
-          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="4" y1="20" x2="20" y2="4"/></svg>
+          <svg width="20" height="20" class="ody-ui-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" data-ui-icon="line"><path d="M4 20 20 4"/><circle cx="4" cy="20" r="1"/><circle cx="20" cy="4" r="1"/></svg>
           <span class="note-form-draw-shape-badge"></span>
         </button>
         <button type="button" class="note-form-draw-circle" title="Circle — click to cycle size">

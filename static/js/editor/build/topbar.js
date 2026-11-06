@@ -15,7 +15,7 @@ export function buildTopbar() {
     <div class="ge-topbar-left">
       <div class="ge-file-wrap">
         <button class="ge-btn ge-btn-sm ge-stacked-btn" id="ge-file-menu-btn" title="File actions" aria-haspopup="true">
-          <span class="ge-stacked-glyph"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 3v4a1 1 0 0 0 1 1h4"/><path d="M17 21H7a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h7l5 5v11a2 2 0 0 1-2 2z"/></svg><span class="ge-stacked-caret">▾</span></span>
+          <span class="ge-stacked-glyph"><svg width="14" height="14" class="ody-ui-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" data-ui-icon="file"><path d="M5 3h9l5 5v13H5V3ZM14 3v6h5"/><path d="M8 13h8M8 17h6"/></svg><span class="ge-stacked-caret">▾</span></span>
           <span class="ge-stacked-label">File</span>
         </button>
         <div class="ge-file-menu dropdown" id="ge-file-menu" hidden>
@@ -35,7 +35,7 @@ export function buildTopbar() {
           <div class="ge-menu-label">Save</div>
           <button class="dropdown-item-compact" data-file-action="save"><span>Save Over Original</span><span class="dropdown-shortcut">Ctrl+S</span></button>
           <button class="dropdown-item-compact" data-file-action="save-copy"><span>Save As Copy</span><span class="dropdown-shortcut">Ctrl+Shift+S</span></button>
-          <button class="dropdown-item-compact" data-file-action="export"><span>Export Image…</span></button>
+          <button class="dropdown-item-compact" data-file-action="export"><span class="ody-ui-label"><svg width="14" height="14" class="ody-ui-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" data-ui-icon="image-export"><g transform="translate(.3 .3) scale(.72)" stroke-width="2.6"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="16" cy="8" r="2"/><path d="m3 18 6-7 4 5 3-3 5 6"/></g><g transform="translate(1.2 1.2) scale(.9)" stroke-width="2.222"><path d="M19 22v-6m-3 3 3-3 3 3"/></g></svg>Export Image…</span></button>
           <button class="dropdown-item-compact" data-file-action="export-psd"><span>Export Layers as PSD…</span></button>
           <div class="ge-menu-label">Project</div>
           <button class="dropdown-item-compact" data-file-action="save-project"><span>Save Project (.json)</span></button>
@@ -75,14 +75,14 @@ export function buildTopbar() {
           <button class="dropdown-item-compact" data-image-action="fill" title="Fill with foreground color (Alt+Backspace)"><span>Fill</span></button>
           <button type="button" class="dropdown-item-compact ge-menu-parent" data-submenu="image-adjustments" aria-haspopup="true" aria-expanded="false"><span>Adjustments</span><span class="ge-submenu-caret">›</span></button>
           <div class="ge-submenu" data-submenu-panel="image-adjustments">
-            <button class="dropdown-item-compact" data-image-action="desaturate" title="Desaturate"><span>Desaturate</span></button>
-            <button class="dropdown-item-compact" data-image-action="auto-tone" title="Auto Tone"><span>Auto Tone</span></button>
-            <button class="dropdown-item-compact" data-image-action="auto-contrast" title="Auto Contrast"><span>Auto Contrast</span></button>
-            <button class="dropdown-item-compact" data-image-action="auto-color" title="Auto Color"><span>Auto Color</span></button>
-            <button class="dropdown-item-compact" data-image-action="equalize" title="Equalize the histogram of the active layer"><span>Equalize</span></button>
+            <button class="dropdown-item-compact" data-image-action="desaturate" title="Desaturate"><span class="ody-ui-label"><svg width="14" height="14" class="ody-ui-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" data-ui-icon="desaturate"><circle cx="12" cy="12" r="9"/><path d="M12 3a9 9 0 0 1 0 18V3Z" fill="currentColor" stroke="none"/></svg>Desaturate</span></button>
+            <button class="dropdown-item-compact" data-image-action="auto-tone" title="Auto Tone"><span class="ody-ui-label"><svg width="14" height="14" class="ody-ui-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" data-ui-icon="auto-tone"><g transform="translate(.3 .3) scale(.72)" stroke-width="2.6"><circle cx="12" cy="12" r="9"/><path d="M12 3a9 9 0 0 1 0 18V3Z" fill="currentColor" stroke="none"/></g><g transform="translate(1.2 1.2) scale(.9)" stroke-width="2.222"><path d="m19 15 1 3 3 1-3 1-1 3-1-3-3-1 3-1 1-3Z"/></g></svg>Auto Tone</span></button>
+            <button class="dropdown-item-compact" data-image-action="auto-contrast" title="Auto Contrast"><span class="ody-ui-label"><svg width="14" height="14" class="ody-ui-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" data-ui-icon="auto-contrast"><g transform="translate(.3 .3) scale(.72)" stroke-width="2.6"><circle cx="12" cy="12" r="9"/><path d="M12 3a9 9 0 0 1 0 18V3Z" fill="currentColor" stroke="none"/></g><g transform="translate(1.2 1.2) scale(.9)" stroke-width="2.222"><path d="m16 19 2 2 4-5"/></g></svg>Auto Contrast</span></button>
+            <button class="dropdown-item-compact" data-image-action="auto-color" title="Auto Color"><span class="ody-ui-label"><svg width="14" height="14" class="ody-ui-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" data-ui-icon="auto-color"><g transform="translate(.3 .3) scale(.72)" stroke-width="2.6"><circle cx="8" cy="14" r="5"/><circle cx="16" cy="14" r="5"/><circle cx="12" cy="7" r="5"/></g><g transform="translate(1.2 1.2) scale(.9)" stroke-width="2.222"><path d="m19 15 1 3 3 1-3 1-1 3-1-3-3-1 3-1 1-3Z"/></g></svg>Auto Color</span></button>
+            <button class="dropdown-item-compact" data-image-action="equalize" title="Equalize the histogram of the active layer"><span class="ody-ui-label"><svg width="14" height="14" class="ody-ui-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" data-ui-icon="histogram"><path d="M3 21V3M3 21h18M6 18v-5h3V7h3v4h3V4h3v14h3"/></svg>Equalize</span></button>
             <button class="dropdown-item-compact" data-image-action="replace-color" title="Recolour pixels near a target colour"><span>Replace Color…</span></button>
             <button class="dropdown-item-compact" data-image-action="adj-brightness-contrast" title="Brightness/Contrast"><span>Brightness/Contrast…</span></button>
-            <button class="dropdown-item-compact" data-image-action="adj-hue-saturation" title="Hue/Saturation"><span>Hue/Saturation…</span></button>
+            <button class="dropdown-item-compact" data-image-action="adj-hue-saturation" title="Hue/Saturation"><span class="ody-ui-label"><svg width="14" height="14" class="ody-ui-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" data-ui-icon="hue-saturation"><circle cx="8" cy="14" r="5"/><circle cx="16" cy="14" r="5"/><circle cx="12" cy="7" r="5"/></svg>Hue/Saturation…</span></button>
             <button class="dropdown-item-compact" data-image-action="adj-selective-color" title="Selective Color"><span>Selective Color…</span></button>
             <button class="dropdown-item-compact" data-image-action="adj-levels" title="Levels"><span>Levels…</span></button>
             <button class="dropdown-item-compact" data-image-action="adj-curves" title="Curves"><span>Curves…</span></button>
@@ -93,7 +93,7 @@ export function buildTopbar() {
             <button class="dropdown-item-compact" data-image-action="adj-black-white" title="Black &amp; White"><span>Black &amp; White…</span></button>
             <button class="dropdown-item-compact" data-image-action="adj-photo-filter" title="Photo Filter"><span>Photo Filter…</span></button>
             <button class="dropdown-item-compact" data-image-action="adj-channel-mixer" title="Channel Mixer"><span>Channel Mixer…</span></button>
-            <button class="dropdown-item-compact" data-image-action="adj-invert" title="Invert"><span>Invert</span></button>
+            <button class="dropdown-item-compact" data-image-action="adj-invert" title="Invert"><span class="ody-ui-label"><svg width="14" height="14" class="ody-ui-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" data-ui-icon="invert"><circle cx="12" cy="12" r="9"/><path d="M12 3a9 9 0 0 1 0 18V3Z" fill="currentColor" stroke="none"/></svg>Invert</span></button>
             <button class="dropdown-item-compact" data-image-action="adj-posterize" title="Posterize"><span>Posterize…</span></button>
             <button class="dropdown-item-compact" data-image-action="adj-threshold" title="Threshold"><span>Threshold…</span></button>
             <button class="dropdown-item-compact" data-image-action="adj-gradient-map" title="Gradient Map"><span>Gradient Map…</span></button>
@@ -140,7 +140,7 @@ export function buildTopbar() {
           </button>
           <div class="ge-filter-submenu-label">Mode</div>
           <button class="dropdown-item-compact" data-image-action="mode-rgb"><span>RGB Color</span></button>
-          <button class="dropdown-item-compact" data-image-action="mode-grayscale"><span>Grayscale</span></button>
+          <button class="dropdown-item-compact" data-image-action="mode-grayscale"><span class="ody-ui-label"><svg width="14" height="14" class="ody-ui-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" data-ui-icon="black-white"><circle cx="12" cy="12" r="9"/><path d="M12 3a9 9 0 0 1 0 18V3Z" fill="currentColor" stroke="none"/></svg>Grayscale</span></button>
           <button class="dropdown-item-compact" data-image-action="mode-cmyk" disabled title="CMYK needs a color-managed pipeline"><span>CMYK Color</span></button>
           <button class="dropdown-item-compact" data-image-action="mode-lab" disabled title="Lab needs a color-managed pipeline"><span>Lab Color</span></button>
           <div class="ge-filter-submenu-label">Bits/Channel</div>
@@ -177,13 +177,13 @@ export function buildTopbar() {
           <div class="ge-menu-label">Select</div>
           <button class="dropdown-item-compact" data-layer-action="select-all"><span>Select All Layers</span></button>
           <div class="ge-menu-label">Vector Mask</div>
-          <button class="dropdown-item-compact" data-layer-action="vector-mask-reveal" title="Add a mask that reveals the whole layer"><span>Reveal All</span></button>
+          <button class="dropdown-item-compact" data-layer-action="vector-mask-reveal" title="Add a mask that reveals the whole layer"><span class="ody-ui-label"><svg width="14" height="14" class="ody-ui-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" data-ui-icon="mask-add"><g transform="translate(.3 .3) scale(.72)" stroke-width="2.6"><rect x="3" y="3" width="18" height="18" rx="1"/><circle cx="12" cy="12" r="5"/><path d="M3 3h9v4a5 5 0 0 0 0 10v4H3V3Z" fill="currentColor" stroke="none"/></g><g transform="translate(1.2 1.2) scale(.9)" stroke-width="2.222"><path d="M19 16v6M16 19h6"/></g></svg>Reveal All</span></button>
           <button class="dropdown-item-compact" data-layer-action="vector-mask-hide" title="Add a mask that hides the whole layer"><span>Hide All</span></button>
           <div class="ge-menu-label">Combine Shapes</div>
-          <button class="dropdown-item-compact" data-layer-action="combine-unite"><span>Unite Shapes</span></button>
-          <button class="dropdown-item-compact" data-layer-action="combine-subtract"><span>Subtract Shapes</span></button>
-          <button class="dropdown-item-compact" data-layer-action="combine-intersect"><span>Intersect Shapes</span></button>
-          <button class="dropdown-item-compact" data-layer-action="combine-exclude"><span>Exclude Shapes</span></button>
+          <button class="dropdown-item-compact" data-layer-action="combine-unite"><span class="ody-ui-label"><svg width="14" height="14" class="ody-ui-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" data-ui-icon="shape-union"><g opacity=".35"><circle cx="9" cy="12" r="6"/><circle cx="15" cy="12" r="6"/></g><path d="M12 6.804a6 6 0 1 0 0 10.392 6 6 0 1 0 0-10.392Z" fill="currentColor" fill-opacity=".2"/></svg>Unite Shapes</span></button>
+          <button class="dropdown-item-compact" data-layer-action="combine-subtract"><span class="ody-ui-label"><svg width="14" height="14" class="ody-ui-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" data-ui-icon="shape-subtract"><g opacity=".35"><circle cx="9" cy="12" r="6"/><circle cx="15" cy="12" r="6"/></g><path d="M12 6.804a6 6 0 1 0 0 10.392 6 6 0 0 1 0-10.392Z" fill="currentColor" fill-opacity=".2"/></svg>Subtract Shapes</span></button>
+          <button class="dropdown-item-compact" data-layer-action="combine-intersect"><span class="ody-ui-label"><svg width="14" height="14" class="ody-ui-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" data-ui-icon="shape-intersect"><g opacity=".35"><circle cx="9" cy="12" r="6"/><circle cx="15" cy="12" r="6"/></g><path d="M12 6.804a6 6 0 0 1 0 10.392 6 6 0 0 1 0-10.392Z" fill="currentColor" fill-opacity=".2"/></svg>Intersect Shapes</span></button>
+          <button class="dropdown-item-compact" data-layer-action="combine-exclude"><span class="ody-ui-label"><svg width="14" height="14" class="ody-ui-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" data-ui-icon="shape-exclude"><g opacity=".35"><circle cx="9" cy="12" r="6"/><circle cx="15" cy="12" r="6"/></g><path d="M12 6.804a6 6 0 1 0 0 10.392 6 6 0 0 1 0-10.392ZM12 17.196a6 6 0 1 0 0-10.392 6 6 0 0 1 0 10.392Z" fill="currentColor" fill-opacity=".2"/></svg>Exclude Shapes</span></button>
           <div class="ge-menu-label">Fill</div>
           <button class="dropdown-item-compact" data-layer-action="fill"><span>Fill</span></button>
         </div>
@@ -215,7 +215,7 @@ export function buildTopbar() {
         <div class="ge-selection-menu dropdown" id="ge-selection-menu" hidden>
           <button class="dropdown-item-compact" data-selection-action="all"><span>Select All</span><span class="dropdown-shortcut">Ctrl+A</span></button>
           <button class="dropdown-item-compact" data-selection-action="deselect"><span>Deselect</span><span class="dropdown-shortcut">Ctrl+D</span></button>
-          <button class="dropdown-item-compact" data-selection-action="reselect"><span>Reselect</span></button>
+          <button class="dropdown-item-compact" data-selection-action="reselect"><span class="ody-ui-label"><svg width="14" height="14" class="ody-ui-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" data-ui-icon="selection-reselect"><g transform="translate(.3 .3) scale(.72)" stroke-width="2.6"><rect x="3" y="3" width="18" height="18" rx="1" stroke-dasharray="3 3"/></g><g transform="translate(1.2 1.2) scale(.9)" stroke-width="2.222"><path d="M22 16v4h-4m4-1a4 4 0 1 0-3 4"/></g></svg>Reselect</span></button>
           <button class="dropdown-item-compact" data-selection-action="invert"><span>Invert</span><span class="dropdown-shortcut">Ctrl+Alt+Shift+I</span></button>
           <button type="button" class="dropdown-item-compact ge-menu-parent" data-submenu="selection-modify" aria-haspopup="true" aria-expanded="false"><span>Modify</span><span class="ge-submenu-caret">›</span></button>
           <div class="ge-submenu" data-submenu-panel="selection-modify">
@@ -225,9 +225,9 @@ export function buildTopbar() {
             <button class="dropdown-item-compact" data-selection-action="modifyContract"><span>Contract…</span></button>
             <button class="dropdown-item-compact" data-selection-action="modifyFeather"><span>Feather…</span></button>
           </div>
-          <button class="dropdown-item-compact" data-selection-action="grow"><span>Grow</span></button>
-          <button class="dropdown-item-compact" data-selection-action="similar"><span>Similar</span></button>
-          <button class="dropdown-item-compact" data-selection-action="subject"><span>Subject</span></button>
+          <button class="dropdown-item-compact" data-selection-action="grow"><span class="ody-ui-label"><svg width="14" height="14" class="ody-ui-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" data-ui-icon="selection-grow"><rect x="8" y="8" width="8" height="8" rx="1"/><path d="m3 8 0-5 5 0M16 3h5v5M21 16v5h-5M8 21H3v-5" stroke-dasharray="2 2"/></svg>Grow</span></button>
+          <button class="dropdown-item-compact" data-selection-action="similar"><span class="ody-ui-label"><svg width="14" height="14" class="ody-ui-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" data-ui-icon="selection-similar"><rect x="3" y="3" width="7" height="7" rx="0" stroke-dasharray="2 2"/><circle cx="17" cy="17" r="4" stroke-dasharray="2 2"/><path d="m9 15 6-6"/></svg>Similar</span></button>
+          <button class="dropdown-item-compact" data-selection-action="subject"><span class="ody-ui-label"><svg width="14" height="14" class="ody-ui-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" data-ui-icon="subject-select"><rect x="3" y="3" width="18" height="18" rx="2" stroke-dasharray="3 3"/><circle cx="12" cy="9" r="3"/><path d="M6 19a6 6 0 0 1 12 0"/></svg>Subject</span></button>
           <button class="dropdown-item-compact" data-selection-action="transform"><span>Transform Selection</span></button>
           <button class="dropdown-item-compact" data-selection-action="refine"><span>Refine Selection…</span></button>
           <button class="dropdown-item-compact" data-selection-action="colorRange"><span>Color Range…</span></button>
@@ -288,9 +288,9 @@ export function buildTopbar() {
           </div>
           <button type="button" class="dropdown-item-compact ge-menu-parent" data-submenu="filter-presets" aria-haspopup="true" aria-expanded="false"><span>Presets</span><span class="ge-submenu-caret">›</span></button>
           <div class="ge-submenu" data-submenu-panel="filter-presets">
-            <button class="dropdown-item-compact" data-filter-action="effect-preset-soft-blur"><span>Soft Blur</span></button>
+            <button class="dropdown-item-compact" data-filter-action="effect-preset-soft-blur"><span class="ody-ui-label"><svg width="14" height="14" class="ody-ui-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" data-ui-icon="blur"><circle cx="12" cy="12" r="3"/><circle cx="12" cy="12" r="7" opacity=".5"/><circle cx="12" cy="12" r="10" opacity=".25"/></svg>Soft Blur</span></button>
             <button class="dropdown-item-compact" data-filter-action="effect-preset-crisp-detail"><span>Crisp Detail</span></button>
-            <button class="dropdown-item-compact" data-filter-action="effect-preset-soft-shadow"><span>Soft Shadow</span></button>
+            <button class="dropdown-item-compact" data-filter-action="effect-preset-soft-shadow"><span class="ody-ui-label"><svg width="14" height="14" class="ody-ui-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" data-ui-icon="drop-shadow"><rect x="7" y="7" width="14" height="14" rx="1" fill="currentColor" opacity=".4"/><rect x="3" y="3" width="14" height="14" rx="1"/></svg>Soft Shadow</span></button>
             <button class="dropdown-item-compact" data-filter-action="effect-preset-white-outline"><span>White Outline</span></button>
           </div>
           <button type="button" class="dropdown-item-compact ge-menu-parent" data-submenu="filter-blur" aria-haspopup="true" aria-expanded="false"><span>Blur</span><span class="ge-submenu-caret">›</span></button>
@@ -470,7 +470,7 @@ export function buildTopbar() {
       </div>
       <div class="ge-window-wrap">
         <button class="ge-btn ge-btn-sm ge-stacked-btn" id="ge-window-menu-btn" title="Window panels" aria-haspopup="true">
-          <span class="ge-stacked-glyph"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="16" rx="2"/><line x1="3" y1="9" x2="21" y2="9"/></svg><span class="ge-stacked-caret">▾</span></span>
+          <span class="ge-stacked-glyph"><svg width="14" height="14" class="ody-ui-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" data-ui-icon="panel-right"><rect x="3" y="3" width="18" height="18" rx="2"/><path d="M15 3v18"/></svg><span class="ge-stacked-caret">▾</span></span>
           <span class="ge-stacked-label">Window</span>
         </button>
         <div class="ge-window-menu dropdown" id="ge-window-menu" hidden>
@@ -513,7 +513,7 @@ export function buildTopbar() {
         </button>
         <div class="ge-help-menu dropdown" id="ge-help-menu" hidden>
           <div class="ge-menu-label">Help</div>
-          <button class="dropdown-item-compact" data-help-action="shortcuts"><span>Keyboard Shortcuts</span></button>
+          <button class="dropdown-item-compact" data-help-action="shortcuts"><span class="ody-ui-label"><svg width="14" height="14" class="ody-ui-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" data-ui-icon="keyboard"><rect x="2" y="5" width="20" height="14" rx="2"/><path d="M6 9h.1M10 9h.1M14 9h.1M18 9h.1M6 13h.1M10 13h.1M14 13h.1M18 13h.1M7 16h10"/></svg>Keyboard Shortcuts</span></button>
           <button class="dropdown-item-compact" data-help-action="about"><span>About Ajax Image Editor</span></button>
         </div>
       </div>
@@ -524,7 +524,7 @@ export function buildTopbar() {
         <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="position:relative;top:2px;"><rect x="2" y="6" width="20" height="12" rx="2"/><path d="M6 10h.01M10 10h.01M14 10h.01M18 10h.01M7 14h10"/></svg>
       </button>
       <button class="ge-btn ge-btn-sm" id="ge-maximize-toggle" title="Maximize editor" aria-label="Maximize editor" aria-pressed="false">
-        <svg class="ge-max-icon" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="15 3 21 3 21 9"/><polyline points="9 21 3 21 3 15"/><line x1="21" y1="3" x2="14" y2="10"/><line x1="3" y1="21" x2="10" y2="14"/></svg>
+        <svg class="ge-max-icon ody-ui-icon" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" data-ui-icon="maximize"><rect x="3" y="3" width="18" height="18" rx="2"/><path d="M3 8h18"/></svg>
       </button>
       <button class="ge-btn ge-btn-sm ge-stacked-btn" id="ge-import-topbar" title="Import image as layer">
         <span class="ge-stacked-glyph"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3v12"/><polyline points="7 8 12 3 17 8"/><path d="M5 14v5h14v-5"/></svg></span>
@@ -584,7 +584,7 @@ export function buildZoomFooter() {
     <div class="ge-footer-history" role="group" aria-label="History">
       <button class="ge-btn ge-btn-sm" id="ge-undo" title="Undo" aria-label="Undo">↩</button>
       <button class="ge-btn ge-btn-sm" id="ge-redo" title="Redo" aria-label="Redo">↪</button>
-      <button class="ge-btn ge-btn-sm" id="ge-history-btn" title="History — click an entry to jump to that state" aria-label="History"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M1 4v6h6"/><path d="M3.51 15a9 9 0 1 0 2.13-9.36L1 10"/><polyline points="12 7 12 12 16 14"/></svg></button>
+      <button class="ge-btn ge-btn-sm" id="ge-history-btn" title="History — click an entry to jump to that state" aria-label="History"><svg width="14" height="14" class="ody-ui-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" data-ui-icon="history"><circle cx="12" cy="12" r="9"/><path d="M3 3v6h6M12 6v7l4 2"/></svg></button>
       <button class="ge-btn ge-btn-sm" id="ge-compare-btn" title="Show the document before editing" aria-label="Show the document before editing" aria-pressed="false"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3v18"/><path d="M5 7h14M5 17h14"/></svg></button>
     </div>
     <span class="ge-status-tool" id="ge-status-tool" aria-live="polite"></span>

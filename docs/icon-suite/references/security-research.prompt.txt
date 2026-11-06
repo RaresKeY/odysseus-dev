@@ -1,0 +1,7 @@
+Use case: logo-brand
+Asset type: one security, research and expanded-workspace icon-family reference board for Odysseus
+Primary request: 36 compact monochrome icons: shield, shield check, padlock, open padlock, key, token hexagon, phone with verification check, vault, login door arrow, logout door arrow, user add, user permissions, backup cloud arrow, restore backup, diagnostic monitor, activity pulse, warning triangle, error circle, information circle, pending clock, offline wifi, connected plugs, plugin puzzle, accessibility person, keyboard, globe, browser window, source document, quotation citation, fact-check shield, knowledge cube, brain search, skill audit lightning check, research parallel panels, research sequential steps, synapse nodes.
+Style/medium: flat vector UI linework on a consistent 24 by 24 logical grid with 2-unit stroke, round caps and joins, simple geometry and roughly 2 units of padding. Strong semantic shapes, readable at 14 to 24 pixels, matching a coherent outline navigation and editing system.
+Composition/framing: 6 by 6 contact sheet, one glyph per cell, generous gutters and small plain labels.
+Color palette: one dark ink only and a truly transparent background.
+Constraints: no gradients, shadows, texture, realistic rendering, decorative frames or colorful status dots. A small corner mark can denote a related action. This is a family motif reference for manually authored SVG paths which inherit CSS currentColor; retain recognizable conventional symbols.

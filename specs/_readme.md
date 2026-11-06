@@ -68,6 +68,7 @@ project documentation.
 - [gallery-editor-media.md](gallery-editor-media.md): gallery, generated media, image editor drafts, signatures, emoji/font helpers.
 - [cookbook-hwfit.md](cookbook-hwfit.md): model downloads, local/remote model serving, hardware detection, fit ranking.
 - [speech.md](speech.md): STT and TTS services, routes, settings, optional dependencies.
+- [icon-suite.md](icon-suite.md): editable UI SVG assets, source inventory, authoring tools and source-backed theme review gallery.
 - [frontend.md](frontend.md): static native-ESM SPA, maintained Notes source/deployment graph, module loading, UI conventions and shared ownership.
 - [integrations.md](integrations.md): Codex/Claude scoped APIs, companion pairing, webhooks, external agent access.
 - [shell-mcp.md](shell-mcp.md): shell execution, background jobs, MCP manager, built-in MCP servers.

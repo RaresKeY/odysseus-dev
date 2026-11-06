@@ -41,7 +41,7 @@ export function transformPopupHTML() {
       </div>
       <div class="ge-row-break ge-transform-position-break"></div>
       <div class="ge-transform-field">
-        <label>W</label>
+        <label class="ody-ui-label" title="transform width"><svg width="12" height="12" class="ody-ui-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" data-ui-icon="transform-width"><rect x="3" y="6" width="18" height="12" rx="0"/><path d="M6 12h12m-3-3 3 3-3 3M9 9l-3 3 3 3"/></svg>W</label>
         <input type="number" class="ge-transform-popup-input" id="ge-transform-w" step="1" />
         <span class="ge-transform-spin" data-spin-for="ge-transform-w">
           <button type="button" data-spin="down" tabindex="-1" aria-label="Decrease width">−</button>
@@ -49,7 +49,7 @@ export function transformPopupHTML() {
         </span>
       </div>
       <div class="ge-transform-field">
-        <label>H</label>
+        <label class="ody-ui-label" title="transform height"><svg width="12" height="12" class="ody-ui-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" data-ui-icon="transform-height"><g transform="rotate(90 12 12)"><rect x="3" y="6" width="18" height="12" rx="0"/><path d="M6 12h12m-3-3 3 3-3 3M9 9l-3 3 3 3"/></g></svg>H</label>
         <input type="number" class="ge-transform-popup-input" id="ge-transform-h" step="1" />
         <span class="ge-transform-spin" data-spin-for="ge-transform-h">
           <button type="button" data-spin="down" tabindex="-1" aria-label="Decrease height">−</button>
@@ -66,7 +66,7 @@ export function transformPopupHTML() {
         </span>
       </div>
       <div class="ge-transform-field">
-        <label>⇱</label>
+        <label class="ody-ui-label" title="skew"><svg width="12" height="12" class="ody-ui-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" data-ui-icon="skew"><path d="M7 4h14l-4 16H3L7 4ZM3 22h18M2 2h20"/></svg></label>
         <input type="number" class="ge-transform-popup-input" id="ge-transform-skew-x" step="1" value="0" aria-label="Horizontal skew" />
         <span class="ge-transform-spin" data-spin-for="ge-transform-skew-x">
           <button type="button" data-spin="down" tabindex="-1" aria-label="Skew X -1°">−</button>
@@ -82,7 +82,7 @@ export function transformPopupHTML() {
         </span>
       </div>
       <div class="ge-transform-field">
-        <label>⤒</label>
+        <label class="ody-ui-label" title="perspective"><svg width="12" height="12" class="ody-ui-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" data-ui-icon="perspective"><path d="m5 3 16 4-4 14-14-4L5 3ZM5 3l12 18M21 7 3 17"/></svg></label>
         <input type="number" class="ge-transform-popup-input" id="ge-transform-persp-x" step="1" value="0" aria-label="Horizontal perspective" />
         <span class="ge-transform-spin" data-spin-for="ge-transform-persp-x">
           <button type="button" data-spin="down" tabindex="-1" aria-label="Perspective X -1">−</button>
@@ -105,7 +105,7 @@ export function transformPopupHTML() {
           <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 12h18"/><path d="m7 8 5-4 5 4"/><path d="m7 16 5 4 5-4"/></svg>
         </button>
         <button type="button" class="ge-transform-quick-btn" id="ge-transform-rot-90" title="Rotate 90 degrees (Shift: counter-clockwise)" aria-label="Rotate 90 degrees">
-          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 11a8 8 0 1 0-2.3 5.7"/><path d="M20 4v7h-7"/></svg>
+          <svg width="14" height="14" class="ody-ui-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" data-ui-icon="rotate-right"><path d="M21 3v6h-6M21 9l-4-4A8 8 0 1 0 20 17"/></svg>
         </button>
       </span>
       <button type="button" class="ge-btn ge-btn-sm" id="ge-transform-cancel-btn">Cancel</button>
