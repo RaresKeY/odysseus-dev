@@ -41,7 +41,7 @@ def main():
     assert 'sidebar-menu-icon' in index and 'data-ui-icon="sidebar-close"' in index
     assert '#hamburger-btn[aria-expanded="true"] > .ody-ui-icon' in (ROOT/'static/css/00-tokens.css').read_text()
     assert "sidebarHidden ? 'Show sidebar' : 'Hide sidebar'" in (ROOT/'static/js/sidebar-layout.js').read_text()
-    assert 'odysseus-v1140-pr40-editor-precache' in (ROOT/'static/sw.js').read_text()
+    assert 'odysseus-v1141-pr40-editor-precache' in (ROOT/'static/sw.js').read_text()
     for name in ['cardRendering.js','drawing.js','panel.js']:
         assert (ROOT/'frontend/src/features/notes/ui'/name).read_bytes() == (ROOT/'static/js/features/notes/ui'/name).read_bytes()
     assert 'note-form-draw-text-badge' in (ROOT/'static/js/features/notes/ui/drawing.js').read_text()

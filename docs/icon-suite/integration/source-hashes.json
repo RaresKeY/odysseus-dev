@@ -2,7 +2,7 @@
   "base": "e71b14fc32d8e0aad1710aa4bd20d85b9339a150",
   "sha256": {
     "static/index.html": "4cf31330ad95d407a84a40eff381916a9372254a2a105fc6cd97290e336ed141",
-    "static/sw.js": "d3b17a2506f58fb4921bf213e1f834b0ca85cf10208c792abf2c72cd3e15d843",
+    "static/sw.js": "63fc11ba9937970e86e63ea30590d94174428102cac01bfb207563ec699a692c",
     "static/login.html": "40471021b41f0835642f390eb5bf7d5f266eec93d8c2a6337a27ceab94443980",
     "static/js/settings.js": "1b85070b8f7f92851cb9ae7ca2fbdcc1972fbb057cf5f9404fe2ea086d86d5d9",
     "static/js/tasks.js": "591068635cb3ff121f6b1aa244052567526afb3bb419d0584f01be716d0663f4",
@@ -17,7 +17,7 @@
     "static/js/sidebar-layout.js": "edbeb38c899245246ddb2b9ec40b917b0a5078b1ef0bfc92dc35df78a4736462",
     "static/js/gallery.js": "21aa55f9e379d9252a314234a944ef044d8258bb56ca895f7d8f8d50d9648da1",
     "static/js/emailInbox.js": "7037c4dce5ae7c009b1e3c093c49820ac1d9421cf479c7c4bd09aebd84e9056b",
-    "static/css/13-image-editor.css": "708c4b24f8bea507b39073167df4b56642b38f05fa814f1d374e6a64411319c7",
+    "static/css/13-image-editor.css": "4b19d339d3ee129e897fd0de3ce4abcb6554ec2b531fcb4ffa83f1034c58064d",
     "static/css/00-tokens.css": "71ad76b26ef21afb12138357f7f0a2956ddef63ed194e4ac40155cad4f72a46a",
     "static/js/editor/history-panel.js": "ca2abbe5838c34a3f9d4419eed5c9e68fd3b59b8ffbbdb9710898b56abddb586",
     "static/js/editor/export-dialog.js": "b75d60c83ad1e0c9b36db0d97d6c7f786b99f53d17a34b4dd1ee4371c16bb60c",
@@ -36,5 +36,7 @@
     "frontend/src/features/notes/ui/drawing.js": "d98adcee6d54fceb24c9add94fcdd0a2a123431b6cebbf153fb1fbf3108543a6"
   },
   "fork_base_head": "907efde0b95b53dcb378412cc38a7a18beb0e272",
-  "source_verified_head": "c10967614fdf3ee79c27e37c362f7e7a90ad7587"
+  "last_full_interface_source_head": "c10967614fdf3ee79c27e37c362f7e7a90ad7587",
+  "latest_delta_base": "e6a5aa97248b1a925f81e7eef50f6c6f370bb739",
+  "latest_verification_request": "879f68e8cfa84d6c844a269bd8ce87d6"
 }

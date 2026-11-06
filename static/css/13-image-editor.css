@@ -4836,6 +4836,10 @@ body.ge-editor-open textarea.ge-direct-text-editor {
   align-items: end;
 }
 .ge-export-link {
+  display: grid;
+  place-items: center;
+  padding: 0;
+  line-height: 0;
   width: 28px;
   height: 29px;
   border: 1px solid var(--border);
@@ -4845,6 +4849,7 @@ body.ge-editor-open textarea.ge-direct-text-editor {
   opacity: 0.45;
   cursor: pointer;
 }
+.ge-export-link > svg { display: block; }
 .ge-export-link.active { opacity: 1; color: var(--red); border-color: var(--red); }
 .ge-export-quality input { width: 100%; accent-color: var(--red); }
 .ge-export-surface-row {

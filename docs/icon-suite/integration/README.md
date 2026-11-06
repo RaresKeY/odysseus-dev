@@ -228,3 +228,5 @@ Historical rejected candidate: the first Shape Intersect SVG used a rectangle/ch
 | image-generate | observed | [Actual icon](screenshots/after/image-generate.png). Visible, unobscured in chat-tool-fixture. SVG is 12 by 12 px; contained in its owner control. |
 | file-png | observed | [Actual icon](screenshots/after/file-png.png). Visible, unobscured in editor-export. SVG is 14 by 14 px; contained in its owner control. |
 | file-jpeg | observed | [Actual icon](screenshots/after/file-jpeg.png). Visible, unobscured in editor-export. SVG is 14 by 14 px; contained in its owner control. |
+
+[Latest export aspect-ratio button alignment](export-placement/index.html): explicit centering removes the 4 px right / 2 px upward icon offset while retaining the input row and lock behavior.
