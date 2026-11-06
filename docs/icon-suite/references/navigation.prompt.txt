@@ -1,0 +1,7 @@
+Use case: logo-brand
+Asset type: one reference contact sheet for a coherent SVG icon family for the Odysseus AI workspace
+Primary request: design a polished monochrome outline icon system. Create one organized reference board containing these 26 icons in reading order: sailboat, home, chat, new chat, search, documents, calendar, compare, cookbook, deep research, email, gallery, library, memory brain, notes, lightning skills, tasks, theme palette, settings, account, workspace folder, terminal, integrations plug, help, command palette, notifications bell.
+Style/medium: precise flat UI vector linework; consistent optical weight, rounded line caps and joins, simple geometric silhouettes. Each glyph is designed on a 24 by 24 grid with a 2-unit stroke and roughly 2-unit padding.
+Composition/framing: a tidy 6-column contact sheet, one glyph per cell, generous gutters. Small plain labels below each glyph for identification. The sailboat is a simple sailing hull and two triangular sails; memory is a recognizable brain; cookbook is an open book; research combines a magnifier and small nodes.
+Color palette: a single dark ink, no multicolor fills. Background genuinely transparent.
+Constraints: these are compact functional product UI icons, legible at 14 to 24 pixels. No decorative containers around glyphs, no gradients, no shadows, no 3D, no texture, no watermark. Use outline shapes with small solid details only where clarity needs them. Final SVGs will be authored manually from this design and recolored with currentColor.

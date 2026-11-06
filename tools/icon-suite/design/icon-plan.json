@@ -1,0 +1,4861 @@
+{
+  "scope": "All current Odysseus UI areas at the pinned upstream commit plus explicitly labelled expansion candidates. Shared actions reuse one semantic icon across views.",
+  "style": {
+    "grid": 24,
+    "stroke_width": 2,
+    "linecap": "round",
+    "linejoin": "round",
+    "paint": "currentColor",
+    "background": "transparent"
+  },
+  "groups": {
+    "navigation": [
+      "sailboat",
+      "home",
+      "chat",
+      "new-chat",
+      "search",
+      "documents",
+      "calendar",
+      "compare",
+      "cookbook",
+      "research",
+      "email",
+      "gallery",
+      "library",
+      "memory",
+      "notes",
+      "skills",
+      "tasks",
+      "theme",
+      "settings",
+      "account",
+      "workspace",
+      "terminal",
+      "integrations",
+      "help",
+      "command-palette",
+      "notifications"
+    ],
+    "actions": [
+      "add",
+      "subtract",
+      "close",
+      "check",
+      "copy",
+      "cut",
+      "paste",
+      "edit",
+      "rename",
+      "delete",
+      "delete-forever",
+      "archive",
+      "restore",
+      "download",
+      "upload",
+      "import",
+      "export",
+      "save",
+      "save-as",
+      "refresh",
+      "undo",
+      "redo",
+      "reset",
+      "more-horizontal",
+      "more-vertical",
+      "select-all",
+      "deselect",
+      "bulk-select",
+      "filter",
+      "filter-clear",
+      "sort",
+      "sort-ascending",
+      "sort-descending",
+      "pin",
+      "unpin",
+      "favorite",
+      "unfavorite",
+      "share",
+      "link",
+      "unlink",
+      "external-link",
+      "open",
+      "move",
+      "duplicate",
+      "clear",
+      "drag-handle"
+    ],
+    "layout": [
+      "arrow-up",
+      "arrow-down",
+      "arrow-left",
+      "arrow-right",
+      "chevron-up",
+      "chevron-down",
+      "chevron-left",
+      "chevron-right",
+      "chevrons-left",
+      "chevrons-right",
+      "jump-bottom",
+      "expand",
+      "collapse",
+      "maximize",
+      "minimize",
+      "fullscreen",
+      "fullscreen-exit",
+      "panel-left",
+      "panel-right",
+      "panel-top",
+      "panel-bottom",
+      "sidebar-open",
+      "sidebar-close",
+      "split-horizontal",
+      "split-vertical",
+      "grid",
+      "list",
+      "table",
+      "columns",
+      "dock",
+      "undock",
+      "resize"
+    ],
+    "chat-ai": [
+      "send",
+      "stop",
+      "regenerate",
+      "resend",
+      "branch",
+      "merge",
+      "message-edit",
+      "message-delete",
+      "quote",
+      "reply",
+      "thumbs-up",
+      "thumbs-down",
+      "thinking",
+      "reasoning",
+      "context",
+      "compact",
+      "persona",
+      "group-chat",
+      "nobody",
+      "plan",
+      "plan-review",
+      "execute-plan",
+      "utility-model",
+      "vision-model",
+      "fallback-model",
+      "model-switch",
+      "compare-add",
+      "blind-test",
+      "reveal",
+      "shuffle",
+      "vote",
+      "trophy",
+      "scoreboard",
+      "tokens",
+      "cost",
+      "prompt",
+      "prompt-expand",
+      "prompt-inject",
+      "tool-call",
+      "tool-result",
+      "background-job",
+      "approval",
+      "allow-once",
+      "allow-session",
+      "deny"
+    ],
+    "models-hardware": [
+      "model",
+      "model-add",
+      "model-download",
+      "model-installed",
+      "model-online",
+      "model-offline",
+      "model-delete",
+      "provider",
+      "endpoint",
+      "endpoint-add",
+      "endpoint-test",
+      "server",
+      "server-add",
+      "server-scan",
+      "server-stop",
+      "server-start",
+      "server-config",
+      "cpu",
+      "gpu",
+      "ram",
+      "vram",
+      "disk",
+      "network",
+      "container",
+      "ssh",
+      "api-key",
+      "local-model",
+      "cloud-model",
+      "database",
+      "embeddings",
+      "usage",
+      "latency",
+      "speed",
+      "parameters",
+      "quantization",
+      "checkpoint",
+      "serving-queue",
+      "launch-retry"
+    ],
+    "documents": [
+      "file",
+      "file-new",
+      "folder",
+      "folder-new",
+      "folder-open",
+      "folder-move",
+      "document-scan",
+      "bold",
+      "italic",
+      "underline",
+      "strikethrough",
+      "superscript",
+      "subscript",
+      "heading",
+      "heading-one",
+      "heading-two",
+      "heading-three",
+      "paragraph",
+      "font-family",
+      "font-size",
+      "text-color",
+      "highlight",
+      "align-left",
+      "align-center",
+      "align-right",
+      "align-justify",
+      "list-bulleted",
+      "list-numbered",
+      "list-check",
+      "indent",
+      "outdent",
+      "line-spacing",
+      "blockquote",
+      "code-inline",
+      "code-block",
+      "table-insert",
+      "table-row-add",
+      "table-column-add",
+      "table-row-remove",
+      "table-column-remove",
+      "separator",
+      "page-break",
+      "text-box",
+      "signature",
+      "find",
+      "find-replace",
+      "spelling",
+      "grammar",
+      "concise",
+      "improve-writing",
+      "check-sources",
+      "diff",
+      "accept-change",
+      "reject-change",
+      "outline",
+      "print",
+      "read-only",
+      "word-count",
+      "warp-text",
+      "text-on-path",
+      "text-on-circle",
+      "clear-formatting",
+      "text-direction",
+      "ai-writing"
+    ],
+    "notes-tasks-calendar": [
+      "note-new",
+      "sticky-note",
+      "drawing",
+      "checklist",
+      "todo",
+      "goal",
+      "target",
+      "next-step",
+      "reminder",
+      "reminder-add",
+      "reminder-overdue",
+      "reminder-dismiss",
+      "note-archive",
+      "note-color",
+      "tag",
+      "tag-add",
+      "tag-off",
+      "calendar-day",
+      "calendar-week",
+      "calendar-month",
+      "calendar-add",
+      "event-add",
+      "event-edit",
+      "event-delete",
+      "event-reschedule",
+      "recurring-event",
+      "recurrence-daily",
+      "recurrence-weekly",
+      "recurrence-monthly",
+      "recurrence-yearly",
+      "timezone",
+      "today",
+      "schedule",
+      "task-add",
+      "task-run",
+      "task-paused",
+      "task-done",
+      "task-failed",
+      "task-queue",
+      "task-history",
+      "task-trigger",
+      "webhook",
+      "task-draft",
+      "activity",
+      "snooze"
+    ],
+    "email-contacts": [
+      "inbox",
+      "mail-unread",
+      "mail-read",
+      "compose",
+      "reply-all",
+      "forward",
+      "send-later",
+      "attachment",
+      "attachment-download",
+      "attachments-download",
+      "spam",
+      "not-spam",
+      "unsubscribe",
+      "unsubscribe-ignore",
+      "email-translate",
+      "email-summarize",
+      "email-extract-event",
+      "contact",
+      "contacts",
+      "contact-add",
+      "contact-import",
+      "contact-export",
+      "signature-learn",
+      "recipients",
+      "cc",
+      "bcc",
+      "outbox",
+      "sent",
+      "drafts",
+      "mail-sync",
+      "inbox-zero",
+      "sender-block",
+      "sender-unblock",
+      "email-cleanup"
+    ],
+    "audio-video": [
+      "microphone",
+      "microphone-off",
+      "record",
+      "waveform",
+      "volume",
+      "volume-off",
+      "headphones",
+      "speech-to-text",
+      "text-to-speech",
+      "voice-settings",
+      "play",
+      "pause",
+      "skip-next",
+      "skip-previous",
+      "repeat",
+      "playback-speed",
+      "camera",
+      "video",
+      "film",
+      "transcript",
+      "subtitles",
+      "audio-file",
+      "autoplay"
+    ],
+    "gallery-editor": [
+      "image",
+      "image-add",
+      "image-import",
+      "image-export",
+      "album",
+      "album-new",
+      "album-cover",
+      "canvas",
+      "canvas-resize",
+      "image-resize",
+      "crop",
+      "perspective-crop",
+      "rotate-left",
+      "rotate-right",
+      "rotate-half",
+      "flip-horizontal",
+      "flip-vertical",
+      "zoom-in",
+      "zoom-out",
+      "zoom-fit",
+      "actual-size",
+      "pan",
+      "brush",
+      "eraser",
+      "pencil",
+      "pen",
+      "line",
+      "path",
+      "node-edit",
+      "polygon",
+      "rectangle",
+      "ellipse",
+      "shape-union",
+      "shape-subtract",
+      "shape-intersect",
+      "shape-exclude",
+      "eyedropper",
+      "paint-bucket",
+      "gradient",
+      "pattern",
+      "swatches",
+      "color-swap",
+      "layer",
+      "layer-new",
+      "layer-duplicate",
+      "layer-delete",
+      "layer-group",
+      "layer-ungroup",
+      "layer-up",
+      "layer-down",
+      "layer-front",
+      "layer-back",
+      "merge-down",
+      "merge-visible",
+      "flatten",
+      "rasterize",
+      "lock",
+      "unlock",
+      "eye",
+      "eye-off",
+      "mask",
+      "mask-add",
+      "mask-remove",
+      "mask-invert",
+      "mask-clear",
+      "mask-refine",
+      "selection",
+      "marquee-rectangle",
+      "marquee-ellipse",
+      "lasso",
+      "magnetic-lasso",
+      "magic-wand",
+      "quick-select",
+      "object-select",
+      "subject-select",
+      "inpaint",
+      "outpaint",
+      "background-remove",
+      "harmonize",
+      "style-transfer",
+      "ruler",
+      "guides",
+      "guide-add",
+      "grid-snap",
+      "transform",
+      "skew",
+      "perspective",
+      "snapshot",
+      "navigator",
+      "properties",
+      "history",
+      "channels",
+      "paths",
+      "histogram",
+      "actions-panel",
+      "aspect-ratio",
+      "free-crop",
+      "crop-square",
+      "crop-portrait",
+      "crop-landscape",
+      "brush-preset",
+      "selection-add",
+      "selection-subtract",
+      "selection-intersect",
+      "selection-invert",
+      "selection-save",
+      "selection-reselect",
+      "selection-border",
+      "selection-smooth",
+      "selection-expand",
+      "selection-contract",
+      "selection-feather",
+      "selection-grow",
+      "selection-similar",
+      "selection-color-range",
+      "selection-to-layer",
+      "selection-to-mask",
+      "content-aware-move",
+      "stroke-selection",
+      "guides-clear",
+      "guide-horizontal",
+      "guide-vertical",
+      "align-distribute",
+      "transform-width",
+      "transform-height",
+      "image-generate"
+    ],
+    "image-adjustments": [
+      "brightness",
+      "contrast",
+      "exposure",
+      "develop",
+      "white-balance",
+      "hue-saturation",
+      "vibrance",
+      "black-white",
+      "shadows-highlights",
+      "levels",
+      "curves",
+      "color-balance",
+      "selective-color",
+      "gradient-map",
+      "invert",
+      "posterize",
+      "threshold",
+      "photo-filter",
+      "channel-mixer",
+      "color-lookup",
+      "desaturate",
+      "auto-tone",
+      "auto-contrast",
+      "auto-color",
+      "equalize",
+      "color-replace"
+    ],
+    "image-filters": [
+      "blur",
+      "gaussian-blur",
+      "motion-blur",
+      "zoom-blur",
+      "radial-blur",
+      "box-blur",
+      "surface-blur",
+      "sharpen",
+      "sharpen-edges",
+      "sharpen-more",
+      "unsharp-mask",
+      "smart-sharpen",
+      "noise",
+      "add-noise",
+      "despeckle",
+      "reduce-noise",
+      "dust-scratches",
+      "median",
+      "pixelate",
+      "mosaic",
+      "crystallize",
+      "mosaic-tiles",
+      "emboss",
+      "find-edges",
+      "glowing-edges",
+      "solarize",
+      "oil-paint",
+      "diffuse",
+      "wind",
+      "trace-contour",
+      "halftone",
+      "reticulation",
+      "note-paper",
+      "charcoal",
+      "chalk",
+      "graphic-pen",
+      "photocopy",
+      "water-paper",
+      "poster-edges",
+      "cutout",
+      "ink-outlines",
+      "crosshatch",
+      "stained-glass",
+      "grain",
+      "texturizer",
+      "patchwork",
+      "craquelure",
+      "twirl",
+      "pinch",
+      "spherize",
+      "ripple",
+      "polar-coordinates",
+      "lens-correction",
+      "ocean-ripple",
+      "glass",
+      "shear",
+      "clouds",
+      "difference-clouds",
+      "lens-flare",
+      "fibers",
+      "offset",
+      "maximum",
+      "minimum",
+      "color-overlay",
+      "drop-shadow",
+      "stroke-effect",
+      "haze-removal"
+    ],
+    "research-knowledge": [
+      "globe",
+      "browser",
+      "web-search",
+      "web-fetch",
+      "link-check",
+      "source",
+      "citation",
+      "source-quality",
+      "fact-check",
+      "research-product",
+      "research-comparison",
+      "research-howto",
+      "research-landscape",
+      "report",
+      "research-parallel",
+      "research-sequential",
+      "research-queue",
+      "research-stop",
+      "research-followup",
+      "research-retry",
+      "knowledge-base",
+      "rag",
+      "memory-add",
+      "memory-search",
+      "memory-tidy",
+      "memory-suggestion",
+      "memory-consolidate",
+      "skill-add",
+      "skill-audit",
+      "skill-test",
+      "skill-pass",
+      "skill-fail",
+      "skill-confidence",
+      "skill-approve",
+      "skill-bin",
+      "skill-restore",
+      "book-open",
+      "book-closed",
+      "synapse"
+    ],
+    "settings-security": [
+      "sliders",
+      "appearance",
+      "font",
+      "keyboard",
+      "accessibility",
+      "density",
+      "mobile",
+      "desktop",
+      "touch",
+      "language",
+      "info",
+      "warning",
+      "error",
+      "success",
+      "pending",
+      "loading",
+      "offline",
+      "online",
+      "connected",
+      "disconnected",
+      "login",
+      "logout",
+      "user-add",
+      "user-delete",
+      "user-admin",
+      "user-roles",
+      "password",
+      "password-show",
+      "password-hide",
+      "key",
+      "token",
+      "token-add",
+      "token-revoke",
+      "shield",
+      "shield-check",
+      "mfa",
+      "mfa-enable",
+      "vault",
+      "vault-lock",
+      "vault-unlock",
+      "backup",
+      "backup-restore",
+      "logs",
+      "diagnostics",
+      "system-update",
+      "system-health",
+      "permissions",
+      "permission-read",
+      "permission-write",
+      "notification-off",
+      "cookies",
+      "privacy",
+      "data-wipe",
+      "bell-reset",
+      "integration-add",
+      "integration-remove",
+      "plugin",
+      "plugin-connect",
+      "plug-disconnect",
+      "api",
+      "browser-direct",
+      "proxy-routing",
+      "device-pair",
+      "device-disconnect",
+      "network-scan",
+      "clipboard-check",
+      "data-export",
+      "data-import",
+      "background-pattern",
+      "background-effects",
+      "frosted-glass"
+    ],
+    "file-types": [
+      "file-richtext",
+      "file-markdown",
+      "file-csv",
+      "file-python",
+      "file-html",
+      "file-json",
+      "file-javascript",
+      "file-typescript",
+      "file-yaml",
+      "file-css",
+      "file-shell",
+      "file-sql",
+      "file-pdf",
+      "file-email",
+      "file-xml",
+      "file-svg",
+      "file-rust",
+      "file-go",
+      "file-java",
+      "file-c",
+      "file-cpp",
+      "file-csharp",
+      "file-ruby",
+      "file-php",
+      "file-code",
+      "file-toml",
+      "file-ini",
+      "file-image",
+      "file-audio",
+      "file-video",
+      "file-archive",
+      "file-binary",
+      "file-font",
+      "file-ics",
+      "file-vcf",
+      "file-psd",
+      "file-log",
+      "file-png",
+      "file-jpeg",
+      "file-webp"
+    ],
+    "integrations-providers": [
+      "search-provider",
+      "search-searxng",
+      "search-duckduckgo",
+      "search-brave",
+      "search-google",
+      "search-tavily",
+      "search-serper",
+      "search-disabled",
+      "mcp",
+      "mcp-server",
+      "mcp-tool",
+      "mcp-refresh",
+      "oauth",
+      "oauth-connect",
+      "oauth-revoke",
+      "ollama",
+      "openai-compatible",
+      "copilot",
+      "chatgpt-subscription",
+      "huggingface",
+      "github",
+      "webdav",
+      "caldav",
+      "imap",
+      "smtp",
+      "browser-agent",
+      "shell-host",
+      "python-runtime",
+      "code-runner"
+    ],
+    "expanded-ui": [
+      "breadcrumb",
+      "sidebar-favorite",
+      "workspace-recent",
+      "workspace-switch",
+      "workspace-new",
+      "workspace-permissions",
+      "workspace-sync",
+      "offline-cache",
+      "sync-conflict",
+      "sync-pending",
+      "connection-retry",
+      "tool-disabled",
+      "tool-waiting",
+      "context-warning",
+      "quota-limit",
+      "budget-limit",
+      "model-capability",
+      "data-provenance",
+      "audit-trail",
+      "keyboard-focus",
+      "keyboard-shortcut",
+      "notification-read",
+      "notification-history",
+      "batch-progress",
+      "empty-state",
+      "loading-skeleton",
+      "broken-image",
+      "unsupported-file",
+      "recover-draft",
+      "session-share",
+      "session-lock",
+      "task-dependency",
+      "task-priority",
+      "task-cancelled",
+      "calendar-conflict",
+      "timezone-compare",
+      "mail-snoozed",
+      "attachment-blocked",
+      "document-version",
+      "document-conflict",
+      "document-comment",
+      "image-compare",
+      "accessible-label",
+      "contrast-check",
+      "high-contrast",
+      "reduced-motion",
+      "reset-theme",
+      "color-custom",
+      "theme-import",
+      "theme-export",
+      "feature-unavailable"
+    ]
+  },
+  "icons": [
+    {
+      "id": "sailboat",
+      "label": "Sailboat",
+      "category": "navigation"
+    },
+    {
+      "id": "home",
+      "label": "Home",
+      "category": "navigation"
+    },
+    {
+      "id": "chat",
+      "label": "Chat",
+      "category": "navigation"
+    },
+    {
+      "id": "new-chat",
+      "label": "New chat",
+      "category": "navigation"
+    },
+    {
+      "id": "search",
+      "label": "Search",
+      "category": "navigation"
+    },
+    {
+      "id": "documents",
+      "label": "Documents",
+      "category": "navigation"
+    },
+    {
+      "id": "calendar",
+      "label": "Calendar",
+      "category": "navigation"
+    },
+    {
+      "id": "compare",
+      "label": "Compare",
+      "category": "navigation"
+    },
+    {
+      "id": "cookbook",
+      "label": "Cookbook",
+      "category": "navigation"
+    },
+    {
+      "id": "research",
+      "label": "Research",
+      "category": "navigation"
+    },
+    {
+      "id": "email",
+      "label": "Email",
+      "category": "navigation"
+    },
+    {
+      "id": "gallery",
+      "label": "Gallery",
+      "category": "navigation"
+    },
+    {
+      "id": "library",
+      "label": "Library",
+      "category": "navigation"
+    },
+    {
+      "id": "memory",
+      "label": "Memory",
+      "category": "navigation"
+    },
+    {
+      "id": "notes",
+      "label": "Notes",
+      "category": "navigation"
+    },
+    {
+      "id": "skills",
+      "label": "Skills",
+      "category": "navigation"
+    },
+    {
+      "id": "tasks",
+      "label": "Tasks",
+      "category": "navigation"
+    },
+    {
+      "id": "theme",
+      "label": "Theme",
+      "category": "navigation"
+    },
+    {
+      "id": "settings",
+      "label": "Settings",
+      "category": "navigation"
+    },
+    {
+      "id": "account",
+      "label": "Account",
+      "category": "navigation"
+    },
+    {
+      "id": "workspace",
+      "label": "Workspace",
+      "category": "navigation"
+    },
+    {
+      "id": "terminal",
+      "label": "Terminal",
+      "category": "navigation"
+    },
+    {
+      "id": "integrations",
+      "label": "Integrations",
+      "category": "navigation"
+    },
+    {
+      "id": "help",
+      "label": "Help",
+      "category": "navigation"
+    },
+    {
+      "id": "command-palette",
+      "label": "Command palette",
+      "category": "navigation"
+    },
+    {
+      "id": "notifications",
+      "label": "Notifications",
+      "category": "navigation"
+    },
+    {
+      "id": "add",
+      "label": "Add",
+      "category": "actions"
+    },
+    {
+      "id": "subtract",
+      "label": "Subtract",
+      "category": "actions"
+    },
+    {
+      "id": "close",
+      "label": "Close",
+      "category": "actions"
+    },
+    {
+      "id": "check",
+      "label": "Check",
+      "category": "actions"
+    },
+    {
+      "id": "copy",
+      "label": "Copy",
+      "category": "actions"
+    },
+    {
+      "id": "cut",
+      "label": "Cut",
+      "category": "actions"
+    },
+    {
+      "id": "paste",
+      "label": "Paste",
+      "category": "actions"
+    },
+    {
+      "id": "edit",
+      "label": "Edit",
+      "category": "actions"
+    },
+    {
+      "id": "rename",
+      "label": "Rename",
+      "category": "actions"
+    },
+    {
+      "id": "delete",
+      "label": "Delete",
+      "category": "actions"
+    },
+    {
+      "id": "delete-forever",
+      "label": "Delete forever",
+      "category": "actions"
+    },
+    {
+      "id": "archive",
+      "label": "Archive",
+      "category": "actions"
+    },
+    {
+      "id": "restore",
+      "label": "Restore",
+      "category": "actions"
+    },
+    {
+      "id": "download",
+      "label": "Download",
+      "category": "actions"
+    },
+    {
+      "id": "upload",
+      "label": "Upload",
+      "category": "actions"
+    },
+    {
+      "id": "import",
+      "label": "Import",
+      "category": "actions"
+    },
+    {
+      "id": "export",
+      "label": "Export",
+      "category": "actions"
+    },
+    {
+      "id": "save",
+      "label": "Save",
+      "category": "actions"
+    },
+    {
+      "id": "save-as",
+      "label": "Save as",
+      "category": "actions"
+    },
+    {
+      "id": "refresh",
+      "label": "Refresh",
+      "category": "actions"
+    },
+    {
+      "id": "undo",
+      "label": "Undo",
+      "category": "actions"
+    },
+    {
+      "id": "redo",
+      "label": "Redo",
+      "category": "actions"
+    },
+    {
+      "id": "reset",
+      "label": "Reset",
+      "category": "actions"
+    },
+    {
+      "id": "more-horizontal",
+      "label": "More horizontal",
+      "category": "actions"
+    },
+    {
+      "id": "more-vertical",
+      "label": "More vertical",
+      "category": "actions"
+    },
+    {
+      "id": "select-all",
+      "label": "Select all",
+      "category": "actions"
+    },
+    {
+      "id": "deselect",
+      "label": "Deselect",
+      "category": "actions"
+    },
+    {
+      "id": "bulk-select",
+      "label": "Bulk select",
+      "category": "actions"
+    },
+    {
+      "id": "filter",
+      "label": "Filter",
+      "category": "actions"
+    },
+    {
+      "id": "filter-clear",
+      "label": "Filter clear",
+      "category": "actions"
+    },
+    {
+      "id": "sort",
+      "label": "Sort",
+      "category": "actions"
+    },
+    {
+      "id": "sort-ascending",
+      "label": "Sort ascending",
+      "category": "actions"
+    },
+    {
+      "id": "sort-descending",
+      "label": "Sort descending",
+      "category": "actions"
+    },
+    {
+      "id": "pin",
+      "label": "Pin",
+      "category": "actions"
+    },
+    {
+      "id": "unpin",
+      "label": "Unpin",
+      "category": "actions"
+    },
+    {
+      "id": "favorite",
+      "label": "Favorite",
+      "category": "actions"
+    },
+    {
+      "id": "unfavorite",
+      "label": "Unfavorite",
+      "category": "actions"
+    },
+    {
+      "id": "share",
+      "label": "Share",
+      "category": "actions"
+    },
+    {
+      "id": "link",
+      "label": "Link",
+      "category": "actions"
+    },
+    {
+      "id": "unlink",
+      "label": "Unlink",
+      "category": "actions"
+    },
+    {
+      "id": "external-link",
+      "label": "External link",
+      "category": "actions"
+    },
+    {
+      "id": "open",
+      "label": "Open",
+      "category": "actions"
+    },
+    {
+      "id": "move",
+      "label": "Move",
+      "category": "actions"
+    },
+    {
+      "id": "duplicate",
+      "label": "Duplicate",
+      "category": "actions"
+    },
+    {
+      "id": "clear",
+      "label": "Clear",
+      "category": "actions"
+    },
+    {
+      "id": "drag-handle",
+      "label": "Drag handle",
+      "category": "actions"
+    },
+    {
+      "id": "arrow-up",
+      "label": "Arrow up",
+      "category": "layout"
+    },
+    {
+      "id": "arrow-down",
+      "label": "Arrow down",
+      "category": "layout"
+    },
+    {
+      "id": "arrow-left",
+      "label": "Arrow left",
+      "category": "layout"
+    },
+    {
+      "id": "arrow-right",
+      "label": "Arrow right",
+      "category": "layout"
+    },
+    {
+      "id": "chevron-up",
+      "label": "Chevron up",
+      "category": "layout"
+    },
+    {
+      "id": "chevron-down",
+      "label": "Chevron down",
+      "category": "layout"
+    },
+    {
+      "id": "chevron-left",
+      "label": "Chevron left",
+      "category": "layout"
+    },
+    {
+      "id": "chevron-right",
+      "label": "Chevron right",
+      "category": "layout"
+    },
+    {
+      "id": "chevrons-left",
+      "label": "Chevrons left",
+      "category": "layout"
+    },
+    {
+      "id": "chevrons-right",
+      "label": "Chevrons right",
+      "category": "layout"
+    },
+    {
+      "id": "jump-bottom",
+      "label": "Jump bottom",
+      "category": "layout"
+    },
+    {
+      "id": "expand",
+      "label": "Expand",
+      "category": "layout"
+    },
+    {
+      "id": "collapse",
+      "label": "Collapse",
+      "category": "layout"
+    },
+    {
+      "id": "maximize",
+      "label": "Maximize",
+      "category": "layout"
+    },
+    {
+      "id": "minimize",
+      "label": "Minimize",
+      "category": "layout"
+    },
+    {
+      "id": "fullscreen",
+      "label": "Fullscreen",
+      "category": "layout"
+    },
+    {
+      "id": "fullscreen-exit",
+      "label": "Fullscreen exit",
+      "category": "layout"
+    },
+    {
+      "id": "panel-left",
+      "label": "Panel left",
+      "category": "layout"
+    },
+    {
+      "id": "panel-right",
+      "label": "Panel right",
+      "category": "layout"
+    },
+    {
+      "id": "panel-top",
+      "label": "Panel top",
+      "category": "layout"
+    },
+    {
+      "id": "panel-bottom",
+      "label": "Panel bottom",
+      "category": "layout"
+    },
+    {
+      "id": "sidebar-open",
+      "label": "Sidebar open",
+      "category": "layout"
+    },
+    {
+      "id": "sidebar-close",
+      "label": "Sidebar close",
+      "category": "layout"
+    },
+    {
+      "id": "split-horizontal",
+      "label": "Split horizontal",
+      "category": "layout"
+    },
+    {
+      "id": "split-vertical",
+      "label": "Split vertical",
+      "category": "layout"
+    },
+    {
+      "id": "grid",
+      "label": "Grid",
+      "category": "layout"
+    },
+    {
+      "id": "list",
+      "label": "List",
+      "category": "layout"
+    },
+    {
+      "id": "table",
+      "label": "Table",
+      "category": "layout"
+    },
+    {
+      "id": "columns",
+      "label": "Columns",
+      "category": "layout"
+    },
+    {
+      "id": "dock",
+      "label": "Dock",
+      "category": "layout"
+    },
+    {
+      "id": "undock",
+      "label": "Undock",
+      "category": "layout"
+    },
+    {
+      "id": "resize",
+      "label": "Resize",
+      "category": "layout"
+    },
+    {
+      "id": "send",
+      "label": "Send",
+      "category": "chat-ai"
+    },
+    {
+      "id": "stop",
+      "label": "Stop",
+      "category": "chat-ai"
+    },
+    {
+      "id": "regenerate",
+      "label": "Regenerate",
+      "category": "chat-ai"
+    },
+    {
+      "id": "resend",
+      "label": "Resend",
+      "category": "chat-ai"
+    },
+    {
+      "id": "branch",
+      "label": "Branch",
+      "category": "chat-ai"
+    },
+    {
+      "id": "merge",
+      "label": "Merge",
+      "category": "chat-ai"
+    },
+    {
+      "id": "message-edit",
+      "label": "Message edit",
+      "category": "chat-ai"
+    },
+    {
+      "id": "message-delete",
+      "label": "Message delete",
+      "category": "chat-ai"
+    },
+    {
+      "id": "quote",
+      "label": "Quote",
+      "category": "chat-ai"
+    },
+    {
+      "id": "reply",
+      "label": "Reply",
+      "category": "chat-ai"
+    },
+    {
+      "id": "thumbs-up",
+      "label": "Thumbs up",
+      "category": "chat-ai"
+    },
+    {
+      "id": "thumbs-down",
+      "label": "Thumbs down",
+      "category": "chat-ai"
+    },
+    {
+      "id": "thinking",
+      "label": "Thinking",
+      "category": "chat-ai"
+    },
+    {
+      "id": "reasoning",
+      "label": "Reasoning",
+      "category": "chat-ai"
+    },
+    {
+      "id": "context",
+      "label": "Context",
+      "category": "chat-ai"
+    },
+    {
+      "id": "compact",
+      "label": "Compact",
+      "category": "chat-ai"
+    },
+    {
+      "id": "persona",
+      "label": "Persona",
+      "category": "chat-ai"
+    },
+    {
+      "id": "group-chat",
+      "label": "Group chat",
+      "category": "chat-ai"
+    },
+    {
+      "id": "nobody",
+      "label": "Nobody",
+      "category": "chat-ai"
+    },
+    {
+      "id": "plan",
+      "label": "Plan",
+      "category": "chat-ai"
+    },
+    {
+      "id": "plan-review",
+      "label": "Plan review",
+      "category": "chat-ai"
+    },
+    {
+      "id": "execute-plan",
+      "label": "Execute plan",
+      "category": "chat-ai"
+    },
+    {
+      "id": "utility-model",
+      "label": "Utility model",
+      "category": "chat-ai"
+    },
+    {
+      "id": "vision-model",
+      "label": "Vision model",
+      "category": "chat-ai"
+    },
+    {
+      "id": "fallback-model",
+      "label": "Fallback model",
+      "category": "chat-ai"
+    },
+    {
+      "id": "model-switch",
+      "label": "Model switch",
+      "category": "chat-ai"
+    },
+    {
+      "id": "compare-add",
+      "label": "Compare add",
+      "category": "chat-ai"
+    },
+    {
+      "id": "blind-test",
+      "label": "Blind test",
+      "category": "chat-ai"
+    },
+    {
+      "id": "reveal",
+      "label": "Reveal",
+      "category": "chat-ai"
+    },
+    {
+      "id": "shuffle",
+      "label": "Shuffle",
+      "category": "chat-ai"
+    },
+    {
+      "id": "vote",
+      "label": "Vote",
+      "category": "chat-ai"
+    },
+    {
+      "id": "trophy",
+      "label": "Trophy",
+      "category": "chat-ai"
+    },
+    {
+      "id": "scoreboard",
+      "label": "Scoreboard",
+      "category": "chat-ai"
+    },
+    {
+      "id": "tokens",
+      "label": "Tokens",
+      "category": "chat-ai"
+    },
+    {
+      "id": "cost",
+      "label": "Cost",
+      "category": "chat-ai"
+    },
+    {
+      "id": "prompt",
+      "label": "Prompt",
+      "category": "chat-ai"
+    },
+    {
+      "id": "prompt-expand",
+      "label": "Prompt expand",
+      "category": "chat-ai"
+    },
+    {
+      "id": "prompt-inject",
+      "label": "Prompt inject",
+      "category": "chat-ai"
+    },
+    {
+      "id": "tool-call",
+      "label": "Tool call",
+      "category": "chat-ai"
+    },
+    {
+      "id": "tool-result",
+      "label": "Tool result",
+      "category": "chat-ai"
+    },
+    {
+      "id": "background-job",
+      "label": "Background job",
+      "category": "chat-ai"
+    },
+    {
+      "id": "approval",
+      "label": "Approval",
+      "category": "chat-ai"
+    },
+    {
+      "id": "allow-once",
+      "label": "Allow once",
+      "category": "chat-ai"
+    },
+    {
+      "id": "allow-session",
+      "label": "Allow session",
+      "category": "chat-ai"
+    },
+    {
+      "id": "deny",
+      "label": "Deny",
+      "category": "chat-ai"
+    },
+    {
+      "id": "model",
+      "label": "Model",
+      "category": "models-hardware"
+    },
+    {
+      "id": "model-add",
+      "label": "Model add",
+      "category": "models-hardware"
+    },
+    {
+      "id": "model-download",
+      "label": "Model download",
+      "category": "models-hardware"
+    },
+    {
+      "id": "model-installed",
+      "label": "Model installed",
+      "category": "models-hardware"
+    },
+    {
+      "id": "model-online",
+      "label": "Model online",
+      "category": "models-hardware"
+    },
+    {
+      "id": "model-offline",
+      "label": "Model offline",
+      "category": "models-hardware"
+    },
+    {
+      "id": "model-delete",
+      "label": "Model delete",
+      "category": "models-hardware"
+    },
+    {
+      "id": "provider",
+      "label": "Provider",
+      "category": "models-hardware"
+    },
+    {
+      "id": "endpoint",
+      "label": "Endpoint",
+      "category": "models-hardware"
+    },
+    {
+      "id": "endpoint-add",
+      "label": "Endpoint add",
+      "category": "models-hardware"
+    },
+    {
+      "id": "endpoint-test",
+      "label": "Endpoint test",
+      "category": "models-hardware"
+    },
+    {
+      "id": "server",
+      "label": "Server",
+      "category": "models-hardware"
+    },
+    {
+      "id": "server-add",
+      "label": "Server add",
+      "category": "models-hardware"
+    },
+    {
+      "id": "server-scan",
+      "label": "Server scan",
+      "category": "models-hardware"
+    },
+    {
+      "id": "server-stop",
+      "label": "Server stop",
+      "category": "models-hardware"
+    },
+    {
+      "id": "server-start",
+      "label": "Server start",
+      "category": "models-hardware"
+    },
+    {
+      "id": "server-config",
+      "label": "Server config",
+      "category": "models-hardware"
+    },
+    {
+      "id": "cpu",
+      "label": "Cpu",
+      "category": "models-hardware"
+    },
+    {
+      "id": "gpu",
+      "label": "Gpu",
+      "category": "models-hardware"
+    },
+    {
+      "id": "ram",
+      "label": "Ram",
+      "category": "models-hardware"
+    },
+    {
+      "id": "vram",
+      "label": "Vram",
+      "category": "models-hardware"
+    },
+    {
+      "id": "disk",
+      "label": "Disk",
+      "category": "models-hardware"
+    },
+    {
+      "id": "network",
+      "label": "Network",
+      "category": "models-hardware"
+    },
+    {
+      "id": "container",
+      "label": "Container",
+      "category": "models-hardware"
+    },
+    {
+      "id": "ssh",
+      "label": "Ssh",
+      "category": "models-hardware"
+    },
+    {
+      "id": "api-key",
+      "label": "Api key",
+      "category": "models-hardware"
+    },
+    {
+      "id": "local-model",
+      "label": "Local model",
+      "category": "models-hardware"
+    },
+    {
+      "id": "cloud-model",
+      "label": "Cloud model",
+      "category": "models-hardware"
+    },
+    {
+      "id": "database",
+      "label": "Database",
+      "category": "models-hardware"
+    },
+    {
+      "id": "embeddings",
+      "label": "Embeddings",
+      "category": "models-hardware"
+    },
+    {
+      "id": "usage",
+      "label": "Usage",
+      "category": "models-hardware"
+    },
+    {
+      "id": "latency",
+      "label": "Latency",
+      "category": "models-hardware"
+    },
+    {
+      "id": "speed",
+      "label": "Speed",
+      "category": "models-hardware"
+    },
+    {
+      "id": "parameters",
+      "label": "Parameters",
+      "category": "models-hardware"
+    },
+    {
+      "id": "quantization",
+      "label": "Quantization",
+      "category": "models-hardware"
+    },
+    {
+      "id": "checkpoint",
+      "label": "Checkpoint",
+      "category": "models-hardware"
+    },
+    {
+      "id": "serving-queue",
+      "label": "Serving queue",
+      "category": "models-hardware"
+    },
+    {
+      "id": "launch-retry",
+      "label": "Launch retry",
+      "category": "models-hardware"
+    },
+    {
+      "id": "file",
+      "label": "File",
+      "category": "documents"
+    },
+    {
+      "id": "file-new",
+      "label": "File new",
+      "category": "documents"
+    },
+    {
+      "id": "folder",
+      "label": "Folder",
+      "category": "documents"
+    },
+    {
+      "id": "folder-new",
+      "label": "Folder new",
+      "category": "documents"
+    },
+    {
+      "id": "folder-open",
+      "label": "Folder open",
+      "category": "documents"
+    },
+    {
+      "id": "folder-move",
+      "label": "Folder move",
+      "category": "documents"
+    },
+    {
+      "id": "document-scan",
+      "label": "Document scan",
+      "category": "documents"
+    },
+    {
+      "id": "bold",
+      "label": "Bold",
+      "category": "documents"
+    },
+    {
+      "id": "italic",
+      "label": "Italic",
+      "category": "documents"
+    },
+    {
+      "id": "underline",
+      "label": "Underline",
+      "category": "documents"
+    },
+    {
+      "id": "strikethrough",
+      "label": "Strikethrough",
+      "category": "documents"
+    },
+    {
+      "id": "superscript",
+      "label": "Superscript",
+      "category": "documents"
+    },
+    {
+      "id": "subscript",
+      "label": "Subscript",
+      "category": "documents"
+    },
+    {
+      "id": "heading",
+      "label": "Heading",
+      "category": "documents"
+    },
+    {
+      "id": "heading-one",
+      "label": "Heading one",
+      "category": "documents"
+    },
+    {
+      "id": "heading-two",
+      "label": "Heading two",
+      "category": "documents"
+    },
+    {
+      "id": "heading-three",
+      "label": "Heading three",
+      "category": "documents"
+    },
+    {
+      "id": "paragraph",
+      "label": "Paragraph",
+      "category": "documents"
+    },
+    {
+      "id": "font-family",
+      "label": "Font family",
+      "category": "documents"
+    },
+    {
+      "id": "font-size",
+      "label": "Font size",
+      "category": "documents"
+    },
+    {
+      "id": "text-color",
+      "label": "Text color",
+      "category": "documents"
+    },
+    {
+      "id": "highlight",
+      "label": "Highlight",
+      "category": "documents"
+    },
+    {
+      "id": "align-left",
+      "label": "Align left",
+      "category": "documents"
+    },
+    {
+      "id": "align-center",
+      "label": "Align center",
+      "category": "documents"
+    },
+    {
+      "id": "align-right",
+      "label": "Align right",
+      "category": "documents"
+    },
+    {
+      "id": "align-justify",
+      "label": "Align justify",
+      "category": "documents"
+    },
+    {
+      "id": "list-bulleted",
+      "label": "List bulleted",
+      "category": "documents"
+    },
+    {
+      "id": "list-numbered",
+      "label": "List numbered",
+      "category": "documents"
+    },
+    {
+      "id": "list-check",
+      "label": "List check",
+      "category": "documents"
+    },
+    {
+      "id": "indent",
+      "label": "Indent",
+      "category": "documents"
+    },
+    {
+      "id": "outdent",
+      "label": "Outdent",
+      "category": "documents"
+    },
+    {
+      "id": "line-spacing",
+      "label": "Line spacing",
+      "category": "documents"
+    },
+    {
+      "id": "blockquote",
+      "label": "Blockquote",
+      "category": "documents"
+    },
+    {
+      "id": "code-inline",
+      "label": "Code inline",
+      "category": "documents"
+    },
+    {
+      "id": "code-block",
+      "label": "Code block",
+      "category": "documents"
+    },
+    {
+      "id": "table-insert",
+      "label": "Table insert",
+      "category": "documents"
+    },
+    {
+      "id": "table-row-add",
+      "label": "Table row add",
+      "category": "documents"
+    },
+    {
+      "id": "table-column-add",
+      "label": "Table column add",
+      "category": "documents"
+    },
+    {
+      "id": "table-row-remove",
+      "label": "Table row remove",
+      "category": "documents"
+    },
+    {
+      "id": "table-column-remove",
+      "label": "Table column remove",
+      "category": "documents"
+    },
+    {
+      "id": "separator",
+      "label": "Separator",
+      "category": "documents"
+    },
+    {
+      "id": "page-break",
+      "label": "Page break",
+      "category": "documents"
+    },
+    {
+      "id": "text-box",
+      "label": "Text box",
+      "category": "documents"
+    },
+    {
+      "id": "signature",
+      "label": "Signature",
+      "category": "documents"
+    },
+    {
+      "id": "find",
+      "label": "Find",
+      "category": "documents"
+    },
+    {
+      "id": "find-replace",
+      "label": "Find replace",
+      "category": "documents"
+    },
+    {
+      "id": "spelling",
+      "label": "Spelling",
+      "category": "documents"
+    },
+    {
+      "id": "grammar",
+      "label": "Grammar",
+      "category": "documents"
+    },
+    {
+      "id": "concise",
+      "label": "Concise",
+      "category": "documents"
+    },
+    {
+      "id": "improve-writing",
+      "label": "Improve writing",
+      "category": "documents"
+    },
+    {
+      "id": "check-sources",
+      "label": "Check sources",
+      "category": "documents"
+    },
+    {
+      "id": "diff",
+      "label": "Diff",
+      "category": "documents"
+    },
+    {
+      "id": "accept-change",
+      "label": "Accept change",
+      "category": "documents"
+    },
+    {
+      "id": "reject-change",
+      "label": "Reject change",
+      "category": "documents"
+    },
+    {
+      "id": "outline",
+      "label": "Outline",
+      "category": "documents"
+    },
+    {
+      "id": "print",
+      "label": "Print",
+      "category": "documents"
+    },
+    {
+      "id": "read-only",
+      "label": "Read only",
+      "category": "documents"
+    },
+    {
+      "id": "word-count",
+      "label": "Word count",
+      "category": "documents"
+    },
+    {
+      "id": "note-new",
+      "label": "Note new",
+      "category": "notes-tasks-calendar"
+    },
+    {
+      "id": "sticky-note",
+      "label": "Sticky note",
+      "category": "notes-tasks-calendar"
+    },
+    {
+      "id": "drawing",
+      "label": "Drawing",
+      "category": "notes-tasks-calendar"
+    },
+    {
+      "id": "checklist",
+      "label": "Checklist",
+      "category": "notes-tasks-calendar"
+    },
+    {
+      "id": "todo",
+      "label": "Todo",
+      "category": "notes-tasks-calendar"
+    },
+    {
+      "id": "goal",
+      "label": "Goal",
+      "category": "notes-tasks-calendar"
+    },
+    {
+      "id": "target",
+      "label": "Target",
+      "category": "notes-tasks-calendar"
+    },
+    {
+      "id": "next-step",
+      "label": "Next step",
+      "category": "notes-tasks-calendar"
+    },
+    {
+      "id": "reminder",
+      "label": "Reminder",
+      "category": "notes-tasks-calendar"
+    },
+    {
+      "id": "reminder-add",
+      "label": "Reminder add",
+      "category": "notes-tasks-calendar"
+    },
+    {
+      "id": "reminder-overdue",
+      "label": "Reminder overdue",
+      "category": "notes-tasks-calendar"
+    },
+    {
+      "id": "reminder-dismiss",
+      "label": "Reminder dismiss",
+      "category": "notes-tasks-calendar"
+    },
+    {
+      "id": "note-archive",
+      "label": "Note archive",
+      "category": "notes-tasks-calendar"
+    },
+    {
+      "id": "note-color",
+      "label": "Note color",
+      "category": "notes-tasks-calendar"
+    },
+    {
+      "id": "tag",
+      "label": "Tag",
+      "category": "notes-tasks-calendar"
+    },
+    {
+      "id": "tag-add",
+      "label": "Tag add",
+      "category": "notes-tasks-calendar"
+    },
+    {
+      "id": "tag-off",
+      "label": "Tag off",
+      "category": "notes-tasks-calendar"
+    },
+    {
+      "id": "calendar-day",
+      "label": "Calendar day",
+      "category": "notes-tasks-calendar"
+    },
+    {
+      "id": "calendar-week",
+      "label": "Calendar week",
+      "category": "notes-tasks-calendar"
+    },
+    {
+      "id": "calendar-month",
+      "label": "Calendar month",
+      "category": "notes-tasks-calendar"
+    },
+    {
+      "id": "calendar-add",
+      "label": "Calendar add",
+      "category": "notes-tasks-calendar"
+    },
+    {
+      "id": "event-add",
+      "label": "Event add",
+      "category": "notes-tasks-calendar"
+    },
+    {
+      "id": "event-edit",
+      "label": "Event edit",
+      "category": "notes-tasks-calendar"
+    },
+    {
+      "id": "event-delete",
+      "label": "Event delete",
+      "category": "notes-tasks-calendar"
+    },
+    {
+      "id": "event-reschedule",
+      "label": "Event reschedule",
+      "category": "notes-tasks-calendar"
+    },
+    {
+      "id": "recurring-event",
+      "label": "Recurring event",
+      "category": "notes-tasks-calendar"
+    },
+    {
+      "id": "recurrence-daily",
+      "label": "Recurrence daily",
+      "category": "notes-tasks-calendar"
+    },
+    {
+      "id": "recurrence-weekly",
+      "label": "Recurrence weekly",
+      "category": "notes-tasks-calendar"
+    },
+    {
+      "id": "recurrence-monthly",
+      "label": "Recurrence monthly",
+      "category": "notes-tasks-calendar"
+    },
+    {
+      "id": "recurrence-yearly",
+      "label": "Recurrence yearly",
+      "category": "notes-tasks-calendar"
+    },
+    {
+      "id": "timezone",
+      "label": "Timezone",
+      "category": "notes-tasks-calendar"
+    },
+    {
+      "id": "today",
+      "label": "Today",
+      "category": "notes-tasks-calendar"
+    },
+    {
+      "id": "schedule",
+      "label": "Schedule",
+      "category": "notes-tasks-calendar"
+    },
+    {
+      "id": "task-add",
+      "label": "Task add",
+      "category": "notes-tasks-calendar"
+    },
+    {
+      "id": "task-run",
+      "label": "Task run",
+      "category": "notes-tasks-calendar"
+    },
+    {
+      "id": "task-paused",
+      "label": "Task paused",
+      "category": "notes-tasks-calendar"
+    },
+    {
+      "id": "task-done",
+      "label": "Task done",
+      "category": "notes-tasks-calendar"
+    },
+    {
+      "id": "task-failed",
+      "label": "Task failed",
+      "category": "notes-tasks-calendar"
+    },
+    {
+      "id": "task-queue",
+      "label": "Task queue",
+      "category": "notes-tasks-calendar"
+    },
+    {
+      "id": "task-history",
+      "label": "Task history",
+      "category": "notes-tasks-calendar"
+    },
+    {
+      "id": "task-trigger",
+      "label": "Task trigger",
+      "category": "notes-tasks-calendar"
+    },
+    {
+      "id": "webhook",
+      "label": "Webhook",
+      "category": "notes-tasks-calendar"
+    },
+    {
+      "id": "task-draft",
+      "label": "Task draft",
+      "category": "notes-tasks-calendar"
+    },
+    {
+      "id": "activity",
+      "label": "Activity",
+      "category": "notes-tasks-calendar"
+    },
+    {
+      "id": "snooze",
+      "label": "Snooze",
+      "category": "notes-tasks-calendar"
+    },
+    {
+      "id": "inbox",
+      "label": "Inbox",
+      "category": "email-contacts"
+    },
+    {
+      "id": "mail-unread",
+      "label": "Mail unread",
+      "category": "email-contacts"
+    },
+    {
+      "id": "mail-read",
+      "label": "Mail read",
+      "category": "email-contacts"
+    },
+    {
+      "id": "compose",
+      "label": "Compose",
+      "category": "email-contacts"
+    },
+    {
+      "id": "reply-all",
+      "label": "Reply all",
+      "category": "email-contacts"
+    },
+    {
+      "id": "forward",
+      "label": "Forward",
+      "category": "email-contacts"
+    },
+    {
+      "id": "send-later",
+      "label": "Send later",
+      "category": "email-contacts"
+    },
+    {
+      "id": "attachment",
+      "label": "Attachment",
+      "category": "email-contacts"
+    },
+    {
+      "id": "attachment-download",
+      "label": "Attachment download",
+      "category": "email-contacts"
+    },
+    {
+      "id": "attachments-download",
+      "label": "Attachments download",
+      "category": "email-contacts"
+    },
+    {
+      "id": "spam",
+      "label": "Spam",
+      "category": "email-contacts"
+    },
+    {
+      "id": "not-spam",
+      "label": "Not spam",
+      "category": "email-contacts"
+    },
+    {
+      "id": "unsubscribe",
+      "label": "Unsubscribe",
+      "category": "email-contacts"
+    },
+    {
+      "id": "unsubscribe-ignore",
+      "label": "Unsubscribe ignore",
+      "category": "email-contacts"
+    },
+    {
+      "id": "email-translate",
+      "label": "Email translate",
+      "category": "email-contacts"
+    },
+    {
+      "id": "email-summarize",
+      "label": "Email summarize",
+      "category": "email-contacts"
+    },
+    {
+      "id": "email-extract-event",
+      "label": "Email extract event",
+      "category": "email-contacts"
+    },
+    {
+      "id": "contact",
+      "label": "Contact",
+      "category": "email-contacts"
+    },
+    {
+      "id": "contacts",
+      "label": "Contacts",
+      "category": "email-contacts"
+    },
+    {
+      "id": "contact-add",
+      "label": "Contact add",
+      "category": "email-contacts"
+    },
+    {
+      "id": "contact-import",
+      "label": "Contact import",
+      "category": "email-contacts"
+    },
+    {
+      "id": "contact-export",
+      "label": "Contact export",
+      "category": "email-contacts"
+    },
+    {
+      "id": "signature-learn",
+      "label": "Signature learn",
+      "category": "email-contacts"
+    },
+    {
+      "id": "recipients",
+      "label": "Recipients",
+      "category": "email-contacts"
+    },
+    {
+      "id": "cc",
+      "label": "Cc",
+      "category": "email-contacts"
+    },
+    {
+      "id": "bcc",
+      "label": "Bcc",
+      "category": "email-contacts"
+    },
+    {
+      "id": "outbox",
+      "label": "Outbox",
+      "category": "email-contacts"
+    },
+    {
+      "id": "sent",
+      "label": "Sent",
+      "category": "email-contacts"
+    },
+    {
+      "id": "drafts",
+      "label": "Drafts",
+      "category": "email-contacts"
+    },
+    {
+      "id": "mail-sync",
+      "label": "Mail sync",
+      "category": "email-contacts"
+    },
+    {
+      "id": "inbox-zero",
+      "label": "Inbox zero",
+      "category": "email-contacts"
+    },
+    {
+      "id": "sender-block",
+      "label": "Sender block",
+      "category": "email-contacts"
+    },
+    {
+      "id": "sender-unblock",
+      "label": "Sender unblock",
+      "category": "email-contacts"
+    },
+    {
+      "id": "email-cleanup",
+      "label": "Email cleanup",
+      "category": "email-contacts"
+    },
+    {
+      "id": "microphone",
+      "label": "Microphone",
+      "category": "audio-video"
+    },
+    {
+      "id": "microphone-off",
+      "label": "Microphone off",
+      "category": "audio-video"
+    },
+    {
+      "id": "record",
+      "label": "Record",
+      "category": "audio-video"
+    },
+    {
+      "id": "waveform",
+      "label": "Waveform",
+      "category": "audio-video"
+    },
+    {
+      "id": "volume",
+      "label": "Volume",
+      "category": "audio-video"
+    },
+    {
+      "id": "volume-off",
+      "label": "Volume off",
+      "category": "audio-video"
+    },
+    {
+      "id": "headphones",
+      "label": "Headphones",
+      "category": "audio-video"
+    },
+    {
+      "id": "speech-to-text",
+      "label": "Speech to text",
+      "category": "audio-video"
+    },
+    {
+      "id": "text-to-speech",
+      "label": "Text to speech",
+      "category": "audio-video"
+    },
+    {
+      "id": "voice-settings",
+      "label": "Voice settings",
+      "category": "audio-video"
+    },
+    {
+      "id": "play",
+      "label": "Play",
+      "category": "audio-video"
+    },
+    {
+      "id": "pause",
+      "label": "Pause",
+      "category": "audio-video"
+    },
+    {
+      "id": "skip-next",
+      "label": "Skip next",
+      "category": "audio-video"
+    },
+    {
+      "id": "skip-previous",
+      "label": "Skip previous",
+      "category": "audio-video"
+    },
+    {
+      "id": "repeat",
+      "label": "Repeat",
+      "category": "audio-video"
+    },
+    {
+      "id": "playback-speed",
+      "label": "Playback speed",
+      "category": "audio-video"
+    },
+    {
+      "id": "camera",
+      "label": "Camera",
+      "category": "audio-video"
+    },
+    {
+      "id": "video",
+      "label": "Video",
+      "category": "audio-video"
+    },
+    {
+      "id": "film",
+      "label": "Film",
+      "category": "audio-video"
+    },
+    {
+      "id": "transcript",
+      "label": "Transcript",
+      "category": "audio-video"
+    },
+    {
+      "id": "subtitles",
+      "label": "Subtitles",
+      "category": "audio-video"
+    },
+    {
+      "id": "audio-file",
+      "label": "Audio file",
+      "category": "audio-video"
+    },
+    {
+      "id": "autoplay",
+      "label": "Autoplay",
+      "category": "audio-video"
+    },
+    {
+      "id": "image",
+      "label": "Image",
+      "category": "gallery-editor"
+    },
+    {
+      "id": "image-add",
+      "label": "Image add",
+      "category": "gallery-editor"
+    },
+    {
+      "id": "image-import",
+      "label": "Image import",
+      "category": "gallery-editor"
+    },
+    {
+      "id": "image-export",
+      "label": "Image export",
+      "category": "gallery-editor"
+    },
+    {
+      "id": "album",
+      "label": "Album",
+      "category": "gallery-editor"
+    },
+    {
+      "id": "album-new",
+      "label": "Album new",
+      "category": "gallery-editor"
+    },
+    {
+      "id": "album-cover",
+      "label": "Album cover",
+      "category": "gallery-editor"
+    },
+    {
+      "id": "canvas",
+      "label": "Canvas",
+      "category": "gallery-editor"
+    },
+    {
+      "id": "canvas-resize",
+      "label": "Canvas resize",
+      "category": "gallery-editor"
+    },
+    {
+      "id": "image-resize",
+      "label": "Image resize",
+      "category": "gallery-editor"
+    },
+    {
+      "id": "crop",
+      "label": "Crop",
+      "category": "gallery-editor"
+    },
+    {
+      "id": "perspective-crop",
+      "label": "Perspective crop",
+      "category": "gallery-editor"
+    },
+    {
+      "id": "rotate-left",
+      "label": "Rotate left",
+      "category": "gallery-editor"
+    },
+    {
+      "id": "rotate-right",
+      "label": "Rotate right",
+      "category": "gallery-editor"
+    },
+    {
+      "id": "rotate-half",
+      "label": "Rotate half",
+      "category": "gallery-editor"
+    },
+    {
+      "id": "flip-horizontal",
+      "label": "Flip horizontal",
+      "category": "gallery-editor"
+    },
+    {
+      "id": "flip-vertical",
+      "label": "Flip vertical",
+      "category": "gallery-editor"
+    },
+    {
+      "id": "zoom-in",
+      "label": "Zoom in",
+      "category": "gallery-editor"
+    },
+    {
+      "id": "zoom-out",
+      "label": "Zoom out",
+      "category": "gallery-editor"
+    },
+    {
+      "id": "zoom-fit",
+      "label": "Zoom fit",
+      "category": "gallery-editor"
+    },
+    {
+      "id": "actual-size",
+      "label": "Actual size",
+      "category": "gallery-editor"
+    },
+    {
+      "id": "pan",
+      "label": "Pan",
+      "category": "gallery-editor"
+    },
+    {
+      "id": "brush",
+      "label": "Brush",
+      "category": "gallery-editor"
+    },
+    {
+      "id": "eraser",
+      "label": "Eraser",
+      "category": "gallery-editor"
+    },
+    {
+      "id": "pencil",
+      "label": "Pencil",
+      "category": "gallery-editor"
+    },
+    {
+      "id": "pen",
+      "label": "Pen",
+      "category": "gallery-editor"
+    },
+    {
+      "id": "line",
+      "label": "Line",
+      "category": "gallery-editor"
+    },
+    {
+      "id": "path",
+      "label": "Path",
+      "category": "gallery-editor"
+    },
+    {
+      "id": "node-edit",
+      "label": "Node edit",
+      "category": "gallery-editor"
+    },
+    {
+      "id": "polygon",
+      "label": "Polygon",
+      "category": "gallery-editor"
+    },
+    {
+      "id": "rectangle",
+      "label": "Rectangle",
+      "category": "gallery-editor"
+    },
+    {
+      "id": "ellipse",
+      "label": "Ellipse",
+      "category": "gallery-editor"
+    },
+    {
+      "id": "shape-union",
+      "label": "Shape union",
+      "category": "gallery-editor"
+    },
+    {
+      "id": "shape-subtract",
+      "label": "Shape subtract",
+      "category": "gallery-editor"
+    },
+    {
+      "id": "shape-intersect",
+      "label": "Shape intersect",
+      "category": "gallery-editor"
+    },
+    {
+      "id": "shape-exclude",
+      "label": "Shape exclude",
+      "category": "gallery-editor"
+    },
+    {
+      "id": "eyedropper",
+      "label": "Eyedropper",
+      "category": "gallery-editor"
+    },
+    {
+      "id": "paint-bucket",
+      "label": "Paint bucket",
+      "category": "gallery-editor"
+    },
+    {
+      "id": "gradient",
+      "label": "Gradient",
+      "category": "gallery-editor"
+    },
+    {
+      "id": "pattern",
+      "label": "Pattern",
+      "category": "gallery-editor"
+    },
+    {
+      "id": "swatches",
+      "label": "Swatches",
+      "category": "gallery-editor"
+    },
+    {
+      "id": "color-swap",
+      "label": "Color swap",
+      "category": "gallery-editor"
+    },
+    {
+      "id": "layer",
+      "label": "Layer",
+      "category": "gallery-editor"
+    },
+    {
+      "id": "layer-new",
+      "label": "Layer new",
+      "category": "gallery-editor"
+    },
+    {
+      "id": "layer-duplicate",
+      "label": "Layer duplicate",
+      "category": "gallery-editor"
+    },
+    {
+      "id": "layer-delete",
+      "label": "Layer delete",
+      "category": "gallery-editor"
+    },
+    {
+      "id": "layer-group",
+      "label": "Layer group",
+      "category": "gallery-editor"
+    },
+    {
+      "id": "layer-ungroup",
+      "label": "Layer ungroup",
+      "category": "gallery-editor"
+    },
+    {
+      "id": "layer-up",
+      "label": "Layer up",
+      "category": "gallery-editor"
+    },
+    {
+      "id": "layer-down",
+      "label": "Layer down",
+      "category": "gallery-editor"
+    },
+    {
+      "id": "layer-front",
+      "label": "Layer front",
+      "category": "gallery-editor"
+    },
+    {
+      "id": "layer-back",
+      "label": "Layer back",
+      "category": "gallery-editor"
+    },
+    {
+      "id": "merge-down",
+      "label": "Merge down",
+      "category": "gallery-editor"
+    },
+    {
+      "id": "merge-visible",
+      "label": "Merge visible",
+      "category": "gallery-editor"
+    },
+    {
+      "id": "flatten",
+      "label": "Flatten",
+      "category": "gallery-editor"
+    },
+    {
+      "id": "rasterize",
+      "label": "Rasterize",
+      "category": "gallery-editor"
+    },
+    {
+      "id": "lock",
+      "label": "Lock",
+      "category": "gallery-editor"
+    },
+    {
+      "id": "unlock",
+      "label": "Unlock",
+      "category": "gallery-editor"
+    },
+    {
+      "id": "eye",
+      "label": "Eye",
+      "category": "gallery-editor"
+    },
+    {
+      "id": "eye-off",
+      "label": "Eye off",
+      "category": "gallery-editor"
+    },
+    {
+      "id": "mask",
+      "label": "Mask",
+      "category": "gallery-editor"
+    },
+    {
+      "id": "mask-add",
+      "label": "Mask add",
+      "category": "gallery-editor"
+    },
+    {
+      "id": "mask-remove",
+      "label": "Mask remove",
+      "category": "gallery-editor"
+    },
+    {
+      "id": "mask-invert",
+      "label": "Mask invert",
+      "category": "gallery-editor"
+    },
+    {
+      "id": "mask-clear",
+      "label": "Mask clear",
+      "category": "gallery-editor"
+    },
+    {
+      "id": "mask-refine",
+      "label": "Mask refine",
+      "category": "gallery-editor"
+    },
+    {
+      "id": "selection",
+      "label": "Selection",
+      "category": "gallery-editor"
+    },
+    {
+      "id": "marquee-rectangle",
+      "label": "Marquee rectangle",
+      "category": "gallery-editor"
+    },
+    {
+      "id": "marquee-ellipse",
+      "label": "Marquee ellipse",
+      "category": "gallery-editor"
+    },
+    {
+      "id": "lasso",
+      "label": "Lasso",
+      "category": "gallery-editor"
+    },
+    {
+      "id": "magnetic-lasso",
+      "label": "Magnetic lasso",
+      "category": "gallery-editor"
+    },
+    {
+      "id": "magic-wand",
+      "label": "Magic wand",
+      "category": "gallery-editor"
+    },
+    {
+      "id": "quick-select",
+      "label": "Quick select",
+      "category": "gallery-editor"
+    },
+    {
+      "id": "object-select",
+      "label": "Object select",
+      "category": "gallery-editor"
+    },
+    {
+      "id": "subject-select",
+      "label": "Subject select",
+      "category": "gallery-editor"
+    },
+    {
+      "id": "inpaint",
+      "label": "Inpaint",
+      "category": "gallery-editor"
+    },
+    {
+      "id": "outpaint",
+      "label": "Outpaint",
+      "category": "gallery-editor"
+    },
+    {
+      "id": "background-remove",
+      "label": "Background remove",
+      "category": "gallery-editor"
+    },
+    {
+      "id": "harmonize",
+      "label": "Harmonize",
+      "category": "gallery-editor"
+    },
+    {
+      "id": "style-transfer",
+      "label": "Style transfer",
+      "category": "gallery-editor"
+    },
+    {
+      "id": "ruler",
+      "label": "Ruler",
+      "category": "gallery-editor"
+    },
+    {
+      "id": "guides",
+      "label": "Guides",
+      "category": "gallery-editor"
+    },
+    {
+      "id": "guide-add",
+      "label": "Guide add",
+      "category": "gallery-editor"
+    },
+    {
+      "id": "grid-snap",
+      "label": "Grid snap",
+      "category": "gallery-editor"
+    },
+    {
+      "id": "transform",
+      "label": "Transform",
+      "category": "gallery-editor"
+    },
+    {
+      "id": "skew",
+      "label": "Skew",
+      "category": "gallery-editor"
+    },
+    {
+      "id": "perspective",
+      "label": "Perspective",
+      "category": "gallery-editor"
+    },
+    {
+      "id": "snapshot",
+      "label": "Snapshot",
+      "category": "gallery-editor"
+    },
+    {
+      "id": "navigator",
+      "label": "Navigator",
+      "category": "gallery-editor"
+    },
+    {
+      "id": "properties",
+      "label": "Properties",
+      "category": "gallery-editor"
+    },
+    {
+      "id": "history",
+      "label": "History",
+      "category": "gallery-editor"
+    },
+    {
+      "id": "channels",
+      "label": "Channels",
+      "category": "gallery-editor"
+    },
+    {
+      "id": "paths",
+      "label": "Paths",
+      "category": "gallery-editor"
+    },
+    {
+      "id": "histogram",
+      "label": "Histogram",
+      "category": "gallery-editor"
+    },
+    {
+      "id": "actions-panel",
+      "label": "Actions panel",
+      "category": "gallery-editor"
+    },
+    {
+      "id": "brightness",
+      "label": "Brightness",
+      "category": "image-adjustments"
+    },
+    {
+      "id": "contrast",
+      "label": "Contrast",
+      "category": "image-adjustments"
+    },
+    {
+      "id": "exposure",
+      "label": "Exposure",
+      "category": "image-adjustments"
+    },
+    {
+      "id": "develop",
+      "label": "Develop",
+      "category": "image-adjustments"
+    },
+    {
+      "id": "white-balance",
+      "label": "White balance",
+      "category": "image-adjustments"
+    },
+    {
+      "id": "hue-saturation",
+      "label": "Hue saturation",
+      "category": "image-adjustments"
+    },
+    {
+      "id": "vibrance",
+      "label": "Vibrance",
+      "category": "image-adjustments"
+    },
+    {
+      "id": "black-white",
+      "label": "Black white",
+      "category": "image-adjustments"
+    },
+    {
+      "id": "shadows-highlights",
+      "label": "Shadows highlights",
+      "category": "image-adjustments"
+    },
+    {
+      "id": "levels",
+      "label": "Levels",
+      "category": "image-adjustments"
+    },
+    {
+      "id": "curves",
+      "label": "Curves",
+      "category": "image-adjustments"
+    },
+    {
+      "id": "color-balance",
+      "label": "Color balance",
+      "category": "image-adjustments"
+    },
+    {
+      "id": "selective-color",
+      "label": "Selective color",
+      "category": "image-adjustments"
+    },
+    {
+      "id": "gradient-map",
+      "label": "Gradient map",
+      "category": "image-adjustments"
+    },
+    {
+      "id": "invert",
+      "label": "Invert",
+      "category": "image-adjustments"
+    },
+    {
+      "id": "posterize",
+      "label": "Posterize",
+      "category": "image-adjustments"
+    },
+    {
+      "id": "threshold",
+      "label": "Threshold",
+      "category": "image-adjustments"
+    },
+    {
+      "id": "photo-filter",
+      "label": "Photo filter",
+      "category": "image-adjustments"
+    },
+    {
+      "id": "channel-mixer",
+      "label": "Channel mixer",
+      "category": "image-adjustments"
+    },
+    {
+      "id": "color-lookup",
+      "label": "Color lookup",
+      "category": "image-adjustments"
+    },
+    {
+      "id": "desaturate",
+      "label": "Desaturate",
+      "category": "image-adjustments"
+    },
+    {
+      "id": "auto-tone",
+      "label": "Auto tone",
+      "category": "image-adjustments"
+    },
+    {
+      "id": "auto-contrast",
+      "label": "Auto contrast",
+      "category": "image-adjustments"
+    },
+    {
+      "id": "auto-color",
+      "label": "Auto color",
+      "category": "image-adjustments"
+    },
+    {
+      "id": "equalize",
+      "label": "Equalize",
+      "category": "image-adjustments"
+    },
+    {
+      "id": "color-replace",
+      "label": "Color replace",
+      "category": "image-adjustments"
+    },
+    {
+      "id": "blur",
+      "label": "Blur",
+      "category": "image-filters"
+    },
+    {
+      "id": "gaussian-blur",
+      "label": "Gaussian blur",
+      "category": "image-filters"
+    },
+    {
+      "id": "motion-blur",
+      "label": "Motion blur",
+      "category": "image-filters"
+    },
+    {
+      "id": "zoom-blur",
+      "label": "Zoom blur",
+      "category": "image-filters"
+    },
+    {
+      "id": "radial-blur",
+      "label": "Radial blur",
+      "category": "image-filters"
+    },
+    {
+      "id": "box-blur",
+      "label": "Box blur",
+      "category": "image-filters"
+    },
+    {
+      "id": "surface-blur",
+      "label": "Surface blur",
+      "category": "image-filters"
+    },
+    {
+      "id": "sharpen",
+      "label": "Sharpen",
+      "category": "image-filters"
+    },
+    {
+      "id": "sharpen-edges",
+      "label": "Sharpen edges",
+      "category": "image-filters"
+    },
+    {
+      "id": "sharpen-more",
+      "label": "Sharpen more",
+      "category": "image-filters"
+    },
+    {
+      "id": "unsharp-mask",
+      "label": "Unsharp mask",
+      "category": "image-filters"
+    },
+    {
+      "id": "smart-sharpen",
+      "label": "Smart sharpen",
+      "category": "image-filters"
+    },
+    {
+      "id": "noise",
+      "label": "Noise",
+      "category": "image-filters"
+    },
+    {
+      "id": "add-noise",
+      "label": "Add noise",
+      "category": "image-filters"
+    },
+    {
+      "id": "despeckle",
+      "label": "Despeckle",
+      "category": "image-filters"
+    },
+    {
+      "id": "reduce-noise",
+      "label": "Reduce noise",
+      "category": "image-filters"
+    },
+    {
+      "id": "dust-scratches",
+      "label": "Dust scratches",
+      "category": "image-filters"
+    },
+    {
+      "id": "median",
+      "label": "Median",
+      "category": "image-filters"
+    },
+    {
+      "id": "pixelate",
+      "label": "Pixelate",
+      "category": "image-filters"
+    },
+    {
+      "id": "mosaic",
+      "label": "Mosaic",
+      "category": "image-filters"
+    },
+    {
+      "id": "crystallize",
+      "label": "Crystallize",
+      "category": "image-filters"
+    },
+    {
+      "id": "mosaic-tiles",
+      "label": "Mosaic tiles",
+      "category": "image-filters"
+    },
+    {
+      "id": "emboss",
+      "label": "Emboss",
+      "category": "image-filters"
+    },
+    {
+      "id": "find-edges",
+      "label": "Find edges",
+      "category": "image-filters"
+    },
+    {
+      "id": "glowing-edges",
+      "label": "Glowing edges",
+      "category": "image-filters"
+    },
+    {
+      "id": "solarize",
+      "label": "Solarize",
+      "category": "image-filters"
+    },
+    {
+      "id": "oil-paint",
+      "label": "Oil paint",
+      "category": "image-filters"
+    },
+    {
+      "id": "diffuse",
+      "label": "Diffuse",
+      "category": "image-filters"
+    },
+    {
+      "id": "wind",
+      "label": "Wind",
+      "category": "image-filters"
+    },
+    {
+      "id": "trace-contour",
+      "label": "Trace contour",
+      "category": "image-filters"
+    },
+    {
+      "id": "halftone",
+      "label": "Halftone",
+      "category": "image-filters"
+    },
+    {
+      "id": "reticulation",
+      "label": "Reticulation",
+      "category": "image-filters"
+    },
+    {
+      "id": "note-paper",
+      "label": "Note paper",
+      "category": "image-filters"
+    },
+    {
+      "id": "charcoal",
+      "label": "Charcoal",
+      "category": "image-filters"
+    },
+    {
+      "id": "chalk",
+      "label": "Chalk",
+      "category": "image-filters"
+    },
+    {
+      "id": "graphic-pen",
+      "label": "Graphic pen",
+      "category": "image-filters"
+    },
+    {
+      "id": "photocopy",
+      "label": "Photocopy",
+      "category": "image-filters"
+    },
+    {
+      "id": "water-paper",
+      "label": "Water paper",
+      "category": "image-filters"
+    },
+    {
+      "id": "poster-edges",
+      "label": "Poster edges",
+      "category": "image-filters"
+    },
+    {
+      "id": "cutout",
+      "label": "Cutout",
+      "category": "image-filters"
+    },
+    {
+      "id": "ink-outlines",
+      "label": "Ink outlines",
+      "category": "image-filters"
+    },
+    {
+      "id": "crosshatch",
+      "label": "Crosshatch",
+      "category": "image-filters"
+    },
+    {
+      "id": "stained-glass",
+      "label": "Stained glass",
+      "category": "image-filters"
+    },
+    {
+      "id": "grain",
+      "label": "Grain",
+      "category": "image-filters"
+    },
+    {
+      "id": "texturizer",
+      "label": "Texturizer",
+      "category": "image-filters"
+    },
+    {
+      "id": "patchwork",
+      "label": "Patchwork",
+      "category": "image-filters"
+    },
+    {
+      "id": "craquelure",
+      "label": "Craquelure",
+      "category": "image-filters"
+    },
+    {
+      "id": "twirl",
+      "label": "Twirl",
+      "category": "image-filters"
+    },
+    {
+      "id": "pinch",
+      "label": "Pinch",
+      "category": "image-filters"
+    },
+    {
+      "id": "spherize",
+      "label": "Spherize",
+      "category": "image-filters"
+    },
+    {
+      "id": "ripple",
+      "label": "Ripple",
+      "category": "image-filters"
+    },
+    {
+      "id": "polar-coordinates",
+      "label": "Polar coordinates",
+      "category": "image-filters"
+    },
+    {
+      "id": "lens-correction",
+      "label": "Lens correction",
+      "category": "image-filters"
+    },
+    {
+      "id": "ocean-ripple",
+      "label": "Ocean ripple",
+      "category": "image-filters"
+    },
+    {
+      "id": "glass",
+      "label": "Glass",
+      "category": "image-filters"
+    },
+    {
+      "id": "shear",
+      "label": "Shear",
+      "category": "image-filters"
+    },
+    {
+      "id": "clouds",
+      "label": "Clouds",
+      "category": "image-filters"
+    },
+    {
+      "id": "difference-clouds",
+      "label": "Difference clouds",
+      "category": "image-filters"
+    },
+    {
+      "id": "lens-flare",
+      "label": "Lens flare",
+      "category": "image-filters"
+    },
+    {
+      "id": "fibers",
+      "label": "Fibers",
+      "category": "image-filters"
+    },
+    {
+      "id": "offset",
+      "label": "Offset",
+      "category": "image-filters"
+    },
+    {
+      "id": "maximum",
+      "label": "Maximum",
+      "category": "image-filters"
+    },
+    {
+      "id": "minimum",
+      "label": "Minimum",
+      "category": "image-filters"
+    },
+    {
+      "id": "color-overlay",
+      "label": "Color overlay",
+      "category": "image-filters"
+    },
+    {
+      "id": "drop-shadow",
+      "label": "Drop shadow",
+      "category": "image-filters"
+    },
+    {
+      "id": "stroke-effect",
+      "label": "Stroke effect",
+      "category": "image-filters"
+    },
+    {
+      "id": "haze-removal",
+      "label": "Haze removal",
+      "category": "image-filters"
+    },
+    {
+      "id": "globe",
+      "label": "Globe",
+      "category": "research-knowledge"
+    },
+    {
+      "id": "browser",
+      "label": "Browser",
+      "category": "research-knowledge"
+    },
+    {
+      "id": "web-search",
+      "label": "Web search",
+      "category": "research-knowledge"
+    },
+    {
+      "id": "web-fetch",
+      "label": "Web fetch",
+      "category": "research-knowledge"
+    },
+    {
+      "id": "link-check",
+      "label": "Link check",
+      "category": "research-knowledge"
+    },
+    {
+      "id": "source",
+      "label": "Source",
+      "category": "research-knowledge"
+    },
+    {
+      "id": "citation",
+      "label": "Citation",
+      "category": "research-knowledge"
+    },
+    {
+      "id": "source-quality",
+      "label": "Source quality",
+      "category": "research-knowledge"
+    },
+    {
+      "id": "fact-check",
+      "label": "Fact check",
+      "category": "research-knowledge"
+    },
+    {
+      "id": "research-product",
+      "label": "Research product",
+      "category": "research-knowledge"
+    },
+    {
+      "id": "research-comparison",
+      "label": "Research comparison",
+      "category": "research-knowledge"
+    },
+    {
+      "id": "research-howto",
+      "label": "Research howto",
+      "category": "research-knowledge"
+    },
+    {
+      "id": "research-landscape",
+      "label": "Research landscape",
+      "category": "research-knowledge"
+    },
+    {
+      "id": "report",
+      "label": "Report",
+      "category": "research-knowledge"
+    },
+    {
+      "id": "research-parallel",
+      "label": "Research parallel",
+      "category": "research-knowledge"
+    },
+    {
+      "id": "research-sequential",
+      "label": "Research sequential",
+      "category": "research-knowledge"
+    },
+    {
+      "id": "research-queue",
+      "label": "Research queue",
+      "category": "research-knowledge"
+    },
+    {
+      "id": "research-stop",
+      "label": "Research stop",
+      "category": "research-knowledge"
+    },
+    {
+      "id": "research-followup",
+      "label": "Research followup",
+      "category": "research-knowledge"
+    },
+    {
+      "id": "research-retry",
+      "label": "Research retry",
+      "category": "research-knowledge"
+    },
+    {
+      "id": "knowledge-base",
+      "label": "Knowledge base",
+      "category": "research-knowledge"
+    },
+    {
+      "id": "rag",
+      "label": "Rag",
+      "category": "research-knowledge"
+    },
+    {
+      "id": "memory-add",
+      "label": "Memory add",
+      "category": "research-knowledge"
+    },
+    {
+      "id": "memory-search",
+      "label": "Memory search",
+      "category": "research-knowledge"
+    },
+    {
+      "id": "memory-tidy",
+      "label": "Memory tidy",
+      "category": "research-knowledge"
+    },
+    {
+      "id": "memory-suggestion",
+      "label": "Memory suggestion",
+      "category": "research-knowledge"
+    },
+    {
+      "id": "memory-consolidate",
+      "label": "Memory consolidate",
+      "category": "research-knowledge"
+    },
+    {
+      "id": "skill-add",
+      "label": "Skill add",
+      "category": "research-knowledge"
+    },
+    {
+      "id": "skill-audit",
+      "label": "Skill audit",
+      "category": "research-knowledge"
+    },
+    {
+      "id": "skill-test",
+      "label": "Skill test",
+      "category": "research-knowledge"
+    },
+    {
+      "id": "skill-pass",
+      "label": "Skill pass",
+      "category": "research-knowledge"
+    },
+    {
+      "id": "skill-fail",
+      "label": "Skill fail",
+      "category": "research-knowledge"
+    },
+    {
+      "id": "skill-confidence",
+      "label": "Skill confidence",
+      "category": "research-knowledge"
+    },
+    {
+      "id": "skill-approve",
+      "label": "Skill approve",
+      "category": "research-knowledge"
+    },
+    {
+      "id": "skill-bin",
+      "label": "Skill bin",
+      "category": "research-knowledge"
+    },
+    {
+      "id": "skill-restore",
+      "label": "Skill restore",
+      "category": "research-knowledge"
+    },
+    {
+      "id": "book-open",
+      "label": "Book open",
+      "category": "research-knowledge"
+    },
+    {
+      "id": "book-closed",
+      "label": "Book closed",
+      "category": "research-knowledge"
+    },
+    {
+      "id": "synapse",
+      "label": "Synapse",
+      "category": "research-knowledge"
+    },
+    {
+      "id": "sliders",
+      "label": "Sliders",
+      "category": "settings-security"
+    },
+    {
+      "id": "appearance",
+      "label": "Appearance",
+      "category": "settings-security"
+    },
+    {
+      "id": "font",
+      "label": "Font",
+      "category": "settings-security"
+    },
+    {
+      "id": "keyboard",
+      "label": "Keyboard",
+      "category": "settings-security"
+    },
+    {
+      "id": "accessibility",
+      "label": "Accessibility",
+      "category": "settings-security"
+    },
+    {
+      "id": "density",
+      "label": "Density",
+      "category": "settings-security"
+    },
+    {
+      "id": "mobile",
+      "label": "Mobile",
+      "category": "settings-security"
+    },
+    {
+      "id": "desktop",
+      "label": "Desktop",
+      "category": "settings-security"
+    },
+    {
+      "id": "touch",
+      "label": "Touch",
+      "category": "settings-security"
+    },
+    {
+      "id": "language",
+      "label": "Language",
+      "category": "settings-security"
+    },
+    {
+      "id": "info",
+      "label": "Info",
+      "category": "settings-security"
+    },
+    {
+      "id": "warning",
+      "label": "Warning",
+      "category": "settings-security"
+    },
+    {
+      "id": "error",
+      "label": "Error",
+      "category": "settings-security"
+    },
+    {
+      "id": "success",
+      "label": "Success",
+      "category": "settings-security"
+    },
+    {
+      "id": "pending",
+      "label": "Pending",
+      "category": "settings-security"
+    },
+    {
+      "id": "loading",
+      "label": "Loading",
+      "category": "settings-security"
+    },
+    {
+      "id": "offline",
+      "label": "Offline",
+      "category": "settings-security"
+    },
+    {
+      "id": "online",
+      "label": "Online",
+      "category": "settings-security"
+    },
+    {
+      "id": "connected",
+      "label": "Connected",
+      "category": "settings-security"
+    },
+    {
+      "id": "disconnected",
+      "label": "Disconnected",
+      "category": "settings-security"
+    },
+    {
+      "id": "login",
+      "label": "Login",
+      "category": "settings-security"
+    },
+    {
+      "id": "logout",
+      "label": "Logout",
+      "category": "settings-security"
+    },
+    {
+      "id": "user-add",
+      "label": "User add",
+      "category": "settings-security"
+    },
+    {
+      "id": "user-delete",
+      "label": "User delete",
+      "category": "settings-security"
+    },
+    {
+      "id": "user-admin",
+      "label": "User admin",
+      "category": "settings-security"
+    },
+    {
+      "id": "user-roles",
+      "label": "User roles",
+      "category": "settings-security"
+    },
+    {
+      "id": "password",
+      "label": "Password",
+      "category": "settings-security"
+    },
+    {
+      "id": "password-show",
+      "label": "Password show",
+      "category": "settings-security"
+    },
+    {
+      "id": "password-hide",
+      "label": "Password hide",
+      "category": "settings-security"
+    },
+    {
+      "id": "key",
+      "label": "Key",
+      "category": "settings-security"
+    },
+    {
+      "id": "token",
+      "label": "Token",
+      "category": "settings-security"
+    },
+    {
+      "id": "token-add",
+      "label": "Token add",
+      "category": "settings-security"
+    },
+    {
+      "id": "token-revoke",
+      "label": "Token revoke",
+      "category": "settings-security"
+    },
+    {
+      "id": "shield",
+      "label": "Shield",
+      "category": "settings-security"
+    },
+    {
+      "id": "shield-check",
+      "label": "Shield check",
+      "category": "settings-security"
+    },
+    {
+      "id": "mfa",
+      "label": "Mfa",
+      "category": "settings-security"
+    },
+    {
+      "id": "mfa-enable",
+      "label": "Mfa enable",
+      "category": "settings-security"
+    },
+    {
+      "id": "vault",
+      "label": "Vault",
+      "category": "settings-security"
+    },
+    {
+      "id": "vault-lock",
+      "label": "Vault lock",
+      "category": "settings-security"
+    },
+    {
+      "id": "vault-unlock",
+      "label": "Vault unlock",
+      "category": "settings-security"
+    },
+    {
+      "id": "backup",
+      "label": "Backup",
+      "category": "settings-security"
+    },
+    {
+      "id": "backup-restore",
+      "label": "Backup restore",
+      "category": "settings-security"
+    },
+    {
+      "id": "logs",
+      "label": "Logs",
+      "category": "settings-security"
+    },
+    {
+      "id": "diagnostics",
+      "label": "Diagnostics",
+      "category": "settings-security"
+    },
+    {
+      "id": "system-update",
+      "label": "System update",
+      "category": "settings-security"
+    },
+    {
+      "id": "system-health",
+      "label": "System health",
+      "category": "settings-security"
+    },
+    {
+      "id": "permissions",
+      "label": "Permissions",
+      "category": "settings-security"
+    },
+    {
+      "id": "permission-read",
+      "label": "Permission read",
+      "category": "settings-security"
+    },
+    {
+      "id": "permission-write",
+      "label": "Permission write",
+      "category": "settings-security"
+    },
+    {
+      "id": "notification-off",
+      "label": "Notification off",
+      "category": "settings-security"
+    },
+    {
+      "id": "cookies",
+      "label": "Cookies",
+      "category": "settings-security"
+    },
+    {
+      "id": "privacy",
+      "label": "Privacy",
+      "category": "settings-security"
+    },
+    {
+      "id": "data-wipe",
+      "label": "Data wipe",
+      "category": "settings-security"
+    },
+    {
+      "id": "bell-reset",
+      "label": "Bell reset",
+      "category": "settings-security"
+    },
+    {
+      "id": "integration-add",
+      "label": "Integration add",
+      "category": "settings-security"
+    },
+    {
+      "id": "integration-remove",
+      "label": "Integration remove",
+      "category": "settings-security"
+    },
+    {
+      "id": "plugin",
+      "label": "Plugin",
+      "category": "settings-security"
+    },
+    {
+      "id": "plugin-connect",
+      "label": "Plugin connect",
+      "category": "settings-security"
+    },
+    {
+      "id": "plug-disconnect",
+      "label": "Plug disconnect",
+      "category": "settings-security"
+    },
+    {
+      "id": "api",
+      "label": "Api",
+      "category": "settings-security"
+    },
+    {
+      "id": "browser-direct",
+      "label": "Browser direct",
+      "category": "settings-security"
+    },
+    {
+      "id": "proxy-routing",
+      "label": "Proxy routing",
+      "category": "settings-security"
+    },
+    {
+      "id": "device-pair",
+      "label": "Device pair",
+      "category": "settings-security"
+    },
+    {
+      "id": "device-disconnect",
+      "label": "Device disconnect",
+      "category": "settings-security"
+    },
+    {
+      "id": "network-scan",
+      "label": "Network scan",
+      "category": "settings-security"
+    },
+    {
+      "id": "clipboard-check",
+      "label": "Clipboard check",
+      "category": "settings-security"
+    },
+    {
+      "id": "data-export",
+      "label": "Data export",
+      "category": "settings-security"
+    },
+    {
+      "id": "data-import",
+      "label": "Data import",
+      "category": "settings-security"
+    },
+    {
+      "id": "file-richtext",
+      "label": "File richtext",
+      "category": "file-types"
+    },
+    {
+      "id": "file-markdown",
+      "label": "File markdown",
+      "category": "file-types"
+    },
+    {
+      "id": "file-csv",
+      "label": "File csv",
+      "category": "file-types"
+    },
+    {
+      "id": "file-python",
+      "label": "File python",
+      "category": "file-types"
+    },
+    {
+      "id": "file-html",
+      "label": "File html",
+      "category": "file-types"
+    },
+    {
+      "id": "file-json",
+      "label": "File json",
+      "category": "file-types"
+    },
+    {
+      "id": "file-javascript",
+      "label": "File javascript",
+      "category": "file-types"
+    },
+    {
+      "id": "file-typescript",
+      "label": "File typescript",
+      "category": "file-types"
+    },
+    {
+      "id": "file-yaml",
+      "label": "File yaml",
+      "category": "file-types"
+    },
+    {
+      "id": "file-css",
+      "label": "File css",
+      "category": "file-types"
+    },
+    {
+      "id": "file-shell",
+      "label": "File shell",
+      "category": "file-types"
+    },
+    {
+      "id": "file-sql",
+      "label": "File sql",
+      "category": "file-types"
+    },
+    {
+      "id": "file-pdf",
+      "label": "File pdf",
+      "category": "file-types"
+    },
+    {
+      "id": "file-email",
+      "label": "File email",
+      "category": "file-types"
+    },
+    {
+      "id": "file-xml",
+      "label": "File xml",
+      "category": "file-types"
+    },
+    {
+      "id": "file-svg",
+      "label": "File svg",
+      "category": "file-types"
+    },
+    {
+      "id": "file-rust",
+      "label": "File rust",
+      "category": "file-types"
+    },
+    {
+      "id": "file-go",
+      "label": "File go",
+      "category": "file-types"
+    },
+    {
+      "id": "file-java",
+      "label": "File java",
+      "category": "file-types"
+    },
+    {
+      "id": "file-c",
+      "label": "File c",
+      "category": "file-types"
+    },
+    {
+      "id": "file-cpp",
+      "label": "File cpp",
+      "category": "file-types"
+    },
+    {
+      "id": "file-csharp",
+      "label": "File csharp",
+      "category": "file-types"
+    },
+    {
+      "id": "file-ruby",
+      "label": "File ruby",
+      "category": "file-types"
+    },
+    {
+      "id": "file-php",
+      "label": "File php",
+      "category": "file-types"
+    },
+    {
+      "id": "file-code",
+      "label": "File code",
+      "category": "file-types"
+    },
+    {
+      "id": "file-toml",
+      "label": "File toml",
+      "category": "file-types"
+    },
+    {
+      "id": "file-ini",
+      "label": "File ini",
+      "category": "file-types"
+    },
+    {
+      "id": "file-image",
+      "label": "File image",
+      "category": "file-types"
+    },
+    {
+      "id": "file-audio",
+      "label": "File audio",
+      "category": "file-types"
+    },
+    {
+      "id": "file-video",
+      "label": "File video",
+      "category": "file-types"
+    },
+    {
+      "id": "file-archive",
+      "label": "File archive",
+      "category": "file-types"
+    },
+    {
+      "id": "file-binary",
+      "label": "File binary",
+      "category": "file-types"
+    },
+    {
+      "id": "file-font",
+      "label": "File font",
+      "category": "file-types"
+    },
+    {
+      "id": "file-ics",
+      "label": "File ics",
+      "category": "file-types"
+    },
+    {
+      "id": "file-vcf",
+      "label": "File vcf",
+      "category": "file-types"
+    },
+    {
+      "id": "file-psd",
+      "label": "File psd",
+      "category": "file-types"
+    },
+    {
+      "id": "file-log",
+      "label": "File log",
+      "category": "file-types"
+    },
+    {
+      "id": "search-provider",
+      "label": "Search provider",
+      "category": "integrations-providers"
+    },
+    {
+      "id": "search-searxng",
+      "label": "Search searxng",
+      "category": "integrations-providers"
+    },
+    {
+      "id": "search-duckduckgo",
+      "label": "Search duckduckgo",
+      "category": "integrations-providers"
+    },
+    {
+      "id": "search-brave",
+      "label": "Search brave",
+      "category": "integrations-providers"
+    },
+    {
+      "id": "search-google",
+      "label": "Search google",
+      "category": "integrations-providers"
+    },
+    {
+      "id": "search-tavily",
+      "label": "Search tavily",
+      "category": "integrations-providers"
+    },
+    {
+      "id": "search-serper",
+      "label": "Search serper",
+      "category": "integrations-providers"
+    },
+    {
+      "id": "search-disabled",
+      "label": "Search disabled",
+      "category": "integrations-providers"
+    },
+    {
+      "id": "mcp",
+      "label": "Mcp",
+      "category": "integrations-providers"
+    },
+    {
+      "id": "mcp-server",
+      "label": "Mcp server",
+      "category": "integrations-providers"
+    },
+    {
+      "id": "mcp-tool",
+      "label": "Mcp tool",
+      "category": "integrations-providers"
+    },
+    {
+      "id": "mcp-refresh",
+      "label": "Mcp refresh",
+      "category": "integrations-providers"
+    },
+    {
+      "id": "oauth",
+      "label": "Oauth",
+      "category": "integrations-providers"
+    },
+    {
+      "id": "oauth-connect",
+      "label": "Oauth connect",
+      "category": "integrations-providers"
+    },
+    {
+      "id": "oauth-revoke",
+      "label": "Oauth revoke",
+      "category": "integrations-providers"
+    },
+    {
+      "id": "ollama",
+      "label": "Ollama",
+      "category": "integrations-providers"
+    },
+    {
+      "id": "openai-compatible",
+      "label": "Openai compatible",
+      "category": "integrations-providers"
+    },
+    {
+      "id": "copilot",
+      "label": "Copilot",
+      "category": "integrations-providers"
+    },
+    {
+      "id": "chatgpt-subscription",
+      "label": "Chatgpt subscription",
+      "category": "integrations-providers"
+    },
+    {
+      "id": "huggingface",
+      "label": "Huggingface",
+      "category": "integrations-providers"
+    },
+    {
+      "id": "github",
+      "label": "Github",
+      "category": "integrations-providers"
+    },
+    {
+      "id": "webdav",
+      "label": "Webdav",
+      "category": "integrations-providers"
+    },
+    {
+      "id": "caldav",
+      "label": "Caldav",
+      "category": "integrations-providers"
+    },
+    {
+      "id": "imap",
+      "label": "Imap",
+      "category": "integrations-providers"
+    },
+    {
+      "id": "smtp",
+      "label": "Smtp",
+      "category": "integrations-providers"
+    },
+    {
+      "id": "browser-agent",
+      "label": "Browser agent",
+      "category": "integrations-providers"
+    },
+    {
+      "id": "shell-host",
+      "label": "Shell host",
+      "category": "integrations-providers"
+    },
+    {
+      "id": "python-runtime",
+      "label": "Python runtime",
+      "category": "integrations-providers"
+    },
+    {
+      "id": "code-runner",
+      "label": "Code runner",
+      "category": "integrations-providers"
+    },
+    {
+      "id": "breadcrumb",
+      "label": "Breadcrumb",
+      "category": "expanded-ui"
+    },
+    {
+      "id": "sidebar-favorite",
+      "label": "Sidebar favorite",
+      "category": "expanded-ui"
+    },
+    {
+      "id": "workspace-recent",
+      "label": "Workspace recent",
+      "category": "expanded-ui"
+    },
+    {
+      "id": "workspace-switch",
+      "label": "Workspace switch",
+      "category": "expanded-ui"
+    },
+    {
+      "id": "workspace-new",
+      "label": "Workspace new",
+      "category": "expanded-ui"
+    },
+    {
+      "id": "workspace-permissions",
+      "label": "Workspace permissions",
+      "category": "expanded-ui"
+    },
+    {
+      "id": "workspace-sync",
+      "label": "Workspace sync",
+      "category": "expanded-ui"
+    },
+    {
+      "id": "offline-cache",
+      "label": "Offline cache",
+      "category": "expanded-ui"
+    },
+    {
+      "id": "sync-conflict",
+      "label": "Sync conflict",
+      "category": "expanded-ui"
+    },
+    {
+      "id": "sync-pending",
+      "label": "Sync pending",
+      "category": "expanded-ui"
+    },
+    {
+      "id": "connection-retry",
+      "label": "Connection retry",
+      "category": "expanded-ui"
+    },
+    {
+      "id": "tool-disabled",
+      "label": "Tool disabled",
+      "category": "expanded-ui"
+    },
+    {
+      "id": "tool-waiting",
+      "label": "Tool waiting",
+      "category": "expanded-ui"
+    },
+    {
+      "id": "context-warning",
+      "label": "Context warning",
+      "category": "expanded-ui"
+    },
+    {
+      "id": "quota-limit",
+      "label": "Quota limit",
+      "category": "expanded-ui"
+    },
+    {
+      "id": "budget-limit",
+      "label": "Budget limit",
+      "category": "expanded-ui"
+    },
+    {
+      "id": "model-capability",
+      "label": "Model capability",
+      "category": "expanded-ui"
+    },
+    {
+      "id": "data-provenance",
+      "label": "Data provenance",
+      "category": "expanded-ui"
+    },
+    {
+      "id": "audit-trail",
+      "label": "Audit trail",
+      "category": "expanded-ui"
+    },
+    {
+      "id": "keyboard-focus",
+      "label": "Keyboard focus",
+      "category": "expanded-ui"
+    },
+    {
+      "id": "keyboard-shortcut",
+      "label": "Keyboard shortcut",
+      "category": "expanded-ui"
+    },
+    {
+      "id": "notification-read",
+      "label": "Notification read",
+      "category": "expanded-ui"
+    },
+    {
+      "id": "notification-history",
+      "label": "Notification history",
+      "category": "expanded-ui"
+    },
+    {
+      "id": "batch-progress",
+      "label": "Batch progress",
+      "category": "expanded-ui"
+    },
+    {
+      "id": "empty-state",
+      "label": "Empty state",
+      "category": "expanded-ui"
+    },
+    {
+      "id": "loading-skeleton",
+      "label": "Loading skeleton",
+      "category": "expanded-ui"
+    },
+    {
+      "id": "broken-image",
+      "label": "Broken image",
+      "category": "expanded-ui"
+    },
+    {
+      "id": "unsupported-file",
+      "label": "Unsupported file",
+      "category": "expanded-ui"
+    },
+    {
+      "id": "recover-draft",
+      "label": "Recover draft",
+      "category": "expanded-ui"
+    },
+    {
+      "id": "session-share",
+      "label": "Session share",
+      "category": "expanded-ui"
+    },
+    {
+      "id": "session-lock",
+      "label": "Session lock",
+      "category": "expanded-ui"
+    },
+    {
+      "id": "task-dependency",
+      "label": "Task dependency",
+      "category": "expanded-ui"
+    },
+    {
+      "id": "task-priority",
+      "label": "Task priority",
+      "category": "expanded-ui"
+    },
+    {
+      "id": "task-cancelled",
+      "label": "Task cancelled",
+      "category": "expanded-ui"
+    },
+    {
+      "id": "calendar-conflict",
+      "label": "Calendar conflict",
+      "category": "expanded-ui"
+    },
+    {
+      "id": "timezone-compare",
+      "label": "Timezone compare",
+      "category": "expanded-ui"
+    },
+    {
+      "id": "mail-snoozed",
+      "label": "Mail snoozed",
+      "category": "expanded-ui"
+    },
+    {
+      "id": "attachment-blocked",
+      "label": "Attachment blocked",
+      "category": "expanded-ui"
+    },
+    {
+      "id": "document-version",
+      "label": "Document version",
+      "category": "expanded-ui"
+    },
+    {
+      "id": "document-conflict",
+      "label": "Document conflict",
+      "category": "expanded-ui"
+    },
+    {
+      "id": "document-comment",
+      "label": "Document comment",
+      "category": "expanded-ui"
+    },
+    {
+      "id": "image-compare",
+      "label": "Image compare",
+      "category": "expanded-ui"
+    },
+    {
+      "id": "accessible-label",
+      "label": "Accessible label",
+      "category": "expanded-ui"
+    },
+    {
+      "id": "contrast-check",
+      "label": "Contrast check",
+      "category": "expanded-ui"
+    },
+    {
+      "id": "high-contrast",
+      "label": "High contrast",
+      "category": "expanded-ui"
+    },
+    {
+      "id": "reduced-motion",
+      "label": "Reduced motion",
+      "category": "expanded-ui"
+    },
+    {
+      "id": "reset-theme",
+      "label": "Reset theme",
+      "category": "expanded-ui"
+    },
+    {
+      "id": "color-custom",
+      "label": "Color custom",
+      "category": "expanded-ui"
+    },
+    {
+      "id": "theme-import",
+      "label": "Theme import",
+      "category": "expanded-ui"
+    },
+    {
+      "id": "theme-export",
+      "label": "Theme export",
+      "category": "expanded-ui"
+    },
+    {
+      "id": "feature-unavailable",
+      "label": "Feature unavailable",
+      "category": "expanded-ui"
+    },
+    {
+      "id": "warp-text",
+      "label": "Warp text",
+      "category": "documents"
+    },
+    {
+      "id": "text-on-path",
+      "label": "Text on path",
+      "category": "documents"
+    },
+    {
+      "id": "text-on-circle",
+      "label": "Text on circle",
+      "category": "documents"
+    },
+    {
+      "id": "clear-formatting",
+      "label": "Clear formatting",
+      "category": "documents"
+    },
+    {
+      "id": "text-direction",
+      "label": "Text direction",
+      "category": "documents"
+    },
+    {
+      "id": "ai-writing",
+      "label": "Ai writing",
+      "category": "documents"
+    },
+    {
+      "id": "aspect-ratio",
+      "label": "Aspect ratio",
+      "category": "gallery-editor"
+    },
+    {
+      "id": "free-crop",
+      "label": "Free crop",
+      "category": "gallery-editor"
+    },
+    {
+      "id": "crop-square",
+      "label": "Crop square",
+      "category": "gallery-editor"
+    },
+    {
+      "id": "crop-portrait",
+      "label": "Crop portrait",
+      "category": "gallery-editor"
+    },
+    {
+      "id": "crop-landscape",
+      "label": "Crop landscape",
+      "category": "gallery-editor"
+    },
+    {
+      "id": "brush-preset",
+      "label": "Brush preset",
+      "category": "gallery-editor"
+    },
+    {
+      "id": "selection-add",
+      "label": "Selection add",
+      "category": "gallery-editor"
+    },
+    {
+      "id": "selection-subtract",
+      "label": "Selection subtract",
+      "category": "gallery-editor"
+    },
+    {
+      "id": "selection-intersect",
+      "label": "Selection intersect",
+      "category": "gallery-editor"
+    },
+    {
+      "id": "selection-invert",
+      "label": "Selection invert",
+      "category": "gallery-editor"
+    },
+    {
+      "id": "selection-save",
+      "label": "Selection save",
+      "category": "gallery-editor"
+    },
+    {
+      "id": "selection-reselect",
+      "label": "Selection reselect",
+      "category": "gallery-editor"
+    },
+    {
+      "id": "selection-border",
+      "label": "Selection border",
+      "category": "gallery-editor"
+    },
+    {
+      "id": "selection-smooth",
+      "label": "Selection smooth",
+      "category": "gallery-editor"
+    },
+    {
+      "id": "selection-expand",
+      "label": "Selection expand",
+      "category": "gallery-editor"
+    },
+    {
+      "id": "selection-contract",
+      "label": "Selection contract",
+      "category": "gallery-editor"
+    },
+    {
+      "id": "selection-feather",
+      "label": "Selection feather",
+      "category": "gallery-editor"
+    },
+    {
+      "id": "selection-grow",
+      "label": "Selection grow",
+      "category": "gallery-editor"
+    },
+    {
+      "id": "selection-similar",
+      "label": "Selection similar",
+      "category": "gallery-editor"
+    },
+    {
+      "id": "selection-color-range",
+      "label": "Selection color range",
+      "category": "gallery-editor"
+    },
+    {
+      "id": "selection-to-layer",
+      "label": "Selection to layer",
+      "category": "gallery-editor"
+    },
+    {
+      "id": "selection-to-mask",
+      "label": "Selection to mask",
+      "category": "gallery-editor"
+    },
+    {
+      "id": "content-aware-move",
+      "label": "Content aware move",
+      "category": "gallery-editor"
+    },
+    {
+      "id": "stroke-selection",
+      "label": "Stroke selection",
+      "category": "gallery-editor"
+    },
+    {
+      "id": "guides-clear",
+      "label": "Guides clear",
+      "category": "gallery-editor"
+    },
+    {
+      "id": "guide-horizontal",
+      "label": "Guide horizontal",
+      "category": "gallery-editor"
+    },
+    {
+      "id": "guide-vertical",
+      "label": "Guide vertical",
+      "category": "gallery-editor"
+    },
+    {
+      "id": "align-distribute",
+      "label": "Align distribute",
+      "category": "gallery-editor"
+    },
+    {
+      "id": "transform-width",
+      "label": "Transform width",
+      "category": "gallery-editor"
+    },
+    {
+      "id": "transform-height",
+      "label": "Transform height",
+      "category": "gallery-editor"
+    },
+    {
+      "id": "image-generate",
+      "label": "Image generate",
+      "category": "gallery-editor"
+    },
+    {
+      "id": "file-png",
+      "label": "File png",
+      "category": "file-types"
+    },
+    {
+      "id": "file-jpeg",
+      "label": "File jpeg",
+      "category": "file-types"
+    },
+    {
+      "id": "file-webp",
+      "label": "File webp",
+      "category": "file-types"
+    },
+    {
+      "id": "background-pattern",
+      "label": "Background pattern",
+      "category": "settings-security"
+    },
+    {
+      "id": "background-effects",
+      "label": "Background effects",
+      "category": "settings-security"
+    },
+    {
+      "id": "frosted-glass",
+      "label": "Frosted glass",
+      "category": "settings-security"
+    }
+  ]
+}

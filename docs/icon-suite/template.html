@@ -1,0 +1,88 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="color-scheme" content="dark light">
+  <title>Odysseus Icon Suite</title>
+  <link rel="icon" type="image/svg+xml" href="../../static/icons/ui/sailboat.svg">
+  <link rel="stylesheet" href="gallery.css">
+  <link rel="stylesheet" href="upstream-components.css">
+</head>
+<body>
+  <!-- SPRITE -->
+  <header class="app-header">
+    <span class="app-mark" data-icon="sailboat"></span>
+    <strong>Odysseus <span class="muted">/ Icon Suite</span></strong>
+    <span id="summary" class="muted"></span>
+    <a href="ICON_INVENTORY.md" class="header-link">Full inventory</a>
+    <a href="catalog.csv" class="header-link">CSV</a>
+  </header>
+  <div class="workspace">
+    <aside class="families">
+      <div class="pane-title">Families <span id="total-count"></span></div>
+      <nav id="families" aria-label="Icon families"></nav>
+      <div class="sidebar-foot">24 px grid · 2 px stroke<br>Monochrome · currentColor<br><span id="source-commit"></span></div>
+    </aside>
+    <main>
+      <div class="tabs" role="tablist" aria-label="Views">
+        <button role="tab" aria-selected="true" data-view="catalog">Icons</button>
+        <button role="tab" aria-selected="false" data-view="themes">Theme trials</button>
+        <button role="tab" aria-selected="false" data-view="coverage">Source coverage</button>
+        <button role="tab" aria-selected="false" data-view="references">Imagegen references</button>
+      </div>
+      <div class="theme-toolbar">
+        <label>Theme <select id="theme-select" aria-label="Theme"></select></label>
+        <label>Foreground <input type="color" id="fg-color" aria-label="Custom foreground"></label>
+        <label>Accent <input type="color" id="accent-color" aria-label="Custom accent"></label>
+        <label>Surface <input type="color" id="bg-color" aria-label="Custom background"></label>
+        <button id="reset-theme" title="Reset theme overrides" class="small-action">Reset</button>
+      </div>
+      <section id="catalog-view" class="view">
+        <div class="filter-toolbar">
+          <label class="search-wrap"><span data-icon="search"></span><input id="search" type="search" placeholder="Find an icon, action or subsystem…" aria-label="Search icons"></label>
+          <select id="coverage-select" aria-label="Coverage filter">
+            <option value="all">All coverage</option><option value="existing-svg">Existing SVG concepts</option>
+            <option value="control-gap">Current control gaps</option><option value="supporting">Supporting glyphs</option><option value="expansion">Expanded UI</option>
+          </select>
+          <select id="role-select" aria-label="Icon color role"><option value="foreground">Foreground</option><option value="accent">Accent</option><option value="brand">Brand</option><option value="disabled">Disabled trial</option></select>
+          <label class="size-control">Size <input id="size" type="range" min="14" max="48" value="28"><output id="size-value">28</output></label>
+        </div>
+        <div class="result-line"><span id="result-count" aria-live="polite"></span><span class="muted">Select a glyph to inspect geometry and uses</span></div>
+        <div id="icon-grid" class="icon-grid" aria-label="Icon catalog"></div>
+        <p id="empty-message" hidden>No icons match these filters.</p>
+      </section>
+      <section id="themes-view" class="view" hidden>
+        <div class="view-heading"><h1>19 upstream themes</h1><p>Actual Odysseus palette values and selected component CSS. Each row applies its own preset, including advanced overrides. Select any icon to use it in every trial.</p></div>
+        <div class="trial-head"><span>Theme</span><span>Foreground</span><span>Rail idle</span><span>Rail active</span><span>Toolbar</span><span>Send</span><span>Mic mode</span><span>Brand</span><span>Danger</span></div>
+        <div id="theme-trials"></div>
+        <div class="contract-notes"><h2>What this checks</h2><p>Rail icons inherit the accent at 50% opacity. Active rail icons use full opacity and the fixed <code>--color-accent</code> background. Toolbar icons inherit foreground; Send uses white ink; mic mode uses foreground over a mixed background. Brand and Send respect advanced preset overrides.</p><p>This is a component color harness built from the pinned source, rather than a running Odysseus server. <a href="theme-contract.json">View the contract and exact source locations</a>.</p></div>
+      </section>
+      <section id="coverage-view" class="view" hidden>
+        <div class="view-heading"><h1>Source inventory</h1><p>Current UI occurrences are retained separately from proposed extensions. Candidate replacements need a contextual integration review; a text-only button can be intentional.</p></div>
+        <div id="coverage-summary" class="coverage-summary"></div>
+        <div class="evidence-links"><a href="evidence/controls.json">All button occurrences</a><a href="evidence/control-map.json">Candidate control mappings</a><a href="evidence/svg-occurrence-map.json">All SVG occurrences</a><a href="evidence/source-audit.json">Raw source audit</a><a href="catalog.json">Full icon manifest</a></div>
+        <table class="coverage-table"><thead><tr><th>Family</th><th>SVG concepts</th><th>Control gaps</th><th>Supporting</th><th>Expanded</th></tr></thead><tbody id="coverage-table"></tbody></table>
+      </section>
+      <section id="references-view" class="view" hidden>
+        <div class="view-heading"><h1>Generated family references</h1><p>Built-in imagegen establishes family silhouettes and motifs. Final SVG geometry, semantic badges and intentional aliases are hand-authored. Reference sheets are not embedded in any icon.</p></div>
+        <div id="reference-grid" class="reference-grid"></div>
+      </section>
+    </main>
+    <aside class="inspector">
+      <div class="pane-title">Inspect <button id="copy-svg" class="small-action" title="Copy selected SVG">Copy SVG</button></div>
+      <div id="selected-preview" class="selected-preview"></div>
+      <h2 id="selected-name"></h2><p id="selected-category" class="muted"></p>
+      <div id="size-trials" class="size-trials"></div>
+      <div class="inspector-section"><span id="selected-coverage" class="coverage-tag"></span><p id="selected-rationale"></p><p id="selected-method" class="muted"></p></div>
+      <div class="inspector-actions"><a id="download-svg" download>SVG file</a></div>
+      <div class="inspector-section"><h3>Source uses</h3><ul id="selected-uses"></ul></div>
+      <div class="inspector-section"><h3>SVG geometry</h3><textarea id="svg-code" readonly aria-label="Selected SVG source" spellcheck="false"></textarea></div>
+    </aside>
+  </div>
+  <div id="toast" role="status" hidden></div>
+  <script id="catalog-data" type="application/json"><!-- DATA --></script>
+  <script id="contract-data" type="application/json"><!-- CONTRACT --></script>
+  <script type="module"><!-- APP --></script>
+</body>
+</html>

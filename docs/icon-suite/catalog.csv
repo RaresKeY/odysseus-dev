@@ -1,0 +1,803 @@
+id,label,category,coverage,svg,reference_board,alias_of,observed_uses,rationale
+sailboat,Sailboat,navigation,existing-svg,../../static/icons/ui/sailboat.svg,navigation,,1,Unifies an icon concept already represented in the current interface.
+home,Home,navigation,existing-svg,../../static/icons/ui/home.svg,navigation,,1,Unifies an icon concept already represented in the current interface.
+chat,Chat,navigation,existing-svg,../../static/icons/ui/chat.svg,navigation,,29,Unifies an icon concept already represented in the current interface.
+new-chat,New chat,navigation,existing-svg,../../static/icons/ui/new-chat.svg,navigation,,7,Unifies an icon concept already represented in the current interface.
+search,Search,navigation,existing-svg,../../static/icons/ui/search.svg,navigation,,10,Unifies an icon concept already represented in the current interface.
+documents,Documents,navigation,existing-svg,../../static/icons/ui/documents.svg,navigation,,21,Unifies an icon concept already represented in the current interface.
+calendar,Calendar,navigation,existing-svg,../../static/icons/ui/calendar.svg,navigation,,27,Unifies an icon concept already represented in the current interface.
+compare,Compare,navigation,existing-svg,../../static/icons/ui/compare.svg,navigation,,8,Unifies an icon concept already represented in the current interface.
+cookbook,Cookbook,navigation,existing-svg,../../static/icons/ui/cookbook.svg,navigation,book-open,20,Unifies an icon concept already represented in the current interface.
+research,Research,navigation,existing-svg,../../static/icons/ui/research.svg,navigation,,43,Unifies an icon concept already represented in the current interface.
+email,Email,navigation,existing-svg,../../static/icons/ui/email.svg,navigation,,33,Unifies an icon concept already represented in the current interface.
+gallery,Gallery,navigation,existing-svg,../../static/icons/ui/gallery.svg,navigation,image,28,Unifies an icon concept already represented in the current interface.
+library,Library,navigation,existing-svg,../../static/icons/ui/library.svg,navigation,,9,Unifies an icon concept already represented in the current interface.
+memory,Memory,navigation,existing-svg,../../static/icons/ui/memory.svg,navigation,,42,Unifies an icon concept already represented in the current interface.
+notes,Notes,navigation,existing-svg,../../static/icons/ui/notes.svg,navigation,,13,Unifies an icon concept already represented in the current interface.
+skills,Skills,navigation,existing-svg,../../static/icons/ui/skills.svg,navigation,,21,Unifies an icon concept already represented in the current interface.
+tasks,Tasks,navigation,existing-svg,../../static/icons/ui/tasks.svg,navigation,,11,Unifies an icon concept already represented in the current interface.
+theme,Theme,navigation,existing-svg,../../static/icons/ui/theme.svg,navigation,,14,Unifies an icon concept already represented in the current interface.
+settings,Settings,navigation,existing-svg,../../static/icons/ui/settings.svg,navigation,,51,Unifies an icon concept already represented in the current interface.
+account,Account,navigation,existing-svg,../../static/icons/ui/account.svg,navigation,,3,Unifies an icon concept already represented in the current interface.
+workspace,Workspace,navigation,existing-svg,../../static/icons/ui/workspace.svg,navigation,folder,11,Unifies an icon concept already represented in the current interface.
+terminal,Terminal,navigation,existing-svg,../../static/icons/ui/terminal.svg,navigation,,4,Unifies an icon concept already represented in the current interface.
+integrations,Integrations,navigation,existing-svg,../../static/icons/ui/integrations.svg,navigation,,7,Unifies an icon concept already represented in the current interface.
+help,Help,navigation,existing-svg,../../static/icons/ui/help.svg,navigation,,1,Unifies an icon concept already represented in the current interface.
+command-palette,Command palette,navigation,supporting,../../static/icons/ui/command-palette.svg,navigation,,0,Supporting glyph for this implemented subsystem; exact integration location remains to be selected.
+notifications,Notifications,navigation,control-gap,../../static/icons/ui/notifications.svg,navigation,,1,Candidate for a current control without a literal SVG; text-only controls may be intentional.
+add,Add,actions,existing-svg,../../static/icons/ui/add.svg,actions,,25,Unifies an icon concept already represented in the current interface.
+subtract,Subtract,actions,existing-svg,../../static/icons/ui/subtract.svg,actions,,2,Unifies an icon concept already represented in the current interface.
+close,Close,actions,existing-svg,../../static/icons/ui/close.svg,actions,,142,Unifies an icon concept already represented in the current interface.
+check,Check,actions,existing-svg,../../static/icons/ui/check.svg,actions,,34,Unifies an icon concept already represented in the current interface.
+copy,Copy,actions,existing-svg,../../static/icons/ui/copy.svg,actions,,42,Unifies an icon concept already represented in the current interface.
+cut,Cut,actions,supporting,../../static/icons/ui/cut.svg,actions,,0,Supporting glyph for this implemented subsystem; exact integration location remains to be selected.
+paste,Paste,actions,control-gap,../../static/icons/ui/paste.svg,actions,,1,Candidate for a current control without a literal SVG; text-only controls may be intentional.
+edit,Edit,actions,existing-svg,../../static/icons/ui/edit.svg,actions,,29,Unifies an icon concept already represented in the current interface.
+rename,Rename,actions,existing-svg,../../static/icons/ui/rename.svg,actions,edit,4,Unifies an icon concept already represented in the current interface.
+delete,Delete,actions,existing-svg,../../static/icons/ui/delete.svg,actions,,61,Unifies an icon concept already represented in the current interface.
+delete-forever,Delete forever,actions,existing-svg,../../static/icons/ui/delete-forever.svg,actions,,2,Unifies an icon concept already represented in the current interface.
+archive,Archive,actions,existing-svg,../../static/icons/ui/archive.svg,actions,,26,Unifies an icon concept already represented in the current interface.
+restore,Restore,actions,existing-svg,../../static/icons/ui/restore.svg,actions,,12,Unifies an icon concept already represented in the current interface.
+download,Download,actions,existing-svg,../../static/icons/ui/download.svg,actions,,22,Unifies an icon concept already represented in the current interface.
+upload,Upload,actions,existing-svg,../../static/icons/ui/upload.svg,actions,,6,Unifies an icon concept already represented in the current interface.
+import,Import,actions,existing-svg,../../static/icons/ui/import.svg,actions,download,10,Unifies an icon concept already represented in the current interface.
+export,Export,actions,existing-svg,../../static/icons/ui/export.svg,actions,upload,24,Unifies an icon concept already represented in the current interface.
+save,Save,actions,existing-svg,../../static/icons/ui/save.svg,actions,,34,Unifies an icon concept already represented in the current interface.
+save-as,Save as,actions,existing-svg,../../static/icons/ui/save-as.svg,actions,,3,Unifies an icon concept already represented in the current interface.
+refresh,Refresh,actions,existing-svg,../../static/icons/ui/refresh.svg,actions,,23,Unifies an icon concept already represented in the current interface.
+undo,Undo,actions,existing-svg,../../static/icons/ui/undo.svg,actions,,6,Unifies an icon concept already represented in the current interface.
+redo,Redo,actions,existing-svg,../../static/icons/ui/redo.svg,actions,,3,Unifies an icon concept already represented in the current interface.
+reset,Reset,actions,existing-svg,../../static/icons/ui/reset.svg,actions,refresh,4,Unifies an icon concept already represented in the current interface.
+more-horizontal,More horizontal,actions,existing-svg,../../static/icons/ui/more-horizontal.svg,actions,,65,Unifies an icon concept already represented in the current interface.
+more-vertical,More vertical,actions,supporting,../../static/icons/ui/more-vertical.svg,actions,,0,Supporting glyph for this implemented subsystem; exact integration location remains to be selected.
+select-all,Select all,actions,existing-svg,../../static/icons/ui/select-all.svg,actions,,39,Unifies an icon concept already represented in the current interface.
+deselect,Deselect,actions,existing-svg,../../static/icons/ui/deselect.svg,actions,,59,Unifies an icon concept already represented in the current interface.
+bulk-select,Bulk select,actions,existing-svg,../../static/icons/ui/bulk-select.svg,actions,select-all,1,Unifies an icon concept already represented in the current interface.
+filter,Filter,actions,existing-svg,../../static/icons/ui/filter.svg,actions,,36,Unifies an icon concept already represented in the current interface.
+filter-clear,Filter clear,actions,supporting,../../static/icons/ui/filter-clear.svg,actions,,0,Supporting glyph for this implemented subsystem; exact integration location remains to be selected.
+sort,Sort,actions,existing-svg,../../static/icons/ui/sort.svg,actions,,1,Unifies an icon concept already represented in the current interface.
+sort-ascending,Sort ascending,actions,supporting,../../static/icons/ui/sort-ascending.svg,actions,,0,Supporting glyph for this implemented subsystem; exact integration location remains to be selected.
+sort-descending,Sort descending,actions,supporting,../../static/icons/ui/sort-descending.svg,actions,,0,Supporting glyph for this implemented subsystem; exact integration location remains to be selected.
+pin,Pin,actions,supporting,../../static/icons/ui/pin.svg,actions,,0,Supporting glyph for this implemented subsystem; exact integration location remains to be selected.
+unpin,Unpin,actions,existing-svg,../../static/icons/ui/unpin.svg,actions,,1,Unifies an icon concept already represented in the current interface.
+favorite,Favorite,actions,existing-svg,../../static/icons/ui/favorite.svg,actions,,9,Unifies an icon concept already represented in the current interface.
+unfavorite,Unfavorite,actions,existing-svg,../../static/icons/ui/unfavorite.svg,actions,,6,Unifies an icon concept already represented in the current interface.
+share,Share,actions,existing-svg,../../static/icons/ui/share.svg,actions,,1,Unifies an icon concept already represented in the current interface.
+link,Link,actions,existing-svg,../../static/icons/ui/link.svg,actions,,1,Unifies an icon concept already represented in the current interface.
+unlink,Unlink,actions,control-gap,../../static/icons/ui/unlink.svg,actions,,1,Candidate for a current control without a literal SVG; text-only controls may be intentional.
+external-link,External link,actions,supporting,../../static/icons/ui/external-link.svg,actions,,0,Supporting glyph for this implemented subsystem; exact integration location remains to be selected.
+open,Open,actions,existing-svg,../../static/icons/ui/open.svg,actions,external-link,6,Unifies an icon concept already represented in the current interface.
+move,Move,actions,control-gap,../../static/icons/ui/move.svg,actions,,4,Candidate for a current control without a literal SVG; text-only controls may be intentional.
+duplicate,Duplicate,actions,supporting,../../static/icons/ui/duplicate.svg,actions,copy,0,Supporting glyph for this implemented subsystem; exact integration location remains to be selected.
+clear,Clear,actions,existing-svg,../../static/icons/ui/clear.svg,actions,,18,Unifies an icon concept already represented in the current interface.
+drag-handle,Drag handle,actions,existing-svg,../../static/icons/ui/drag-handle.svg,actions,,1,Unifies an icon concept already represented in the current interface.
+arrow-up,Arrow up,layout,supporting,../../static/icons/ui/arrow-up.svg,actions,,0,Supporting glyph for this implemented subsystem; exact integration location remains to be selected.
+arrow-down,Arrow down,layout,supporting,../../static/icons/ui/arrow-down.svg,actions,,0,Supporting glyph for this implemented subsystem; exact integration location remains to be selected.
+arrow-left,Arrow left,layout,existing-svg,../../static/icons/ui/arrow-left.svg,actions,,8,Unifies an icon concept already represented in the current interface.
+arrow-right,Arrow right,layout,supporting,../../static/icons/ui/arrow-right.svg,actions,,0,Supporting glyph for this implemented subsystem; exact integration location remains to be selected.
+chevron-up,Chevron up,layout,supporting,../../static/icons/ui/chevron-up.svg,actions,,0,Supporting glyph for this implemented subsystem; exact integration location remains to be selected.
+chevron-down,Chevron down,layout,supporting,../../static/icons/ui/chevron-down.svg,actions,,0,Supporting glyph for this implemented subsystem; exact integration location remains to be selected.
+chevron-left,Chevron left,layout,existing-svg,../../static/icons/ui/chevron-left.svg,actions,,10,Unifies an icon concept already represented in the current interface.
+chevron-right,Chevron right,layout,existing-svg,../../static/icons/ui/chevron-right.svg,actions,,9,Unifies an icon concept already represented in the current interface.
+chevrons-left,Chevrons left,layout,supporting,../../static/icons/ui/chevrons-left.svg,actions,,0,Supporting glyph for this implemented subsystem; exact integration location remains to be selected.
+chevrons-right,Chevrons right,layout,supporting,../../static/icons/ui/chevrons-right.svg,actions,,0,Supporting glyph for this implemented subsystem; exact integration location remains to be selected.
+jump-bottom,Jump bottom,layout,control-gap,../../static/icons/ui/jump-bottom.svg,actions,,1,Candidate for a current control without a literal SVG; text-only controls may be intentional.
+expand,Expand,layout,existing-svg,../../static/icons/ui/expand.svg,actions,,5,Unifies an icon concept already represented in the current interface.
+collapse,Collapse,layout,existing-svg,../../static/icons/ui/collapse.svg,actions,,3,Unifies an icon concept already represented in the current interface.
+maximize,Maximize,layout,existing-svg,../../static/icons/ui/maximize.svg,actions,,1,Unifies an icon concept already represented in the current interface.
+minimize,Minimize,layout,existing-svg,../../static/icons/ui/minimize.svg,actions,,14,Unifies an icon concept already represented in the current interface.
+fullscreen,Fullscreen,layout,existing-svg,../../static/icons/ui/fullscreen.svg,actions,,2,Unifies an icon concept already represented in the current interface.
+fullscreen-exit,Fullscreen exit,layout,supporting,../../static/icons/ui/fullscreen-exit.svg,actions,,0,Supporting glyph for this implemented subsystem; exact integration location remains to be selected.
+panel-left,Panel left,layout,supporting,../../static/icons/ui/panel-left.svg,actions,,0,Supporting glyph for this implemented subsystem; exact integration location remains to be selected.
+panel-right,Panel right,layout,existing-svg,../../static/icons/ui/panel-right.svg,actions,,1,Unifies an icon concept already represented in the current interface.
+panel-top,Panel top,layout,supporting,../../static/icons/ui/panel-top.svg,actions,,0,Supporting glyph for this implemented subsystem; exact integration location remains to be selected.
+panel-bottom,Panel bottom,layout,supporting,../../static/icons/ui/panel-bottom.svg,actions,,0,Supporting glyph for this implemented subsystem; exact integration location remains to be selected.
+sidebar-open,Sidebar open,layout,supporting,../../static/icons/ui/sidebar-open.svg,actions,,0,Supporting glyph for this implemented subsystem; exact integration location remains to be selected.
+sidebar-close,Sidebar close,layout,existing-svg,../../static/icons/ui/sidebar-close.svg,actions,,4,Unifies an icon concept already represented in the current interface.
+split-horizontal,Split horizontal,layout,supporting,../../static/icons/ui/split-horizontal.svg,actions,,0,Supporting glyph for this implemented subsystem; exact integration location remains to be selected.
+split-vertical,Split vertical,layout,supporting,../../static/icons/ui/split-vertical.svg,actions,,0,Supporting glyph for this implemented subsystem; exact integration location remains to be selected.
+grid,Grid,layout,existing-svg,../../static/icons/ui/grid.svg,actions,,1,Unifies an icon concept already represented in the current interface.
+list,List,layout,existing-svg,../../static/icons/ui/list.svg,actions,,2,Unifies an icon concept already represented in the current interface.
+table,Table,layout,existing-svg,../../static/icons/ui/table.svg,actions,,2,Unifies an icon concept already represented in the current interface.
+columns,Columns,layout,supporting,../../static/icons/ui/columns.svg,actions,,0,Supporting glyph for this implemented subsystem; exact integration location remains to be selected.
+dock,Dock,layout,existing-svg,../../static/icons/ui/dock.svg,actions,,2,Unifies an icon concept already represented in the current interface.
+undock,Undock,layout,supporting,../../static/icons/ui/undock.svg,actions,,0,Supporting glyph for this implemented subsystem; exact integration location remains to be selected.
+resize,Resize,layout,existing-svg,../../static/icons/ui/resize.svg,actions,,4,Unifies an icon concept already represented in the current interface.
+send,Send,chat-ai,existing-svg,../../static/icons/ui/send.svg,models-ai,,9,Unifies an icon concept already represented in the current interface.
+stop,Stop,chat-ai,existing-svg,../../static/icons/ui/stop.svg,models-ai,,6,Unifies an icon concept already represented in the current interface.
+regenerate,Regenerate,chat-ai,existing-svg,../../static/icons/ui/regenerate.svg,models-ai,refresh,4,Unifies an icon concept already represented in the current interface.
+resend,Resend,chat-ai,existing-svg,../../static/icons/ui/resend.svg,models-ai,refresh,1,Unifies an icon concept already represented in the current interface.
+branch,Branch,chat-ai,supporting,../../static/icons/ui/branch.svg,models-ai,,0,Supporting glyph for this implemented subsystem; exact integration location remains to be selected.
+merge,Merge,chat-ai,supporting,../../static/icons/ui/merge.svg,models-ai,,0,Supporting glyph for this implemented subsystem; exact integration location remains to be selected.
+message-edit,Message edit,chat-ai,supporting,../../static/icons/ui/message-edit.svg,models-ai,,0,Supporting glyph for this implemented subsystem; exact integration location remains to be selected.
+message-delete,Message delete,chat-ai,supporting,../../static/icons/ui/message-delete.svg,models-ai,,0,Supporting glyph for this implemented subsystem; exact integration location remains to be selected.
+quote,Quote,chat-ai,existing-svg,../../static/icons/ui/quote.svg,models-ai,,1,Unifies an icon concept already represented in the current interface.
+reply,Reply,chat-ai,existing-svg,../../static/icons/ui/reply.svg,models-ai,,9,Unifies an icon concept already represented in the current interface.
+thumbs-up,Thumbs up,chat-ai,supporting,../../static/icons/ui/thumbs-up.svg,models-ai,,0,Supporting glyph for this implemented subsystem; exact integration location remains to be selected.
+thumbs-down,Thumbs down,chat-ai,supporting,../../static/icons/ui/thumbs-down.svg,models-ai,,0,Supporting glyph for this implemented subsystem; exact integration location remains to be selected.
+thinking,Thinking,chat-ai,existing-svg,../../static/icons/ui/thinking.svg,models-ai,,1,Unifies an icon concept already represented in the current interface.
+reasoning,Reasoning,chat-ai,existing-svg,../../static/icons/ui/reasoning.svg,models-ai,,1,Unifies an icon concept already represented in the current interface.
+context,Context,chat-ai,existing-svg,../../static/icons/ui/context.svg,models-ai,,7,Unifies an icon concept already represented in the current interface.
+compact,Compact,chat-ai,existing-svg,../../static/icons/ui/compact.svg,models-ai,,17,Unifies an icon concept already represented in the current interface.
+persona,Persona,chat-ai,existing-svg,../../static/icons/ui/persona.svg,models-ai,,3,Unifies an icon concept already represented in the current interface.
+group-chat,Group chat,chat-ai,existing-svg,../../static/icons/ui/group-chat.svg,models-ai,,8,Unifies an icon concept already represented in the current interface.
+nobody,Nobody,chat-ai,existing-svg,../../static/icons/ui/nobody.svg,models-ai,,5,Unifies an icon concept already represented in the current interface.
+plan,Plan,chat-ai,existing-svg,../../static/icons/ui/plan.svg,models-ai,,3,Unifies an icon concept already represented in the current interface.
+plan-review,Plan review,chat-ai,control-gap,../../static/icons/ui/plan-review.svg,models-ai,,1,Candidate for a current control without a literal SVG; text-only controls may be intentional.
+execute-plan,Execute plan,chat-ai,existing-svg,../../static/icons/ui/execute-plan.svg,models-ai,,1,Unifies an icon concept already represented in the current interface.
+utility-model,Utility model,chat-ai,existing-svg,../../static/icons/ui/utility-model.svg,models-ai,,2,Unifies an icon concept already represented in the current interface.
+vision-model,Vision model,chat-ai,control-gap,../../static/icons/ui/vision-model.svg,models-ai,,1,Candidate for a current control without a literal SVG; text-only controls may be intentional.
+fallback-model,Fallback model,chat-ai,supporting,../../static/icons/ui/fallback-model.svg,models-ai,,0,Supporting glyph for this implemented subsystem; exact integration location remains to be selected.
+model-switch,Model switch,chat-ai,supporting,../../static/icons/ui/model-switch.svg,models-ai,,0,Supporting glyph for this implemented subsystem; exact integration location remains to be selected.
+compare-add,Compare add,chat-ai,existing-svg,../../static/icons/ui/compare-add.svg,models-ai,,2,Unifies an icon concept already represented in the current interface.
+blind-test,Blind test,chat-ai,supporting,../../static/icons/ui/blind-test.svg,models-ai,eye-off,0,Supporting glyph for this implemented subsystem; exact integration location remains to be selected.
+reveal,Reveal,chat-ai,existing-svg,../../static/icons/ui/reveal.svg,models-ai,eye,1,Unifies an icon concept already represented in the current interface.
+shuffle,Shuffle,chat-ai,supporting,../../static/icons/ui/shuffle.svg,models-ai,,0,Supporting glyph for this implemented subsystem; exact integration location remains to be selected.
+vote,Vote,chat-ai,existing-svg,../../static/icons/ui/vote.svg,models-ai,,4,Unifies an icon concept already represented in the current interface.
+trophy,Trophy,chat-ai,supporting,../../static/icons/ui/trophy.svg,models-ai,,0,Supporting glyph for this implemented subsystem; exact integration location remains to be selected.
+scoreboard,Scoreboard,chat-ai,existing-svg,../../static/icons/ui/scoreboard.svg,models-ai,,3,Unifies an icon concept already represented in the current interface.
+tokens,Tokens,chat-ai,supporting,../../static/icons/ui/tokens.svg,models-ai,,0,Supporting glyph for this implemented subsystem; exact integration location remains to be selected.
+cost,Cost,chat-ai,supporting,../../static/icons/ui/cost.svg,models-ai,,0,Supporting glyph for this implemented subsystem; exact integration location remains to be selected.
+prompt,Prompt,chat-ai,existing-svg,../../static/icons/ui/prompt.svg,models-ai,,11,Unifies an icon concept already represented in the current interface.
+prompt-expand,Prompt expand,chat-ai,supporting,../../static/icons/ui/prompt-expand.svg,models-ai,,0,Supporting glyph for this implemented subsystem; exact integration location remains to be selected.
+prompt-inject,Prompt inject,chat-ai,existing-svg,../../static/icons/ui/prompt-inject.svg,models-ai,,1,Unifies an icon concept already represented in the current interface.
+tool-call,Tool call,chat-ai,existing-svg,../../static/icons/ui/tool-call.svg,models-ai,,32,Unifies an icon concept already represented in the current interface.
+tool-result,Tool result,chat-ai,supporting,../../static/icons/ui/tool-result.svg,models-ai,,0,Supporting glyph for this implemented subsystem; exact integration location remains to be selected.
+background-job,Background job,chat-ai,supporting,../../static/icons/ui/background-job.svg,models-ai,,0,Supporting glyph for this implemented subsystem; exact integration location remains to be selected.
+approval,Approval,chat-ai,supporting,../../static/icons/ui/approval.svg,models-ai,,0,Supporting glyph for this implemented subsystem; exact integration location remains to be selected.
+allow-once,Allow once,chat-ai,supporting,../../static/icons/ui/allow-once.svg,models-ai,,0,Supporting glyph for this implemented subsystem; exact integration location remains to be selected.
+allow-session,Allow session,chat-ai,supporting,../../static/icons/ui/allow-session.svg,models-ai,,0,Supporting glyph for this implemented subsystem; exact integration location remains to be selected.
+deny,Deny,chat-ai,supporting,../../static/icons/ui/deny.svg,models-ai,,0,Supporting glyph for this implemented subsystem; exact integration location remains to be selected.
+model,Model,models-hardware,existing-svg,../../static/icons/ui/model.svg,models-ai,,13,Unifies an icon concept already represented in the current interface.
+model-add,Model add,models-hardware,supporting,../../static/icons/ui/model-add.svg,models-ai,,0,Supporting glyph for this implemented subsystem; exact integration location remains to be selected.
+model-download,Model download,models-hardware,supporting,../../static/icons/ui/model-download.svg,models-ai,,0,Supporting glyph for this implemented subsystem; exact integration location remains to be selected.
+model-installed,Model installed,models-hardware,supporting,../../static/icons/ui/model-installed.svg,models-ai,,0,Supporting glyph for this implemented subsystem; exact integration location remains to be selected.
+model-online,Model online,models-hardware,supporting,../../static/icons/ui/model-online.svg,models-ai,online,0,Supporting glyph for this implemented subsystem; exact integration location remains to be selected.
+model-offline,Model offline,models-hardware,supporting,../../static/icons/ui/model-offline.svg,models-ai,offline,0,Supporting glyph for this implemented subsystem; exact integration location remains to be selected.
+model-delete,Model delete,models-hardware,supporting,../../static/icons/ui/model-delete.svg,models-ai,,0,Supporting glyph for this implemented subsystem; exact integration location remains to be selected.
+provider,Provider,models-hardware,existing-svg,../../static/icons/ui/provider.svg,models-ai,server,8,Unifies an icon concept already represented in the current interface.
+endpoint,Endpoint,models-hardware,existing-svg,../../static/icons/ui/endpoint.svg,models-ai,,6,Unifies an icon concept already represented in the current interface.
+endpoint-add,Endpoint add,models-hardware,supporting,../../static/icons/ui/endpoint-add.svg,models-ai,,0,Supporting glyph for this implemented subsystem; exact integration location remains to be selected.
+endpoint-test,Endpoint test,models-hardware,supporting,../../static/icons/ui/endpoint-test.svg,models-ai,,0,Supporting glyph for this implemented subsystem; exact integration location remains to be selected.
+server,Server,models-hardware,existing-svg,../../static/icons/ui/server.svg,models-ai,,15,Unifies an icon concept already represented in the current interface.
+server-add,Server add,models-hardware,supporting,../../static/icons/ui/server-add.svg,models-ai,,0,Supporting glyph for this implemented subsystem; exact integration location remains to be selected.
+server-scan,Server scan,models-hardware,supporting,../../static/icons/ui/server-scan.svg,models-ai,,0,Supporting glyph for this implemented subsystem; exact integration location remains to be selected.
+server-stop,Server stop,models-hardware,control-gap,../../static/icons/ui/server-stop.svg,models-ai,,2,Candidate for a current control without a literal SVG; text-only controls may be intentional.
+server-start,Server start,models-hardware,supporting,../../static/icons/ui/server-start.svg,models-ai,,0,Supporting glyph for this implemented subsystem; exact integration location remains to be selected.
+server-config,Server config,models-hardware,supporting,../../static/icons/ui/server-config.svg,models-ai,,0,Supporting glyph for this implemented subsystem; exact integration location remains to be selected.
+cpu,Cpu,models-hardware,control-gap,../../static/icons/ui/cpu.svg,models-ai,,3,Candidate for a current control without a literal SVG; text-only controls may be intentional.
+gpu,Gpu,models-hardware,existing-svg,../../static/icons/ui/gpu.svg,models-ai,,7,Unifies an icon concept already represented in the current interface.
+ram,Ram,models-hardware,supporting,../../static/icons/ui/ram.svg,models-ai,,0,Supporting glyph for this implemented subsystem; exact integration location remains to be selected.
+vram,Vram,models-hardware,control-gap,../../static/icons/ui/vram.svg,models-ai,,1,Candidate for a current control without a literal SVG; text-only controls may be intentional.
+disk,Disk,models-hardware,supporting,../../static/icons/ui/disk.svg,models-ai,,0,Supporting glyph for this implemented subsystem; exact integration location remains to be selected.
+network,Network,models-hardware,existing-svg,../../static/icons/ui/network.svg,models-ai,,1,Unifies an icon concept already represented in the current interface.
+container,Container,models-hardware,existing-svg,../../static/icons/ui/container.svg,models-ai,,6,Unifies an icon concept already represented in the current interface.
+ssh,Ssh,models-hardware,existing-svg,../../static/icons/ui/ssh.svg,models-ai,key,1,Unifies an icon concept already represented in the current interface.
+api-key,Api key,models-hardware,existing-svg,../../static/icons/ui/api-key.svg,models-ai,key,3,Unifies an icon concept already represented in the current interface.
+local-model,Local model,models-hardware,supporting,../../static/icons/ui/local-model.svg,models-ai,,0,Supporting glyph for this implemented subsystem; exact integration location remains to be selected.
+cloud-model,Cloud model,models-hardware,supporting,../../static/icons/ui/cloud-model.svg,models-ai,,0,Supporting glyph for this implemented subsystem; exact integration location remains to be selected.
+database,Database,models-hardware,existing-svg,../../static/icons/ui/database.svg,models-ai,,1,Unifies an icon concept already represented in the current interface.
+embeddings,Embeddings,models-hardware,supporting,../../static/icons/ui/embeddings.svg,models-ai,memory,0,Supporting glyph for this implemented subsystem; exact integration location remains to be selected.
+usage,Usage,models-hardware,control-gap,../../static/icons/ui/usage.svg,models-ai,,1,Candidate for a current control without a literal SVG; text-only controls may be intentional.
+latency,Latency,models-hardware,supporting,../../static/icons/ui/latency.svg,models-ai,,0,Supporting glyph for this implemented subsystem; exact integration location remains to be selected.
+speed,Speed,models-hardware,supporting,../../static/icons/ui/speed.svg,models-ai,,0,Supporting glyph for this implemented subsystem; exact integration location remains to be selected.
+parameters,Parameters,models-hardware,supporting,../../static/icons/ui/parameters.svg,models-ai,,0,Supporting glyph for this implemented subsystem; exact integration location remains to be selected.
+quantization,Quantization,models-hardware,supporting,../../static/icons/ui/quantization.svg,models-ai,,0,Supporting glyph for this implemented subsystem; exact integration location remains to be selected.
+checkpoint,Checkpoint,models-hardware,control-gap,../../static/icons/ui/checkpoint.svg,models-ai,,1,Candidate for a current control without a literal SVG; text-only controls may be intentional.
+serving-queue,Serving queue,models-hardware,supporting,../../static/icons/ui/serving-queue.svg,models-ai,,0,Supporting glyph for this implemented subsystem; exact integration location remains to be selected.
+launch-retry,Launch retry,models-hardware,supporting,../../static/icons/ui/launch-retry.svg,models-ai,refresh,0,Supporting glyph for this implemented subsystem; exact integration location remains to be selected.
+file,File,documents,existing-svg,../../static/icons/ui/file.svg,authoring,,3,Unifies an icon concept already represented in the current interface.
+file-new,File new,documents,supporting,../../static/icons/ui/file-new.svg,authoring,,0,Supporting glyph for this implemented subsystem; exact integration location remains to be selected.
+folder,Folder,documents,existing-svg,../../static/icons/ui/folder.svg,authoring,,2,Unifies an icon concept already represented in the current interface.
+folder-new,Folder new,documents,supporting,../../static/icons/ui/folder-new.svg,authoring,,0,Supporting glyph for this implemented subsystem; exact integration location remains to be selected.
+folder-open,Folder open,documents,supporting,../../static/icons/ui/folder-open.svg,authoring,,0,Supporting glyph for this implemented subsystem; exact integration location remains to be selected.
+folder-move,Folder move,documents,supporting,../../static/icons/ui/folder-move.svg,authoring,,0,Supporting glyph for this implemented subsystem; exact integration location remains to be selected.
+document-scan,Document scan,documents,supporting,../../static/icons/ui/document-scan.svg,authoring,,0,Supporting glyph for this implemented subsystem; exact integration location remains to be selected.
+bold,Bold,documents,control-gap,../../static/icons/ui/bold.svg,authoring,,2,Candidate for a current control without a literal SVG; text-only controls may be intentional.
+italic,Italic,documents,control-gap,../../static/icons/ui/italic.svg,authoring,,2,Candidate for a current control without a literal SVG; text-only controls may be intentional.
+underline,Underline,documents,control-gap,../../static/icons/ui/underline.svg,authoring,,1,Candidate for a current control without a literal SVG; text-only controls may be intentional.
+strikethrough,Strikethrough,documents,existing-svg,../../static/icons/ui/strikethrough.svg,authoring,,2,Unifies an icon concept already represented in the current interface.
+superscript,Superscript,documents,existing-svg,../../static/icons/ui/superscript.svg,authoring,,1,Unifies an icon concept already represented in the current interface.
+subscript,Subscript,documents,existing-svg,../../static/icons/ui/subscript.svg,authoring,,1,Unifies an icon concept already represented in the current interface.
+heading,Heading,documents,existing-svg,../../static/icons/ui/heading.svg,authoring,,1,Unifies an icon concept already represented in the current interface.
+heading-one,Heading one,documents,supporting,../../static/icons/ui/heading-one.svg,authoring,,0,Supporting glyph for this implemented subsystem; exact integration location remains to be selected.
+heading-two,Heading two,documents,supporting,../../static/icons/ui/heading-two.svg,authoring,,0,Supporting glyph for this implemented subsystem; exact integration location remains to be selected.
+heading-three,Heading three,documents,supporting,../../static/icons/ui/heading-three.svg,authoring,,0,Supporting glyph for this implemented subsystem; exact integration location remains to be selected.
+paragraph,Paragraph,documents,control-gap,../../static/icons/ui/paragraph.svg,authoring,,1,Candidate for a current control without a literal SVG; text-only controls may be intentional.
+font-family,Font family,documents,existing-svg,../../static/icons/ui/font-family.svg,authoring,,10,Unifies an icon concept already represented in the current interface.
+font-size,Font size,documents,existing-svg,../../static/icons/ui/font-size.svg,authoring,,35,Unifies an icon concept already represented in the current interface.
+text-color,Text color,documents,existing-svg,../../static/icons/ui/text-color.svg,authoring,,2,Unifies an icon concept already represented in the current interface.
+highlight,Highlight,documents,existing-svg,../../static/icons/ui/highlight.svg,authoring,,2,Unifies an icon concept already represented in the current interface.
+align-left,Align left,documents,existing-svg,../../static/icons/ui/align-left.svg,authoring,,6,Unifies an icon concept already represented in the current interface.
+align-center,Align center,documents,existing-svg,../../static/icons/ui/align-center.svg,authoring,,4,Unifies an icon concept already represented in the current interface.
+align-right,Align right,documents,control-gap,../../static/icons/ui/align-right.svg,authoring,,1,Candidate for a current control without a literal SVG; text-only controls may be intentional.
+align-justify,Align justify,documents,supporting,../../static/icons/ui/align-justify.svg,authoring,,0,Supporting glyph for this implemented subsystem; exact integration location remains to be selected.
+list-bulleted,List bulleted,documents,existing-svg,../../static/icons/ui/list-bulleted.svg,authoring,list,1,Unifies an icon concept already represented in the current interface.
+list-numbered,List numbered,documents,existing-svg,../../static/icons/ui/list-numbered.svg,authoring,,1,Unifies an icon concept already represented in the current interface.
+list-check,List check,documents,supporting,../../static/icons/ui/list-check.svg,authoring,,0,Supporting glyph for this implemented subsystem; exact integration location remains to be selected.
+indent,Indent,documents,existing-svg,../../static/icons/ui/indent.svg,authoring,,2,Unifies an icon concept already represented in the current interface.
+outdent,Outdent,documents,existing-svg,../../static/icons/ui/outdent.svg,authoring,,1,Unifies an icon concept already represented in the current interface.
+line-spacing,Line spacing,documents,existing-svg,../../static/icons/ui/line-spacing.svg,authoring,,1,Unifies an icon concept already represented in the current interface.
+blockquote,Blockquote,documents,existing-svg,../../static/icons/ui/blockquote.svg,authoring,quote,1,Unifies an icon concept already represented in the current interface.
+code-inline,Code inline,documents,existing-svg,../../static/icons/ui/code-inline.svg,authoring,,5,Unifies an icon concept already represented in the current interface.
+code-block,Code block,documents,existing-svg,../../static/icons/ui/code-block.svg,authoring,,2,Unifies an icon concept already represented in the current interface.
+table-insert,Table insert,documents,supporting,../../static/icons/ui/table-insert.svg,authoring,,0,Supporting glyph for this implemented subsystem; exact integration location remains to be selected.
+table-row-add,Table row add,documents,supporting,../../static/icons/ui/table-row-add.svg,authoring,,0,Supporting glyph for this implemented subsystem; exact integration location remains to be selected.
+table-column-add,Table column add,documents,supporting,../../static/icons/ui/table-column-add.svg,authoring,,0,Supporting glyph for this implemented subsystem; exact integration location remains to be selected.
+table-row-remove,Table row remove,documents,supporting,../../static/icons/ui/table-row-remove.svg,authoring,,0,Supporting glyph for this implemented subsystem; exact integration location remains to be selected.
+table-column-remove,Table column remove,documents,supporting,../../static/icons/ui/table-column-remove.svg,authoring,,0,Supporting glyph for this implemented subsystem; exact integration location remains to be selected.
+separator,Separator,documents,existing-svg,../../static/icons/ui/separator.svg,authoring,,2,Unifies an icon concept already represented in the current interface.
+page-break,Page break,documents,existing-svg,../../static/icons/ui/page-break.svg,authoring,,1,Unifies an icon concept already represented in the current interface.
+text-box,Text box,documents,existing-svg,../../static/icons/ui/text-box.svg,authoring,,4,Unifies an icon concept already represented in the current interface.
+signature,Signature,documents,existing-svg,../../static/icons/ui/signature.svg,authoring,,4,Unifies an icon concept already represented in the current interface.
+find,Find,documents,existing-svg,../../static/icons/ui/find.svg,authoring,search,3,Unifies an icon concept already represented in the current interface.
+find-replace,Find replace,documents,existing-svg,../../static/icons/ui/find-replace.svg,authoring,,6,Unifies an icon concept already represented in the current interface.
+spelling,Spelling,documents,existing-svg,../../static/icons/ui/spelling.svg,authoring,,1,Unifies an icon concept already represented in the current interface.
+grammar,Grammar,documents,supporting,../../static/icons/ui/grammar.svg,authoring,,0,Supporting glyph for this implemented subsystem; exact integration location remains to be selected.
+concise,Concise,documents,existing-svg,../../static/icons/ui/concise.svg,authoring,,1,Unifies an icon concept already represented in the current interface.
+improve-writing,Improve writing,documents,existing-svg,../../static/icons/ui/improve-writing.svg,authoring,,1,Unifies an icon concept already represented in the current interface.
+check-sources,Check sources,documents,existing-svg,../../static/icons/ui/check-sources.svg,authoring,,1,Unifies an icon concept already represented in the current interface.
+diff,Diff,documents,existing-svg,../../static/icons/ui/diff.svg,authoring,,1,Unifies an icon concept already represented in the current interface.
+accept-change,Accept change,documents,existing-svg,../../static/icons/ui/accept-change.svg,authoring,check,1,Unifies an icon concept already represented in the current interface.
+reject-change,Reject change,documents,supporting,../../static/icons/ui/reject-change.svg,authoring,close,0,Supporting glyph for this implemented subsystem; exact integration location remains to be selected.
+outline,Outline,documents,existing-svg,../../static/icons/ui/outline.svg,authoring,,3,Unifies an icon concept already represented in the current interface.
+print,Print,documents,existing-svg,../../static/icons/ui/print.svg,authoring,,1,Unifies an icon concept already represented in the current interface.
+read-only,Read only,documents,existing-svg,../../static/icons/ui/read-only.svg,authoring,lock,1,Unifies an icon concept already represented in the current interface.
+word-count,Word count,documents,control-gap,../../static/icons/ui/word-count.svg,authoring,,1,Candidate for a current control without a literal SVG; text-only controls may be intentional.
+note-new,Note new,notes-tasks-calendar,existing-svg,../../static/icons/ui/note-new.svg,authoring,,27,Unifies an icon concept already represented in the current interface.
+sticky-note,Sticky note,notes-tasks-calendar,supporting,../../static/icons/ui/sticky-note.svg,authoring,,0,Supporting glyph for this implemented subsystem; exact integration location remains to be selected.
+drawing,Drawing,notes-tasks-calendar,existing-svg,../../static/icons/ui/drawing.svg,authoring,pen,4,Unifies an icon concept already represented in the current interface.
+checklist,Checklist,notes-tasks-calendar,supporting,../../static/icons/ui/checklist.svg,authoring,,0,Supporting glyph for this implemented subsystem; exact integration location remains to be selected.
+todo,Todo,notes-tasks-calendar,existing-svg,../../static/icons/ui/todo.svg,authoring,select-all,7,Unifies an icon concept already represented in the current interface.
+goal,Goal,notes-tasks-calendar,supporting,../../static/icons/ui/goal.svg,authoring,,0,Supporting glyph for this implemented subsystem; exact integration location remains to be selected.
+target,Target,notes-tasks-calendar,existing-svg,../../static/icons/ui/target.svg,authoring,,4,Unifies an icon concept already represented in the current interface.
+next-step,Next step,notes-tasks-calendar,existing-svg,../../static/icons/ui/next-step.svg,authoring,,2,Unifies an icon concept already represented in the current interface.
+reminder,Reminder,notes-tasks-calendar,existing-svg,../../static/icons/ui/reminder.svg,authoring,,15,Unifies an icon concept already represented in the current interface.
+reminder-add,Reminder add,notes-tasks-calendar,supporting,../../static/icons/ui/reminder-add.svg,authoring,,0,Supporting glyph for this implemented subsystem; exact integration location remains to be selected.
+reminder-overdue,Reminder overdue,notes-tasks-calendar,supporting,../../static/icons/ui/reminder-overdue.svg,authoring,,0,Supporting glyph for this implemented subsystem; exact integration location remains to be selected.
+reminder-dismiss,Reminder dismiss,notes-tasks-calendar,supporting,../../static/icons/ui/reminder-dismiss.svg,authoring,,0,Supporting glyph for this implemented subsystem; exact integration location remains to be selected.
+note-archive,Note archive,notes-tasks-calendar,supporting,../../static/icons/ui/note-archive.svg,authoring,,0,Supporting glyph for this implemented subsystem; exact integration location remains to be selected.
+note-color,Note color,notes-tasks-calendar,supporting,../../static/icons/ui/note-color.svg,authoring,,0,Supporting glyph for this implemented subsystem; exact integration location remains to be selected.
+tag,Tag,notes-tasks-calendar,existing-svg,../../static/icons/ui/tag.svg,authoring,,1,Unifies an icon concept already represented in the current interface.
+tag-add,Tag add,notes-tasks-calendar,supporting,../../static/icons/ui/tag-add.svg,authoring,,0,Supporting glyph for this implemented subsystem; exact integration location remains to be selected.
+tag-off,Tag off,notes-tasks-calendar,supporting,../../static/icons/ui/tag-off.svg,authoring,,0,Supporting glyph for this implemented subsystem; exact integration location remains to be selected.
+calendar-day,Calendar day,notes-tasks-calendar,control-gap,../../static/icons/ui/calendar-day.svg,authoring,,3,Candidate for a current control without a literal SVG; text-only controls may be intentional.
+calendar-week,Calendar week,notes-tasks-calendar,supporting,../../static/icons/ui/calendar-week.svg,authoring,,0,Supporting glyph for this implemented subsystem; exact integration location remains to be selected.
+calendar-month,Calendar month,notes-tasks-calendar,supporting,../../static/icons/ui/calendar-month.svg,authoring,,0,Supporting glyph for this implemented subsystem; exact integration location remains to be selected.
+calendar-add,Calendar add,notes-tasks-calendar,existing-svg,../../static/icons/ui/calendar-add.svg,authoring,,2,Unifies an icon concept already represented in the current interface.
+event-add,Event add,notes-tasks-calendar,existing-svg,../../static/icons/ui/event-add.svg,authoring,,3,Unifies an icon concept already represented in the current interface.
+event-edit,Event edit,notes-tasks-calendar,supporting,../../static/icons/ui/event-edit.svg,authoring,,0,Supporting glyph for this implemented subsystem; exact integration location remains to be selected.
+event-delete,Event delete,notes-tasks-calendar,supporting,../../static/icons/ui/event-delete.svg,authoring,,0,Supporting glyph for this implemented subsystem; exact integration location remains to be selected.
+event-reschedule,Event reschedule,notes-tasks-calendar,supporting,../../static/icons/ui/event-reschedule.svg,authoring,,0,Supporting glyph for this implemented subsystem; exact integration location remains to be selected.
+recurring-event,Recurring event,notes-tasks-calendar,supporting,../../static/icons/ui/recurring-event.svg,authoring,,0,Supporting glyph for this implemented subsystem; exact integration location remains to be selected.
+recurrence-daily,Recurrence daily,notes-tasks-calendar,control-gap,../../static/icons/ui/recurrence-daily.svg,authoring,,2,Candidate for a current control without a literal SVG; text-only controls may be intentional.
+recurrence-weekly,Recurrence weekly,notes-tasks-calendar,control-gap,../../static/icons/ui/recurrence-weekly.svg,authoring,,2,Candidate for a current control without a literal SVG; text-only controls may be intentional.
+recurrence-monthly,Recurrence monthly,notes-tasks-calendar,control-gap,../../static/icons/ui/recurrence-monthly.svg,authoring,,8,Candidate for a current control without a literal SVG; text-only controls may be intentional.
+recurrence-yearly,Recurrence yearly,notes-tasks-calendar,control-gap,../../static/icons/ui/recurrence-yearly.svg,authoring,,2,Candidate for a current control without a literal SVG; text-only controls may be intentional.
+timezone,Timezone,notes-tasks-calendar,supporting,../../static/icons/ui/timezone.svg,authoring,,0,Supporting glyph for this implemented subsystem; exact integration location remains to be selected.
+today,Today,notes-tasks-calendar,existing-svg,../../static/icons/ui/today.svg,authoring,,5,Unifies an icon concept already represented in the current interface.
+schedule,Schedule,notes-tasks-calendar,existing-svg,../../static/icons/ui/schedule.svg,authoring,clock,10,Unifies an icon concept already represented in the current interface.
+task-add,Task add,notes-tasks-calendar,supporting,../../static/icons/ui/task-add.svg,authoring,,0,Supporting glyph for this implemented subsystem; exact integration location remains to be selected.
+task-run,Task run,notes-tasks-calendar,existing-svg,../../static/icons/ui/task-run.svg,authoring,,1,Unifies an icon concept already represented in the current interface.
+task-paused,Task paused,notes-tasks-calendar,existing-svg,../../static/icons/ui/task-paused.svg,authoring,,1,Unifies an icon concept already represented in the current interface.
+task-done,Task done,notes-tasks-calendar,existing-svg,../../static/icons/ui/task-done.svg,authoring,,6,Unifies an icon concept already represented in the current interface.
+task-failed,Task failed,notes-tasks-calendar,supporting,../../static/icons/ui/task-failed.svg,authoring,,0,Supporting glyph for this implemented subsystem; exact integration location remains to be selected.
+task-queue,Task queue,notes-tasks-calendar,supporting,../../static/icons/ui/task-queue.svg,authoring,,0,Supporting glyph for this implemented subsystem; exact integration location remains to be selected.
+task-history,Task history,notes-tasks-calendar,supporting,../../static/icons/ui/task-history.svg,authoring,clock,0,Supporting glyph for this implemented subsystem; exact integration location remains to be selected.
+task-trigger,Task trigger,notes-tasks-calendar,existing-svg,../../static/icons/ui/task-trigger.svg,authoring,,1,Unifies an icon concept already represented in the current interface.
+webhook,Webhook,notes-tasks-calendar,existing-svg,../../static/icons/ui/webhook.svg,authoring,,1,Unifies an icon concept already represented in the current interface.
+task-draft,Task draft,notes-tasks-calendar,existing-svg,../../static/icons/ui/task-draft.svg,authoring,,1,Unifies an icon concept already represented in the current interface.
+activity,Activity,notes-tasks-calendar,existing-svg,../../static/icons/ui/activity.svg,authoring,,3,Unifies an icon concept already represented in the current interface.
+snooze,Snooze,notes-tasks-calendar,supporting,../../static/icons/ui/snooze.svg,authoring,,0,Supporting glyph for this implemented subsystem; exact integration location remains to be selected.
+inbox,Inbox,email-contacts,existing-svg,../../static/icons/ui/inbox.svg,authoring,,3,Unifies an icon concept already represented in the current interface.
+mail-unread,Mail unread,email-contacts,supporting,../../static/icons/ui/mail-unread.svg,authoring,,0,Supporting glyph for this implemented subsystem; exact integration location remains to be selected.
+mail-read,Mail read,email-contacts,supporting,../../static/icons/ui/mail-read.svg,authoring,,0,Supporting glyph for this implemented subsystem; exact integration location remains to be selected.
+compose,Compose,email-contacts,existing-svg,../../static/icons/ui/compose.svg,authoring,edit,6,Unifies an icon concept already represented in the current interface.
+reply-all,Reply all,email-contacts,existing-svg,../../static/icons/ui/reply-all.svg,authoring,,3,Unifies an icon concept already represented in the current interface.
+forward,Forward,email-contacts,existing-svg,../../static/icons/ui/forward.svg,authoring,,3,Unifies an icon concept already represented in the current interface.
+send-later,Send later,email-contacts,existing-svg,../../static/icons/ui/send-later.svg,authoring,,1,Unifies an icon concept already represented in the current interface.
+attachment,Attachment,email-contacts,existing-svg,../../static/icons/ui/attachment.svg,authoring,,21,Unifies an icon concept already represented in the current interface.
+attachment-download,Attachment download,email-contacts,existing-svg,../../static/icons/ui/attachment-download.svg,authoring,,1,Unifies an icon concept already represented in the current interface.
+attachments-download,Attachments download,email-contacts,supporting,../../static/icons/ui/attachments-download.svg,authoring,,0,Supporting glyph for this implemented subsystem; exact integration location remains to be selected.
+spam,Spam,email-contacts,existing-svg,../../static/icons/ui/spam.svg,authoring,,6,Unifies an icon concept already represented in the current interface.
+not-spam,Not spam,email-contacts,control-gap,../../static/icons/ui/not-spam.svg,authoring,,1,Candidate for a current control without a literal SVG; text-only controls may be intentional.
+unsubscribe,Unsubscribe,email-contacts,existing-svg,../../static/icons/ui/unsubscribe.svg,authoring,,9,Unifies an icon concept already represented in the current interface.
+unsubscribe-ignore,Unsubscribe ignore,email-contacts,supporting,../../static/icons/ui/unsubscribe-ignore.svg,authoring,,0,Supporting glyph for this implemented subsystem; exact integration location remains to be selected.
+email-translate,Email translate,email-contacts,supporting,../../static/icons/ui/email-translate.svg,authoring,translate,0,Supporting glyph for this implemented subsystem; exact integration location remains to be selected.
+email-summarize,Email summarize,email-contacts,supporting,../../static/icons/ui/email-summarize.svg,authoring,,0,Supporting glyph for this implemented subsystem; exact integration location remains to be selected.
+email-extract-event,Email extract event,email-contacts,supporting,../../static/icons/ui/email-extract-event.svg,authoring,,0,Supporting glyph for this implemented subsystem; exact integration location remains to be selected.
+contact,Contact,email-contacts,existing-svg,../../static/icons/ui/contact.svg,authoring,account,3,Unifies an icon concept already represented in the current interface.
+contacts,Contacts,email-contacts,existing-svg,../../static/icons/ui/contacts.svg,authoring,,4,Unifies an icon concept already represented in the current interface.
+contact-add,Contact add,email-contacts,supporting,../../static/icons/ui/contact-add.svg,authoring,,0,Supporting glyph for this implemented subsystem; exact integration location remains to be selected.
+contact-import,Contact import,email-contacts,supporting,../../static/icons/ui/contact-import.svg,authoring,,0,Supporting glyph for this implemented subsystem; exact integration location remains to be selected.
+contact-export,Contact export,email-contacts,supporting,../../static/icons/ui/contact-export.svg,authoring,,0,Supporting glyph for this implemented subsystem; exact integration location remains to be selected.
+signature-learn,Signature learn,email-contacts,supporting,../../static/icons/ui/signature-learn.svg,authoring,,0,Supporting glyph for this implemented subsystem; exact integration location remains to be selected.
+recipients,Recipients,email-contacts,existing-svg,../../static/icons/ui/recipients.svg,authoring,,5,Unifies an icon concept already represented in the current interface.
+cc,Cc,email-contacts,existing-svg,../../static/icons/ui/cc.svg,authoring,,1,Unifies an icon concept already represented in the current interface.
+bcc,Bcc,email-contacts,supporting,../../static/icons/ui/bcc.svg,authoring,,0,Supporting glyph for this implemented subsystem; exact integration location remains to be selected.
+outbox,Outbox,email-contacts,supporting,../../static/icons/ui/outbox.svg,authoring,,0,Supporting glyph for this implemented subsystem; exact integration location remains to be selected.
+sent,Sent,email-contacts,existing-svg,../../static/icons/ui/sent.svg,authoring,,6,Unifies an icon concept already represented in the current interface.
+drafts,Drafts,email-contacts,supporting,../../static/icons/ui/drafts.svg,authoring,,0,Supporting glyph for this implemented subsystem; exact integration location remains to be selected.
+mail-sync,Mail sync,email-contacts,supporting,../../static/icons/ui/mail-sync.svg,authoring,refresh,0,Supporting glyph for this implemented subsystem; exact integration location remains to be selected.
+inbox-zero,Inbox zero,email-contacts,supporting,../../static/icons/ui/inbox-zero.svg,authoring,,0,Supporting glyph for this implemented subsystem; exact integration location remains to be selected.
+sender-block,Sender block,email-contacts,supporting,../../static/icons/ui/sender-block.svg,authoring,,0,Supporting glyph for this implemented subsystem; exact integration location remains to be selected.
+sender-unblock,Sender unblock,email-contacts,supporting,../../static/icons/ui/sender-unblock.svg,authoring,,0,Supporting glyph for this implemented subsystem; exact integration location remains to be selected.
+email-cleanup,Email cleanup,email-contacts,supporting,../../static/icons/ui/email-cleanup.svg,authoring,,0,Supporting glyph for this implemented subsystem; exact integration location remains to be selected.
+microphone,Microphone,audio-video,supporting,../../static/icons/ui/microphone.svg,authoring,,0,Supporting glyph for this implemented subsystem; exact integration location remains to be selected.
+microphone-off,Microphone off,audio-video,supporting,../../static/icons/ui/microphone-off.svg,authoring,,0,Supporting glyph for this implemented subsystem; exact integration location remains to be selected.
+record,Record,audio-video,supporting,../../static/icons/ui/record.svg,authoring,,0,Supporting glyph for this implemented subsystem; exact integration location remains to be selected.
+waveform,Waveform,audio-video,supporting,../../static/icons/ui/waveform.svg,authoring,,0,Supporting glyph for this implemented subsystem; exact integration location remains to be selected.
+volume,Volume,audio-video,supporting,../../static/icons/ui/volume.svg,authoring,,0,Supporting glyph for this implemented subsystem; exact integration location remains to be selected.
+volume-off,Volume off,audio-video,supporting,../../static/icons/ui/volume-off.svg,authoring,,0,Supporting glyph for this implemented subsystem; exact integration location remains to be selected.
+headphones,Headphones,audio-video,supporting,../../static/icons/ui/headphones.svg,authoring,,0,Supporting glyph for this implemented subsystem; exact integration location remains to be selected.
+speech-to-text,Speech to text,audio-video,supporting,../../static/icons/ui/speech-to-text.svg,authoring,,0,Supporting glyph for this implemented subsystem; exact integration location remains to be selected.
+text-to-speech,Text to speech,audio-video,existing-svg,../../static/icons/ui/text-to-speech.svg,authoring,,1,Unifies an icon concept already represented in the current interface.
+voice-settings,Voice settings,audio-video,supporting,../../static/icons/ui/voice-settings.svg,authoring,parameters,0,Supporting glyph for this implemented subsystem; exact integration location remains to be selected.
+play,Play,audio-video,existing-svg,../../static/icons/ui/play.svg,authoring,,19,Unifies an icon concept already represented in the current interface.
+pause,Pause,audio-video,existing-svg,../../static/icons/ui/pause.svg,authoring,,1,Unifies an icon concept already represented in the current interface.
+skip-next,Skip next,audio-video,supporting,../../static/icons/ui/skip-next.svg,authoring,,0,Supporting glyph for this implemented subsystem; exact integration location remains to be selected.
+skip-previous,Skip previous,audio-video,supporting,../../static/icons/ui/skip-previous.svg,authoring,,0,Supporting glyph for this implemented subsystem; exact integration location remains to be selected.
+repeat,Repeat,audio-video,existing-svg,../../static/icons/ui/repeat.svg,authoring,,7,Unifies an icon concept already represented in the current interface.
+playback-speed,Playback speed,audio-video,supporting,../../static/icons/ui/playback-speed.svg,authoring,clock,0,Supporting glyph for this implemented subsystem; exact integration location remains to be selected.
+camera,Camera,audio-video,supporting,../../static/icons/ui/camera.svg,authoring,,0,Supporting glyph for this implemented subsystem; exact integration location remains to be selected.
+video,Video,audio-video,supporting,../../static/icons/ui/video.svg,authoring,,0,Supporting glyph for this implemented subsystem; exact integration location remains to be selected.
+film,Film,audio-video,supporting,../../static/icons/ui/film.svg,authoring,,0,Supporting glyph for this implemented subsystem; exact integration location remains to be selected.
+transcript,Transcript,audio-video,existing-svg,../../static/icons/ui/transcript.svg,authoring,,2,Unifies an icon concept already represented in the current interface.
+subtitles,Subtitles,audio-video,supporting,../../static/icons/ui/subtitles.svg,authoring,,0,Supporting glyph for this implemented subsystem; exact integration location remains to be selected.
+audio-file,Audio file,audio-video,supporting,../../static/icons/ui/audio-file.svg,authoring,,0,Supporting glyph for this implemented subsystem; exact integration location remains to be selected.
+autoplay,Autoplay,audio-video,supporting,../../static/icons/ui/autoplay.svg,authoring,,0,Supporting glyph for this implemented subsystem; exact integration location remains to be selected.
+image,Image,gallery-editor,existing-svg,../../static/icons/ui/image.svg,image-editor,,27,Unifies an icon concept already represented in the current interface.
+image-add,Image add,gallery-editor,existing-svg,../../static/icons/ui/image-add.svg,image-editor,,1,Unifies an icon concept already represented in the current interface.
+image-import,Image import,gallery-editor,supporting,../../static/icons/ui/image-import.svg,image-editor,,0,Supporting glyph for this implemented subsystem; exact integration location remains to be selected.
+image-export,Image export,gallery-editor,supporting,../../static/icons/ui/image-export.svg,image-editor,,0,Supporting glyph for this implemented subsystem; exact integration location remains to be selected.
+album,Album,gallery-editor,existing-svg,../../static/icons/ui/album.svg,image-editor,layer-group,15,Unifies an icon concept already represented in the current interface.
+album-new,Album new,gallery-editor,supporting,../../static/icons/ui/album-new.svg,image-editor,,0,Supporting glyph for this implemented subsystem; exact integration location remains to be selected.
+album-cover,Album cover,gallery-editor,existing-svg,../../static/icons/ui/album-cover.svg,image-editor,layer,1,Unifies an icon concept already represented in the current interface.
+canvas,Canvas,gallery-editor,existing-svg,../../static/icons/ui/canvas.svg,image-editor,,19,Unifies an icon concept already represented in the current interface.
+canvas-resize,Canvas resize,gallery-editor,supporting,../../static/icons/ui/canvas-resize.svg,image-editor,,0,Supporting glyph for this implemented subsystem; exact integration location remains to be selected.
+image-resize,Image resize,gallery-editor,supporting,../../static/icons/ui/image-resize.svg,image-editor,,0,Supporting glyph for this implemented subsystem; exact integration location remains to be selected.
+crop,Crop,gallery-editor,existing-svg,../../static/icons/ui/crop.svg,image-editor,,4,Unifies an icon concept already represented in the current interface.
+perspective-crop,Perspective crop,gallery-editor,existing-svg,../../static/icons/ui/perspective-crop.svg,image-editor,,3,Unifies an icon concept already represented in the current interface.
+rotate-left,Rotate left,gallery-editor,existing-svg,../../static/icons/ui/rotate-left.svg,image-editor,,5,Unifies an icon concept already represented in the current interface.
+rotate-right,Rotate right,gallery-editor,existing-svg,../../static/icons/ui/rotate-right.svg,image-editor,,3,Unifies an icon concept already represented in the current interface.
+rotate-half,Rotate half,gallery-editor,existing-svg,../../static/icons/ui/rotate-half.svg,image-editor,,2,Unifies an icon concept already represented in the current interface.
+flip-horizontal,Flip horizontal,gallery-editor,supporting,../../static/icons/ui/flip-horizontal.svg,image-editor,,0,Supporting glyph for this implemented subsystem; exact integration location remains to be selected.
+flip-vertical,Flip vertical,gallery-editor,supporting,../../static/icons/ui/flip-vertical.svg,image-editor,,0,Supporting glyph for this implemented subsystem; exact integration location remains to be selected.
+zoom-in,Zoom in,gallery-editor,control-gap,../../static/icons/ui/zoom-in.svg,image-editor,,2,Candidate for a current control without a literal SVG; text-only controls may be intentional.
+zoom-out,Zoom out,gallery-editor,control-gap,../../static/icons/ui/zoom-out.svg,image-editor,,2,Candidate for a current control without a literal SVG; text-only controls may be intentional.
+zoom-fit,Zoom fit,gallery-editor,control-gap,../../static/icons/ui/zoom-fit.svg,image-editor,,1,Candidate for a current control without a literal SVG; text-only controls may be intentional.
+actual-size,Actual size,gallery-editor,supporting,../../static/icons/ui/actual-size.svg,image-editor,,0,Supporting glyph for this implemented subsystem; exact integration location remains to be selected.
+pan,Pan,gallery-editor,existing-svg,../../static/icons/ui/pan.svg,image-editor,,1,Unifies an icon concept already represented in the current interface.
+brush,Brush,gallery-editor,existing-svg,../../static/icons/ui/brush.svg,image-editor,,9,Unifies an icon concept already represented in the current interface.
+eraser,Eraser,gallery-editor,existing-svg,../../static/icons/ui/eraser.svg,image-editor,,16,Unifies an icon concept already represented in the current interface.
+pencil,Pencil,gallery-editor,supporting,../../static/icons/ui/pencil.svg,image-editor,edit,0,Supporting glyph for this implemented subsystem; exact integration location remains to be selected.
+pen,Pen,gallery-editor,supporting,../../static/icons/ui/pen.svg,image-editor,,0,Supporting glyph for this implemented subsystem; exact integration location remains to be selected.
+line,Line,gallery-editor,existing-svg,../../static/icons/ui/line.svg,image-editor,,5,Unifies an icon concept already represented in the current interface.
+path,Path,gallery-editor,existing-svg,../../static/icons/ui/path.svg,image-editor,,17,Unifies an icon concept already represented in the current interface.
+node-edit,Node edit,gallery-editor,supporting,../../static/icons/ui/node-edit.svg,image-editor,path,0,Supporting glyph for this implemented subsystem; exact integration location remains to be selected.
+polygon,Polygon,gallery-editor,existing-svg,../../static/icons/ui/polygon.svg,image-editor,,5,Unifies an icon concept already represented in the current interface.
+rectangle,Rectangle,gallery-editor,existing-svg,../../static/icons/ui/rectangle.svg,image-editor,,1,Unifies an icon concept already represented in the current interface.
+ellipse,Ellipse,gallery-editor,existing-svg,../../static/icons/ui/ellipse.svg,image-editor,,4,Unifies an icon concept already represented in the current interface.
+shape-union,Shape union,gallery-editor,control-gap,../../static/icons/ui/shape-union.svg,image-editor,,1,Candidate for a current control without a literal SVG; text-only controls may be intentional.
+shape-subtract,Shape subtract,gallery-editor,control-gap,../../static/icons/ui/shape-subtract.svg,image-editor,,1,Candidate for a current control without a literal SVG; text-only controls may be intentional.
+shape-intersect,Shape intersect,gallery-editor,existing-svg,../../static/icons/ui/shape-intersect.svg,image-editor,,7,Unifies an icon concept already represented in the current interface.
+shape-exclude,Shape exclude,gallery-editor,control-gap,../../static/icons/ui/shape-exclude.svg,image-editor,,1,Candidate for a current control without a literal SVG; text-only controls may be intentional.
+eyedropper,Eyedropper,gallery-editor,existing-svg,../../static/icons/ui/eyedropper.svg,image-editor,,3,Unifies an icon concept already represented in the current interface.
+paint-bucket,Paint bucket,gallery-editor,existing-svg,../../static/icons/ui/paint-bucket.svg,image-editor,,28,Unifies an icon concept already represented in the current interface.
+gradient,Gradient,gallery-editor,existing-svg,../../static/icons/ui/gradient.svg,image-editor,,7,Unifies an icon concept already represented in the current interface.
+pattern,Pattern,gallery-editor,existing-svg,../../static/icons/ui/pattern.svg,image-editor,,3,Unifies an icon concept already represented in the current interface.
+swatches,Swatches,gallery-editor,existing-svg,../../static/icons/ui/swatches.svg,image-editor,,3,Unifies an icon concept already represented in the current interface.
+color-swap,Color swap,gallery-editor,existing-svg,../../static/icons/ui/color-swap.svg,image-editor,,1,Unifies an icon concept already represented in the current interface.
+layer,Layer,gallery-editor,existing-svg,../../static/icons/ui/layer.svg,image-editor,,28,Unifies an icon concept already represented in the current interface.
+layer-new,Layer new,gallery-editor,existing-svg,../../static/icons/ui/layer-new.svg,image-editor,,11,Unifies an icon concept already represented in the current interface.
+layer-duplicate,Layer duplicate,gallery-editor,supporting,../../static/icons/ui/layer-duplicate.svg,image-editor,,0,Supporting glyph for this implemented subsystem; exact integration location remains to be selected.
+layer-delete,Layer delete,gallery-editor,supporting,../../static/icons/ui/layer-delete.svg,image-editor,,0,Supporting glyph for this implemented subsystem; exact integration location remains to be selected.
+layer-group,Layer group,gallery-editor,existing-svg,../../static/icons/ui/layer-group.svg,image-editor,,4,Unifies an icon concept already represented in the current interface.
+layer-ungroup,Layer ungroup,gallery-editor,supporting,../../static/icons/ui/layer-ungroup.svg,image-editor,,0,Supporting glyph for this implemented subsystem; exact integration location remains to be selected.
+layer-up,Layer up,gallery-editor,control-gap,../../static/icons/ui/layer-up.svg,image-editor,,1,Candidate for a current control without a literal SVG; text-only controls may be intentional.
+layer-down,Layer down,gallery-editor,control-gap,../../static/icons/ui/layer-down.svg,image-editor,,1,Candidate for a current control without a literal SVG; text-only controls may be intentional.
+layer-front,Layer front,gallery-editor,control-gap,../../static/icons/ui/layer-front.svg,image-editor,,1,Candidate for a current control without a literal SVG; text-only controls may be intentional.
+layer-back,Layer back,gallery-editor,control-gap,../../static/icons/ui/layer-back.svg,image-editor,,1,Candidate for a current control without a literal SVG; text-only controls may be intentional.
+merge-down,Merge down,gallery-editor,existing-svg,../../static/icons/ui/merge-down.svg,image-editor,,3,Unifies an icon concept already represented in the current interface.
+merge-visible,Merge visible,gallery-editor,existing-svg,../../static/icons/ui/merge-visible.svg,image-editor,,4,Unifies an icon concept already represented in the current interface.
+flatten,Flatten,gallery-editor,existing-svg,../../static/icons/ui/flatten.svg,image-editor,,2,Unifies an icon concept already represented in the current interface.
+rasterize,Rasterize,gallery-editor,existing-svg,../../static/icons/ui/rasterize.svg,image-editor,,4,Unifies an icon concept already represented in the current interface.
+lock,Lock,gallery-editor,existing-svg,../../static/icons/ui/lock.svg,image-editor,,4,Unifies an icon concept already represented in the current interface.
+unlock,Unlock,gallery-editor,existing-svg,../../static/icons/ui/unlock.svg,image-editor,,2,Unifies an icon concept already represented in the current interface.
+eye,Eye,gallery-editor,existing-svg,../../static/icons/ui/eye.svg,image-editor,,40,Unifies an icon concept already represented in the current interface.
+eye-off,Eye off,gallery-editor,existing-svg,../../static/icons/ui/eye-off.svg,image-editor,,10,Unifies an icon concept already represented in the current interface.
+mask,Mask,gallery-editor,existing-svg,../../static/icons/ui/mask.svg,image-editor,,18,Unifies an icon concept already represented in the current interface.
+mask-add,Mask add,gallery-editor,supporting,../../static/icons/ui/mask-add.svg,image-editor,,0,Supporting glyph for this implemented subsystem; exact integration location remains to be selected.
+mask-remove,Mask remove,gallery-editor,supporting,../../static/icons/ui/mask-remove.svg,image-editor,,0,Supporting glyph for this implemented subsystem; exact integration location remains to be selected.
+mask-invert,Mask invert,gallery-editor,existing-svg,../../static/icons/ui/mask-invert.svg,image-editor,,2,Unifies an icon concept already represented in the current interface.
+mask-clear,Mask clear,gallery-editor,existing-svg,../../static/icons/ui/mask-clear.svg,image-editor,,1,Unifies an icon concept already represented in the current interface.
+mask-refine,Mask refine,gallery-editor,control-gap,../../static/icons/ui/mask-refine.svg,image-editor,,2,Candidate for a current control without a literal SVG; text-only controls may be intentional.
+selection,Selection,gallery-editor,existing-svg,../../static/icons/ui/selection.svg,image-editor,,50,Unifies an icon concept already represented in the current interface.
+marquee-rectangle,Marquee rectangle,gallery-editor,existing-svg,../../static/icons/ui/marquee-rectangle.svg,image-editor,selection,1,Unifies an icon concept already represented in the current interface.
+marquee-ellipse,Marquee ellipse,gallery-editor,existing-svg,../../static/icons/ui/marquee-ellipse.svg,image-editor,,1,Unifies an icon concept already represented in the current interface.
+lasso,Lasso,gallery-editor,existing-svg,../../static/icons/ui/lasso.svg,image-editor,,1,Unifies an icon concept already represented in the current interface.
+magnetic-lasso,Magnetic lasso,gallery-editor,supporting,../../static/icons/ui/magnetic-lasso.svg,image-editor,,0,Supporting glyph for this implemented subsystem; exact integration location remains to be selected.
+magic-wand,Magic wand,gallery-editor,supporting,../../static/icons/ui/magic-wand.svg,image-editor,,0,Supporting glyph for this implemented subsystem; exact integration location remains to be selected.
+quick-select,Quick select,gallery-editor,existing-svg,../../static/icons/ui/quick-select.svg,image-editor,,2,Unifies an icon concept already represented in the current interface.
+object-select,Object select,gallery-editor,existing-svg,../../static/icons/ui/object-select.svg,image-editor,,3,Unifies an icon concept already represented in the current interface.
+subject-select,Subject select,gallery-editor,existing-svg,../../static/icons/ui/subject-select.svg,image-editor,,4,Unifies an icon concept already represented in the current interface.
+inpaint,Inpaint,gallery-editor,existing-svg,../../static/icons/ui/inpaint.svg,image-editor,,5,Unifies an icon concept already represented in the current interface.
+outpaint,Outpaint,gallery-editor,supporting,../../static/icons/ui/outpaint.svg,image-editor,,0,Supporting glyph for this implemented subsystem; exact integration location remains to be selected.
+background-remove,Background remove,gallery-editor,existing-svg,../../static/icons/ui/background-remove.svg,image-editor,,2,Unifies an icon concept already represented in the current interface.
+harmonize,Harmonize,gallery-editor,control-gap,../../static/icons/ui/harmonize.svg,image-editor,,1,Candidate for a current control without a literal SVG; text-only controls may be intentional.
+style-transfer,Style transfer,gallery-editor,supporting,../../static/icons/ui/style-transfer.svg,image-editor,,0,Supporting glyph for this implemented subsystem; exact integration location remains to be selected.
+ruler,Ruler,gallery-editor,existing-svg,../../static/icons/ui/ruler.svg,image-editor,,1,Unifies an icon concept already represented in the current interface.
+guides,Guides,gallery-editor,existing-svg,../../static/icons/ui/guides.svg,image-editor,,1,Unifies an icon concept already represented in the current interface.
+guide-add,Guide add,gallery-editor,supporting,../../static/icons/ui/guide-add.svg,image-editor,,0,Supporting glyph for this implemented subsystem; exact integration location remains to be selected.
+grid-snap,Grid snap,gallery-editor,existing-svg,../../static/icons/ui/grid-snap.svg,image-editor,,3,Unifies an icon concept already represented in the current interface.
+transform,Transform,gallery-editor,existing-svg,../../static/icons/ui/transform.svg,image-editor,,8,Unifies an icon concept already represented in the current interface.
+skew,Skew,gallery-editor,control-gap,../../static/icons/ui/skew.svg,image-editor,,4,Candidate for a current control without a literal SVG; text-only controls may be intentional.
+perspective,Perspective,gallery-editor,control-gap,../../static/icons/ui/perspective.svg,image-editor,,4,Candidate for a current control without a literal SVG; text-only controls may be intentional.
+snapshot,Snapshot,gallery-editor,existing-svg,../../static/icons/ui/snapshot.svg,image-editor,,4,Unifies an icon concept already represented in the current interface.
+navigator,Navigator,gallery-editor,existing-svg,../../static/icons/ui/navigator.svg,image-editor,,3,Unifies an icon concept already represented in the current interface.
+properties,Properties,gallery-editor,existing-svg,../../static/icons/ui/properties.svg,image-editor,,6,Unifies an icon concept already represented in the current interface.
+history,History,gallery-editor,existing-svg,../../static/icons/ui/history.svg,image-editor,,7,Unifies an icon concept already represented in the current interface.
+channels,Channels,gallery-editor,existing-svg,../../static/icons/ui/channels.svg,image-editor,,3,Unifies an icon concept already represented in the current interface.
+paths,Paths,gallery-editor,existing-svg,../../static/icons/ui/paths.svg,image-editor,path,2,Unifies an icon concept already represented in the current interface.
+histogram,Histogram,gallery-editor,existing-svg,../../static/icons/ui/histogram.svg,image-editor,,3,Unifies an icon concept already represented in the current interface.
+actions-panel,Actions panel,gallery-editor,supporting,../../static/icons/ui/actions-panel.svg,image-editor,properties,0,Supporting glyph for this implemented subsystem; exact integration location remains to be selected.
+brightness,Brightness,image-adjustments,existing-svg,../../static/icons/ui/brightness.svg,adjustments-effects,,3,Unifies an icon concept already represented in the current interface.
+contrast,Contrast,image-adjustments,supporting,../../static/icons/ui/contrast.svg,adjustments-effects,,0,Supporting glyph for this implemented subsystem; exact integration location remains to be selected.
+exposure,Exposure,image-adjustments,existing-svg,../../static/icons/ui/exposure.svg,adjustments-effects,,3,Unifies an icon concept already represented in the current interface.
+develop,Develop,image-adjustments,control-gap,../../static/icons/ui/develop.svg,adjustments-effects,parameters,1,Candidate for a current control without a literal SVG; text-only controls may be intentional.
+white-balance,White balance,image-adjustments,existing-svg,../../static/icons/ui/white-balance.svg,adjustments-effects,,2,Unifies an icon concept already represented in the current interface.
+hue-saturation,Hue saturation,image-adjustments,existing-svg,../../static/icons/ui/hue-saturation.svg,adjustments-effects,,4,Unifies an icon concept already represented in the current interface.
+vibrance,Vibrance,image-adjustments,control-gap,../../static/icons/ui/vibrance.svg,adjustments-effects,,2,Candidate for a current control without a literal SVG; text-only controls may be intentional.
+black-white,Black white,image-adjustments,existing-svg,../../static/icons/ui/black-white.svg,adjustments-effects,contrast,4,Unifies an icon concept already represented in the current interface.
+shadows-highlights,Shadows highlights,image-adjustments,existing-svg,../../static/icons/ui/shadows-highlights.svg,adjustments-effects,,3,Unifies an icon concept already represented in the current interface.
+levels,Levels,image-adjustments,existing-svg,../../static/icons/ui/levels.svg,adjustments-effects,,3,Unifies an icon concept already represented in the current interface.
+curves,Curves,image-adjustments,control-gap,../../static/icons/ui/curves.svg,adjustments-effects,,2,Candidate for a current control without a literal SVG; text-only controls may be intentional.
+color-balance,Color balance,image-adjustments,existing-svg,../../static/icons/ui/color-balance.svg,adjustments-effects,,4,Unifies an icon concept already represented in the current interface.
+selective-color,Selective color,image-adjustments,existing-svg,../../static/icons/ui/selective-color.svg,adjustments-effects,,3,Unifies an icon concept already represented in the current interface.
+gradient-map,Gradient map,image-adjustments,existing-svg,../../static/icons/ui/gradient-map.svg,adjustments-effects,gradient,3,Unifies an icon concept already represented in the current interface.
+invert,Invert,image-adjustments,existing-svg,../../static/icons/ui/invert.svg,adjustments-effects,contrast,12,Unifies an icon concept already represented in the current interface.
+posterize,Posterize,image-adjustments,existing-svg,../../static/icons/ui/posterize.svg,adjustments-effects,,3,Unifies an icon concept already represented in the current interface.
+threshold,Threshold,image-adjustments,control-gap,../../static/icons/ui/threshold.svg,adjustments-effects,,2,Candidate for a current control without a literal SVG; text-only controls may be intentional.
+photo-filter,Photo filter,image-adjustments,existing-svg,../../static/icons/ui/photo-filter.svg,adjustments-effects,,3,Unifies an icon concept already represented in the current interface.
+channel-mixer,Channel mixer,image-adjustments,existing-svg,../../static/icons/ui/channel-mixer.svg,adjustments-effects,,3,Unifies an icon concept already represented in the current interface.
+color-lookup,Color lookup,image-adjustments,existing-svg,../../static/icons/ui/color-lookup.svg,adjustments-effects,,2,Unifies an icon concept already represented in the current interface.
+desaturate,Desaturate,image-adjustments,control-gap,../../static/icons/ui/desaturate.svg,adjustments-effects,contrast,1,Candidate for a current control without a literal SVG; text-only controls may be intentional.
+auto-tone,Auto tone,image-adjustments,control-gap,../../static/icons/ui/auto-tone.svg,adjustments-effects,,1,Candidate for a current control without a literal SVG; text-only controls may be intentional.
+auto-contrast,Auto contrast,image-adjustments,control-gap,../../static/icons/ui/auto-contrast.svg,adjustments-effects,,1,Candidate for a current control without a literal SVG; text-only controls may be intentional.
+auto-color,Auto color,image-adjustments,control-gap,../../static/icons/ui/auto-color.svg,adjustments-effects,,1,Candidate for a current control without a literal SVG; text-only controls may be intentional.
+equalize,Equalize,image-adjustments,supporting,../../static/icons/ui/equalize.svg,adjustments-effects,histogram,0,Supporting glyph for this implemented subsystem; exact integration location remains to be selected.
+color-replace,Color replace,image-adjustments,existing-svg,../../static/icons/ui/color-replace.svg,adjustments-effects,,2,Unifies an icon concept already represented in the current interface.
+blur,Blur,image-filters,control-gap,../../static/icons/ui/blur.svg,adjustments-effects,,2,Candidate for a current control without a literal SVG; text-only controls may be intentional.
+gaussian-blur,Gaussian blur,image-filters,existing-svg,../../static/icons/ui/gaussian-blur.svg,adjustments-effects,,2,Unifies an icon concept already represented in the current interface.
+motion-blur,Motion blur,image-filters,existing-svg,../../static/icons/ui/motion-blur.svg,adjustments-effects,,2,Unifies an icon concept already represented in the current interface.
+zoom-blur,Zoom blur,image-filters,existing-svg,../../static/icons/ui/zoom-blur.svg,adjustments-effects,,2,Unifies an icon concept already represented in the current interface.
+radial-blur,Radial blur,image-filters,control-gap,../../static/icons/ui/radial-blur.svg,adjustments-effects,,1,Candidate for a current control without a literal SVG; text-only controls may be intentional.
+box-blur,Box blur,image-filters,control-gap,../../static/icons/ui/box-blur.svg,adjustments-effects,,1,Candidate for a current control without a literal SVG; text-only controls may be intentional.
+surface-blur,Surface blur,image-filters,control-gap,../../static/icons/ui/surface-blur.svg,adjustments-effects,,1,Candidate for a current control without a literal SVG; text-only controls may be intentional.
+sharpen,Sharpen,image-filters,existing-svg,../../static/icons/ui/sharpen.svg,adjustments-effects,,6,Unifies an icon concept already represented in the current interface.
+sharpen-edges,Sharpen edges,image-filters,control-gap,../../static/icons/ui/sharpen-edges.svg,adjustments-effects,,1,Candidate for a current control without a literal SVG; text-only controls may be intentional.
+sharpen-more,Sharpen more,image-filters,control-gap,../../static/icons/ui/sharpen-more.svg,adjustments-effects,,1,Candidate for a current control without a literal SVG; text-only controls may be intentional.
+unsharp-mask,Unsharp mask,image-filters,control-gap,../../static/icons/ui/unsharp-mask.svg,adjustments-effects,,1,Candidate for a current control without a literal SVG; text-only controls may be intentional.
+smart-sharpen,Smart sharpen,image-filters,control-gap,../../static/icons/ui/smart-sharpen.svg,adjustments-effects,,1,Candidate for a current control without a literal SVG; text-only controls may be intentional.
+noise,Noise,image-filters,control-gap,../../static/icons/ui/noise.svg,adjustments-effects,,1,Candidate for a current control without a literal SVG; text-only controls may be intentional.
+add-noise,Add noise,image-filters,control-gap,../../static/icons/ui/add-noise.svg,adjustments-effects,,1,Candidate for a current control without a literal SVG; text-only controls may be intentional.
+despeckle,Despeckle,image-filters,control-gap,../../static/icons/ui/despeckle.svg,adjustments-effects,,1,Candidate for a current control without a literal SVG; text-only controls may be intentional.
+reduce-noise,Reduce noise,image-filters,control-gap,../../static/icons/ui/reduce-noise.svg,adjustments-effects,,1,Candidate for a current control without a literal SVG; text-only controls may be intentional.
+dust-scratches,Dust scratches,image-filters,control-gap,../../static/icons/ui/dust-scratches.svg,adjustments-effects,,1,Candidate for a current control without a literal SVG; text-only controls may be intentional.
+median,Median,image-filters,control-gap,../../static/icons/ui/median.svg,adjustments-effects,,1,Candidate for a current control without a literal SVG; text-only controls may be intentional.
+pixelate,Pixelate,image-filters,existing-svg,../../static/icons/ui/pixelate.svg,adjustments-effects,,2,Unifies an icon concept already represented in the current interface.
+mosaic,Mosaic,image-filters,control-gap,../../static/icons/ui/mosaic.svg,adjustments-effects,,1,Candidate for a current control without a literal SVG; text-only controls may be intentional.
+crystallize,Crystallize,image-filters,control-gap,../../static/icons/ui/crystallize.svg,adjustments-effects,,1,Candidate for a current control without a literal SVG; text-only controls may be intentional.
+mosaic-tiles,Mosaic tiles,image-filters,control-gap,../../static/icons/ui/mosaic-tiles.svg,adjustments-effects,pattern,1,Candidate for a current control without a literal SVG; text-only controls may be intentional.
+emboss,Emboss,image-filters,control-gap,../../static/icons/ui/emboss.svg,adjustments-effects,,1,Candidate for a current control without a literal SVG; text-only controls may be intentional.
+find-edges,Find edges,image-filters,control-gap,../../static/icons/ui/find-edges.svg,adjustments-effects,,1,Candidate for a current control without a literal SVG; text-only controls may be intentional.
+glowing-edges,Glowing edges,image-filters,control-gap,../../static/icons/ui/glowing-edges.svg,adjustments-effects,,1,Candidate for a current control without a literal SVG; text-only controls may be intentional.
+solarize,Solarize,image-filters,control-gap,../../static/icons/ui/solarize.svg,adjustments-effects,,1,Candidate for a current control without a literal SVG; text-only controls may be intentional.
+oil-paint,Oil paint,image-filters,control-gap,../../static/icons/ui/oil-paint.svg,adjustments-effects,,1,Candidate for a current control without a literal SVG; text-only controls may be intentional.
+diffuse,Diffuse,image-filters,control-gap,../../static/icons/ui/diffuse.svg,adjustments-effects,,1,Candidate for a current control without a literal SVG; text-only controls may be intentional.
+wind,Wind,image-filters,control-gap,../../static/icons/ui/wind.svg,adjustments-effects,,1,Candidate for a current control without a literal SVG; text-only controls may be intentional.
+trace-contour,Trace contour,image-filters,control-gap,../../static/icons/ui/trace-contour.svg,adjustments-effects,,1,Candidate for a current control without a literal SVG; text-only controls may be intentional.
+halftone,Halftone,image-filters,control-gap,../../static/icons/ui/halftone.svg,adjustments-effects,,1,Candidate for a current control without a literal SVG; text-only controls may be intentional.
+reticulation,Reticulation,image-filters,control-gap,../../static/icons/ui/reticulation.svg,adjustments-effects,,1,Candidate for a current control without a literal SVG; text-only controls may be intentional.
+note-paper,Note paper,image-filters,control-gap,../../static/icons/ui/note-paper.svg,adjustments-effects,,1,Candidate for a current control without a literal SVG; text-only controls may be intentional.
+charcoal,Charcoal,image-filters,control-gap,../../static/icons/ui/charcoal.svg,adjustments-effects,,2,Candidate for a current control without a literal SVG; text-only controls may be intentional.
+chalk,Chalk,image-filters,supporting,../../static/icons/ui/chalk.svg,adjustments-effects,,0,Supporting glyph for this implemented subsystem; exact integration location remains to be selected.
+graphic-pen,Graphic pen,image-filters,control-gap,../../static/icons/ui/graphic-pen.svg,adjustments-effects,,1,Candidate for a current control without a literal SVG; text-only controls may be intentional.
+photocopy,Photocopy,image-filters,control-gap,../../static/icons/ui/photocopy.svg,adjustments-effects,,1,Candidate for a current control without a literal SVG; text-only controls may be intentional.
+water-paper,Water paper,image-filters,control-gap,../../static/icons/ui/water-paper.svg,adjustments-effects,,1,Candidate for a current control without a literal SVG; text-only controls may be intentional.
+poster-edges,Poster edges,image-filters,control-gap,../../static/icons/ui/poster-edges.svg,adjustments-effects,,1,Candidate for a current control without a literal SVG; text-only controls may be intentional.
+cutout,Cutout,image-filters,control-gap,../../static/icons/ui/cutout.svg,adjustments-effects,,1,Candidate for a current control without a literal SVG; text-only controls may be intentional.
+ink-outlines,Ink outlines,image-filters,control-gap,../../static/icons/ui/ink-outlines.svg,adjustments-effects,,1,Candidate for a current control without a literal SVG; text-only controls may be intentional.
+crosshatch,Crosshatch,image-filters,control-gap,../../static/icons/ui/crosshatch.svg,adjustments-effects,,1,Candidate for a current control without a literal SVG; text-only controls may be intentional.
+stained-glass,Stained glass,image-filters,control-gap,../../static/icons/ui/stained-glass.svg,adjustments-effects,,1,Candidate for a current control without a literal SVG; text-only controls may be intentional.
+grain,Grain,image-filters,control-gap,../../static/icons/ui/grain.svg,adjustments-effects,,1,Candidate for a current control without a literal SVG; text-only controls may be intentional.
+texturizer,Texturizer,image-filters,control-gap,../../static/icons/ui/texturizer.svg,adjustments-effects,,1,Candidate for a current control without a literal SVG; text-only controls may be intentional.
+patchwork,Patchwork,image-filters,control-gap,../../static/icons/ui/patchwork.svg,adjustments-effects,,1,Candidate for a current control without a literal SVG; text-only controls may be intentional.
+craquelure,Craquelure,image-filters,control-gap,../../static/icons/ui/craquelure.svg,adjustments-effects,,1,Candidate for a current control without a literal SVG; text-only controls may be intentional.
+twirl,Twirl,image-filters,control-gap,../../static/icons/ui/twirl.svg,adjustments-effects,,1,Candidate for a current control without a literal SVG; text-only controls may be intentional.
+pinch,Pinch,image-filters,control-gap,../../static/icons/ui/pinch.svg,adjustments-effects,,1,Candidate for a current control without a literal SVG; text-only controls may be intentional.
+spherize,Spherize,image-filters,control-gap,../../static/icons/ui/spherize.svg,adjustments-effects,,1,Candidate for a current control without a literal SVG; text-only controls may be intentional.
+ripple,Ripple,image-filters,control-gap,../../static/icons/ui/ripple.svg,adjustments-effects,,1,Candidate for a current control without a literal SVG; text-only controls may be intentional.
+polar-coordinates,Polar coordinates,image-filters,control-gap,../../static/icons/ui/polar-coordinates.svg,adjustments-effects,,1,Candidate for a current control without a literal SVG; text-only controls may be intentional.
+lens-correction,Lens correction,image-filters,control-gap,../../static/icons/ui/lens-correction.svg,adjustments-effects,,1,Candidate for a current control without a literal SVG; text-only controls may be intentional.
+ocean-ripple,Ocean ripple,image-filters,control-gap,../../static/icons/ui/ocean-ripple.svg,adjustments-effects,ripple,1,Candidate for a current control without a literal SVG; text-only controls may be intentional.
+glass,Glass,image-filters,control-gap,../../static/icons/ui/glass.svg,adjustments-effects,,1,Candidate for a current control without a literal SVG; text-only controls may be intentional.
+shear,Shear,image-filters,control-gap,../../static/icons/ui/shear.svg,adjustments-effects,,1,Candidate for a current control without a literal SVG; text-only controls may be intentional.
+clouds,Clouds,image-filters,control-gap,../../static/icons/ui/clouds.svg,adjustments-effects,,1,Candidate for a current control without a literal SVG; text-only controls may be intentional.
+difference-clouds,Difference clouds,image-filters,control-gap,../../static/icons/ui/difference-clouds.svg,adjustments-effects,,1,Candidate for a current control without a literal SVG; text-only controls may be intentional.
+lens-flare,Lens flare,image-filters,control-gap,../../static/icons/ui/lens-flare.svg,adjustments-effects,,1,Candidate for a current control without a literal SVG; text-only controls may be intentional.
+fibers,Fibers,image-filters,control-gap,../../static/icons/ui/fibers.svg,adjustments-effects,,1,Candidate for a current control without a literal SVG; text-only controls may be intentional.
+offset,Offset,image-filters,control-gap,../../static/icons/ui/offset.svg,adjustments-effects,,1,Candidate for a current control without a literal SVG; text-only controls may be intentional.
+maximum,Maximum,image-filters,control-gap,../../static/icons/ui/maximum.svg,adjustments-effects,,1,Candidate for a current control without a literal SVG; text-only controls may be intentional.
+minimum,Minimum,image-filters,control-gap,../../static/icons/ui/minimum.svg,adjustments-effects,,1,Candidate for a current control without a literal SVG; text-only controls may be intentional.
+color-overlay,Color overlay,image-filters,existing-svg,../../static/icons/ui/color-overlay.svg,adjustments-effects,,1,Unifies an icon concept already represented in the current interface.
+drop-shadow,Drop shadow,image-filters,existing-svg,../../static/icons/ui/drop-shadow.svg,adjustments-effects,,2,Unifies an icon concept already represented in the current interface.
+stroke-effect,Stroke effect,image-filters,existing-svg,../../static/icons/ui/stroke-effect.svg,adjustments-effects,,1,Unifies an icon concept already represented in the current interface.
+haze-removal,Haze removal,image-filters,existing-svg,../../static/icons/ui/haze-removal.svg,adjustments-effects,,1,Unifies an icon concept already represented in the current interface.
+globe,Globe,research-knowledge,supporting,../../static/icons/ui/globe.svg,security-research,,0,Supporting glyph for this implemented subsystem; exact integration location remains to be selected.
+browser,Browser,research-knowledge,existing-svg,../../static/icons/ui/browser.svg,security-research,,2,Unifies an icon concept already represented in the current interface.
+web-search,Web search,research-knowledge,existing-svg,../../static/icons/ui/web-search.svg,security-research,search,3,Unifies an icon concept already represented in the current interface.
+web-fetch,Web fetch,research-knowledge,supporting,../../static/icons/ui/web-fetch.svg,security-research,,0,Supporting glyph for this implemented subsystem; exact integration location remains to be selected.
+link-check,Link check,research-knowledge,supporting,../../static/icons/ui/link-check.svg,security-research,,0,Supporting glyph for this implemented subsystem; exact integration location remains to be selected.
+source,Source,research-knowledge,existing-svg,../../static/icons/ui/source.svg,security-research,,4,Unifies an icon concept already represented in the current interface.
+citation,Citation,research-knowledge,supporting,../../static/icons/ui/citation.svg,security-research,,0,Supporting glyph for this implemented subsystem; exact integration location remains to be selected.
+source-quality,Source quality,research-knowledge,supporting,../../static/icons/ui/source-quality.svg,security-research,,0,Supporting glyph for this implemented subsystem; exact integration location remains to be selected.
+fact-check,Fact check,research-knowledge,existing-svg,../../static/icons/ui/fact-check.svg,security-research,approval,1,Unifies an icon concept already represented in the current interface.
+research-product,Research product,research-knowledge,supporting,../../static/icons/ui/research-product.svg,security-research,,0,Supporting glyph for this implemented subsystem; exact integration location remains to be selected.
+research-comparison,Research comparison,research-knowledge,supporting,../../static/icons/ui/research-comparison.svg,security-research,compare,0,Supporting glyph for this implemented subsystem; exact integration location remains to be selected.
+research-howto,Research howto,research-knowledge,supporting,../../static/icons/ui/research-howto.svg,security-research,checklist,0,Supporting glyph for this implemented subsystem; exact integration location remains to be selected.
+research-landscape,Research landscape,research-knowledge,supporting,../../static/icons/ui/research-landscape.svg,security-research,grid,0,Supporting glyph for this implemented subsystem; exact integration location remains to be selected.
+report,Report,research-knowledge,existing-svg,../../static/icons/ui/report.svg,security-research,,3,Unifies an icon concept already represented in the current interface.
+research-parallel,Research parallel,research-knowledge,existing-svg,../../static/icons/ui/research-parallel.svg,security-research,,2,Unifies an icon concept already represented in the current interface.
+research-sequential,Research sequential,research-knowledge,existing-svg,../../static/icons/ui/research-sequential.svg,security-research,,3,Unifies an icon concept already represented in the current interface.
+research-queue,Research queue,research-knowledge,supporting,../../static/icons/ui/research-queue.svg,security-research,,0,Supporting glyph for this implemented subsystem; exact integration location remains to be selected.
+research-stop,Research stop,research-knowledge,supporting,../../static/icons/ui/research-stop.svg,security-research,,0,Supporting glyph for this implemented subsystem; exact integration location remains to be selected.
+research-followup,Research followup,research-knowledge,supporting,../../static/icons/ui/research-followup.svg,security-research,,0,Supporting glyph for this implemented subsystem; exact integration location remains to be selected.
+research-retry,Research retry,research-knowledge,supporting,../../static/icons/ui/research-retry.svg,security-research,refresh,0,Supporting glyph for this implemented subsystem; exact integration location remains to be selected.
+knowledge-base,Knowledge base,research-knowledge,supporting,../../static/icons/ui/knowledge-base.svg,security-research,,0,Supporting glyph for this implemented subsystem; exact integration location remains to be selected.
+rag,Rag,research-knowledge,existing-svg,../../static/icons/ui/rag.svg,security-research,,3,Unifies an icon concept already represented in the current interface.
+memory-add,Memory add,research-knowledge,existing-svg,../../static/icons/ui/memory-add.svg,security-research,,1,Unifies an icon concept already represented in the current interface.
+memory-search,Memory search,research-knowledge,existing-svg,../../static/icons/ui/memory-search.svg,security-research,,5,Unifies an icon concept already represented in the current interface.
+memory-tidy,Memory tidy,research-knowledge,supporting,../../static/icons/ui/memory-tidy.svg,security-research,,0,Supporting glyph for this implemented subsystem; exact integration location remains to be selected.
+memory-suggestion,Memory suggestion,research-knowledge,supporting,../../static/icons/ui/memory-suggestion.svg,security-research,,0,Supporting glyph for this implemented subsystem; exact integration location remains to be selected.
+memory-consolidate,Memory consolidate,research-knowledge,supporting,../../static/icons/ui/memory-consolidate.svg,security-research,,0,Supporting glyph for this implemented subsystem; exact integration location remains to be selected.
+skill-add,Skill add,research-knowledge,supporting,../../static/icons/ui/skill-add.svg,security-research,,0,Supporting glyph for this implemented subsystem; exact integration location remains to be selected.
+skill-audit,Skill audit,research-knowledge,supporting,../../static/icons/ui/skill-audit.svg,security-research,,0,Supporting glyph for this implemented subsystem; exact integration location remains to be selected.
+skill-test,Skill test,research-knowledge,existing-svg,../../static/icons/ui/skill-test.svg,security-research,,11,Unifies an icon concept already represented in the current interface.
+skill-pass,Skill pass,research-knowledge,supporting,../../static/icons/ui/skill-pass.svg,security-research,check,0,Supporting glyph for this implemented subsystem; exact integration location remains to be selected.
+skill-fail,Skill fail,research-knowledge,supporting,../../static/icons/ui/skill-fail.svg,security-research,,0,Supporting glyph for this implemented subsystem; exact integration location remains to be selected.
+skill-confidence,Skill confidence,research-knowledge,supporting,../../static/icons/ui/skill-confidence.svg,security-research,,0,Supporting glyph for this implemented subsystem; exact integration location remains to be selected.
+skill-approve,Skill approve,research-knowledge,supporting,../../static/icons/ui/skill-approve.svg,security-research,check,0,Supporting glyph for this implemented subsystem; exact integration location remains to be selected.
+skill-bin,Skill bin,research-knowledge,supporting,../../static/icons/ui/skill-bin.svg,security-research,,0,Supporting glyph for this implemented subsystem; exact integration location remains to be selected.
+skill-restore,Skill restore,research-knowledge,supporting,../../static/icons/ui/skill-restore.svg,security-research,,0,Supporting glyph for this implemented subsystem; exact integration location remains to be selected.
+book-open,Book open,research-knowledge,supporting,../../static/icons/ui/book-open.svg,security-research,,0,Supporting glyph for this implemented subsystem; exact integration location remains to be selected.
+book-closed,Book closed,research-knowledge,supporting,../../static/icons/ui/book-closed.svg,security-research,,0,Supporting glyph for this implemented subsystem; exact integration location remains to be selected.
+synapse,Synapse,research-knowledge,supporting,../../static/icons/ui/synapse.svg,security-research,,0,Supporting glyph for this implemented subsystem; exact integration location remains to be selected.
+sliders,Sliders,settings-security,existing-svg,../../static/icons/ui/sliders.svg,security-research,,2,Unifies an icon concept already represented in the current interface.
+appearance,Appearance,settings-security,existing-svg,../../static/icons/ui/appearance.svg,security-research,theme,2,Unifies an icon concept already represented in the current interface.
+font,Font,settings-security,existing-svg,../../static/icons/ui/font.svg,security-research,,4,Unifies an icon concept already represented in the current interface.
+keyboard,Keyboard,settings-security,supporting,../../static/icons/ui/keyboard.svg,security-research,,0,Supporting glyph for this implemented subsystem; exact integration location remains to be selected.
+accessibility,Accessibility,settings-security,supporting,../../static/icons/ui/accessibility.svg,security-research,,0,Supporting glyph for this implemented subsystem; exact integration location remains to be selected.
+density,Density,settings-security,supporting,../../static/icons/ui/density.svg,security-research,,0,Supporting glyph for this implemented subsystem; exact integration location remains to be selected.
+mobile,Mobile,settings-security,existing-svg,../../static/icons/ui/mobile.svg,security-research,,1,Unifies an icon concept already represented in the current interface.
+desktop,Desktop,settings-security,supporting,../../static/icons/ui/desktop.svg,security-research,,0,Supporting glyph for this implemented subsystem; exact integration location remains to be selected.
+touch,Touch,settings-security,supporting,../../static/icons/ui/touch.svg,security-research,,0,Supporting glyph for this implemented subsystem; exact integration location remains to be selected.
+language,Language,settings-security,existing-svg,../../static/icons/ui/language.svg,security-research,translate,5,Unifies an icon concept already represented in the current interface.
+info,Info,settings-security,existing-svg,../../static/icons/ui/info.svg,security-research,,4,Unifies an icon concept already represented in the current interface.
+warning,Warning,settings-security,supporting,../../static/icons/ui/warning.svg,security-research,,0,Supporting glyph for this implemented subsystem; exact integration location remains to be selected.
+error,Error,settings-security,existing-svg,../../static/icons/ui/error.svg,security-research,,5,Unifies an icon concept already represented in the current interface.
+success,Success,settings-security,existing-svg,../../static/icons/ui/success.svg,security-research,check,1,Unifies an icon concept already represented in the current interface.
+pending,Pending,settings-security,existing-svg,../../static/icons/ui/pending.svg,security-research,,3,Unifies an icon concept already represented in the current interface.
+loading,Loading,settings-security,existing-svg,../../static/icons/ui/loading.svg,security-research,,3,Unifies an icon concept already represented in the current interface.
+offline,Offline,settings-security,existing-svg,../../static/icons/ui/offline.svg,security-research,,1,Unifies an icon concept already represented in the current interface.
+online,Online,settings-security,supporting,../../static/icons/ui/online.svg,security-research,,0,Supporting glyph for this implemented subsystem; exact integration location remains to be selected.
+connected,Connected,settings-security,supporting,../../static/icons/ui/connected.svg,security-research,,0,Supporting glyph for this implemented subsystem; exact integration location remains to be selected.
+disconnected,Disconnected,settings-security,supporting,../../static/icons/ui/disconnected.svg,security-research,,0,Supporting glyph for this implemented subsystem; exact integration location remains to be selected.
+login,Login,settings-security,existing-svg,../../static/icons/ui/login.svg,security-research,,9,Unifies an icon concept already represented in the current interface.
+logout,Logout,settings-security,existing-svg,../../static/icons/ui/logout.svg,security-research,,2,Unifies an icon concept already represented in the current interface.
+user-add,User add,settings-security,supporting,../../static/icons/ui/user-add.svg,security-research,,0,Supporting glyph for this implemented subsystem; exact integration location remains to be selected.
+user-delete,User delete,settings-security,supporting,../../static/icons/ui/user-delete.svg,security-research,,0,Supporting glyph for this implemented subsystem; exact integration location remains to be selected.
+user-admin,User admin,settings-security,supporting,../../static/icons/ui/user-admin.svg,security-research,,0,Supporting glyph for this implemented subsystem; exact integration location remains to be selected.
+user-roles,User roles,settings-security,supporting,../../static/icons/ui/user-roles.svg,security-research,,0,Supporting glyph for this implemented subsystem; exact integration location remains to be selected.
+password,Password,settings-security,existing-svg,../../static/icons/ui/password.svg,security-research,lock,7,Unifies an icon concept already represented in the current interface.
+password-show,Password show,settings-security,existing-svg,../../static/icons/ui/password-show.svg,security-research,eye,1,Unifies an icon concept already represented in the current interface.
+password-hide,Password hide,settings-security,supporting,../../static/icons/ui/password-hide.svg,security-research,eye-off,0,Supporting glyph for this implemented subsystem; exact integration location remains to be selected.
+key,Key,settings-security,existing-svg,../../static/icons/ui/key.svg,security-research,,3,Unifies an icon concept already represented in the current interface.
+token,Token,settings-security,existing-svg,../../static/icons/ui/token.svg,security-research,,1,Unifies an icon concept already represented in the current interface.
+token-add,Token add,settings-security,existing-svg,../../static/icons/ui/token-add.svg,security-research,,1,Unifies an icon concept already represented in the current interface.
+token-revoke,Token revoke,settings-security,existing-svg,../../static/icons/ui/token-revoke.svg,security-research,,4,Unifies an icon concept already represented in the current interface.
+shield,Shield,settings-security,supporting,../../static/icons/ui/shield.svg,security-research,,0,Supporting glyph for this implemented subsystem; exact integration location remains to be selected.
+shield-check,Shield check,settings-security,supporting,../../static/icons/ui/shield-check.svg,security-research,approval,0,Supporting glyph for this implemented subsystem; exact integration location remains to be selected.
+mfa,Mfa,settings-security,existing-svg,../../static/icons/ui/mfa.svg,security-research,,2,Unifies an icon concept already represented in the current interface.
+mfa-enable,Mfa enable,settings-security,control-gap,../../static/icons/ui/mfa-enable.svg,security-research,,1,Candidate for a current control without a literal SVG; text-only controls may be intentional.
+vault,Vault,settings-security,existing-svg,../../static/icons/ui/vault.svg,security-research,,1,Unifies an icon concept already represented in the current interface.
+vault-lock,Vault lock,settings-security,supporting,../../static/icons/ui/vault-lock.svg,security-research,,0,Supporting glyph for this implemented subsystem; exact integration location remains to be selected.
+vault-unlock,Vault unlock,settings-security,supporting,../../static/icons/ui/vault-unlock.svg,security-research,,0,Supporting glyph for this implemented subsystem; exact integration location remains to be selected.
+backup,Backup,settings-security,supporting,../../static/icons/ui/backup.svg,security-research,,0,Supporting glyph for this implemented subsystem; exact integration location remains to be selected.
+backup-restore,Backup restore,settings-security,supporting,../../static/icons/ui/backup-restore.svg,security-research,,0,Supporting glyph for this implemented subsystem; exact integration location remains to be selected.
+logs,Logs,settings-security,control-gap,../../static/icons/ui/logs.svg,security-research,,1,Candidate for a current control without a literal SVG; text-only controls may be intentional.
+diagnostics,Diagnostics,settings-security,supporting,../../static/icons/ui/diagnostics.svg,security-research,,0,Supporting glyph for this implemented subsystem; exact integration location remains to be selected.
+system-update,System update,settings-security,supporting,../../static/icons/ui/system-update.svg,security-research,,0,Supporting glyph for this implemented subsystem; exact integration location remains to be selected.
+system-health,System health,settings-security,supporting,../../static/icons/ui/system-health.svg,security-research,,0,Supporting glyph for this implemented subsystem; exact integration location remains to be selected.
+permissions,Permissions,settings-security,control-gap,../../static/icons/ui/permissions.svg,security-research,,1,Candidate for a current control without a literal SVG; text-only controls may be intentional.
+permission-read,Permission read,settings-security,supporting,../../static/icons/ui/permission-read.svg,security-research,,0,Supporting glyph for this implemented subsystem; exact integration location remains to be selected.
+permission-write,Permission write,settings-security,supporting,../../static/icons/ui/permission-write.svg,security-research,,0,Supporting glyph for this implemented subsystem; exact integration location remains to be selected.
+notification-off,Notification off,settings-security,supporting,../../static/icons/ui/notification-off.svg,security-research,,0,Supporting glyph for this implemented subsystem; exact integration location remains to be selected.
+cookies,Cookies,settings-security,supporting,../../static/icons/ui/cookies.svg,security-research,,0,Supporting glyph for this implemented subsystem; exact integration location remains to be selected.
+privacy,Privacy,settings-security,supporting,../../static/icons/ui/privacy.svg,security-research,,0,Supporting glyph for this implemented subsystem; exact integration location remains to be selected.
+data-wipe,Data wipe,settings-security,existing-svg,../../static/icons/ui/data-wipe.svg,security-research,,10,Unifies an icon concept already represented in the current interface.
+bell-reset,Bell reset,settings-security,supporting,../../static/icons/ui/bell-reset.svg,security-research,,0,Supporting glyph for this implemented subsystem; exact integration location remains to be selected.
+integration-add,Integration add,settings-security,supporting,../../static/icons/ui/integration-add.svg,security-research,,0,Supporting glyph for this implemented subsystem; exact integration location remains to be selected.
+integration-remove,Integration remove,settings-security,supporting,../../static/icons/ui/integration-remove.svg,security-research,,0,Supporting glyph for this implemented subsystem; exact integration location remains to be selected.
+plugin,Plugin,settings-security,existing-svg,../../static/icons/ui/plugin.svg,security-research,,1,Unifies an icon concept already represented in the current interface.
+plugin-connect,Plugin connect,settings-security,supporting,../../static/icons/ui/plugin-connect.svg,security-research,integrations,0,Supporting glyph for this implemented subsystem; exact integration location remains to be selected.
+plug-disconnect,Plug disconnect,settings-security,supporting,../../static/icons/ui/plug-disconnect.svg,security-research,disconnected,0,Supporting glyph for this implemented subsystem; exact integration location remains to be selected.
+api,Api,settings-security,existing-svg,../../static/icons/ui/api.svg,security-research,,2,Unifies an icon concept already represented in the current interface.
+browser-direct,Browser direct,settings-security,supporting,../../static/icons/ui/browser-direct.svg,security-research,globe,0,Supporting glyph for this implemented subsystem; exact integration location remains to be selected.
+proxy-routing,Proxy routing,settings-security,supporting,../../static/icons/ui/proxy-routing.svg,security-research,,0,Supporting glyph for this implemented subsystem; exact integration location remains to be selected.
+device-pair,Device pair,settings-security,supporting,../../static/icons/ui/device-pair.svg,security-research,,0,Supporting glyph for this implemented subsystem; exact integration location remains to be selected.
+device-disconnect,Device disconnect,settings-security,supporting,../../static/icons/ui/device-disconnect.svg,security-research,,0,Supporting glyph for this implemented subsystem; exact integration location remains to be selected.
+network-scan,Network scan,settings-security,supporting,../../static/icons/ui/network-scan.svg,security-research,,0,Supporting glyph for this implemented subsystem; exact integration location remains to be selected.
+clipboard-check,Clipboard check,settings-security,supporting,../../static/icons/ui/clipboard-check.svg,security-research,check,0,Supporting glyph for this implemented subsystem; exact integration location remains to be selected.
+data-export,Data export,settings-security,supporting,../../static/icons/ui/data-export.svg,security-research,upload,0,Supporting glyph for this implemented subsystem; exact integration location remains to be selected.
+data-import,Data import,settings-security,supporting,../../static/icons/ui/data-import.svg,security-research,download,0,Supporting glyph for this implemented subsystem; exact integration location remains to be selected.
+file-richtext,File richtext,file-types,existing-svg,../../static/icons/ui/file-richtext.svg,authoring,,1,Unifies an icon concept already represented in the current interface.
+file-markdown,File markdown,file-types,existing-svg,../../static/icons/ui/file-markdown.svg,authoring,,1,Unifies an icon concept already represented in the current interface.
+file-csv,File csv,file-types,existing-svg,../../static/icons/ui/file-csv.svg,authoring,table,1,Unifies an icon concept already represented in the current interface.
+file-python,File python,file-types,existing-svg,../../static/icons/ui/file-python.svg,authoring,,1,Unifies an icon concept already represented in the current interface.
+file-html,File html,file-types,existing-svg,../../static/icons/ui/file-html.svg,authoring,,1,Unifies an icon concept already represented in the current interface.
+file-json,File json,file-types,existing-svg,../../static/icons/ui/file-json.svg,authoring,,1,Unifies an icon concept already represented in the current interface.
+file-javascript,File javascript,file-types,existing-svg,../../static/icons/ui/file-javascript.svg,authoring,,1,Unifies an icon concept already represented in the current interface.
+file-typescript,File typescript,file-types,existing-svg,../../static/icons/ui/file-typescript.svg,authoring,,1,Unifies an icon concept already represented in the current interface.
+file-yaml,File yaml,file-types,existing-svg,../../static/icons/ui/file-yaml.svg,authoring,,1,Unifies an icon concept already represented in the current interface.
+file-css,File css,file-types,existing-svg,../../static/icons/ui/file-css.svg,authoring,,1,Unifies an icon concept already represented in the current interface.
+file-shell,File shell,file-types,existing-svg,../../static/icons/ui/file-shell.svg,authoring,,2,Unifies an icon concept already represented in the current interface.
+file-sql,File sql,file-types,existing-svg,../../static/icons/ui/file-sql.svg,authoring,,1,Unifies an icon concept already represented in the current interface.
+file-pdf,File pdf,file-types,existing-svg,../../static/icons/ui/file-pdf.svg,authoring,,1,Unifies an icon concept already represented in the current interface.
+file-email,File email,file-types,existing-svg,../../static/icons/ui/file-email.svg,authoring,email,1,Unifies an icon concept already represented in the current interface.
+file-xml,File xml,file-types,existing-svg,../../static/icons/ui/file-xml.svg,authoring,,1,Unifies an icon concept already represented in the current interface.
+file-svg,File svg,file-types,existing-svg,../../static/icons/ui/file-svg.svg,authoring,,2,Unifies an icon concept already represented in the current interface.
+file-rust,File rust,file-types,existing-svg,../../static/icons/ui/file-rust.svg,authoring,,1,Unifies an icon concept already represented in the current interface.
+file-go,File go,file-types,existing-svg,../../static/icons/ui/file-go.svg,authoring,,1,Unifies an icon concept already represented in the current interface.
+file-java,File java,file-types,existing-svg,../../static/icons/ui/file-java.svg,authoring,,1,Unifies an icon concept already represented in the current interface.
+file-c,File c,file-types,existing-svg,../../static/icons/ui/file-c.svg,authoring,,1,Unifies an icon concept already represented in the current interface.
+file-cpp,File cpp,file-types,existing-svg,../../static/icons/ui/file-cpp.svg,authoring,,1,Unifies an icon concept already represented in the current interface.
+file-csharp,File csharp,file-types,existing-svg,../../static/icons/ui/file-csharp.svg,authoring,,1,Unifies an icon concept already represented in the current interface.
+file-ruby,File ruby,file-types,existing-svg,../../static/icons/ui/file-ruby.svg,authoring,,1,Unifies an icon concept already represented in the current interface.
+file-php,File php,file-types,existing-svg,../../static/icons/ui/file-php.svg,authoring,,1,Unifies an icon concept already represented in the current interface.
+file-code,File code,file-types,existing-svg,../../static/icons/ui/file-code.svg,authoring,api,1,Unifies an icon concept already represented in the current interface.
+file-toml,File toml,file-types,supporting,../../static/icons/ui/file-toml.svg,authoring,,0,Supporting glyph for this implemented subsystem; exact integration location remains to be selected.
+file-ini,File ini,file-types,supporting,../../static/icons/ui/file-ini.svg,authoring,,0,Supporting glyph for this implemented subsystem; exact integration location remains to be selected.
+file-image,File image,file-types,supporting,../../static/icons/ui/file-image.svg,authoring,image,0,Supporting glyph for this implemented subsystem; exact integration location remains to be selected.
+file-audio,File audio,file-types,supporting,../../static/icons/ui/file-audio.svg,authoring,audio-file,0,Supporting glyph for this implemented subsystem; exact integration location remains to be selected.
+file-video,File video,file-types,supporting,../../static/icons/ui/file-video.svg,authoring,film,0,Supporting glyph for this implemented subsystem; exact integration location remains to be selected.
+file-archive,File archive,file-types,supporting,../../static/icons/ui/file-archive.svg,authoring,,0,Supporting glyph for this implemented subsystem; exact integration location remains to be selected.
+file-binary,File binary,file-types,supporting,../../static/icons/ui/file-binary.svg,authoring,,0,Supporting glyph for this implemented subsystem; exact integration location remains to be selected.
+file-font,File font,file-types,supporting,../../static/icons/ui/file-font.svg,authoring,font-family,0,Supporting glyph for this implemented subsystem; exact integration location remains to be selected.
+file-ics,File ics,file-types,supporting,../../static/icons/ui/file-ics.svg,authoring,calendar,0,Supporting glyph for this implemented subsystem; exact integration location remains to be selected.
+file-vcf,File vcf,file-types,supporting,../../static/icons/ui/file-vcf.svg,authoring,contacts,0,Supporting glyph for this implemented subsystem; exact integration location remains to be selected.
+file-psd,File psd,file-types,control-gap,../../static/icons/ui/file-psd.svg,authoring,layer,1,Candidate for a current control without a literal SVG; text-only controls may be intentional.
+file-log,File log,file-types,supporting,../../static/icons/ui/file-log.svg,authoring,logs,0,Supporting glyph for this implemented subsystem; exact integration location remains to be selected.
+search-provider,Search provider,integrations-providers,existing-svg,../../static/icons/ui/search-provider.svg,models-ai,globe,4,Unifies an icon concept already represented in the current interface.
+search-searxng,Search searxng,integrations-providers,existing-svg,../../static/icons/ui/search-searxng.svg,models-ai,,1,Unifies an icon concept already represented in the current interface.
+search-duckduckgo,Search duckduckgo,integrations-providers,existing-svg,../../static/icons/ui/search-duckduckgo.svg,models-ai,,1,Unifies an icon concept already represented in the current interface.
+search-brave,Search brave,integrations-providers,existing-svg,../../static/icons/ui/search-brave.svg,models-ai,,1,Unifies an icon concept already represented in the current interface.
+search-google,Search google,integrations-providers,existing-svg,../../static/icons/ui/search-google.svg,models-ai,,1,Unifies an icon concept already represented in the current interface.
+search-tavily,Search tavily,integrations-providers,existing-svg,../../static/icons/ui/search-tavily.svg,models-ai,,1,Unifies an icon concept already represented in the current interface.
+search-serper,Search serper,integrations-providers,existing-svg,../../static/icons/ui/search-serper.svg,models-ai,,1,Unifies an icon concept already represented in the current interface.
+search-disabled,Search disabled,integrations-providers,existing-svg,../../static/icons/ui/search-disabled.svg,models-ai,offline,1,Unifies an icon concept already represented in the current interface.
+mcp,Mcp,integrations-providers,existing-svg,../../static/icons/ui/mcp.svg,models-ai,integrations,2,Unifies an icon concept already represented in the current interface.
+mcp-server,Mcp server,integrations-providers,supporting,../../static/icons/ui/mcp-server.svg,models-ai,server,0,Supporting glyph for this implemented subsystem; exact integration location remains to be selected.
+mcp-tool,Mcp tool,integrations-providers,supporting,../../static/icons/ui/mcp-tool.svg,models-ai,tool-call,0,Supporting glyph for this implemented subsystem; exact integration location remains to be selected.
+mcp-refresh,Mcp refresh,integrations-providers,supporting,../../static/icons/ui/mcp-refresh.svg,models-ai,,0,Supporting glyph for this implemented subsystem; exact integration location remains to be selected.
+oauth,Oauth,integrations-providers,supporting,../../static/icons/ui/oauth.svg,models-ai,link,0,Supporting glyph for this implemented subsystem; exact integration location remains to be selected.
+oauth-connect,Oauth connect,integrations-providers,supporting,../../static/icons/ui/oauth-connect.svg,models-ai,,0,Supporting glyph for this implemented subsystem; exact integration location remains to be selected.
+oauth-revoke,Oauth revoke,integrations-providers,supporting,../../static/icons/ui/oauth-revoke.svg,models-ai,,0,Supporting glyph for this implemented subsystem; exact integration location remains to be selected.
+ollama,Ollama,integrations-providers,existing-svg,../../static/icons/ui/ollama.svg,models-ai,,6,Unifies an icon concept already represented in the current interface.
+openai-compatible,Openai compatible,integrations-providers,supporting,../../static/icons/ui/openai-compatible.svg,models-ai,,0,Supporting glyph for this implemented subsystem; exact integration location remains to be selected.
+copilot,Copilot,integrations-providers,existing-svg,../../static/icons/ui/copilot.svg,models-ai,,2,Unifies an icon concept already represented in the current interface.
+chatgpt-subscription,Chatgpt subscription,integrations-providers,supporting,../../static/icons/ui/chatgpt-subscription.svg,models-ai,,0,Supporting glyph for this implemented subsystem; exact integration location remains to be selected.
+huggingface,Huggingface,integrations-providers,supporting,../../static/icons/ui/huggingface.svg,models-ai,,0,Supporting glyph for this implemented subsystem; exact integration location remains to be selected.
+github,Github,integrations-providers,supporting,../../static/icons/ui/github.svg,models-ai,,0,Supporting glyph for this implemented subsystem; exact integration location remains to be selected.
+webdav,Webdav,integrations-providers,supporting,../../static/icons/ui/webdav.svg,models-ai,,0,Supporting glyph for this implemented subsystem; exact integration location remains to be selected.
+caldav,Caldav,integrations-providers,existing-svg,../../static/icons/ui/caldav.svg,models-ai,,2,Unifies an icon concept already represented in the current interface.
+imap,Imap,integrations-providers,existing-svg,../../static/icons/ui/imap.svg,models-ai,,1,Unifies an icon concept already represented in the current interface.
+smtp,Smtp,integrations-providers,supporting,../../static/icons/ui/smtp.svg,models-ai,,0,Supporting glyph for this implemented subsystem; exact integration location remains to be selected.
+browser-agent,Browser agent,integrations-providers,supporting,../../static/icons/ui/browser-agent.svg,models-ai,,0,Supporting glyph for this implemented subsystem; exact integration location remains to be selected.
+shell-host,Shell host,integrations-providers,supporting,../../static/icons/ui/shell-host.svg,models-ai,terminal,0,Supporting glyph for this implemented subsystem; exact integration location remains to be selected.
+python-runtime,Python runtime,integrations-providers,supporting,../../static/icons/ui/python-runtime.svg,models-ai,,0,Supporting glyph for this implemented subsystem; exact integration location remains to be selected.
+code-runner,Code runner,integrations-providers,existing-svg,../../static/icons/ui/code-runner.svg,models-ai,terminal,2,Unifies an icon concept already represented in the current interface.
+breadcrumb,Breadcrumb,expanded-ui,expansion,../../static/icons/ui/breadcrumb.svg,security-research,,0,Proposed affordance for expanded UI; availability is not a product commitment.
+sidebar-favorite,Sidebar favorite,expanded-ui,expansion,../../static/icons/ui/sidebar-favorite.svg,security-research,,0,Proposed affordance for expanded UI; availability is not a product commitment.
+workspace-recent,Workspace recent,expanded-ui,expansion,../../static/icons/ui/workspace-recent.svg,security-research,,0,Proposed affordance for expanded UI; availability is not a product commitment.
+workspace-switch,Workspace switch,expanded-ui,expansion,../../static/icons/ui/workspace-switch.svg,security-research,,0,Proposed affordance for expanded UI; availability is not a product commitment.
+workspace-new,Workspace new,expanded-ui,expansion,../../static/icons/ui/workspace-new.svg,security-research,,0,Proposed affordance for expanded UI; availability is not a product commitment.
+workspace-permissions,Workspace permissions,expanded-ui,expansion,../../static/icons/ui/workspace-permissions.svg,security-research,,0,Proposed affordance for expanded UI; availability is not a product commitment.
+workspace-sync,Workspace sync,expanded-ui,expansion,../../static/icons/ui/workspace-sync.svg,security-research,,0,Proposed affordance for expanded UI; availability is not a product commitment.
+offline-cache,Offline cache,expanded-ui,expansion,../../static/icons/ui/offline-cache.svg,security-research,,0,Proposed affordance for expanded UI; availability is not a product commitment.
+sync-conflict,Sync conflict,expanded-ui,expansion,../../static/icons/ui/sync-conflict.svg,security-research,,0,Proposed affordance for expanded UI; availability is not a product commitment.
+sync-pending,Sync pending,expanded-ui,expansion,../../static/icons/ui/sync-pending.svg,security-research,refresh,0,Proposed affordance for expanded UI; availability is not a product commitment.
+connection-retry,Connection retry,expanded-ui,expansion,../../static/icons/ui/connection-retry.svg,security-research,,0,Proposed affordance for expanded UI; availability is not a product commitment.
+tool-disabled,Tool disabled,expanded-ui,expansion,../../static/icons/ui/tool-disabled.svg,security-research,,0,Proposed affordance for expanded UI; availability is not a product commitment.
+tool-waiting,Tool waiting,expanded-ui,expansion,../../static/icons/ui/tool-waiting.svg,security-research,,0,Proposed affordance for expanded UI; availability is not a product commitment.
+context-warning,Context warning,expanded-ui,expansion,../../static/icons/ui/context-warning.svg,security-research,,1,Proposed affordance for expanded UI; availability is not a product commitment.
+quota-limit,Quota limit,expanded-ui,expansion,../../static/icons/ui/quota-limit.svg,security-research,,0,Proposed affordance for expanded UI; availability is not a product commitment.
+budget-limit,Budget limit,expanded-ui,expansion,../../static/icons/ui/budget-limit.svg,security-research,,0,Proposed affordance for expanded UI; availability is not a product commitment.
+model-capability,Model capability,expanded-ui,expansion,../../static/icons/ui/model-capability.svg,security-research,skills,0,Proposed affordance for expanded UI; availability is not a product commitment.
+data-provenance,Data provenance,expanded-ui,expansion,../../static/icons/ui/data-provenance.svg,security-research,,0,Proposed affordance for expanded UI; availability is not a product commitment.
+audit-trail,Audit trail,expanded-ui,expansion,../../static/icons/ui/audit-trail.svg,security-research,,0,Proposed affordance for expanded UI; availability is not a product commitment.
+keyboard-focus,Keyboard focus,expanded-ui,expansion,../../static/icons/ui/keyboard-focus.svg,security-research,,0,Proposed affordance for expanded UI; availability is not a product commitment.
+keyboard-shortcut,Keyboard shortcut,expanded-ui,expansion,../../static/icons/ui/keyboard-shortcut.svg,security-research,,6,Proposed affordance for expanded UI; availability is not a product commitment.
+notification-read,Notification read,expanded-ui,expansion,../../static/icons/ui/notification-read.svg,security-research,,0,Proposed affordance for expanded UI; availability is not a product commitment.
+notification-history,Notification history,expanded-ui,expansion,../../static/icons/ui/notification-history.svg,security-research,,0,Proposed affordance for expanded UI; availability is not a product commitment.
+batch-progress,Batch progress,expanded-ui,expansion,../../static/icons/ui/batch-progress.svg,security-research,,0,Proposed affordance for expanded UI; availability is not a product commitment.
+empty-state,Empty state,expanded-ui,expansion,../../static/icons/ui/empty-state.svg,security-research,,1,Proposed affordance for expanded UI; availability is not a product commitment.
+loading-skeleton,Loading skeleton,expanded-ui,expansion,../../static/icons/ui/loading-skeleton.svg,security-research,density,0,Proposed affordance for expanded UI; availability is not a product commitment.
+broken-image,Broken image,expanded-ui,expansion,../../static/icons/ui/broken-image.svg,security-research,,0,Proposed affordance for expanded UI; availability is not a product commitment.
+unsupported-file,Unsupported file,expanded-ui,expansion,../../static/icons/ui/unsupported-file.svg,security-research,,0,Proposed affordance for expanded UI; availability is not a product commitment.
+recover-draft,Recover draft,expanded-ui,expansion,../../static/icons/ui/recover-draft.svg,security-research,,0,Proposed affordance for expanded UI; availability is not a product commitment.
+session-share,Session share,expanded-ui,expansion,../../static/icons/ui/session-share.svg,security-research,,0,Proposed affordance for expanded UI; availability is not a product commitment.
+session-lock,Session lock,expanded-ui,expansion,../../static/icons/ui/session-lock.svg,security-research,lock,0,Proposed affordance for expanded UI; availability is not a product commitment.
+task-dependency,Task dependency,expanded-ui,expansion,../../static/icons/ui/task-dependency.svg,security-research,,0,Proposed affordance for expanded UI; availability is not a product commitment.
+task-priority,Task priority,expanded-ui,expansion,../../static/icons/ui/task-priority.svg,security-research,,0,Proposed affordance for expanded UI; availability is not a product commitment.
+task-cancelled,Task cancelled,expanded-ui,expansion,../../static/icons/ui/task-cancelled.svg,security-research,,0,Proposed affordance for expanded UI; availability is not a product commitment.
+calendar-conflict,Calendar conflict,expanded-ui,expansion,../../static/icons/ui/calendar-conflict.svg,security-research,,0,Proposed affordance for expanded UI; availability is not a product commitment.
+timezone-compare,Timezone compare,expanded-ui,expansion,../../static/icons/ui/timezone-compare.svg,security-research,,0,Proposed affordance for expanded UI; availability is not a product commitment.
+mail-snoozed,Mail snoozed,expanded-ui,expansion,../../static/icons/ui/mail-snoozed.svg,security-research,,0,Proposed affordance for expanded UI; availability is not a product commitment.
+attachment-blocked,Attachment blocked,expanded-ui,expansion,../../static/icons/ui/attachment-blocked.svg,security-research,,0,Proposed affordance for expanded UI; availability is not a product commitment.
+document-version,Document version,expanded-ui,expansion,../../static/icons/ui/document-version.svg,security-research,,0,Proposed affordance for expanded UI; availability is not a product commitment.
+document-conflict,Document conflict,expanded-ui,expansion,../../static/icons/ui/document-conflict.svg,security-research,,0,Proposed affordance for expanded UI; availability is not a product commitment.
+document-comment,Document comment,expanded-ui,expansion,../../static/icons/ui/document-comment.svg,security-research,,0,Proposed affordance for expanded UI; availability is not a product commitment.
+image-compare,Image compare,expanded-ui,expansion,../../static/icons/ui/image-compare.svg,security-research,,1,Proposed affordance for expanded UI; availability is not a product commitment.
+accessible-label,Accessible label,expanded-ui,expansion,../../static/icons/ui/accessible-label.svg,security-research,,0,Proposed affordance for expanded UI; availability is not a product commitment.
+contrast-check,Contrast check,expanded-ui,expansion,../../static/icons/ui/contrast-check.svg,security-research,,0,Proposed affordance for expanded UI; availability is not a product commitment.
+high-contrast,High contrast,expanded-ui,expansion,../../static/icons/ui/high-contrast.svg,security-research,,0,Proposed affordance for expanded UI; availability is not a product commitment.
+reduced-motion,Reduced motion,expanded-ui,expansion,../../static/icons/ui/reduced-motion.svg,security-research,,0,Proposed affordance for expanded UI; availability is not a product commitment.
+reset-theme,Reset theme,expanded-ui,expansion,../../static/icons/ui/reset-theme.svg,security-research,,26,Proposed affordance for expanded UI; availability is not a product commitment.
+color-custom,Color custom,expanded-ui,expansion,../../static/icons/ui/color-custom.svg,security-research,,0,Proposed affordance for expanded UI; availability is not a product commitment.
+theme-import,Theme import,expanded-ui,expansion,../../static/icons/ui/theme-import.svg,security-research,,1,Proposed affordance for expanded UI; availability is not a product commitment.
+theme-export,Theme export,expanded-ui,expansion,../../static/icons/ui/theme-export.svg,security-research,,1,Proposed affordance for expanded UI; availability is not a product commitment.
+feature-unavailable,Feature unavailable,expanded-ui,expansion,../../static/icons/ui/feature-unavailable.svg,security-research,,11,Proposed affordance for expanded UI; availability is not a product commitment.
+warp-text,Warp text,documents,control-gap,../../static/icons/ui/warp-text.svg,authoring,,1,Candidate for a current control without a literal SVG; text-only controls may be intentional.
+text-on-path,Text on path,documents,supporting,../../static/icons/ui/text-on-path.svg,authoring,,0,Supporting glyph for this implemented subsystem; exact integration location remains to be selected.
+text-on-circle,Text on circle,documents,supporting,../../static/icons/ui/text-on-circle.svg,authoring,,0,Supporting glyph for this implemented subsystem; exact integration location remains to be selected.
+clear-formatting,Clear formatting,documents,existing-svg,../../static/icons/ui/clear-formatting.svg,authoring,,2,Unifies an icon concept already represented in the current interface.
+text-direction,Text direction,documents,supporting,../../static/icons/ui/text-direction.svg,authoring,,0,Supporting glyph for this implemented subsystem; exact integration location remains to be selected.
+ai-writing,Ai writing,documents,existing-svg,../../static/icons/ui/ai-writing.svg,authoring,sparkles,3,Unifies an icon concept already represented in the current interface.
+aspect-ratio,Aspect ratio,gallery-editor,existing-svg,../../static/icons/ui/aspect-ratio.svg,image-editor,,2,Unifies an icon concept already represented in the current interface.
+free-crop,Free crop,gallery-editor,supporting,../../static/icons/ui/free-crop.svg,image-editor,crop,0,Supporting glyph for this implemented subsystem; exact integration location remains to be selected.
+crop-square,Crop square,gallery-editor,existing-svg,../../static/icons/ui/crop-square.svg,image-editor,,3,Unifies an icon concept already represented in the current interface.
+crop-portrait,Crop portrait,gallery-editor,existing-svg,../../static/icons/ui/crop-portrait.svg,image-editor,,5,Unifies an icon concept already represented in the current interface.
+crop-landscape,Crop landscape,gallery-editor,existing-svg,../../static/icons/ui/crop-landscape.svg,image-editor,,3,Unifies an icon concept already represented in the current interface.
+brush-preset,Brush preset,gallery-editor,control-gap,../../static/icons/ui/brush-preset.svg,image-editor,,1,Candidate for a current control without a literal SVG; text-only controls may be intentional.
+selection-add,Selection add,gallery-editor,existing-svg,../../static/icons/ui/selection-add.svg,image-editor,,1,Unifies an icon concept already represented in the current interface.
+selection-subtract,Selection subtract,gallery-editor,supporting,../../static/icons/ui/selection-subtract.svg,image-editor,,0,Supporting glyph for this implemented subsystem; exact integration location remains to be selected.
+selection-intersect,Selection intersect,gallery-editor,supporting,../../static/icons/ui/selection-intersect.svg,image-editor,,0,Supporting glyph for this implemented subsystem; exact integration location remains to be selected.
+selection-invert,Selection invert,gallery-editor,supporting,../../static/icons/ui/selection-invert.svg,image-editor,,0,Supporting glyph for this implemented subsystem; exact integration location remains to be selected.
+selection-save,Selection save,gallery-editor,supporting,../../static/icons/ui/selection-save.svg,image-editor,,0,Supporting glyph for this implemented subsystem; exact integration location remains to be selected.
+selection-reselect,Selection reselect,gallery-editor,control-gap,../../static/icons/ui/selection-reselect.svg,image-editor,,1,Candidate for a current control without a literal SVG; text-only controls may be intentional.
+selection-border,Selection border,gallery-editor,existing-svg,../../static/icons/ui/selection-border.svg,image-editor,,5,Unifies an icon concept already represented in the current interface.
+selection-smooth,Selection smooth,gallery-editor,existing-svg,../../static/icons/ui/selection-smooth.svg,image-editor,,2,Unifies an icon concept already represented in the current interface.
+selection-expand,Selection expand,gallery-editor,supporting,../../static/icons/ui/selection-expand.svg,image-editor,selection-grow,0,Supporting glyph for this implemented subsystem; exact integration location remains to be selected.
+selection-contract,Selection contract,gallery-editor,control-gap,../../static/icons/ui/selection-contract.svg,image-editor,collapse,1,Candidate for a current control without a literal SVG; text-only controls may be intentional.
+selection-feather,Selection feather,gallery-editor,existing-svg,../../static/icons/ui/selection-feather.svg,image-editor,,4,Unifies an icon concept already represented in the current interface.
+selection-grow,Selection grow,gallery-editor,control-gap,../../static/icons/ui/selection-grow.svg,image-editor,,1,Candidate for a current control without a literal SVG; text-only controls may be intentional.
+selection-similar,Selection similar,gallery-editor,control-gap,../../static/icons/ui/selection-similar.svg,image-editor,,1,Candidate for a current control without a literal SVG; text-only controls may be intentional.
+selection-color-range,Selection color range,gallery-editor,control-gap,../../static/icons/ui/selection-color-range.svg,image-editor,,1,Candidate for a current control without a literal SVG; text-only controls may be intentional.
+selection-to-layer,Selection to layer,gallery-editor,supporting,../../static/icons/ui/selection-to-layer.svg,image-editor,,0,Supporting glyph for this implemented subsystem; exact integration location remains to be selected.
+selection-to-mask,Selection to mask,gallery-editor,existing-svg,../../static/icons/ui/selection-to-mask.svg,image-editor,,6,Unifies an icon concept already represented in the current interface.
+content-aware-move,Content aware move,gallery-editor,existing-svg,../../static/icons/ui/content-aware-move.svg,image-editor,,1,Unifies an icon concept already represented in the current interface.
+stroke-selection,Stroke selection,gallery-editor,supporting,../../static/icons/ui/stroke-selection.svg,image-editor,,0,Supporting glyph for this implemented subsystem; exact integration location remains to be selected.
+guides-clear,Guides clear,gallery-editor,supporting,../../static/icons/ui/guides-clear.svg,image-editor,,0,Supporting glyph for this implemented subsystem; exact integration location remains to be selected.
+guide-horizontal,Guide horizontal,gallery-editor,supporting,../../static/icons/ui/guide-horizontal.svg,image-editor,,0,Supporting glyph for this implemented subsystem; exact integration location remains to be selected.
+guide-vertical,Guide vertical,gallery-editor,supporting,../../static/icons/ui/guide-vertical.svg,image-editor,,0,Supporting glyph for this implemented subsystem; exact integration location remains to be selected.
+align-distribute,Align distribute,gallery-editor,existing-svg,../../static/icons/ui/align-distribute.svg,image-editor,,1,Unifies an icon concept already represented in the current interface.
+transform-width,Transform width,gallery-editor,control-gap,../../static/icons/ui/transform-width.svg,image-editor,,2,Candidate for a current control without a literal SVG; text-only controls may be intentional.
+transform-height,Transform height,gallery-editor,control-gap,../../static/icons/ui/transform-height.svg,image-editor,,2,Candidate for a current control without a literal SVG; text-only controls may be intentional.
+image-generate,Image generate,gallery-editor,existing-svg,../../static/icons/ui/image-generate.svg,image-editor,sparkles,5,Unifies an icon concept already represented in the current interface.
+file-png,File png,file-types,control-gap,../../static/icons/ui/file-png.svg,authoring,image,1,Candidate for a current control without a literal SVG; text-only controls may be intentional.
+file-jpeg,File jpeg,file-types,control-gap,../../static/icons/ui/file-jpeg.svg,authoring,image,1,Candidate for a current control without a literal SVG; text-only controls may be intentional.
+file-webp,File webp,file-types,control-gap,../../static/icons/ui/file-webp.svg,authoring,image,1,Candidate for a current control without a literal SVG; text-only controls may be intentional.
+background-pattern,Background pattern,settings-security,supporting,../../static/icons/ui/background-pattern.svg,security-research,pattern,0,Supporting glyph for this implemented subsystem; exact integration location remains to be selected.
+background-effects,Background effects,settings-security,supporting,../../static/icons/ui/background-effects.svg,security-research,sparkles,0,Supporting glyph for this implemented subsystem; exact integration location remains to be selected.
+frosted-glass,Frosted glass,settings-security,supporting,../../static/icons/ui/frosted-glass.svg,security-research,,0,Supporting glyph for this implemented subsystem; exact integration location remains to be selected.

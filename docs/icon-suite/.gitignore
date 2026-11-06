@@ -1,0 +1,5 @@
+evidence/upstream-source/
+previews/
+sheets/
+checks/*.json
+checks/*.log
