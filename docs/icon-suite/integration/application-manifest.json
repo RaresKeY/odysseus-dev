@@ -2857,5 +2857,6 @@
       "applied_role": "labeled-command"
     }
   ],
-  "fork_base_head": "fc5f997b8dff55de8f07c283bf90e926959687f2"
+  "fork_base_head": "907efde0b95b53dcb378412cc38a7a18beb0e272",
+  "source_verified_head": "c10967614fdf3ee79c27e37c362f7e7a90ad7587"
 }

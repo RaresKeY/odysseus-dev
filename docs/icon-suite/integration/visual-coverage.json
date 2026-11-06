@@ -3,9 +3,9 @@
   "base_pr_head": "e71b14fc32d8e0aad1710aa4bd20d85b9339a150",
   "export_sha256": "1cc73f7f36f977c16b4ca2cec87ae42c3c82f99049b213237a24bd2563a8fc8f",
   "counts": {
-    "observed": 88,
+    "observed": 89,
     "not-observed": 27,
-    "kept-old": 3
+    "kept-old": 2
   },
   "scenes": 83,
   "javascript_exceptions": 0,
@@ -1218,7 +1218,7 @@
         "height": 13,
         "color": "rgb(156, 222, 242)",
         "parent": {
-          "x": 1317,
+          "x": 1309,
           "y": 37.5,
           "width": 27,
           "height": 32
@@ -1263,7 +1263,7 @@
         "height": 13,
         "color": "rgb(156, 222, 242)",
         "parent": {
-          "x": 1345,
+          "x": 1337,
           "y": 37.5,
           "width": 27,
           "height": 32
@@ -1427,9 +1427,9 @@
           "selector": "[data-ui-icon=\"text-color\"]"
         }
       ],
-      "explanation": "Scoped to the selected source control; existing labels, state hooks and unrelated glyphs remain.",
+      "explanation": "Replace the existing A mark and keep its accent underline and separate dropdown caret.",
       "captured_role": "disclosure-arrow",
-      "applied_role": "semantic-icon-plus-disclosure",
+      "applied_role": "formatting-dropdown",
       "original_label": "Text color",
       "was_text": false,
       "visual_status": "observed",
@@ -1445,7 +1445,7 @@
         "parent": {
           "x": 1378,
           "y": 37.5,
-          "width": 46,
+          "width": 38,
           "height": 32
         },
         "contained": true,
@@ -1488,7 +1488,7 @@
         "height": 13,
         "color": "rgb(224, 108, 117)",
         "parent": {
-          "x": 1425,
+          "x": 1417,
           "y": 37.5,
           "width": 38,
           "height": 32
@@ -1533,7 +1533,7 @@
         "height": 13,
         "color": "rgb(156, 222, 242)",
         "parent": {
-          "x": 1103,
+          "x": 1095,
           "y": 37.5,
           "width": 27,
           "height": 32
@@ -1578,7 +1578,7 @@
         "height": 13,
         "color": "rgb(156, 222, 242)",
         "parent": {
-          "x": 948,
+          "x": 940,
           "y": 37.5,
           "width": 38,
           "height": 32
@@ -1623,7 +1623,7 @@
         "height": 13,
         "color": "rgb(156, 222, 242)",
         "parent": {
-          "x": 1131,
+          "x": 1123,
           "y": 37.5,
           "width": 27,
           "height": 32
@@ -1855,23 +1855,23 @@
       "original_label": "Active - click to pause",
       "was_text": false,
       "visual_status": "observed",
-      "visual_explanation": "Visible, unobscured in feature-gallery. SVG is 10 by 10 px; contained in its owner control.",
+      "visual_explanation": "Visible, unobscured in feature-tasks. SVG is 10.07293701171875 by 10.07293701171875 px; contained in its owner control.",
       "screenshot": "screenshots/after/pause.png",
       "receipt": {
         "id": "pause",
         "tag": "BUTTON",
         "label": "Active - click to pause",
-        "width": 10,
-        "height": 10,
+        "width": 10.07293701171875,
+        "height": 10.07293701171875,
         "color": "rgb(80, 250, 123)",
         "parent": {
-          "x": 967.59375,
-          "y": 307.09375,
-          "width": 69.40625,
-          "height": 20
+          "x": 953.951171875,
+          "y": 306.2731628417969,
+          "width": 69.9124755859375,
+          "height": 20.1458740234375
         },
         "contained": true,
-        "scene": "feature-gallery"
+        "scene": "feature-tasks"
       }
     },
     {
@@ -1900,7 +1900,7 @@
       "original_label": "Insert image",
       "was_text": false,
       "visual_status": "observed",
-      "visual_explanation": "Visible, unobscured in 03-document-editing. SVG is 13 by 13 px; contained in its owner control.",
+      "visual_explanation": "Visible, unobscured in 03-document. SVG is 13 by 13 px; contained in its owner control.",
       "screenshot": "screenshots/after/image.png",
       "receipt": {
         "id": "image",
@@ -1910,13 +1910,13 @@
         "height": 13,
         "color": "rgb(156, 222, 242)",
         "parent": {
-          "x": 861,
+          "x": 1549,
           "y": 37.5,
           "width": 27,
           "height": 32
         },
         "contained": true,
-        "scene": "03-document-editing"
+        "scene": "03-document"
       }
     },
     {
@@ -2370,15 +2370,41 @@
         "status": "source-label candidate",
         "source_url": "https://github.com/odysseus-dev/odysseus/blob/c21980f5a6d1cb84db8c8ab0f488cefc7764eb3f/static/js/editor/build/controls.js#L377"
       },
-      "status": "kept-old-needs-remap",
-      "targets": [],
-      "explanation": "The selected candidate is a rectangle with a check badge, not an overlap/intersection mark. Keep the existing overlap circles on Intersect selection and redraw this candidate before applying it.",
+      "status": "applied",
+      "targets": [
+        {
+          "path": "static/js/editor/build/controls.js",
+          "selector": "[data-ui-icon=\"shape-intersect\"]"
+        },
+        {
+          "path": "static/js/editor/build/topbar.js",
+          "selector": "[data-ui-icon=\"shape-intersect\"]"
+        }
+      ],
+      "explanation": "Scoped to the selected source control; existing labels, state hooks and unrelated glyphs remain.",
       "captured_role": "action-or-status-icon",
+      "applied_role": "action-or-status-icon",
       "original_label": "Intersect selection",
       "was_text": false,
-      "visual_status": "kept-old",
-      "visual_explanation": "The selected candidate is a rectangle with a check badge, not an overlap/intersection mark. Keep the existing overlap circles on Intersect selection and redraw this candidate before applying it.",
-      "context_screenshot": "screenshots/after/editor-tool-marquee.png"
+      "visual_status": "observed",
+      "visual_explanation": "Visible, unobscured in editor-tool-marquee. SVG is 13 by 13 px; contained in its owner control.",
+      "screenshot": "screenshots/after/shape-intersect.png",
+      "receipt": {
+        "id": "shape-intersect",
+        "tag": "BUTTON",
+        "label": "Intersect selection",
+        "width": 13,
+        "height": 13,
+        "color": "rgb(156, 222, 242)",
+        "parent": {
+          "x": 286.75,
+          "y": 119.5,
+          "width": 27,
+          "height": 32
+        },
+        "contained": true,
+        "scene": "editor-tool-marquee"
+      }
     },
     {
       "id": "shape-exclude",
@@ -3387,8 +3413,8 @@
         "height": 14,
         "color": "rgb(156, 222, 242)",
         "parent": {
-          "x": 289,
-          "y": 263.5625,
+          "x": 286,
+          "y": 264.890625,
           "width": 180,
           "height": 20.390625
         },
@@ -3432,8 +3458,8 @@
         "height": 14,
         "color": "rgb(156, 222, 242)",
         "parent": {
-          "x": 289,
-          "y": 342.734375,
+          "x": 286,
+          "y": 344.0625,
           "width": 180,
           "height": 20.390625
         },
@@ -3522,8 +3548,8 @@
         "height": 14,
         "color": "rgb(156, 222, 242)",
         "parent": {
-          "x": 289,
-          "y": 633.03125,
+          "x": 286,
+          "y": 634.359375,
           "width": 180,
           "height": 20.390625
         },
@@ -3567,8 +3593,8 @@
         "height": 14,
         "color": "rgb(156, 222, 242)",
         "parent": {
-          "x": 289,
-          "y": 158,
+          "x": 286,
+          "y": 159.328125,
           "width": 180,
           "height": 20.390625
         },
@@ -3612,8 +3638,8 @@
         "height": 14,
         "color": "rgb(156, 222, 242)",
         "parent": {
-          "x": 289,
-          "y": 184.390625,
+          "x": 286,
+          "y": 185.71875,
           "width": 180,
           "height": 20.390625
         },
@@ -3657,8 +3683,8 @@
         "height": 14,
         "color": "rgb(156, 222, 242)",
         "parent": {
-          "x": 289,
-          "y": 210.78125,
+          "x": 286,
+          "y": 212.109375,
           "width": 180,
           "height": 20.390625
         },
@@ -3702,8 +3728,8 @@
         "height": 14,
         "color": "rgb(156, 222, 242)",
         "parent": {
-          "x": 289,
-          "y": 237.171875,
+          "x": 286,
+          "y": 238.5,
           "width": 180,
           "height": 20.390625
         },
@@ -3747,8 +3773,8 @@
         "height": 14,
         "color": "rgb(156, 222, 242)",
         "parent": {
-          "x": 496,
-          "y": 206,
+          "x": 493,
+          "y": 206.609375,
           "width": 180,
           "height": 20.390625
         },
@@ -3837,8 +3863,8 @@
         "height": 14,
         "color": "rgb(156, 222, 242)",
         "parent": {
-          "x": 496,
-          "y": 258.78125,
+          "x": 493,
+          "y": 259.390625,
           "width": 180,
           "height": 20.390625
         },

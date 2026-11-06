@@ -1,8 +1,8 @@
 # Selected icon interface review
 
-Applied 115 of the 118 selected new icon concepts to the fork PR. The other 140 explicit choices and 544 unspecified IDs keep their old glyphs. Database, Unlink and Shape Intersect are retained as three documented semantic guards. The selected Shape Intersect candidate is a rectangle/check mark and needs an actual overlap motif.
+Applied 116 of the 118 selected new icon concepts to the fork PR. The other 140 explicit choices and 544 unspecified IDs keep their old glyphs. Database and Unlink remain two documented semantic guards. Shape Intersect has been redrawn with an actual overlap result and is applied to the selected control and matching Combine Shapes command.
 
-The authenticated, disposable Odysseus UI capture covers 83 states and directly observes 88 applied IDs. 27 applied IDs remain conditional or CSS-hidden and are explicitly marked below. Of 43 choices captured from literal text, 36 were observed. The capture has zero page JavaScript exceptions, zero automation errors and 0 SVG containment failures. Counts refer to semantic IDs and retain the first unobscured instance seen; they do not certify every repeated instance or hover/state variant. A context screenshot does not verify an unobserved glyph.
+The authenticated, disposable Odysseus UI capture covers 83 states and directly observes 89 applied IDs. 27 applied IDs remain conditional or CSS-hidden and are explicitly marked below. Of 43 choices captured from literal text, 36 were observed. The capture has zero page JavaScript exceptions, zero automation errors and 0 SVG containment failures. Counts refer to semantic IDs and retain the first unobscured instance seen; they do not certify every repeated instance or hover/state variant. A context screenshot does not verify an unobserved glyph.
 
 TEXT meant literal source button content. TYPE MARK covers B/I/U and superscript; MENU LABEL covers named editor commands; TEXT LABEL covers command names such as Harmonize; FORMAT LABEL covers PNG/JPEG or mode names; STEPPER covers numeric plus/minus. CARET is a separate SVG role used for dropdowns and expandable panels. The gallery now distinguishes these roles across all 620 compared source variants.
 
@@ -10,11 +10,13 @@ Compound controls need both their semantic mark and their disclosure affordance.
 
 Changed text controls were checked in the actual document toolbar, transform toolbar, Notes drawing toolbar and export dialog. Formatting SVG boxes remain 13 px, command glyphs generally use 14 px, and numeric field glyphs preserve arithmetic signs. PNG/JPEG labels remain visible at desktop and 390 px. Notes drawing badges and served-module copies are preserved. These checks do not establish every conditional provider workflow.
 
-Recommended follow-up in the fork: redraw Shape Intersect with an actual overlap/intersection motif; rename the mobile document Unlink action to Close; keep Calendar Refresh as a refresh arrow; call the archived-note glyph archive rather than save; rename the captured Admin Test alias to webhook-test rather than skill-test; classify comparison execution-mode icons separately from Deep Research; retain readable command and format labels. Do not remake generic semantic glyphs to replace carets or dormant text-menubar fragments. Revisit the smallest composite badge icons at 12–14 px only after a real owner screenshot shows they are hard to read.
+Recommended follow-up in the fork: rename the mobile document Unlink action to Close; keep Calendar Refresh as a refresh arrow; call the archived-note glyph archive rather than save; rename the captured Admin Test alias to webhook-test rather than skill-test; classify comparison execution-mode icons separately from Deep Research; retain readable command and format labels. Do not remake generic semantic glyphs to replace carets or dormant text-menubar fragments. Revisit the smallest composite badge icons at 12–14 px only after a real owner screenshot shows they are hard to read.
+
+The fork was rebased onto newer Odysseus code during this work. Final after screenshots and source hashes use fork base 907efde0 plus the visual fixes. Historical before screenshots retain the original e71b14fc baseline; the dedicated visual-fix page compares previously applied glyphs and the corrected small-size candidates. All 174 focused checks pass on the rebased code; seven document tests that invoke Node were deselected.
 
 The browser ran inside the secretless Pi Dev Workbench runner with network disabled, a temporary admin account and disposable data. App startup used lifespan off and MCP disabled. The chat tool events are explicit rendering fixtures. A supplementary photo/Calendar probe timed out and supplies no passing evidence. No external model, mail, TTS, vault, model download or ML operation was tested. The actual app capture used software compositing; the separate gallery's 40 checks used the workstation GPU. The full backend test suite and physical touchscreen behavior were not run.
 
-Earlier capture attempts exposed an automation-only Settings lookup error and a served-Notes-copy mismatch. The automation was corrected to import the existing Settings owner; an unsupported /settings route was also rejected from the evidence; the Notes copies were synchronized before the successful capture. The final cache change increments the numeric version to v1117 while preserving the established cache-name format. The intersect regression test caught a rectangle/check candidate, which is now held old instead of weakening the overlap assertion. Superseded failed attempts are not used as passing evidence.
+Earlier capture attempts exposed an automation-only Settings lookup error and a served-Notes-copy mismatch. The automation was corrected to import the existing Settings owner; an unsupported /settings route was also rejected from the evidence; the Notes copies were synchronized before the successful capture. The latest visual fixes remove a duplicate Text color letter and underline, center the Heading mark, simplify Path anchors and Gradient bands, and redraw the four boolean operations. The cache numeric version is v1140. The original overlap regression remains intact and passes with the redrawn intersection glyph. Superseded failed attempts are not used as passing evidence.
 
 [Open the captioned screenshot report](review.html). [Every selected ID and visual status](visual-coverage.csv). [Exact choices](choices.json). [Applied targets and contextual remaps](application-manifest.json). [All source control classifications](control-classification.json).
 
@@ -98,9 +100,9 @@ Memory Search and Image Generate are rendered by the real chat renderer from exp
 
 [Before](screenshots/before/chat-tool-fixture.png) · [After](screenshots/after/chat-tool-fixture.png)
 
-### Shape Intersect needs a redraw
+### Shape Intersect: rejected earlier candidate
 
-The selected Shape Intersect candidate rendered as a rectangle with a check mark. It does not show overlap. The existing circle-overlap glyph is retained until this candidate is redrawn; the original intersect regression test remains intact.
+Historical rejected candidate: the first Shape Intersect SVG used a rectangle/check badge. It has now been replaced by two operand circles with the intersection result emphasized. The current per-ID screenshot below shows the corrected glyph; the original intersect regression test remains intact.
 
 [Rejected candidate in the actual interface](screenshots/rejected/shape-intersect.png)
 
@@ -155,8 +157,8 @@ The selected Shape Intersect candidate rendered as a rectangle with a check mark
 | send-later | observed | [Actual icon](screenshots/after/send-later.png). Visible, unobscured in document-email. SVG is 13 by 13 px; contained in its owner control. |
 | spam | not-observed | [Context only](screenshots/after/02-model-picker.png). Spam action requires a selected mailbox message. No email account or external mailbox was used. Screenshot shows the fixture model-picker context, not this unobserved glyph. |
 | play | not-observed | [Context only](screenshots/after/chat-tool-fixture.png). The chosen Play glyph is a paused/completed TTS state. No speech service or audio playback was exercised. |
-| pause | observed | [Actual icon](screenshots/after/pause.png). Visible, unobscured in feature-gallery. SVG is 10 by 10 px; contained in its owner control. |
-| image | observed | [Actual icon](screenshots/after/image.png). Visible, unobscured in 03-document-editing. SVG is 13 by 13 px; contained in its owner control. |
+| pause | observed | [Actual icon](screenshots/after/pause.png). Visible, unobscured in feature-tasks. SVG is 10.07293701171875 by 10.07293701171875 px; contained in its owner control. |
+| image | observed | [Actual icon](screenshots/after/image.png). Visible, unobscured in 03-document. SVG is 13 by 13 px; contained in its owner control. |
 | image-export | observed | [Actual icon](screenshots/after/image-export.png). Visible, unobscured in editor-menu-file. SVG is 14 by 14 px; contained in its owner control. |
 | rotate-right | observed | [Actual icon](screenshots/after/rotate-right.png). Visible, unobscured in editor-tool-transform. SVG is 14 by 14 px; contained in its owner control. |
 | zoom-in | not-observed | [Context only](screenshots/after/02-model-picker.png). The Week zoom controls were not observed after opening Calendar in the disposable account. The action is unchanged apart from its glyph. Screenshot shows the fixture model-picker context, not this unobserved glyph. |
@@ -167,7 +169,7 @@ The selected Shape Intersect candidate rendered as a rectangle with a check mark
 | ellipse | observed | [Actual icon](screenshots/after/ellipse.png). Visible, unobscured in editor-tool-shape. SVG is 14 by 14 px; contained in its owner control. |
 | shape-union | observed | [Actual icon](screenshots/after/shape-union.png). Visible, unobscured in editor-menu-layer. SVG is 14 by 14 px; contained in its owner control. |
 | shape-subtract | observed | [Actual icon](screenshots/after/shape-subtract.png). Visible, unobscured in editor-menu-layer. SVG is 14 by 14 px; contained in its owner control. |
-| shape-intersect | kept-old | [Context only](screenshots/after/editor-tool-marquee.png). The selected candidate is a rectangle with a check badge, not an overlap/intersection mark. Keep the existing overlap circles on Intersect selection and redraw this candidate before applying it. |
+| shape-intersect | observed | [Actual icon](screenshots/after/shape-intersect.png). Visible, unobscured in editor-tool-marquee. SVG is 13 by 13 px; contained in its owner control. |
 | shape-exclude | observed | [Actual icon](screenshots/after/shape-exclude.png). Visible, unobscured in editor-menu-layer. SVG is 14 by 14 px; contained in its owner control. |
 | eyedropper | not-observed | [Context only](screenshots/after/editor-color-picker.png). The custom color-picker popover did not expose its Eyedropper glyph in this run. The active inline swatches are a different owner. This remains unverified. |
 | gradient | observed | [Actual icon](screenshots/after/gradient.png). Visible, unobscured in 06-editor. SVG is 15 by 15 px; contained in its owner control. |

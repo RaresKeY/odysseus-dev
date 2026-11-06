@@ -57,3 +57,11 @@ condition = "AND"
 paths = ['''(?:^|/)docs/icon-suite/integration/source-hashes\.json$''']
 regexTarget = "secret"
 regexes = ['''^c9032147a099c2de9088063b1a1d0a41cb9048acd17723ba1edfa72f52968ac0$''']
+
+[[allowlists]]
+description = "Reviewed icon color-mark stylesheet SHA-256 digest"
+targetRules = ["generic-api-key"]
+condition = "AND"
+paths = ['''(?:^|/)docs/icon-suite/integration/source-hashes\.json$''']
+regexTarget = "secret"
+regexes = ['''^71ad76b26ef21afb12138357f7f0a2956ddef63ed194e4ac40155cad4f72a46a$''']

@@ -37,3 +37,5 @@ The fork now applies the owner’s exported new choices at reviewed application 
 ## Compare and select
 
 The opening Old vs new grid shows captured source glyphs and literal text beside the new family. Click an entire side to select and lock a winner. Only the unchosen side turns gray; Unlock allows a different choice. Picks persist in browser storage and Export picks saves their exact source variant as JSON. Source roles distinguish carets, formatting marks, labels and numeric steppers so these fragments are not confused with missing semantic icons.
+
+[Latest icon visual fixes](integration/visual-fixes/index.html) show the corrected Text color control, boolean operations, Path anchors, Gradient bands and Heading alignment with before/after evidence.
