@@ -65,7 +65,10 @@ def test_control_op_prefers_offline_saliency():
 def test_select_menu_entry_and_wiring():
     topbar = TOPBAR.read_text()
     assert 'data-selection-action="subject"' in topbar
-    assert '<button class="dropdown-item-compact" data-selection-action="subject"><span>Subject</span></button>' in topbar
+    button = re.search(r'<button\b[^>]*data-selection-action="subject"[^>]*>(.*?)</button>', topbar, re.S)
+    assert button and re.sub(r'<[^>]*>', '', button.group(1)).strip() == 'Subject'
+    assert 'data-ui-icon="subject-select"' in button.group(1)
+    assert 'aria-hidden="true"' in button.group(1)
     wire = WIRE.read_text()
     assert "else if (action === 'subject') { window.geEditorControl?.invoke?.('selection.subject', {}); handled = true; }" in wire
 

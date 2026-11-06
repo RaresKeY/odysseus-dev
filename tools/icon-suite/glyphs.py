@@ -187,7 +187,7 @@ add('bold', path('M6 3h7a5 5 0 0 1 0 10H6V3ZM6 13h8a4 4 0 0 1 0 8H6v-8Z'))
 add('italic', path('M10 3h10M4 21h10M16 3 8 21'))
 add('underline', path('M6 3v9a6 6 0 0 0 12 0V3M4 21h16'))
 add('strikethrough', path('M18 6c-3-5-12-4-12 2 0 2 3 4 6 4s6 2 6 4c0 6-9 7-12 2M3 12h18'))
-add('heading', path('M4 4v16M16 4v16M4 12h12'))
+add('heading', path('M6 4v16M18 4v16M6 12h12'))
 add('paragraph', path('M18 3v18M14 3v18M14 3H9a5 5 0 0 0 0 10h5M14 3h7'))
 add('font-family', path('M3 21 10 3h4l7 18M6 14h12'))
 add('font-size', path('M3 5h12M9 5v16M16 11h6M19 11v10'))
@@ -285,13 +285,28 @@ add('brush', path('m11 13 8-10c2-2 4 0 2 2l-8 10-2-2ZM11 13c-5-2-6 2-6 4 0 2-2 3
 add('eraser', path('m14 3 7 7-11 11H6l-4-4L14 3ZM7 11l8 8M10 22h12'))
 add('pen', path('m12 3 9 9-8 8-10 1 1-10 8-8ZM3 21l8-8M7 7l10 10') + circle(12, 12, 1))
 add('line', path('M4 20 20 4') + circle(4, 20, 1) + circle(20, 4, 1))
-add('path', path('M4 19C4 5 20 19 20 5M4 19V5M20 5v14') + rect(2, 17, 4, 4, .5) + rect(18, 3, 4, 4, .5) + dot(4, 5) + dot(20, 19))
+# Keep tangent handles quiet and stop them at the anchor boxes so 14 px nodes stay open.
+add('path', path('M4 17V5M20 7v12', stroke_width='1', opacity='.55') + path('M4 17C4 6 20 18 20 7') + rect(2, 17, 4, 4, .5, stroke_width='1.5') + rect(18, 3, 4, 4, .5, stroke_width='1.5') + dot(4, 5) + dot(20, 19))
 add('polygon', path('m12 3 9 7-4 11H7L3 10l9-7Z'))
 add('rectangle', rect(3, 5, 18, 14, 0))
 add('ellipse', '<ellipse cx="12" cy="12" rx="10" ry="7"/>')
+
+# Show the result of each boolean operation over the same two operand circles.
+# The dim outlines retain context without a badge that could mean add/delete shape.
+_boolean_context = '<g opacity=".35">' + circle(9, 12, 6) + circle(15, 12, 6) + '</g>'
+_boolean_results = {
+    'union': 'M12 6.804a6 6 0 1 0 0 10.392 6 6 0 1 0 0-10.392Z',
+    'subtract': 'M12 6.804a6 6 0 1 0 0 10.392 6 6 0 0 1 0-10.392Z',
+    'intersect': 'M12 6.804a6 6 0 0 1 0 10.392 6 6 0 0 1 0-10.392Z',
+    'exclude': 'M12 6.804a6 6 0 1 0 0 10.392 6 6 0 0 1 0-10.392ZM12 17.196a6 6 0 1 0 0-10.392 6 6 0 0 1 0 10.392Z',
+}
+for _operation, _result in _boolean_results.items():
+    add('shape-'+_operation, _boolean_context + path(_result, fill='currentColor', fill_opacity='.2'))
+
 add('eyedropper', path('m14 4 6 6M13 5l6 6M16 2l6 6-4 4-6-6 4-4ZM13 7 3 17v4h4L17 11'))
 add('paint-bucket', path('m6 3 12 12M9 5l-6 6 8 8 9-9-8-8-3 3ZM3 12h15M20 15s-2 4-2 5a2 2 0 0 0 4 0c0-1-2-5-2-5Z'))
-add('gradient', rect(3, 5, 18, 14) + path('M7 5v14M11 5v14M15 5v14M18 5v14', opacity='.55') + path('M3 5h4v14H3Z', fill='currentColor', stroke='none'))
+# Three tonal bands survive small control sizes without a dense stripe moire.
+add('gradient', path('M3 5h6v14H3Z', fill='currentColor', stroke='none') + path('M9 5h6v14H9Z', fill='currentColor', stroke='none', opacity='.5') + path('M15 5h6v14h-6Z', fill='currentColor', stroke='none', opacity='.15') + rect(3, 5, 18, 14))
 add('pattern', ''.join(path(f'm{x} {y} 2-2 2 2-2 2-2-2Z') for x in [3, 10, 17] for y in [5, 12, 19]))
 add('swatches', rect(3, 3, 7, 7, 1) + rect(14, 3, 7, 7, 1) + rect(3, 14, 7, 7, 1) + rect(14, 14, 7, 7, 1, fill='currentColor'))
 add('color-swap', path('M3 7h15m-4-4 4 4-4 4M21 17H6m4-4-4 4 4 4'))
@@ -593,8 +608,6 @@ for name, base, badge in [
     ('text-to-speech','chat','play'), ('audio-file','file','play'), ('autoplay','play','refresh'),
     ('image-add','image','add'), ('image-import','image','download'), ('image-export','image','upload'),
     ('album-new','album','add'), ('canvas-resize','canvas','up'), ('image-resize','image','up'),
-    ('shape-union','rectangle','add'), ('shape-subtract','rectangle','remove'),
-    ('shape-intersect','rectangle','check'), ('shape-exclude','rectangle','close'),
     ('layer-new','layer','add'), ('layer-duplicate','layer','dot'), ('layer-delete','layer','close'),
     ('layer-ungroup','layer-group','close'), ('layer-up','layer','up'), ('layer-down','layer','down'),
     ('layer-front','layer','up'), ('layer-back','layer','down'), ('mask-add','mask','add'),

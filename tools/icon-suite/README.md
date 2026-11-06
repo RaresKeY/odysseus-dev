@@ -22,3 +22,5 @@ Bounds checking renders a padded viewBox so overflow cannot be hidden by clippin
 ## Exported choice contract
 
 Run `python3 tools/icon-suite/check_choices.py` to verify the selected-only application markers, retained model controls and dropdown carets, numeric signs, labels, four-column export layout, sidebar state, Notes served/authored equality and cache version. [The integration review](../../docs/icon-suite/integration/README.md) records the exact export, contextual target corrections, actual app screenshots and conditional controls. This focused static check does not execute the app.
+
+Run `python3 tools/icon-suite/check_visual_geometry.py` with the existing rendering dependencies to verify union, subtraction, intersection and exclusion by sampling their rendered result regions. [Visual-fix comparisons](../../docs/icon-suite/integration/visual-fixes/index.html) retain the previous applied glyphs and final actual-interface crops.

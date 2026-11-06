@@ -19220,9 +19220,7 @@
       ],
       "svg": "../../static/icons/ui/shape-union.svg",
       "geometry": {
-        "method": "authored base and semantic badge",
-        "base": "rectangle",
-        "badge": "add"
+        "method": "authored vector geometry"
       },
       "reference_board": "image-editor",
       "reference_scope": "family style and motifs; compositions and semantic aliases are manually authored",
@@ -19247,9 +19245,7 @@
       ],
       "svg": "../../static/icons/ui/shape-subtract.svg",
       "geometry": {
-        "method": "authored base and semantic badge",
-        "base": "rectangle",
-        "badge": "remove"
+        "method": "authored vector geometry"
       },
       "reference_board": "image-editor",
       "reference_scope": "family style and motifs; compositions and semantic aliases are manually authored",
@@ -19317,9 +19313,7 @@
       ],
       "svg": "../../static/icons/ui/shape-intersect.svg",
       "geometry": {
-        "method": "authored base and semantic badge",
-        "base": "rectangle",
-        "badge": "check"
+        "method": "authored vector geometry"
       },
       "reference_board": "image-editor",
       "reference_scope": "family style and motifs; compositions and semantic aliases are manually authored",
@@ -19344,9 +19338,7 @@
       ],
       "svg": "../../static/icons/ui/shape-exclude.svg",
       "geometry": {
-        "method": "authored base and semantic badge",
-        "base": "rectangle",
-        "badge": "close"
+        "method": "authored vector geometry"
       },
       "reference_board": "image-editor",
       "reference_scope": "family style and motifs; compositions and semantic aliases are manually authored",

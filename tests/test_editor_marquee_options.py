@@ -104,7 +104,7 @@ def test_wand_action_row_matches_marquee():
     j = CONTROLS.index('id="ge-sam-section"')
     wand = CONTROLS[i:j]
     assert '<button class="ge-btn ge-btn-sm" id="ge-wand-clear" title="Clear selection" aria-label="Clear selection">' in wand
-    assert 'data-wand-mode="add" title="Add to selection (Shift)">+</button>' in wand
+    _assert_compact_add_mode(wand, 'Add to selection (Shift)')
     assert 'data-wand-mode="subtract" title="Subtract from selection (Alt)">−</button>' in wand
     for label in ("Invert", "Erase", "Copy Layer", "To Mask", "Quick Mask"):
         assert label in wand
@@ -214,7 +214,7 @@ def test_quickselect_objectselect_sam_match_the_wand_strip():
         # compact mode labels (no verbose "+ Add" / "− Subtract")
         assert "+ Add</button>" not in sec
         assert "− Subtract</button>" not in sec
-        assert 'data-wand-mode="add" title="Add to selection">+</button>' in sec
+        _assert_compact_add_mode(sec, 'Add to selection')
         assert 'data-wand-mode="subtract" title="Subtract from selection">−</button>' in sec
         # the unified action row
         assert '<div class="ge-control-row ge-actions" style="margin-top:2px;flex-wrap:wrap;">' in sec
@@ -271,3 +271,14 @@ def test_quickselect_brush_size_uses_the_shared_eraser_row_slider_style():
     assert "#ge-quickselect-section .ge-eraser-row label { flex: 0 0 auto; }" in CSS
     wire = (ROOT / "static/js/editor/wire-selection-controls.js").read_text(encoding="utf-8")
     assert "document.getElementById('ge-quickselect-size-label')" in wire
+
+
+def _assert_compact_add_mode(section, title):
+    # The selected icon replaces the plus while preserving a compact mode button.
+    button = re.search(r'<button\b[^>]*data-wand-mode="add"[^>]*>(.*?)</button>', section, re.S)
+    assert button and f'title="{title}"' in button.group()
+    body = button.group(1)
+    assert re.sub(r'<[^>]*>', '', body).strip() == ''
+    svg = re.search(r'<svg\b([^>]*)>', body)
+    assert svg and 'width="13"' in svg.group(1) and 'height="13"' in svg.group(1)
+    assert 'data-ui-icon="selection-add"' in svg.group(1) and 'aria-hidden="true"' in svg.group(1)

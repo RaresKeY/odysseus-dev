@@ -22,6 +22,9 @@ def main():
     for key in ['heading', 'font']:
         button = re.search(r'<button\b[^>]*data-dd="'+key+r'"[^>]*>.*?</button>',doc,re.S).group()
         assert button.count('<svg') == 2 and 'width="8"' in button
+    color = re.search(r'<button\b[^>]*data-dd="color"[^>]*>.*?</button>', doc, re.S).group()
+    assert color.count('<svg') == 2 and '>A</span>' not in color
+    assert 'rich-color-letter ody-ui-color-mark' in color
     index = (ROOT/'static/index.html').read_text()
     reasoning = re.search(r'<button\b[^>]*id="reasoning-effort-btn"[^>]*>.*?</button>',index,re.S).group()
     assert 'data-ui-icon="reasoning"' in reasoning and 'reasoning-effort-chevron' in reasoning
@@ -38,7 +41,7 @@ def main():
     assert 'sidebar-menu-icon' in index and 'data-ui-icon="sidebar-close"' in index
     assert '#hamburger-btn[aria-expanded="true"] > .ody-ui-icon' in (ROOT/'static/css/00-tokens.css').read_text()
     assert "sidebarHidden ? 'Show sidebar' : 'Hide sidebar'" in (ROOT/'static/js/sidebar-layout.js').read_text()
-    assert 'odysseus-v1139-pr40-editor-precache' in (ROOT/'static/sw.js').read_text()
+    assert 'odysseus-v1140-pr40-editor-precache' in (ROOT/'static/sw.js').read_text()
     for name in ['cardRendering.js','drawing.js','panel.js']:
         assert (ROOT/'frontend/src/features/notes/ui'/name).read_bytes() == (ROOT/'static/js/features/notes/ui'/name).read_bytes()
     assert 'note-form-draw-text-badge' in (ROOT/'static/js/features/notes/ui/drawing.js').read_text()

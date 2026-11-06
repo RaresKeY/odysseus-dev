@@ -5,8 +5,8 @@
   "export_sha256": "1cc73f7f36f977c16b4ca2cec87ae42c3c82f99049b213237a24bd2563a8fc8f",
   "default": "old",
   "counts": {
-    "applied": 115,
-    "kept-old-needs-remap": 3
+    "applied": 116,
+    "kept-old-needs-remap": 2
   },
   "selected_new": 118,
   "explicit_old": 140,
@@ -920,9 +920,9 @@
           "selector": "[data-ui-icon=\"text-color\"]"
         }
       ],
-      "explanation": "Scoped to the selected source control; existing labels, state hooks and unrelated glyphs remain.",
+      "explanation": "Replace the existing A mark and keep its accent underline and separate dropdown caret.",
       "captured_role": "disclosure-arrow",
-      "applied_role": "semantic-icon-plus-disclosure"
+      "applied_role": "formatting-dropdown"
     },
     {
       "id": "highlight",
@@ -1449,10 +1449,20 @@
         "status": "source-label candidate",
         "source_url": "https://github.com/odysseus-dev/odysseus/blob/c21980f5a6d1cb84db8c8ab0f488cefc7764eb3f/static/js/editor/build/controls.js#L377"
       },
-      "status": "kept-old-needs-remap",
-      "targets": [],
-      "explanation": "The selected candidate is a rectangle with a check badge, not an overlap/intersection mark. Keep the existing overlap circles on Intersect selection and redraw this candidate before applying it.",
-      "captured_role": "action-or-status-icon"
+      "status": "applied",
+      "targets": [
+        {
+          "path": "static/js/editor/build/controls.js",
+          "selector": "[data-ui-icon=\"shape-intersect\"]"
+        },
+        {
+          "path": "static/js/editor/build/topbar.js",
+          "selector": "[data-ui-icon=\"shape-intersect\"]"
+        }
+      ],
+      "explanation": "Scoped to the selected source control; existing labels, state hooks and unrelated glyphs remain.",
+      "captured_role": "action-or-status-icon",
+      "applied_role": "action-or-status-icon"
     },
     {
       "id": "shape-exclude",
@@ -2846,5 +2856,6 @@
       "captured_role": "format-or-mode-label",
       "applied_role": "labeled-command"
     }
-  ]
+  ],
+  "fork_base_head": "fc5f997b8dff55de8f07c283bf90e926959687f2"
 }
