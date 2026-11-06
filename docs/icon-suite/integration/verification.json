@@ -1,0 +1,29 @@
+{
+  "pass": true,
+  "selected_new": 118,
+  "applied": 116,
+  "default_old": 544,
+  "explicit_old": 140,
+  "guarded": [
+    "database",
+    "unlink"
+  ],
+  "observed": 89,
+  "not_observed": 27,
+  "interface_states": 83,
+  "javascript_exceptions": 0,
+  "svg_containment_failures": 0,
+  "original_text_choices": 43,
+  "observed_text_choices": 36,
+  "gallery_assertions": 40,
+  "changed_javascript_parse_checks": 29,
+  "supplementary_context_probe": "timeout, excluded from passing evidence",
+  "not_run": [
+    "Full backend suite",
+    "Node/Playwright computed-style snapshot (runtime policy uses Deno and native CDP)",
+    "External model, email, TTS, vault, downloaded-model and ML workflows",
+    "Physical touch interaction"
+  ],
+  "stylesheet_manifest_tests": 3,
+  "stylesheet_manifest_tests_pass": true
+}

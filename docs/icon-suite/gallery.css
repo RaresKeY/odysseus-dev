@@ -29,8 +29,8 @@ button:focus-visible,a:focus-visible,input:focus-visible,select:focus-visible,te
 .family-btn.selected { background:color-mix(in srgb,var(--red) 12%,transparent); color:var(--red); }
 .sidebar-foot { margin-top:auto; border-top:1px solid var(--border); padding:12px; font-size:10px; line-height:1.9; opacity:.55; }
 main { min-width:0; overflow:hidden; display:flex; flex-direction:column; }
-.tabs { display:flex; height:41px; min-height:41px; border-bottom:1px solid var(--border); background:var(--panel); padding-left:8px; }
-.tabs button { background:none; border:0; padding:0 13px; opacity:.5; border-bottom:2px solid transparent; font-size:11px; white-space:nowrap; }
+.tabs { display:flex; height:41px; min-height:41px; overflow-x:auto; flex-shrink:0; border-bottom:1px solid var(--border); background:var(--panel); padding-left:8px; }
+.tabs button { flex:none; background:none; border:0; padding:0 13px; opacity:.5; border-bottom:2px solid transparent; font-size:11px; white-space:nowrap; }
 .tabs button[aria-selected=true] { color:var(--fg); opacity:1; border-bottom-color:var(--red); }
 .theme-toolbar { min-height:48px; flex-shrink:0; display:flex; flex-wrap:wrap; align-items:center; gap:13px; padding:9px 13px; border-bottom:1px solid var(--border); }
 .theme-toolbar label { display:flex; align-items:center; gap:6px; font-size:10px; }
@@ -39,7 +39,7 @@ select { max-width:185px; border:1px solid var(--border); border-radius:3px; col
 .small-action { border:1px solid var(--border); border-radius:3px; background:transparent; padding:3px 7px; font-size:10px; }
 .small-action:hover { background:color-mix(in srgb,var(--fg) 7%,transparent); }
 .view { flex:1; overflow-y:auto; min-height:0; padding-bottom:20px; }
-.filter-toolbar { display:flex; flex-wrap:wrap; align-items:center; gap:8px; padding:12px 13px; }
+.filter-toolbar { flex-shrink:0; display:flex; flex-wrap:wrap; align-items:center; gap:8px; padding:12px 13px; }
 .search-wrap { flex:1; min-width:200px; display:flex; gap:7px; align-items:center; border:1px solid var(--border); background:var(--panel); border-radius:3px; padding:6px 9px; }
 .search-wrap .icon { width:14px; height:14px; opacity:.55; }
 .search-wrap input { width:100%; min-width:0; color:inherit; background:none; border:none; outline:none; font-size:11px; }
@@ -57,6 +57,59 @@ select { max-width:185px; border:1px solid var(--border); border-radius:3px; col
 .icon-grid[data-role=brand] .icon { color:var(--brand-color,var(--red)); }
 .icon-grid[data-role=disabled] .icon { opacity:.35; }
 #empty-message { text-align:center; padding:50px 15px; opacity:.6; }
+.comparison-heading { display:flex; align-items:center; justify-content:space-between; flex-wrap:wrap; gap:8px; padding:8px 14px 14px; }
+.comparison-heading h1 { margin:0 0 5px; font-size:17px; font-weight:500; }
+.comparison-heading p { margin:0; font-size:11px; opacity:.65; }
+#comparison-total { font-size:11px; opacity:.65; }
+.comparison-controls { position:sticky; top:0; z-index:1; display:flex; flex-wrap:wrap; align-items:center; gap:16px; min-height:49px; padding:9px 14px; border-block:1px solid var(--border); background:var(--bg); font-size:11px; }
+.comparison-controls label { display:flex; align-items:center; gap:6px; white-space:nowrap; }
+.comparison-controls input[type=checkbox] { accent-color:var(--red); }
+#comparison-count { margin-left:auto; min-width:65px; font-size:11px; opacity:.65; text-align:right; }
+.comparison-grid { display:grid; grid-template-columns:repeat(auto-fill,minmax(245px,1fr)); margin:13px; border-top:1px solid var(--border); border-left:1px solid var(--border); }
+.comparison-card { min-width:0; display:flex; flex-direction:column; border-right:1px solid var(--border); border-bottom:1px solid var(--border); content-visibility:auto; contain-intrinsic-size:auto 320px; }
+.compare-select { display:flex; width:100%; min-width:0; flex-direction:column; align-items:start; gap:4px; min-height:53px; padding:11px 12px; border:0; border-radius:0; background:color-mix(in srgb,var(--panel) 50%,transparent); text-align:left; font-size:12px; }
+.compare-select > span { max-width:100%; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+.compare-select:hover { background:color-mix(in srgb,var(--fg) 6%,transparent); }
+.compare-select[aria-pressed=true] { background:color-mix(in srgb,var(--red) 10%,transparent); box-shadow:inset 0 2px var(--red); }
+.compare-select .comparison-family { font-size:10px; opacity:.5; }
+.comparison-pair { display:grid; grid-template-columns:1fr 1fr; margin:0 12px; padding-top:13px; }
+.comparison-slot { min-width:0; text-align:center; }
+.comparison-slot + .comparison-slot { border-left:1px solid var(--border); }
+.winner-option { padding:6px 0 9px; border:0; border-radius:0; background:transparent; color:inherit; }
+.winner-option:not(:disabled):hover { background:color-mix(in srgb,var(--fg) 6%,transparent); }
+.winner-option:disabled { cursor:default; }
+.winner-option.is-winner { box-shadow:inset 0 0 0 1px var(--red); background:color-mix(in srgb,var(--red) 7%,transparent); }
+/* Dim only the losing side; the card, winner and unlock control keep their theme colors. */
+.winner-option.is-loser { filter:grayscale(1); opacity:.32; }
+.winner-caption { display:block; font-size:10px; }
+.is-winner .winner-caption { font-weight:600; }
+.comparison-decision { display:flex; justify-content:space-between; align-items:center; gap:6px; padding:0 12px; min-height:44px; font-size:10px; }
+.unlock-choice { min-height:36px; }
+.choice-toolbar { display:flex; flex-wrap:wrap; align-items:center; gap:10px; padding:10px 14px 0; font-size:10px; }
+.choice-toolbar strong { font-weight:500; }
+#choice-save-status { opacity:.65; }
+#choice-save-status.save-failed { opacity:1; color:var(--red); }
+#export-choices { margin-left:auto; min-height:36px; }
+#export-choices:disabled { cursor:default; opacity:.45; }
+@media(pointer:coarse) { .unlock-choice,#export-choices { min-height:44px; } }
+.comparison-column { font-size:9px; letter-spacing:.12em; opacity:.5; }
+.comparison-preview { height:104px; display:flex; align-items:center; justify-content:center; }
+.comparison-preview svg { flex:none; max-width:100%; }
+.comparison-missing { max-width:95px; font-size:10px; line-height:1.6; opacity:.45; }
+.original-text { max-width:95%; padding:5px 8px; border:1px solid var(--border); background:var(--panel); line-height:1.4; overflow-wrap:anywhere; }
+.comparison-footer { display:flex; align-items:center; justify-content:space-between; gap:8px; padding:10px 12px 12px; margin-top:auto; font-size:10px; }
+.comparison-footer > :first-child { min-width:0; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; opacity:.6; }
+.comparison-footer > :last-child { white-space:nowrap; }
+.original-variants { max-width:none; width:calc(100% - 24px); margin:0 12px; font-size:10px; }
+.comparison-basis { margin:0 12px; min-height:25px; display:flex; align-items:center; font-size:10px; opacity:.5; }
+#comparison-empty { margin:36px 15px; text-align:center; opacity:.65; }
+.comparison-grid[data-role=accent] .comparison-pair { color:var(--red); }
+.comparison-grid[data-role=brand] .comparison-pair { color:var(--brand-color,var(--red)); }
+.comparison-grid[data-role=disabled] .comparison-preview { opacity:.35; }
+@media(min-width:941px) { .workspace[data-active-view=compare]:not(.compare-inspect) { grid-template-columns:205px minmax(0,1fr); } .workspace[data-active-view=compare]:not(.compare-inspect) .inspector { display:none; } }
+@media(min-width:941px) and (max-width:1180px) { .workspace[data-active-view=compare]:not(.compare-inspect) { grid-template-columns:174px minmax(0,1fr); } }
+@media(max-width:940px) { .comparison-controls .desktop-inspect { display:none; } }
+@media(max-width:650px) { .comparison-heading { padding:7px 9px 12px; } .comparison-heading p { max-width:335px; line-height:1.6; } .comparison-controls { gap:9px; padding:9px 8px; } .comparison-controls label { font-size:10px; } .comparison-grid { margin:8px; grid-template-columns:minmax(0,1fr); } .comparison-preview { height:110px; } }
 .inspector { overflow-y:auto; background:var(--panel); border-left:1px solid var(--border); }
 .selected-preview { height:160px; display:flex; align-items:center; justify-content:center; border-bottom:1px solid var(--border); background:linear-gradient(45deg,color-mix(in srgb,var(--fg) 2%,transparent) 25%,transparent 25%,transparent 75%,color-mix(in srgb,var(--fg) 2%,transparent) 75%),linear-gradient(45deg,color-mix(in srgb,var(--fg) 2%,transparent) 25%,transparent 25%,transparent 75%,color-mix(in srgb,var(--fg) 2%,transparent) 75%); background-size:16px 16px; background-position:0 0,8px 8px; }
 .selected-preview .icon { width:82px; height:82px; }

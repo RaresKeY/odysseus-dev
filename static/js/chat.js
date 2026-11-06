@@ -5842,7 +5842,7 @@ import { invalidateSettings } from './appConfig.js';
         if (accumulated && window.aiTTSManager && window.aiTTSManager.autoPlay) {
           const ttsBtn = holder.querySelector('.ai-tts-button');
           if (ttsBtn) {
-            var ICON_PLAY_TTS = '<svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor" stroke="none"><polygon points="6 3 20 12 6 21 6 3"/></svg>';
+            var ICON_PLAY_TTS = '<svg width="14" height="14" class="ody-ui-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" data-ui-icon="play"><path d="m6 3 15 9-15 9V3Z"/></svg>';
             var ICON_STOP_TTS = '<svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor" stroke="none"><rect x="5" y="5" width="14" height="14" rx="2"/></svg>';
             const resetFn = () => {
               ttsBtn.innerHTML = ICON_PLAY_TTS;

@@ -91,7 +91,7 @@ async function loadUsers() {
         </div>
         <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap;">
           <button class="admin-btn-sm" data-adm-toggle-admin="${esc(u.username)}" data-make-admin="${u.is_admin ? '0' : '1'}" style="font-size:11px;">${u.is_admin ? 'Revoke admin' : 'Make admin'}</button>
-          <button class="admin-btn-sm" data-adm-rename-user="${esc(u.username)}" style="font-size:11px;">Rename</button>
+          <button class="admin-btn-sm ody-ui-with-label" data-adm-rename-user="${esc(u.username)}" style="font-size:11px;"><svg width="14" height="14" class="ody-ui-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" data-ui-icon="rename"><path d="m4 16 12-12a2 2 0 0 1 4 4L8 20H4v-4ZM14 6l4 4"/></svg><span class="ody-ui-label-text">Rename</span></button>
           ${u.is_admin ? '' : '<button class="admin-btn-sm" data-adm-reset-password style="font-size:11px;">Change password</button>'}
           ${u.is_admin ? '' : `<button class="admin-btn-delete" data-adm-del-user="${esc(u.username)}" style="font-size:11px;">Remove</button>`}
           ${u.is_admin ? '' : '<svg class="admin-user-chevron" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" style="opacity:0.3;transition:transform 0.2s,opacity 0.2s;"><polyline points="6 9 12 15 18 9"/></svg>'}
@@ -3633,7 +3633,7 @@ async function loadWebhooks() {
             ${errorText}
           </div>
           <div class="admin-ep-actions">
-            <button class="admin-btn-sm" data-adm-wh-test="${w.id}">Test</button>
+            <button class="admin-btn-sm ody-ui-with-label" data-adm-wh-test="${w.id}"><svg width="14" height="14" class="ody-ui-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" data-ui-icon="skill-test"><g transform="translate(.3 .3) scale(.72)" stroke-width="2.6"><path d="m13 3-9 11h7l-1 7 10-12h-7l1-6Z"/></g><g transform="translate(1.2 1.2) scale(.9)" stroke-width="2.222"><path d="m17 16 6 3-6 3v-6Z"/></g></svg><span class="ody-ui-label-text">Test</span></button>
             <button class="admin-btn-sm" data-adm-wh-toggle="${w.id}">${w.is_active ? 'Disable' : 'Enable'}</button>
             <button class="admin-btn-delete" data-adm-wh-delete="${w.id}">Delete</button>
           </div>

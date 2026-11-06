@@ -17,8 +17,9 @@
     <span id="summary" class="muted"></span>
     <a href="ICON_INVENTORY.md" class="header-link">Full inventory</a>
     <a href="catalog.csv" class="header-link">CSV</a>
+    <a href="integration/review.html" class="header-link">Interface review</a>
   </header>
-  <div class="workspace">
+  <div class="workspace" data-active-view="compare">
     <aside class="families">
       <div class="pane-title">Families <span id="total-count"></span></div>
       <nav id="families" aria-label="Icon families"></nav>
@@ -26,7 +27,8 @@
     </aside>
     <main>
       <div class="tabs" role="tablist" aria-label="Views">
-        <button role="tab" aria-selected="true" data-view="catalog">Icons</button>
+        <button role="tab" aria-selected="true" data-view="compare">Old vs new</button>
+        <button role="tab" aria-selected="false" data-view="catalog">Icons</button>
         <button role="tab" aria-selected="false" data-view="themes">Theme trials</button>
         <button role="tab" aria-selected="false" data-view="coverage">Source coverage</button>
         <button role="tab" aria-selected="false" data-view="references">Imagegen references</button>
@@ -38,19 +40,38 @@
         <label>Surface <input type="color" id="bg-color" aria-label="Custom background"></label>
         <button id="reset-theme" title="Reset theme overrides" class="small-action">Reset</button>
       </div>
-      <section id="catalog-view" class="view">
-        <div class="filter-toolbar">
+        <div id="browser-controls" class="filter-toolbar">
           <label class="search-wrap"><span data-icon="search"></span><input id="search" type="search" placeholder="Find an icon, action or subsystem…" aria-label="Search icons"></label>
           <select id="coverage-select" aria-label="Coverage filter">
             <option value="all">All coverage</option><option value="existing-svg">Existing SVG concepts</option>
             <option value="control-gap">Current control gaps</option><option value="supporting">Supporting glyphs</option><option value="expansion">Expanded UI</option>
           </select>
           <select id="role-select" aria-label="Icon color role"><option value="foreground">Foreground</option><option value="accent">Accent</option><option value="brand">Brand</option><option value="disabled">Disabled trial</option></select>
-          <label class="size-control">Size <input id="size" type="range" min="14" max="48" value="28"><output id="size-value">28</output></label>
+          <label id="catalog-size-control" class="size-control">Size <input id="size" type="range" min="14" max="48" value="28"><output id="size-value">28</output></label>
         </div>
+      <section id="catalog-view" class="view" hidden>
         <div class="result-line"><span id="result-count" aria-live="polite"></span><span class="muted">Select a glyph to inspect geometry and uses</span></div>
         <div id="icon-grid" class="icon-grid" aria-label="Icon catalog"></div>
         <p id="empty-message" hidden>No icons match these filters.</p>
+      </section>
+      <section id="compare-view" class="view">
+        <div class="comparison-heading">
+          <div><h1>Old vs new</h1><p>Choose a winner; unlock to change it. Only the unchosen side grays out. Source-label matches are review candidates.</p></div>
+          <span id="comparison-total"></span>
+        </div>
+        <div class="comparison-controls">
+          <select id="comparison-scope" aria-label="Comparison scope"><option value="paired">With an old icon</option><option value="all">All 802 icons</option><option value="unpaired">No captured counterpart</option></select>
+          <label class="size-control">Compare size <input id="comparison-size" type="range" min="24" max="88" value="56"><output id="comparison-size-value">56</output></label>
+          <label><input id="same-ink" type="checkbox" checked> Same ink</label>
+          <label class="desktop-inspect"><input id="inspect-toggle" type="checkbox"> Inspector</label>
+          <span id="comparison-count" role="status"></span>
+        </div>
+        <div class="choice-toolbar">
+          <strong id="winner-count">0 picked</strong><span id="choice-save-status" role="status">Saved in this browser</span>
+          <button id="export-choices" class="small-action" disabled>Export picks</button>
+        </div>
+        <div id="comparison-grid" class="comparison-grid"></div>
+        <p id="comparison-empty" hidden>No icons match these filters. Try another family, search or comparison scope.</p>
       </section>
       <section id="themes-view" class="view" hidden>
         <div class="view-heading"><h1>19 upstream themes</h1><p>Actual Odysseus palette values and selected component CSS. Each row applies its own preset, including advanced overrides. Select any icon to use it in every trial.</p></div>
@@ -83,6 +104,7 @@
   <div id="toast" role="status" hidden></div>
   <script id="catalog-data" type="application/json"><!-- DATA --></script>
   <script id="contract-data" type="application/json"><!-- CONTRACT --></script>
+  <script id="comparison-data" type="application/json"><!-- COMPARISON --></script>
   <script type="module"><!-- APP --></script>
 </body>
 </html>
