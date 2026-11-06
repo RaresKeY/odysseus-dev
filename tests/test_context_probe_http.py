@@ -13,6 +13,7 @@ import pytest
 
 from src import model_context as context
 from src import tls_overrides
+from src.endpoint_resolver import endpoint_headers
 
 MODEL = "served-fixture"
 
@@ -88,8 +89,9 @@ def test_http_accounts_rotation_expiry_and_tenant_path(monkeypatch):
         url = server.base + "/tenant/v1/chat/completions"
 
         def window(account):
-            return context.get_context_length(url, MODEL, headers={"Authorization": "Bearer " + account},
-                                              endpoint_kind="proxy")
+            headers = endpoint_headers({"Authorization": "Bearer " + account}, endpoint_kind="proxy").copy()
+            assert dict(headers) == {"Authorization": "Bearer " + account}
+            return context.get_context_length(url, MODEL, headers=headers)
 
         assert window("first") == 8192
         assert window("second") == 32768
@@ -99,7 +101,7 @@ def test_http_accounts_rotation_expiry_and_tenant_path(monkeypatch):
         assert context.get_context_length_known(url, MODEL, headers={}, endpoint_kind="proxy") == (
             context.DEFAULT_CONTEXT, False)
         assert all(path == "/tenant/v1/models" for path, _ in server.requests)
-        # Expire both cache layers without depending on wall-clock scheduling.
+        # Expire catalog evidence without depending on wall-clock scheduling.
         monkeypatch.setattr(context, "_CACHE_TTL_SECONDS", -1)
         context._context_cache.clear()
         context._catalog_ctx_cache.clear()

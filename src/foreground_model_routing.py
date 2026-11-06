@@ -161,8 +161,10 @@ def build_foreground_model_candidates(
 ) -> list:
     """Build the ordered candidate list for a foreground request."""
 
+    if headers is None:
+        headers = {}
     policy = policy or resolve_foreground_model_policy(owner)
-    primary = (endpoint_url, model, headers or {})
+    primary = (endpoint_url, model, headers)
     candidates = [primary]
     for candidate in policy.fallback_candidates:
         if candidate not in candidates:
@@ -180,6 +182,8 @@ def build_foreground_route_descriptors(
 ) -> list:
     """Build safe route metadata parallel to foreground candidates."""
 
+    if headers is None:
+        headers = {}
     policy = policy or resolve_foreground_model_policy(owner)
     selected = None
     if selected_endpoint_id:
@@ -187,7 +191,7 @@ def build_foreground_route_descriptors(
             selected_endpoint_id,
             endpoint_url,
             model,
-            headers or {},
+            headers,
             owner=owner,
         )
     if selected is None:
@@ -200,8 +204,8 @@ def build_foreground_route_descriptors(
                 "endpoint_cost_tracked": endpoint_cost_tracked(endpoint_url),
             }
         else:
-            selected = resolve_route_descriptor(endpoint_url, model, headers or {}, owner=owner)
-    primary = (endpoint_url, model, headers or {})
+            selected = resolve_route_descriptor(endpoint_url, model, headers, owner=owner)
+    primary = (endpoint_url, model, headers)
     candidates = [primary]
     descriptors = [selected]
     for candidate, descriptor in zip(

@@ -102,7 +102,8 @@ def test_cache_scope_count_is_bounded(monkeypatch):
     monkeypatch.setattr(context.httpx, "get", lambda url, **kwargs: response(8192))
     for i in range(5):
         context.get_context_length(URL, MODEL, headers={"X-Account": str(i)}, endpoint_kind="proxy")
-    assert len(context._context_cache) == len(context._catalog_ctx_cache) == 2
+    assert len(context._context_cache) == 0
+    assert len(context._catalog_ctx_cache) == 2
 
 
 def test_redirect_or_rewritten_origin_receives_no_credentials(monkeypatch):
@@ -197,3 +198,122 @@ def test_session_metadata_without_owner_never_resolves_credentials(monkeypatch):
     monkeypatch.setattr("src.owner_identity.effective_storage_owner", lambda owner: None)
     monkeypatch.setattr("src.endpoint_resolver.resolve_endpoint_by_id", lambda *a, **k: pytest.fail("ownerless lookup"))
     assert context.get_session_context_length(session, owner=None) == context.DEFAULT_CONTEXT
+
+
+def test_ollama_runtime_hint_survives_allocation_cache_expiry(monkeypatch):
+    clock = [1.0]
+    monkeypatch.setattr(context, "time", SimpleNamespace(monotonic=lambda: clock[0]))
+    calls = []
+
+    def get(url, **kwargs):
+        calls.append(url)
+        if len(calls) == 1:
+            return httpx.Response(200, json={"models": [
+                {"name": "qwen3-fixture:latest", "context_length": 4096},
+            ]})
+        return httpx.Response(503)
+
+    monkeypatch.setattr(context.httpx, "get", get)
+    url = "http://localhost:11434/v1/chat/completions"
+    headers = {"Authorization": "Bearer selected"}
+    assert context.get_context_length_known(url, "qwen3-fixture", headers=headers, endpoint_kind="api") == (4096, True)
+    clock[0] += context._CACHE_TTL_SECONDS + 1
+    assert context.get_context_length_known(url, "qwen3-fixture", headers=headers, endpoint_kind="api") == (
+        context.DEFAULT_CONTEXT, False,
+    )
+
+
+def test_model_cache_cannot_extend_the_catalog_evidence_lifetime(monkeypatch):
+    clock = [1.0]
+    monkeypatch.setattr(context, "time", SimpleNamespace(monotonic=lambda: clock[0]))
+    windows = [8192]
+    calls = []
+
+    def get(url, **kwargs):
+        calls.append(url)
+        return httpx.Response(200, json={"data": [
+            {"id": MODEL, "context_length": windows[0]},
+            {"id": "other-fixture", "context_length": windows[0]},
+        ]})
+
+    monkeypatch.setattr(context.httpx, "get", get)
+    headers = {"Authorization": "Bearer selected"}
+    assert context.get_context_length(URL, MODEL, headers=headers, endpoint_kind="proxy") == 8192
+    clock[0] += context._CACHE_TTL_SECONDS - 1
+    assert context.get_context_length(URL, "other-fixture", headers=headers, endpoint_kind="proxy") == 8192
+    windows[0] = 16384
+    clock[0] += 2
+    assert context.get_context_length(URL, MODEL, headers=headers, endpoint_kind="proxy") == 16384
+    assert context.get_context_length(URL, "other-fixture", headers=headers, endpoint_kind="proxy") == 16384
+    assert len(calls) == 2
+
+
+@pytest.mark.parametrize("kind,url,expected", [
+    ("local", "http://model.internal/v1/chat/completions", 4096),
+    ("proxy", "http://localhost:11434/v1/chat/completions", 32768),
+])
+def test_admitted_registration_kind_reaches_context_probe(monkeypatch, kind, url, expected):
+    from src import endpoint_resolver as resolver
+    row = SimpleNamespace(id="selected", name="Selected", endpoint_kind=kind)
+    owners = []
+
+    class Query:
+        def filter(self, *args):
+            return self
+
+        def first(self):
+            return row
+
+    db = SimpleNamespace(query=lambda *args: Query(), close=lambda: None)
+    monkeypatch.setattr(resolver, "SessionLocal", lambda: db)
+    monkeypatch.setattr(resolver, "endpoint_supports_chat", lambda ep: True)
+    monkeypatch.setattr(resolver, "resolve_endpoint_runtime", lambda ep, owner: (url, "selected"))
+    monkeypatch.setattr(resolver, "_endpoint_enabled_models", lambda ep: [MODEL])
+    monkeypatch.setattr(resolver, "_endpoint_hidden_models", lambda ep: [])
+    monkeypatch.setattr("src.auth_helpers.owner_filter",
+                        lambda query, model, owner: owners.append(owner) or query)
+
+    def get(target, **kwargs):
+        assert kwargs["headers"]["Authorization"] == "Bearer selected"
+        if target.endswith("/slots"):
+            return httpx.Response(200, json=[{"n_ctx": 4096}])
+        if target.endswith("/api/ps"):
+            return httpx.Response(200, json={"models": [
+                {"name": MODEL + ":latest", "context_length": 8192},
+            ]})
+        return response(32768)
+
+    monkeypatch.setattr(context.httpx, "get", get)
+    route = resolver.resolve_endpoint_by_id("selected", MODEL, owner="alice", require_exact_model=True)
+    assert route is not None
+    assert context.get_context_length(route[0], route[1], headers=route[2]) == expected
+    assert owners == ["alice"]
+    assert dict(route[2]) == {"Authorization": "Bearer selected"}
+
+
+def test_restored_bound_session_keeps_credentials_and_recovers_owned_kind(monkeypatch):
+    from routes import chat_helpers
+    row = SimpleNamespace(id="selected", base_url="http://model.internal/v1", endpoint_kind="local")
+    owners = []
+
+    class Query:
+        def filter(self, *args):
+            return self
+
+        def all(self):
+            return [row]
+
+    db = SimpleNamespace(query=lambda *args: Query(), close=lambda: None)
+    monkeypatch.setattr(chat_helpers, "SessionLocal", lambda: db)
+    monkeypatch.setattr("src.auth_helpers.owner_filter",
+                        lambda query, model, owner: owners.append(owner) or query)
+    monkeypatch.setattr("src.model_admission.endpoint_supports_execution", lambda ep: True)
+    monkeypatch.setattr("src.endpoint_resolver.resolve_endpoint_runtime",
+                        lambda *args, **kwargs: pytest.fail("selected credentials must be preserved"))
+    monkeypatch.setattr(context.httpx, "get", lambda url, **kwargs: httpx.Response(200, json=[{"n_ctx": 4096}]))
+    sess = SimpleNamespace(endpoint_id="selected", endpoint_url="http://model.internal/v1/chat/completions",
+                           model=MODEL, headers={"Authorization": "Bearer selected"})
+    chat_helpers.resolve_session_auth(sess, "session-1", owner="alice")
+    assert context.get_context_length(sess.endpoint_url, MODEL, headers=sess.headers) == 4096
+    assert dict(sess.headers) == {"Authorization": "Bearer selected"}
+    assert owners == ["alice"]

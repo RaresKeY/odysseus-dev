@@ -3818,3 +3818,13 @@ def test_skill_activation_reaches_later_fallback_request_and_pinned_round(monkey
     pinned_tool_names = set(pinned_route_prompt.partition("tools=")[2].split(","))
     assert {"grep", "manage_skills"} <= pinned_tool_names
     assert any('"delta": "pinned backup answer"' in chunk for chunk in chunks)
+
+
+def test_anonymous_foreground_route_retains_admitted_endpoint_kind():
+    headers = endpoint_resolver.endpoint_headers({}, endpoint_kind="proxy")
+    candidates = build_foreground_model_candidates(
+        "http://localhost:11434/v1/chat/completions", "served-fixture", headers,
+        policy=ForegroundModelPolicy(),
+    )
+    assert candidates[0][2] is headers
+    assert candidates[0][2].endpoint_kind == "proxy"

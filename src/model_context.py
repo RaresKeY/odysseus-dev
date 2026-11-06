@@ -265,9 +265,10 @@ def _cache_read(cache, key):
         return value
 
 
-def _cache_store(cache, key, value):
+def _cache_store(cache, key, value, *, expires_at=None):
     with _cache_lock:
-        cache[key] = (time.monotonic() + _CACHE_TTL_SECONDS, value)
+        expiry = time.monotonic() + _CACHE_TTL_SECONDS if expires_at is None else expires_at
+        cache[key] = (expiry, value)
         cache.move_to_end(key)
         while len(cache) > _MAX_CACHE_SCOPES:
             cache.popitem(last=False)
@@ -276,8 +277,11 @@ def _cache_store(cache, key, value):
 def _request_kind(endpoint_url, headers, endpoint_kind):
     if endpoint_kind is not None:
         return endpoint_kind if endpoint_kind in {"auto", "local", "api", "proxy"} else None
-    # An admitted route must not acquire another registration's classification.
-    return _configured_endpoint_kind(endpoint_url) if headers is None else None
+    # Admitted route metadata travels beside the HTTP fields, never via another owner's row.
+    if headers is not None:
+        selected_kind = getattr(headers, "endpoint_kind", None)
+        return selected_kind if selected_kind in {"auto", "local", "api", "proxy"} else None
+    return _configured_endpoint_kind(endpoint_url)
 
 
 def _scope(endpoint_url, headers, kind):
@@ -330,11 +334,13 @@ def _get_context_length_cached(endpoint_url, model, *, headers=None, endpoint_ki
     local = _local_for_kind(endpoint_url, kind)
     dynamic = _cache_read(_ollama_runtime_endpoints, scope) or _ollama_ps_url(endpoint_url, kind) is not None
     key = (scope, model)
-    cached = _cache_read(_context_cache, key) if not local and not dynamic else None
+    # API/proxy catalogs already own their evidence lifetime; a second cache must not renew it.
+    cache_context = not local and not dynamic and kind not in {"api", "proxy"}
+    cached = _cache_read(_context_cache, key) if cache_context else None
     if cached is not None:
         return cached
     value = _query_context_length(endpoint_url, model, headers=headers, endpoint_kind=kind)
-    if not local and not dynamic and (value[0] != DEFAULT_CONTEXT or kind in {"api", "proxy"}):
+    if cache_context and value[0] != DEFAULT_CONTEXT:
         _cache_store(_context_cache, key, value)
     return value
 
@@ -570,7 +576,11 @@ def _probe_ollama_runtime_context(
             return None
 
         # A valid /api/ps response prevents caching static runtime assumptions.
-        _cache_store(_ollama_runtime_endpoints, _scope(endpoint_url, headers, configured_kind), True)
+        # Keep the bounded server-kind hint after allocations expire: probe failure is not static evidence.
+        _cache_store(
+            _ollama_runtime_endpoints, _scope(endpoint_url, headers, configured_kind),
+            True, expires_at=math.inf,
+        )
 
         from src.model_capability_readers import ollama
 
