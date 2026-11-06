@@ -26,9 +26,10 @@ Example (GigaChat):
     LLM_CA_BUNDLE=/etc/odysseus/ca/russian-trusted-root.pem
 
 Scope:
-    `llm_verify()` is intentionally consumed by only two call sites — the
-    shared async client in `src/llm_core.py` and the endpoint probes in
-    `routes/model_routes.py`. Both reach LLM provider URLs. The override
+    `llm_verify()` is limited to the LLM transports in `src/llm_core.py` and
+    `src/decisions/provider.py`, endpoint probes in `routes/model_routes.py`,
+    and same-origin metadata probes in `src/model_context.py` using the
+    caller-selected provider credentials. The override
     is NOT threaded into web_fetch, search providers, gallery downloads,
     embeddings, webhook delivery, or anything else that hits arbitrary
     URLs, and it does NOT affect the app's own browser-facing TLS. That

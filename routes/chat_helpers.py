@@ -595,7 +595,7 @@ async def auto_name_session(session_manager, sess):
         if _is_spec_model and endpoint_url:
             try:
                 from src.database import SessionLocal
-                from src.endpoint_resolver import (build_chat_url, build_headers,
+                from src.endpoint_resolver import (build_chat_url, build_headers, endpoint_headers,
                     resolve_endpoint_runtime, resolve_owner_registered_endpoint)
                 from src.owner_identity import auth_disabled
 
@@ -607,7 +607,9 @@ async def auto_name_session(session_manager, sess):
                     endpoint = resolve_owner_registered_endpoint(db, endpoint_url, owner)
                     base, key = resolve_endpoint_runtime(endpoint, owner=owner)
                     title_url = build_chat_url(base)
-                    title_headers = build_headers(key, base)
+                    title_headers = endpoint_headers(
+                        build_headers(key, base), endpoint_kind=getattr(endpoint, "endpoint_kind", None),
+                    )
                 finally:
                     db.close()
                 title = await llm_call_async(
@@ -666,6 +668,7 @@ async def auto_name_session(session_manager, sess):
             from src.endpoint_resolver import (
                 build_chat_url,
                 build_headers,
+                endpoint_headers,
                 resolve_endpoint,
                 resolve_endpoint_runtime,
                 resolve_owner_registered_endpoint,
@@ -675,7 +678,9 @@ async def auto_name_session(session_manager, sess):
                 endpoint = resolve_owner_registered_endpoint(db, t_url, owner)
                 base, key = resolve_endpoint_runtime(endpoint, owner=owner)
                 t_url = build_chat_url(base)
-                t_headers = build_headers(key, base)
+                t_headers = endpoint_headers(
+                    build_headers(key, base), endpoint_kind=getattr(endpoint, "endpoint_kind", None),
+                )
             except Exception as e:
                 logger.debug("[auto-name] session fallback endpoint %s unauthorized for %s: %s", t_url, owner, e)
                 t_url, t_model, t_headers = None, None, None
@@ -978,14 +983,18 @@ def resolve_session_auth(sess, session_id: str, owner: Optional[str] = None):
     except Exception:
         is_chatgpt_subscription = False
     has_auth = _has_auth_keys(sess.headers)
-    if has_auth and not is_chatgpt_subscription:
+    preserve_auth = has_auth and not is_chatgpt_subscription
+    if preserve_auth and (
+        getattr(sess.headers, "endpoint_kind", None) is not None
+        or not owner or not getattr(sess, "endpoint_id", None)
+    ):
         return
     if is_chatgpt_subscription:
         # Never reuse a stale bearer after deletion, disablement or failed refresh.
         sess.headers = {}
 
     try:
-        from src.endpoint_resolver import build_headers, resolve_endpoint_runtime
+        from src.endpoint_resolver import build_headers, endpoint_headers, resolve_endpoint_runtime
         db = SessionLocal()
         try:
             stored_q = db.query(DBSession).filter(DBSession.id == session_id)
@@ -1009,6 +1018,10 @@ def resolve_session_auth(sess, session_id: str, owner: Optional[str] = None):
             ep, bound_here = _select_session_endpoint(sess, target_url, q.all())
             if ep is None:
                 return
+            if preserve_auth:
+                # Restored JSON headers lost request-local metadata; retain the selected credential.
+                sess.headers = endpoint_headers(sess.headers, endpoint_kind=getattr(ep, "endpoint_kind", None))
+                return
             if bound_here:
                 # Bind before authentication, including failed/expired credentials.
                 stored_q.filter(DBSession.endpoint_id == None).update({"endpoint_id": ep.id})
@@ -1019,9 +1032,13 @@ def resolve_session_auth(sess, session_id: str, owner: Optional[str] = None):
                 logger.warning("Failed to resolve provider auth for session %s: %s", session_id, type(e).__name__)
                 return
             if not api_key:
-                # No usable key (e.g. ChatGPT Subscription needs re-auth).
+                # Preserve classification for anonymous routes without restoring stored authentication.
+                if not _has_auth_keys(getattr(sess, "headers", None)):
+                    sess.headers = endpoint_headers({}, endpoint_kind=getattr(ep, "endpoint_kind", None))
                 return
-            sess.headers = build_headers(api_key, base)
+            sess.headers = endpoint_headers(
+                build_headers(api_key, base), endpoint_kind=getattr(ep, "endpoint_kind", None),
+            )
             if is_chatgpt_subscription:
                 # Request-local only; persistence was cleaned before resolution.
                 return
@@ -1385,7 +1402,7 @@ async def build_chat_context(
     if defer_context_shaping:
         context_length = (
             prepared_window.get("context_length")
-            or get_context_length(sess.endpoint_url, sess.model)
+            or get_context_length(sess.endpoint_url, sess.model, headers=getattr(sess, "headers", None))
         )
         was_compacted = False
     else:

@@ -1667,8 +1667,8 @@ def setup_session_routes(
                 "tool_policy": _policy,
             }
         try:
-            from src.model_context import get_context_length
-            ctx = get_context_length(session.endpoint_url, session.model)
+            from src.model_context import get_session_context_length
+            ctx = get_session_context_length(session, owner=effective_user(request))
             return {
                 "context_length": ctx,
                 "model": session.model,
