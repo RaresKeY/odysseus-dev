@@ -1,14 +1,15 @@
 {
   "pass": true,
   "selected_new": 118,
-  "applied": 116,
+  "applied": 115,
   "default_old": 544,
   "explicit_old": 140,
   "guarded": [
     "database",
+    "shape-intersect",
     "unlink"
   ],
-  "observed": 89,
+  "observed": 88,
   "not_observed": 27,
   "interface_states": 83,
   "javascript_exceptions": 0,
@@ -25,5 +26,11 @@
     "Physical touch interaction"
   ],
   "stylesheet_manifest_tests": 3,
-  "stylesheet_manifest_tests_pass": true
+  "stylesheet_manifest_tests_pass": true,
+  "editor_and_stylesheet_regressions": 126,
+  "cache_name": "odysseus-v1117-pr40-editor-precache",
+  "codeql": "36 annotations on lines unchanged from the pre-integration head; unresolved",
+  "capture_refresh": "75cfdddeb66a47b481aa09d7e26fecc7 passed on corrected sources",
+  "choice_contract": "801d491b432a4cb5a4cf238925a8f158 passed",
+  "editor_regressions": "6521f5d7acf74d91aefe5775c93d4450: 126 passed"
 }
