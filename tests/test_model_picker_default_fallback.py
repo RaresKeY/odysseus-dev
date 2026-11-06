@@ -70,6 +70,7 @@ const window={__odysseusDefaultChat:{endpoint_url:pending.url,endpoint_id:'share
  modelsModule:{getCachedItems:()=>[{url:pending.url,endpoint_id:'shared',models:['first','preferred']}]}};
 const localStorage={setItem(){}};
 let _defaultChatPickInFlight=false,_defaultPendingSeq=0,_autoSelectingDefault=false;
+let _automationPolicy=null;
 function providerLogo(){return null;}function providerLabel(){return 'Fixture';}function _updateReasoningEffortUI(){}
 eval(JSON.parse(process.argv[1])+'\nupdateModelPicker();');
 console.log(JSON.stringify({pending,label:label.textContent}));

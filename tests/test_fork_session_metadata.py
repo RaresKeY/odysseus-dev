@@ -99,7 +99,10 @@ def test_fork_does_not_corrupt_source_message_metadata(monkeypatch):
 def _fork_with(monkeypatch, body, db_ids):
     """Fork a 4-message source whose DB rows have the given ids."""
     monkeypatch.setattr(mod, "_verify_session_owner", lambda *a, **k: None)
-    source = _FakeSession(name="Long chat")
+    from src.chat_automation import AutomationStore
+    forked_policies = []
+    monkeypatch.setattr(AutomationStore, "fork", lambda self, owner, source, target: forked_policies.append((owner, source, target)))
+    source = _FakeSession(name="Long chat", owner="alice")
     for i, role in enumerate(["user", "assistant", "user", "assistant"]):
         source.history.append(ChatMessage(role=role, content=f"m{i}", metadata={"_db_id": db_ids[i]}))
     manager = _FakeSessionManager(source)
@@ -120,7 +123,8 @@ def _fork_with(monkeypatch, body, db_ids):
     class _Req:
         async def json(self): return body
 
-    asyncio.run(_fork_handler(router)(_Req(), "src-id"))
+    result = asyncio.run(_fork_handler(router)(_Req(), "src-id"))
+    assert forked_policies == [("alice", "src-id", result["id"])]
     return [m.content for m in manager.created.history]
 
 
