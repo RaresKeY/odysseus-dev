@@ -27,9 +27,11 @@ bootstrap instances, install dependencies, or replace their browser workflows.
 
 ## Enumerate all existing automated tests
 
-The committed inventory lists every `test_*.py` and JavaScript/browser test source
-under `tests/`, with content hashes and Python definition counts. Regenerate after
-test changes:
+The committed inventory lists every file under `tests/`, with content hashes and
+Python test-definition counts. It distinguishes pytest files, JavaScript scenario
+and support sources, and remaining fixtures/support files. This includes standalone
+browser scenarios with unconventional names; support-file counts are not test-case
+counts. Symlinks and generated caches are excluded. Regenerate after test changes:
 
 ```sh
 python scripts/fork_regression_inventory.py --output docs/testing/fork-regression/automated-inventory.json

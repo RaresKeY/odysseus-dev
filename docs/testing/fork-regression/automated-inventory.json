@@ -1,50 +1,116 @@
 {
   "schema": "odysseus-fork-test-inventory/v1",
-  "scope": "All test_*.py and JavaScript/browser test sources under tests; definitions are not expanded parametrizations.",
+  "scope": "Every file under tests except symlinks and generated caches. Pytest files, JavaScript scenario/support sources and remaining fixture/support files are distinguished; definitions are not expanded parametrizations.",
   "counts": {
-    "javascript-browser": 71,
+    "fixture-or-support": 64,
+    "javascript-source": 107,
     "pytest": 1675
   },
   "python_definitions": 13233,
   "files": [
     {
+      "path": "tests/KNOWN_FAILURES.md",
+      "kind": "fixture-or-support",
+      "sha256": "b26e84aec5688eda7d9797f145989b35665ff504123871cbd25d7686fe3569dd"
+    },
+    {
+      "path": "tests/LAYOUT_INVENTORY.md",
+      "kind": "fixture-or-support",
+      "sha256": "fa67229f8945f26acc58a49e5f17acc68e63d91c786a9d00e991eb4b63ff85aa"
+    },
+    {
+      "path": "tests/OVERSIZED_TEST_SPLIT_PLAN.md",
+      "kind": "fixture-or-support",
+      "sha256": "7e7a761f4fe931e6a52786a812ca9d552da96b736c3d9923094cf569a9fc271c"
+    },
+    {
+      "path": "tests/README.md",
+      "kind": "fixture-or-support",
+      "sha256": "e69c980e8af003fb5595f0274e16fda333a4dbd6a650a28f8b9896270b1df5ba"
+    },
+    {
+      "path": "tests/TESTING_STANDARD.md",
+      "kind": "fixture-or-support",
+      "sha256": "590a7fee2e713439fc505c3ccd66b2663fa2015781102919081591ba659b55dd"
+    },
+    {
+      "path": "tests/WAVE6_TEST_PERFORMANCE_REPORT.md",
+      "kind": "fixture-or-support",
+      "sha256": "268522e79603a19a483df57549c9d857cca54512298b0e69fc9ad65b12a01172"
+    },
+    {
+      "path": "tests/_shards.py",
+      "kind": "fixture-or-support",
+      "sha256": "aab2608a0bdc3ecbd3ffc06fa99ae74877aa482ff7f831adce25d71fad837d6f"
+    },
+    {
+      "path": "tests/_taxonomy.py",
+      "kind": "fixture-or-support",
+      "sha256": "12913bc44e1719fedab90d75f9c6b09b155b1acb02af30e3ecfb58681e8d285a"
+    },
+    {
       "path": "tests/approvalActivity.test.mjs",
-      "kind": "javascript-browser",
+      "kind": "javascript-source",
       "sha256": "85cbd770eee79066c9ecf0b5def92a9da1f2bb17ae0f2be8959578687aa8bfdf"
     },
     {
       "path": "tests/backgroundToolJobs.test.mjs",
-      "kind": "javascript-browser",
+      "kind": "javascript-source",
       "sha256": "6ebb0112d39e3c484528aa7cca70d6b24ce42057076067bb9960825f18095ab1"
     },
     {
       "path": "tests/bombadil-spec.ts",
-      "kind": "javascript-browser",
+      "kind": "javascript-source",
       "sha256": "6028fc27d4689e3eb763daa35b9f657d4297f47478036fc6a56119af1494477d"
     },
     {
+      "path": "tests/browser/notesNative.mjs",
+      "kind": "javascript-source",
+      "sha256": "910cd5777564e9f6338b8a864a772beffea197dc476464171c180e7be96e572d"
+    },
+    {
+      "path": "tests/browser/notesOffline.mjs",
+      "kind": "javascript-source",
+      "sha256": "ef4bc40a710919c81c582d3b9fe80376d0d5ae66fb9be3c293871a83ee360f97"
+    },
+    {
+      "path": "tests/browser/notesReference.mjs",
+      "kind": "javascript-source",
+      "sha256": "437ec2e9865b3e066bbec8d7595a0d947f1e503b96e7b4d819ec1bed86c9bb1e"
+    },
+    {
+      "path": "tests/browser_chat_controls.py",
+      "kind": "fixture-or-support",
+      "sha256": "212118813e988e8bcf7ce76329e733c32e15675801723d8b40fe962e6394d724"
+    },
+    {
+      "path": "tests/browser_workspaces.py",
+      "kind": "fixture-or-support",
+      "sha256": "54f8e274048932aa4ce3fd9984b43dc46e52f1d281a7c946399c607bd4a3197e"
+    },
+    {
       "path": "tests/chatAutoApproveAvailability.test.mjs",
-      "kind": "javascript-browser",
+      "kind": "javascript-source",
       "sha256": "34d36662b0bc440821c2d4a486363c7cea60619a484f6f13ba6e750aa4b2868e"
     },
     {
       "path": "tests/chatEditorProgress.test.mjs",
-      "kind": "javascript-browser",
+      "kind": "javascript-source",
       "sha256": "2e8a8d8570b6495a0cc6415a2c5d15425329a41b2ae254a0afc18096e3066efa"
     },
     {
       "path": "tests/chatImageDeletion.test.mjs",
-      "kind": "javascript-browser",
+      "kind": "javascript-source",
       "sha256": "8bce971aa2228a2259f7ed4e24995f8fd9fe76c1c9ea11623af8b0816b777c12"
     },
     {
       "path": "tests/chatPhotoEditorIntegrity.test.mjs",
-      "kind": "javascript-browser",
+      "kind": "javascript-source",
       "sha256": "4739375c9216cc0b03aa66b11a080d18e60a3cf4ee40edca14d9a7ae09e5fbe2"
     },
     {
       "path": "tests/chatProcessingHandoff.test.mjs",
-      "kind": "javascript-browser",
+      "kind": "javascript-source",
       "sha256": "3d445c29a6a869c8fb699e6f70c006e65020da975c086fc1c8620be0b7d84682"
     },
     {
@@ -240,289 +306,684 @@
       "definitions": 3
     },
     {
+      "path": "tests/codeql_security_browser.cjs",
+      "kind": "javascript-source",
+      "sha256": "c0f23925a55a3aa1d51cc4329e320875887f4b07881003932d700b7bb8e5f1cc"
+    },
+    {
+      "path": "tests/conftest.py",
+      "kind": "fixture-or-support",
+      "sha256": "43e4d14ecd7be5092f1a17ae2deddff93a43b4134fb84e918d18a0529eaa16d2"
+    },
+    {
+      "path": "tests/containment_helpers.py",
+      "kind": "fixture-or-support",
+      "sha256": "929f74fce59dd69150ee10372f8ad71acf6d64bc3eebb0fb7a716d612ee0555e"
+    },
+    {
       "path": "tests/copyChatHeader.test.mjs",
-      "kind": "javascript-browser",
+      "kind": "javascript-source",
       "sha256": "2f8288cffecc6d774d076fd032ab98794cea9a3d8b8b142d994d3f50cca8715c"
     },
     {
+      "path": "tests/css_snapshot/README.md",
+      "kind": "fixture-or-support",
+      "sha256": "ffe87e911910ad4fb04f7a7ebd5b5ddc6bf922b3fa27aee55c517571c21be9e7"
+    },
+    {
+      "path": "tests/css_snapshot/baseline.json",
+      "kind": "fixture-or-support",
+      "sha256": "4b67583ee3fae48d211c4e0eb5c7d3b9db925f67b7a013d54b1c47ecf3b1a8b8"
+    },
+    {
+      "path": "tests/css_snapshot/bench.html",
+      "kind": "fixture-or-support",
+      "sha256": "061f36825d85d741c7347596f05e6f2790379556e90223e7409cb7753921f6c3"
+    },
+    {
+      "path": "tests/css_snapshot/capture.mjs",
+      "kind": "javascript-source",
+      "sha256": "685e6b3b282559571c34d96dc916ca8b3e14452df87ed6b9f217b2c2d2898cd6"
+    },
+    {
+      "path": "tests/css_snapshot/inventory.json",
+      "kind": "fixture-or-support",
+      "sha256": "1046ff3858963c22dfbc2b3d8b390c7bb300fa2f068965353639eeee700a7afe"
+    },
+    {
+      "path": "tests/css_snapshot/pr26-validation.md",
+      "kind": "fixture-or-support",
+      "sha256": "d53429b877ed3cb0471ed276125e67be1eebcaebf98fc031fbfec474f0ad69a0"
+    },
+    {
+      "path": "tests/css_snapshot/pr40-validation.md",
+      "kind": "fixture-or-support",
+      "sha256": "381d7195736ebf7fa9eb5659ebcdc708e491f57739df3a5808b6894727525bd5"
+    },
+    {
+      "path": "tests/documentMobileExport.mjs",
+      "kind": "javascript-source",
+      "sha256": "ceb4da17eb634ca721a92c298d29f286315b5eab41e780d10f72bd0c4238485d"
+    },
+    {
+      "path": "tests/documentSelectionCaret.mjs",
+      "kind": "javascript-source",
+      "sha256": "bb098534d778081fdeeae0ca59cb83b3c6c686483acecc4256ad282d7bfb60d0"
+    },
+    {
+      "path": "tests/e2e/README.md",
+      "kind": "fixture-or-support",
+      "sha256": "c0819acd10ae6f0d3049152d67a2bd94b57982063f19e98b23564d3408f84429"
+    },
+    {
       "path": "tests/e2e/ios-layout/postmerge-layout.spec.cjs",
-      "kind": "javascript-browser",
+      "kind": "javascript-source",
       "sha256": "f1d8493827cd7223263bca518ae276e97463eaa9d43121248f1948381512072b"
     },
     {
+      "path": "tests/e2e/ios-layout-teardown.cjs",
+      "kind": "javascript-source",
+      "sha256": "54a4cea48bccdb3ae24bbdf113b0e5d4ed929189a64c568b7a4b77dd6bfc88ee"
+    },
+    {
+      "path": "tests/e2e/ios-layout.config.cjs",
+      "kind": "javascript-source",
+      "sha256": "2fe85c9f4a24fb09789d589a66d79639d05846b973d383e13e12fc354afc8cb6"
+    },
+    {
       "path": "tests/e2e/photo-editor/adjustment-layers.spec.js",
-      "kind": "javascript-browser",
+      "kind": "javascript-source",
       "sha256": "207718c927f46bf734386d4faa2be1940a225c4bb8f35710129959c5b7be6636"
     },
     {
       "path": "tests/e2e/photo-editor/app-compare-mobile.spec.js",
-      "kind": "javascript-browser",
+      "kind": "javascript-source",
       "sha256": "01ed2617c6d6e864b8b5f3e3328d010fdcf2938fb5bb8759234c1aa0acb251cc"
     },
     {
       "path": "tests/e2e/photo-editor/brush-cursor.spec.js",
-      "kind": "javascript-browser",
+      "kind": "javascript-source",
       "sha256": "4ee337af7f30b02624313c994cdb90ed3d472fa825db5b345ee995f148020100"
     },
     {
       "path": "tests/e2e/photo-editor/brush-engine.spec.js",
-      "kind": "javascript-browser",
+      "kind": "javascript-source",
       "sha256": "6b5872e8628089176c01356e2120ff9edfe0cc0b667ed009a86e9b9fdd56f89b"
     },
     {
       "path": "tests/e2e/photo-editor/compare-mode.spec.js",
-      "kind": "javascript-browser",
+      "kind": "javascript-source",
       "sha256": "88a71377bd1c16ac5252d282e589c670504006332da62cefcb08e490258d9c1e"
     },
     {
       "path": "tests/e2e/photo-editor/core-workflow.spec.js",
-      "kind": "javascript-browser",
+      "kind": "javascript-source",
       "sha256": "475fe3779b25dd99785d1358bc4a16f5390c0228a41ebe5224206d65953595cb"
     },
     {
       "path": "tests/e2e/photo-editor/direct-manipulation.spec.js",
-      "kind": "javascript-browser",
+      "kind": "javascript-source",
       "sha256": "c54ffb419b3deeefb033719c6af52640c36e01acd78ef1f621c934c0f0f7bb8b"
     },
     {
       "path": "tests/e2e/photo-editor/export-fidelity.spec.js",
-      "kind": "javascript-browser",
+      "kind": "javascript-source",
       "sha256": "5c37be7914e481225ec9de7f1ad88969d987111187b960121ed7b8e5c2e63bc3"
     },
     {
       "path": "tests/e2e/photo-editor/gallery-layout.spec.js",
-      "kind": "javascript-browser",
+      "kind": "javascript-source",
       "sha256": "50610eaa8918f82664ca20d6f422401eb4ddca1d46b03453b28e5e4a4eb411d2"
     },
     {
       "path": "tests/e2e/photo-editor/group-effects.spec.js",
-      "kind": "javascript-browser",
+      "kind": "javascript-source",
       "sha256": "cba7b5090c498cc8800f0853f5b4c29958ddb3bba86bc1e3fcf1b03dd72c2ce6"
     },
     {
       "path": "tests/e2e/photo-editor/group-mask.spec.js",
-      "kind": "javascript-browser",
+      "kind": "javascript-source",
       "sha256": "df75cf8177fe5ac09ab6ae64eb4e50e1f7aba810cb43d9b7461961dacbdbde1f"
     },
     {
       "path": "tests/e2e/photo-editor/group-reorder.spec.js",
-      "kind": "javascript-browser",
+      "kind": "javascript-source",
       "sha256": "0687a4af250f9806b46064432e1db2bfc438d23865026a1021c85c3e6a2a32de"
     },
     {
+      "path": "tests/e2e/photo-editor/helpers.js",
+      "kind": "javascript-source",
+      "sha256": "97873eac1e1980002e85ee842ef8cf3524e9dcb7dbc47db9fdc612cf023260f6"
+    },
+    {
       "path": "tests/e2e/photo-editor/interaction-contract.spec.js",
-      "kind": "javascript-browser",
+      "kind": "javascript-source",
       "sha256": "fb8b31357a27dcc206a05baa92f0ed007e306c8a4208b425f1b35da3c32409e0"
     },
     {
       "path": "tests/e2e/photo-editor/layer-clipping.spec.js",
-      "kind": "javascript-browser",
+      "kind": "javascript-source",
       "sha256": "97fdb9117366b8000487135f0c0b82da61cf860af8518e25080c41be62dc798f"
     },
     {
       "path": "tests/e2e/photo-editor/layer-locks.spec.js",
-      "kind": "javascript-browser",
+      "kind": "javascript-source",
       "sha256": "57bd912519ab3504bc4ab37e8d6af03fdfcd0cc4c91a6111c2fe81668e762517"
     },
     {
       "path": "tests/e2e/photo-editor/layer-mask-link.spec.js",
-      "kind": "javascript-browser",
+      "kind": "javascript-source",
       "sha256": "9e95521c0e11c49a41404884e59ba701cf664b11cd5754f89a374b31e5c71a99"
     },
     {
       "path": "tests/e2e/photo-editor/layer-selection.spec.js",
-      "kind": "javascript-browser",
+      "kind": "javascript-source",
       "sha256": "67179768c30ed4af65cb98c94e464594a435c6584ac9881bfa22a3f3ae30d254"
     },
     {
       "path": "tests/e2e/photo-editor/merge-fidelity.spec.js",
-      "kind": "javascript-browser",
+      "kind": "javascript-source",
       "sha256": "298d3efee7bd3421436263c0a9f9c27b207a9b88b737c578aa25072b9f09b9cb"
     },
     {
       "path": "tests/e2e/photo-editor/mobile-fit-zoom.spec.js",
-      "kind": "javascript-browser",
+      "kind": "javascript-source",
       "sha256": "b2959c8197de077c9feba1adf8773fa3b5d70d95d31b02f4c36a15f57ec41cbc"
     },
     {
       "path": "tests/e2e/photo-editor/mobile-layer-sheet.spec.js",
-      "kind": "javascript-browser",
+      "kind": "javascript-source",
       "sha256": "d3e70db18430e4c3496c72ab721ddf961fe18d41c96016022a5430c30258686b"
     },
     {
       "path": "tests/e2e/photo-editor/multi-transform.spec.js",
-      "kind": "javascript-browser",
+      "kind": "javascript-source",
       "sha256": "1a33f57e2dff6d66ceca018d4f7d339264b9cb45c4b9e8e31834385171fb4122"
     },
     {
       "path": "tests/e2e/photo-editor/offline-upgrade.spec.js",
-      "kind": "javascript-browser",
+      "kind": "javascript-source",
       "sha256": "a7a2d410f919fbf66fdf3f88089470e8392773cb8751f67b9a286547295515f7"
     },
     {
       "path": "tests/e2e/photo-editor/panel-text-security.spec.js",
-      "kind": "javascript-browser",
+      "kind": "javascript-source",
       "sha256": "3026931e5f712a25bfa66e82c42855997610915711ffc8d5ee4042d8d6c5236e"
     },
     {
       "path": "tests/e2e/photo-editor/phone-footer-gaps.spec.js",
-      "kind": "javascript-browser",
+      "kind": "javascript-source",
       "sha256": "f3b7e51ca19a6dbeb79032b6787385166c3810c19974a98afbb06abb0e08329f"
     },
     {
       "path": "tests/e2e/photo-editor/placed-layers.spec.js",
-      "kind": "javascript-browser",
+      "kind": "javascript-source",
       "sha256": "d0bf39bbc0bbb9479694802b1fd16a33615326a31d70d9329d87f513a6d79832"
     },
     {
       "path": "tests/e2e/photo-editor/preflight-mobile.spec.js",
-      "kind": "javascript-browser",
+      "kind": "javascript-source",
       "sha256": "ab8e92795aa23c6bce0399c072e9e9eb6b6e09354725fb587e945845401cc200"
     },
     {
       "path": "tests/e2e/photo-editor/project-recovery.spec.js",
-      "kind": "javascript-browser",
+      "kind": "javascript-source",
       "sha256": "7be5494b62284a056e38a24e06a4498767fc9eed8046ef94065bb732d97cc767"
     },
     {
+      "path": "tests/e2e/photo-editor/quickedit-bench-grade.js",
+      "kind": "javascript-source",
+      "sha256": "27496baa23cfbe6cd7a9b5a5997633c11677f6aab03076cc76fcd91f56c70197"
+    },
+    {
+      "path": "tests/e2e/photo-editor/quickedit-bench.js",
+      "kind": "javascript-source",
+      "sha256": "b7ecdbd3ab8d566a02dd5d143cbf6f485a9838cae955dd37a7894f48954f78dc"
+    },
+    {
+      "path": "tests/e2e/photo-editor/quickedit-coverage.js",
+      "kind": "javascript-source",
+      "sha256": "527f13ae6592d7e90ea06039e7f55ef39a3d9c7f7fab888b6ea3039a745c8456"
+    },
+    {
       "path": "tests/e2e/photo-editor/rasterize-confirm.spec.js",
-      "kind": "javascript-browser",
+      "kind": "javascript-source",
       "sha256": "38f70357dbb2c68a7c4dfc171efb651abbf7e0f54603cbed0cab0d305d624e39"
     },
     {
       "path": "tests/e2e/photo-editor/refresh-recovery.spec.js",
-      "kind": "javascript-browser",
+      "kind": "javascript-source",
       "sha256": "1009e727f144f9e2f71dcec74b7ab6b675607f476b66ade201c8c936da8334c2"
     },
     {
       "path": "tests/e2e/photo-editor/selection-boundary.spec.js",
-      "kind": "javascript-browser",
+      "kind": "javascript-source",
       "sha256": "c9cf2927cfd66a5262d5feaeeec24b5731085ce0fc104cd0121c001b1531f5d7"
     },
     {
       "path": "tests/e2e/photo-editor/selection-refine.spec.js",
-      "kind": "javascript-browser",
+      "kind": "javascript-source",
       "sha256": "e5fb2c872fb83fa495b46346760036d3fd2be5a98c02994a8a24225bd1436142"
     },
     {
       "path": "tests/e2e/photo-editor/tablet-options.spec.js",
-      "kind": "javascript-browser",
+      "kind": "javascript-source",
       "sha256": "fb38fa4c61c0bfebb52fee43cdc076e50e45267acb22e1be3008f0b1534c64ff"
     },
     {
       "path": "tests/e2e/photo-editor/text-font-swap.spec.js",
-      "kind": "javascript-browser",
+      "kind": "javascript-source",
       "sha256": "8bdf990b7b5952d7a9b7bb873e3185df063f00c2a2d61623356b2fbca81259ef"
     },
     {
       "path": "tests/e2e/photo-editor/text-shapes.spec.js",
-      "kind": "javascript-browser",
+      "kind": "javascript-source",
       "sha256": "f149c6a885d86638515f4eb4e29954f948df8a0fd7da270b5bdf16c961bf7c8c"
     },
     {
       "path": "tests/e2e/photo-editor/transform-frame.spec.js",
-      "kind": "javascript-browser",
+      "kind": "javascript-source",
       "sha256": "cd66449b86aac2fdba5aa95d41a679058e6dc10cc02ecbf1f1f9beea8eec4986"
     },
     {
+      "path": "tests/e2e/playwright.config.js",
+      "kind": "javascript-source",
+      "sha256": "22683bf71619051be8ff0143e5ad075711d4cd6cfb5c7a926ce82b578c82c438"
+    },
+    {
+      "path": "tests/e2e/setup.js",
+      "kind": "javascript-source",
+      "sha256": "d89aee249e4889b0f44e4eaed9320ebcf301a9f7920ff4e71854a939fd25ec1f"
+    },
+    {
+      "path": "tests/e2e/teardown.js",
+      "kind": "javascript-source",
+      "sha256": "aa7993a9f5cfd18be6e6c53bc5b1f77a7f091129c69ee2a0e4beb14a736f162a"
+    },
+    {
+      "path": "tests/editor-ai-cancel.mjs",
+      "kind": "javascript-source",
+      "sha256": "81be24d4c16749b8bedf21e304d309cce7c98614b753b398ebaccf89c77283df"
+    },
+    {
+      "path": "tests/editor-layer-styles.mjs",
+      "kind": "javascript-source",
+      "sha256": "0e27f283abaa37eb40840c90906269c649385a7017c280bab8bdc3d71b051942"
+    },
+    {
+      "path": "tests/editorRichUpdate.mjs",
+      "kind": "javascript-source",
+      "sha256": "8fa0d90857389b29080981b5e34eb817000789be5cc5f4cbbc50ed85ad23f565"
+    },
+    {
+      "path": "tests/editorSuggestionApply.mjs",
+      "kind": "javascript-source",
+      "sha256": "55d57e7e90b4fb5089070233b9fa361a305f9d3500549220bf29555b6d17df5a"
+    },
+    {
+      "path": "tests/editorSuggestionButtons.mjs",
+      "kind": "javascript-source",
+      "sha256": "af13f417ae759047da195c837e239cd85dfbba691b64d873a40147e87ab7ffb6"
+    },
+    {
       "path": "tests/emailReplyBrowser.test.mjs",
-      "kind": "javascript-browser",
+      "kind": "javascript-source",
       "sha256": "5d3e57355f94f6f906930346ccabc639502fed5468fdf20fa6221181f97f0199"
     },
     {
       "path": "tests/emailReplyStream.test.mjs",
-      "kind": "javascript-browser",
+      "kind": "javascript-source",
       "sha256": "e25166223238b6ba22ef300cff941a170b670646e6102e8185fa33c6e9c499a1"
     },
     {
+      "path": "tests/fixtures/ca-trust/README.md",
+      "kind": "fixture-or-support",
+      "sha256": "b9a2bbd6c7ef99c7cb04ebc3834830d754b85760869c29b3e481f4c6da31ff65"
+    },
+    {
+      "path": "tests/fixtures/ca-trust/incident.json",
+      "kind": "fixture-or-support",
+      "sha256": "39300b6cd0c5de9c1abb49258ddd7310d21aa032e2cc2821a269c3a44fdb4321"
+    },
+    {
+      "path": "tests/fixtures/clean_v3_open_email_reply.json",
+      "kind": "fixture-or-support",
+      "sha256": "42caea0db68a2663f1fe23d4c99e3105264bc967fe2a7255f247bc9783bda06f"
+    },
+    {
+      "path": "tests/fixtures/decision_port/donor-lifecycle-v1.json",
+      "kind": "fixture-or-support",
+      "sha256": "5a6dd859f3363d6eafb2f8a7498d3014427418e47c59eb91f5d23ecb2697628b"
+    },
+    {
+      "path": "tests/fixtures/decision_port/extended-campaign-v1.json",
+      "kind": "fixture-or-support",
+      "sha256": "4804403d1724b1cfd6ee9cecd792f3b54ef86c9796bae558ee6f720cb0b318f4"
+    },
+    {
+      "path": "tests/fixtures/decision_port/historical-aggregates-v1.json",
+      "kind": "fixture-or-support",
+      "sha256": "e8fd48653f63ba68961afd38784dc09484356b3e8ae5e25adccf7ef00014d412"
+    },
+    {
+      "path": "tests/fixtures/decision_port/runtime-campaign-v2.json",
+      "kind": "fixture-or-support",
+      "sha256": "1f72a692ac62fc0d08760118aa1068474ffadb82098dc167a35f0b8be8d543a7"
+    },
+    {
+      "path": "tests/fixtures/decision_port/synthetic-v1.json",
+      "kind": "fixture-or-support",
+      "sha256": "f42bf51fa6cac1ed09dcc5a11b1d6f9908ca24ea05b994ad78334d0533c24c8c"
+    },
+    {
+      "path": "tests/fixtures/decision_port/systemone-wire-v1.json",
+      "kind": "fixture-or-support",
+      "sha256": "63d959e1bae08c7e32ca1fe9ffe9d5ab201fe68cc1d6b1f4814745c69f2b5d29"
+    },
+    {
+      "path": "tests/fixtures/hwfit_publication_models.json",
+      "kind": "fixture-or-support",
+      "sha256": "45e899e4bb20f88a184f9d9d64e58ede754318a02480e4e74b3cc41b8515137b"
+    },
+    {
+      "path": "tests/fixtures/model_auto/codex_jev_policy.json",
+      "kind": "fixture-or-support",
+      "sha256": "788db2882eb01c5f6e57610c7112374a91dff3520bf94f8aac92c0f9dcb5fd30"
+    },
+    {
+      "path": "tests/fixtures/notesRecurrenceBaseline.mjs",
+      "kind": "javascript-source",
+      "sha256": "9af973a5d2fb08a5eed550be0198bef501af56802c3844b5d0bb8e718cc685cf"
+    },
+    {
+      "path": "tests/fixtures/odysseus_hwfit_live_case.json",
+      "kind": "fixture-or-support",
+      "sha256": "9155a0ffb827c5e7ee29d119492b5645a26f1792a436516bfff67eb604861d64"
+    },
+    {
+      "path": "tests/fixtures/skills_api_baseline.json",
+      "kind": "fixture-or-support",
+      "sha256": "b3e4b40d3ca07b08cd05ab7caf849422a85e3805a46bfa6cc03bd8a3c6cf052a"
+    },
+    {
+      "path": "tests/fixtures/skills_openapi_baseline.json",
+      "kind": "fixture-or-support",
+      "sha256": "136208fd0716318a80f42b2d7fb2e5d64802153b06169c42a566794823c9c01c"
+    },
+    {
+      "path": "tests/fixtures/vl/basic-shapes.json",
+      "kind": "fixture-or-support",
+      "sha256": "602d471158a4f711737eb7e6857a368406895b2b2fd143ca504762f0681aae5d"
+    },
+    {
+      "path": "tests/fixtures/vl/basic-shapes.svg",
+      "kind": "fixture-or-support",
+      "sha256": "baaad6e1afa6edb2914a94a653ef859055a609da11fced045873b69017617f47"
+    },
+    {
+      "path": "tests/fixtures/vl/quarterly-dashboard.html",
+      "kind": "fixture-or-support",
+      "sha256": "234cbaee38629f68f2d90e50daca06606631b57a0cd34d3f7ddcc2000fce02f4"
+    },
+    {
       "path": "tests/frontendArchitecture.test.mjs",
-      "kind": "javascript-browser",
+      "kind": "javascript-source",
       "sha256": "e4c713a0d724e9351ffe8a51acd16b71e711f5a97112b25ce0595e2e03962771"
     },
     {
       "path": "tests/galleryModelPickerSync.test.mjs",
-      "kind": "javascript-browser",
+      "kind": "javascript-source",
       "sha256": "a64ac0e564fda7ab5d1bf1dc181a47585847cca8432261e986a7f987f2555ef4"
     },
     {
       "path": "tests/generatedImageResult.test.mjs",
-      "kind": "javascript-browser",
+      "kind": "javascript-source",
       "sha256": "60c4f890e3350271abc52a3a32d78e5e17fbb1a6df6f6a67451feca7a8cb1f5b"
     },
     {
+      "path": "tests/helpers/__init__.py",
+      "kind": "fixture-or-support",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "tests/helpers/calendar_routes.py",
+      "kind": "fixture-or-support",
+      "sha256": "601142a533bbf4a368ef2948f4fef5e18834576c247c7b67db365ec1c6ea5891"
+    },
+    {
+      "path": "tests/helpers/cli_loader.py",
+      "kind": "fixture-or-support",
+      "sha256": "0be93839556628ac9b379493f2128043157a558380da86d6684043f84703ce06"
+    },
+    {
+      "path": "tests/helpers/database.py",
+      "kind": "fixture-or-support",
+      "sha256": "11d883e201f284961a372cbf153f2bd87ab26abfecea6f8d2ad2fdf8e9cf1b62"
+    },
+    {
+      "path": "tests/helpers/db_stubs.py",
+      "kind": "fixture-or-support",
+      "sha256": "13149f17dff58be42f765f19e301e699c08a224e77f404969e4525564161aebb"
+    },
+    {
+      "path": "tests/helpers/document_source.mjs",
+      "kind": "javascript-source",
+      "sha256": "bcac8118eede43d3a86e125019de721c6477140e4da5f1341ae1eb785692ee58"
+    },
+    {
+      "path": "tests/helpers/document_source.py",
+      "kind": "fixture-or-support",
+      "sha256": "e7f0c128f9b2b774b07e7c7830b7d68e5444eb7d12f6ef707e714d36310bba10"
+    },
+    {
+      "path": "tests/helpers/embedding_lanes.py",
+      "kind": "fixture-or-support",
+      "sha256": "f98e472e0eac4b85152c248394e79565a00ee9cc471ba949be9a0ab659232313"
+    },
+    {
+      "path": "tests/helpers/import_state.py",
+      "kind": "fixture-or-support",
+      "sha256": "3df6f9246290dbaa3b3548f47a8b5a008b9909273cdb1b8871884755093001fb"
+    },
+    {
+      "path": "tests/helpers/js_modules.py",
+      "kind": "fixture-or-support",
+      "sha256": "0e50683e1d7746469f62303d6dd89ed08bd563b84b36784bef8ca9cad47a0286"
+    },
+    {
+      "path": "tests/helpers/model_admission.py",
+      "kind": "fixture-or-support",
+      "sha256": "ce417a95315fb7ce825ed1895ee258a0e2f8e92f0b8e65e13e05805ae3980e78"
+    },
+    {
+      "path": "tests/helpers/notes_source.py",
+      "kind": "fixture-or-support",
+      "sha256": "859a5f442dc717f59993891c338cd6ae9d6e5e009392a2ee69ab0e3b063bb572"
+    },
+    {
+      "path": "tests/helpers/sqlite_db.py",
+      "kind": "fixture-or-support",
+      "sha256": "08e81f7fa85d4b230a9ceb9969c90cda698719db712537967ae0e8a79e6c5fe1"
+    },
+    {
+      "path": "tests/helpers/stylesheets.mjs",
+      "kind": "javascript-source",
+      "sha256": "7e505d0d9ae30d537d825188f276894182fc12e25fdcdf609f97b1cace3c3462"
+    },
+    {
+      "path": "tests/helpers/stylesheets.py",
+      "kind": "fixture-or-support",
+      "sha256": "55e9936209723478d051fea87392ba6cc18cc88a8b91659852225837ffd16e93"
+    },
+    {
+      "path": "tests/helpers/task_automation_bootstrap_probe.py",
+      "kind": "fixture-or-support",
+      "sha256": "c9c20412a00c5afa07d01ba83ba223837d4d86cf5d2ebffd6e75e3af25415cdb"
+    },
+    {
+      "path": "tests/helpers/test_settings_shell.js",
+      "kind": "javascript-source",
+      "sha256": "d78f4f1eaa386c82b0064baf8163fb2d6c20d649be194919f90459911fcd7c73"
+    },
+    {
+      "path": "tests/helpers/test_settings_shell_coordinator.mjs",
+      "kind": "javascript-source",
+      "sha256": "14635d7a9d0fef79340f6c0eaaa44e2e53cad38fdafdd3e8d76b68f891ecd255"
+    },
+    {
+      "path": "tests/helpers/theme_bootstrap.cjs",
+      "kind": "javascript-source",
+      "sha256": "c0b7bc370fe9efb8cdbfb7e90f262ced284f9c2f4a34c10b38469c6e70a23f50"
+    },
+    {
+      "path": "tests/helpers/unix_sockets.py",
+      "kind": "fixture-or-support",
+      "sha256": "5fe310a88d917f0ad7dc6e424c657e7ec981886b5ddda46349dde41b199dfc4f"
+    },
+    {
+      "path": "tests/helpers/worker_runtime.py",
+      "kind": "fixture-or-support",
+      "sha256": "9cad358ee5361595e38919057da6f09ffd95e73458f01b976b5d07759c19facf"
+    },
+    {
       "path": "tests/historyResumeRendering.test.mjs",
-      "kind": "javascript-browser",
+      "kind": "javascript-source",
       "sha256": "36696aa806bacab665d9f156d78519a0a8664d42953ee7f935f24bcb0cb9cfd1"
     },
     {
+      "path": "tests/hwfit_publication_fixtures.py",
+      "kind": "fixture-or-support",
+      "sha256": "314359819206ba02c33ffbd10c5789b8a29b35e56ac3b257d9bcc15e9ac1e01c"
+    },
+    {
       "path": "tests/live_thinking_scheduler.test.mjs",
-      "kind": "javascript-browser",
+      "kind": "javascript-source",
       "sha256": "2481774569571a096e9bd16a86c25707395984569b7c53929e5536b5a83811e2"
     },
     {
+      "path": "tests/markdown_codefence_placeholder_regression.mjs",
+      "kind": "javascript-source",
+      "sha256": "a609702c1b3243eb95a6c19b36f25ccb8b8e241dda5b4caf4e46f85f43f6f11c"
+    },
+    {
       "path": "tests/noteTestOracle.test.mjs",
-      "kind": "javascript-browser",
+      "kind": "javascript-source",
       "sha256": "4b4fcd8daf19f2c471e90e68849c4e0270b94cd97afea509e9d255b37f066989"
     },
     {
       "path": "tests/notesApplication.test.mjs",
-      "kind": "javascript-browser",
+      "kind": "javascript-source",
       "sha256": "739ffc3f20de8e2bdf1d513b17bf485f85821e9906109cdf8ffea04b81b0f1dd"
     },
     {
       "path": "tests/notesCharacterization.test.mjs",
-      "kind": "javascript-browser",
+      "kind": "javascript-source",
       "sha256": "1946369be43177b19a44cd9ae4f90d64da6558d1a470f8e347b490a2188782be"
     },
     {
       "path": "tests/notesDraftAutosave.test.mjs",
-      "kind": "javascript-browser",
+      "kind": "javascript-source",
       "sha256": "99f0cd92a30cf01c0ee6814f6684edeb80ebdb9a5ab96583244092865bfb6212"
     },
     {
       "path": "tests/notesInfrastructure.test.mjs",
-      "kind": "javascript-browser",
+      "kind": "javascript-source",
       "sha256": "0417205809de16c7c7338ea80ba19ca844603b3e06655987226f5f83d962d18b"
     },
     {
       "path": "tests/notesRecurrence.test.mjs",
-      "kind": "javascript-browser",
+      "kind": "javascript-source",
       "sha256": "dcf7c2d33de9bb457f96af070354ecc3ab69669002bdc9c7c943bef1b3d2e9bc"
     },
     {
       "path": "tests/notesReminders.test.mjs",
-      "kind": "javascript-browser",
+      "kind": "javascript-source",
       "sha256": "dd9a703465dde8f92625a3226ab52d20a02aa5d3415fbcc70609f69a372ccc12"
     },
     {
       "path": "tests/notesWorkflows.test.mjs",
-      "kind": "javascript-browser",
+      "kind": "javascript-source",
       "sha256": "5a9112569f226525faaf6603a9867620b47902534f9cd882c08f71f2f96614b2"
     },
     {
+      "path": "tests/pdfAnnotationGestures.mjs",
+      "kind": "javascript-source",
+      "sha256": "711401c0923d71de9bc34c74283ad489bdc0907eee0bd7ecf01b21a09b02542e"
+    },
+    {
+      "path": "tests/pr6503_security_browser.cjs",
+      "kind": "javascript-source",
+      "sha256": "48934268910483472233394249ca37c90af0c23635a30af704abee8636777473"
+    },
+    {
+      "path": "tests/process_resource_helpers.py",
+      "kind": "fixture-or-support",
+      "sha256": "ada476ffff5fed7b1ea96b285a1aed8051e72fbdbe1594819ebb834c073ebc5a"
+    },
+    {
+      "path": "tests/publication_plan_b_browser.cjs",
+      "kind": "javascript-source",
+      "sha256": "2450b8b6bc935b8fdccef06e422c5d562733d91e9065077fa5e7aca1df1fd00c"
+    },
+    {
       "path": "tests/researchMobileButtons.test.mjs",
-      "kind": "javascript-browser",
+      "kind": "javascript-source",
       "sha256": "45b86d32af0fa8d05ee9ce54209df8728d4e84bd93a862f38e039097a488bba8"
     },
     {
+      "path": "tests/run_focus.py",
+      "kind": "fixture-or-support",
+      "sha256": "efd050a9036f43f49a9c0494c8813082b15acb5fa5722a92ff87f1d323864475"
+    },
+    {
+      "path": "tests/run_order_report.py",
+      "kind": "fixture-or-support",
+      "sha256": "c6e5a2475f59697fe0aa10b0b5853447e91d40cf60c3618db97eee4983485a6c"
+    },
+    {
+      "path": "tests/runtime_evidence_helpers.py",
+      "kind": "fixture-or-support",
+      "sha256": "76bd8f2492d28373bb2dc7559419e023cb1b70a357ecd0112b1bcd78b42efa02"
+    },
+    {
       "path": "tests/schemaThinkingProbe.test.mjs",
-      "kind": "javascript-browser",
+      "kind": "javascript-source",
       "sha256": "9877f1c4e37e0dd10ae309e9faa14d72545d6e01a95c715e84bb5bfe0922adff"
     },
     {
       "path": "tests/selectedNotesContext.test.mjs",
-      "kind": "javascript-browser",
+      "kind": "javascript-source",
       "sha256": "35fb2bd1f02757b73188342ec00f1e97253b8ba8dfb577861675872a517bd949"
     },
     {
       "path": "tests/sidebarNewChat.test.mjs",
-      "kind": "javascript-browser",
+      "kind": "javascript-source",
       "sha256": "8763bea0aeeed2ec533eb897ab9dd9b66cddb3eb3ebddd03806c4f223264f00a"
     },
     {
       "path": "tests/skillsApproval.test.mjs",
-      "kind": "javascript-browser",
+      "kind": "javascript-source",
       "sha256": "2946784aed1159e71fdb4215cfa5d77df5c66c00b47ff6ce53e8a702a5d58959"
+    },
+    {
+      "path": "tests/smoke/README.md",
+      "kind": "fixture-or-support",
+      "sha256": "299e9bab1b194d0a97215275d6c5f8e2d92ec3737cab1568f824dc6eed3318b5"
+    },
+    {
+      "path": "tests/smoke/areas.py",
+      "kind": "fixture-or-support",
+      "sha256": "6935a514de6f5dca8b0310da3b24319d10c152ee8ad8859c680efd471fee55c2"
+    },
+    {
+      "path": "tests/smoke/conftest.py",
+      "kind": "fixture-or-support",
+      "sha256": "23d8f78e49c3c6615fab5b13da5adbf6f455a21f2f0968a0d0314359894a8e75"
+    },
+    {
+      "path": "tests/smoke/stub_provider.py",
+      "kind": "fixture-or-support",
+      "sha256": "2d7e6c7cbb86472bb3768ad71fdc1cf02ee5cd49343a7d9271856e321237b127"
     },
     {
       "path": "tests/smoke/test_calendar_smoke.py",
@@ -597,18 +1058,28 @@
       "definitions": 1
     },
     {
+      "path": "tests/streaming/corpus.mjs",
+      "kind": "javascript-source",
+      "sha256": "3e1b68346adabbc4cf8d78cb2cc081ea2ab4b5193df0fadcfad841a47c832519"
+    },
+    {
       "path": "tests/streaming/invariant.test.mjs",
-      "kind": "javascript-browser",
+      "kind": "javascript-source",
       "sha256": "e19b87c54dafe91340779cc95f7355f8bd7aa603837c6330294a32982dcc9d36"
     },
     {
+      "path": "tests/streaming/markdownHarness.mjs",
+      "kind": "javascript-source",
+      "sha256": "a55cf30b60a2406d38ddb26874175470df760aeb06f715c05dcb7c39768ce1de"
+    },
+    {
       "path": "tests/streaming/segmenter.test.mjs",
-      "kind": "javascript-browser",
+      "kind": "javascript-source",
       "sha256": "1329334bcbe6562f64ebb4042f96b05c95911f1cab52806a7b2ecbaad7975c38"
     },
     {
       "path": "tests/streamingRendererRaf.test.mjs",
-      "kind": "javascript-browser",
+      "kind": "javascript-source",
       "sha256": "c1452fff489f5637618f362967c268333e6de06861e2b719bf2f08c702a2145e"
     },
     {
@@ -1162,6 +1633,11 @@
       "kind": "pytest",
       "sha256": "2980f09bbabea0454b7c46fac0027d66b2c13e1d1eec822871dc813dfb01c7f4",
       "definitions": 7
+    },
+    {
+      "path": "tests/test_auto_categories.mjs",
+      "kind": "javascript-source",
+      "sha256": "92990cc295ba8ac6087b912118c74a7f7d3333e44ffa886851802ea99c9a148f"
     },
     {
       "path": "tests/test_automation_catalog.py",
@@ -4770,6 +5246,11 @@
       "definitions": 11
     },
     {
+      "path": "tests/test_email_library_print_browser.cjs",
+      "kind": "javascript-source",
+      "sha256": "8f26496d593b0a5a78ddbd1ece5052139a5eaa5ae23c6f061915aa587a121fd2"
+    },
+    {
       "path": "tests/test_email_linkify_security_js.py",
       "kind": "pytest",
       "sha256": "6f410419ce6b58209f29c324ad6933e40657ced0f8f75c7269cfd83b0a145df6",
@@ -5316,6 +5797,11 @@
       "definitions": 18
     },
     {
+      "path": "tests/test_feature_ux_display.mjs",
+      "kind": "javascript-source",
+      "sha256": "5f191435a33ff3c4fdc08511cd8e520e3f16f7f7cee7b732b4851663e0f57992"
+    },
+    {
       "path": "tests/test_fenced_example_not_executed_for_native_models.py",
       "kind": "pytest",
       "sha256": "34f0efd2ad9a1e8c4b4a9779fe5b21d2d65ba32c3e97d6b2392598100ad04c71",
@@ -5360,7 +5846,7 @@
     {
       "path": "tests/test_fork_live_tests.py",
       "kind": "pytest",
-      "sha256": "96547dbe208521f3a6c9f2fc44684bd8d26aba94d4e4b7e06df244b609d52a66",
+      "sha256": "69b3ed944de1f567bd8f23bd7a39de7c4f17f412c51b9a2f378c8cc8fb314772",
       "definitions": 16
     },
     {
@@ -10399,17 +10885,32 @@
     },
     {
       "path": "tests/toolFollowupOracle.test.mjs",
-      "kind": "javascript-browser",
+      "kind": "javascript-source",
       "sha256": "fbb775326d1dbb93e46eaad7d812f23318cddc38f86424d18137e70190a77d35"
     },
     {
       "path": "tests/tool_followup_oracle.test.mjs",
-      "kind": "javascript-browser",
+      "kind": "javascript-source",
       "sha256": "1ee7ddd22a22ce067a9b0de7da5355f1819644a25335e66f08a3f4a507d9d012"
     },
     {
+      "path": "tests/tools/build_oversized_test_split_plan.py",
+      "kind": "fixture-or-support",
+      "sha256": "478c3767b2e6d951dce242f41e27cd348e965c89617422ad3140624b30f05bdf"
+    },
+    {
+      "path": "tests/tools/editor_writing_smoke.py",
+      "kind": "fixture-or-support",
+      "sha256": "a97686d654bbad447e0b87c4e15353abc5e643800d04f6a4ecfc6ef37a99155b"
+    },
+    {
+      "path": "tests/tools/organizer_smoke.py",
+      "kind": "fixture-or-support",
+      "sha256": "200a5f154653ca4eec490c12dbcafc840aa8df9bb62fea6f39ee0b8b29cf4e30"
+    },
+    {
       "path": "tests/turnRendering.test.mjs",
-      "kind": "javascript-browser",
+      "kind": "javascript-source",
       "sha256": "a759d38b8d536f1d23c37654778f8a47552efbd220986eb909e0d560a8245b61"
     }
   ]

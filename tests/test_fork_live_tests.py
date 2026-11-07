@@ -226,8 +226,12 @@ def test_inventory_reports_pytest_definitions_and_browser_sources_without_import
     (root / 'test_example.py').write_text('raise RuntimeError("must not import")\nclass TestCases:\n def test_async(self): pass\ndef test_simple(): pass\n')
     (root / 'widget.test.mjs').write_text('throw Error("must not execute");')
     (root / 'layout.spec.cjs').write_text('throw Error("must not execute");')
+    (root / 'unnamedScenario.mjs').write_text('throw Error("must not execute");')
+    (root / 'fixture.json').write_text('{}')
+    (root / '__pycache__').mkdir()
+    (root / '__pycache__' / 'ignored.pyc').write_bytes(b'ignored')
     result = inventory(tmp_path, nodes=True)
-    assert result['counts'] == {'pytest': 1, 'javascript-browser': 2}
+    assert result['counts'] == {'pytest': 1, 'javascript-source': 3, 'fixture-or-support': 1}
     assert result['python_definitions'] == 2
     row = next(f for f in result['files'] if f['kind'] == 'pytest')
     assert row['nodes'][0].endswith('::TestCases::test_async')

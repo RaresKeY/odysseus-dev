@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""List every checked-in test source without importing or executing tests.
+"""List every suite file without importing or executing tests.
 
 This is a source inventory, not expanded pytest collection or a pass report.
 Use --nodes to include Python definition names; parametrized/dynamic cases
@@ -19,16 +19,15 @@ def inventory(root, *, nodes=False):
     root = Path(root)
     files = []
     for path in sorted((root / 'tests').rglob('*')):
+        if any(part in {'__pycache__', '.pytest_cache', 'node_modules'} for part in path.relative_to(root).parts):
+            continue
         if not path.is_file() or path.is_symlink():
             continue
         python = path.name.startswith('test_') and path.suffix == '.py'
-        javascript = (path.suffix in {'.js', '.mjs', '.cjs', '.ts', '.tsx', '.jsx'}
-                      and ('.test.' in path.name or '.spec.' in path.name)) or path.name == 'bombadil-spec.ts'
-        if not (python or javascript):
-            continue
+        javascript = path.suffix in {'.js', '.mjs', '.cjs', '.ts', '.tsx', '.jsx'}
         raw = path.read_bytes()
         row = {'path': path.relative_to(root).as_posix(),
-               'kind': 'pytest' if python else 'javascript-browser',
+               'kind': 'pytest' if python else ('javascript-source' if javascript else 'fixture-or-support'),
                'sha256': hashlib.sha256(raw).hexdigest()}
         if python:
             tree = ast.parse(raw, filename=str(path))
@@ -45,7 +44,7 @@ def inventory(root, *, nodes=False):
                 row['nodes'] = [row['path'] + '::' + name for name in definitions]
         files.append(row)
     return {'schema': 'odysseus-fork-test-inventory/v1',
-            'scope': 'All test_*.py and JavaScript/browser test sources under tests; definitions are not expanded parametrizations.',
+            'scope': 'Every file under tests except symlinks and generated caches. Pytest files, JavaScript scenario/support sources and remaining fixture/support files are distinguished; definitions are not expanded parametrizations.',
             'counts': dict(Counter(f['kind'] for f in files)),
             'python_definitions': sum(f.get('definitions', 0) for f in files), 'files': files}
 
