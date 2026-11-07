@@ -2452,6 +2452,13 @@ import { invalidateSettings } from './appConfig.js';
       }
     }
 
+    // Session creation publishes a navigation event before its policy refresh finishes.
+    if (!await whenAutomationSettingsReady()) {
+      uiModule.showError('Chat settings are still loading. Try sending again.');
+      _releaseSendFlag();
+      return;
+    }
+
     // --- API key guard: warn if message looks like an API key ---
     if (!approvalForSend && API_KEY_RE.test(msg.trim())) {
       if (!await window.styledConfirm('This looks like an API key. Sending it to the AI could expose it.\n\nDid you mean to use /setup instead?', { confirmText: 'Send anyway', danger: true })) {
@@ -3075,7 +3082,10 @@ import { invalidateSettings } from './appConfig.js';
       _syncForegroundStreamGlobals();
       holder._researchQuery = msg; // Store query for notification text
       
-      const modelName = _bestKnownStreamModel(selectedRouteForSend) || null;
+      const routingPolicy = window.ChatAutomation?.getPolicy();
+      const autoSelecting = routingPolicy?.route_mode === 'auto'
+        && (!routingPolicy.session_id || routingPolicy.session_id === streamSessionId);
+      const modelName = autoSelecting ? null : _bestKnownStreamModel(selectedRouteForSend) || null;
 
       let loadingText = 'Initializing...';
 
@@ -3091,7 +3101,7 @@ import { invalidateSettings } from './appConfig.js';
         loadingText = 'Processing request...';
       }
 
-      var roleLabel = _modelRouteLabel(modelName, modelName);
+      var roleLabel = autoSelecting ? 'Auto · Jev' : _modelRouteLabel(modelName, modelName);
       var _charNameInit = presetsModule.getCharacterName ? presetsModule.getCharacterName() : '';
       if (_charNameInit) roleLabel = _charNameInit;
       const roleTs = new Date().toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'});
@@ -3168,13 +3178,15 @@ import { invalidateSettings } from './appConfig.js';
         let errText = `Error ${res.status}`;
         try {
           const errBody = await res.text();
-          // Parse nested JSON error if present
-          const m = errBody.match(/"message"\s*:\s*"([^"]+)"/);
-          if (m) errText = m[1].replace(/\\"/g, '"');
+          let error;
+          try { error = JSON.parse(errBody); } catch (_) {}
+          const detail = error?.detail || error?.error?.message || error?.message || error?.error;
+          if (typeof detail === 'string') errText = detail;
           else if (errBody.length < 200) errText = errBody;
         } catch {}
         // Auto-switch to chat mode for tool-related errors
-        if (errText.includes('tool') || errText.includes('auto')) {
+        if (!res.headers.has('X-Decision-Failure')
+            && /(?:tools?.*(?:not supported|unsupported)|doesn['’]?t support.*tools?)/i.test(errText)) {
           errText = 'This model doesn\'t support agent tools — switched to Chat mode. Try again.';
           const _ab = document.getElementById('mode-agent-btn');
           const _cb = document.getElementById('mode-chat-btn');

@@ -48,7 +48,7 @@ def provider(raw):
 
 def configure(registered):
     pool = google_pool(registered, model='models/gemini-2.5-flash')
-    registered.update_configuration('alice', {'decision_provider': CONFIG}, 0)
+    registered.update_configuration('alice', {'decision_provider': CONFIG}, registered.configuration('alice')['revision'])
     return pool
 
 
