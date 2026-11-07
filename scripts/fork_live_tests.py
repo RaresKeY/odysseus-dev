@@ -7,6 +7,7 @@ identifiers/counts, never response bodies, chat text, cookies or login secrets.
 from __future__ import annotations
 
 import argparse
+from collections import Counter
 from contextlib import contextmanager
 from datetime import datetime, timezone
 import http.client
@@ -139,7 +140,7 @@ def read_events(response):
     return events
 
 
-def verify_turn(events, marker, model, *, file_cycle=False):
+def verify_turn(events, marker, model, *, file_cycle=False, endpoint_id=None):
     errors = [e for e in events if e.get('type') in {
         'error', 'intent_nudge_exhausted', 'approval_required', 'tool_approval_required'}
         or e.get('error') or e.get('blocked') or e.get('failed')]
@@ -151,14 +152,22 @@ def verify_turn(events, marker, model, *, file_cycle=False):
     require('[Agent guard:' not in text, 'agent_guard_fired')
     metrics = [e.get('data', e) for e in events if e.get('type') == 'metrics']
     reported = [m.get('model') for m in metrics if m.get('model')]
+    reported += [item for m in metrics for item in m.get('round_models', [])]
     require(reported and all(m == model for m in reported), 'actual_model_mismatch')
+    if endpoint_id:
+        endpoints = [m.get('endpoint_id') for m in metrics if m.get('endpoint_id')]
+        endpoints += [item for m in metrics for item in m.get('round_endpoint_ids', [])]
+        require(endpoints and all(item == endpoint_id for item in endpoints), 'actual_endpoint_mismatch')
     evidence = {'event_count': len(events), 'actual_model': model,
                 'tool_outputs': sum(e.get('type') == 'tool_output' for e in events)}
+    rounds = [len(m['round_models']) for m in metrics if isinstance(m.get('round_models'), list)]
+    if rounds:
+        evidence['agent_rounds'] = rounds[-1]
     if not file_cycle:
         require(not evidence['tool_outputs'] and not any(e.get('type') == 'tool_start' for e in events),
                 'greeting_used_tools')
-        rounds = [m.get('agent_rounds') for m in metrics if m.get('agent_rounds') is not None]
-        require(rounds and all(r == 1 for r in rounds), 'greeting_repeated_rounds')
+        require(rounds, 'greeting_round_count_missing')
+        require(all(r == 1 for r in rounds), 'greeting_repeated_rounds')
     else:
         outputs = [e for e in events if e.get('type') == 'tool_output']
         require(len(outputs) == 1 and sum(e.get('type') == 'tool_start' for e in events) == 1,
@@ -175,9 +184,11 @@ class Suite:
         self.client, self.login, self.args = client, login, args
         self.marker = 'fork-regression-' + uuid.uuid4().hex[:16]
         self.results = []
+        self.case_evidence = {}
 
     def check(self, case_id, operation):
         start = time.monotonic()
+        self.case_evidence = {}
         try:
             evidence = operation() or {}
             result = {'id': case_id, 'status': 'passed', 'evidence': evidence}
@@ -186,10 +197,17 @@ class Suite:
         except Exception as exc:
             # Exception strings can contain server bodies or credentials.
             result = {'id': case_id, 'status': 'failed', 'reason': type(exc).__name__}
+        if self.case_evidence:
+            result['evidence'] = {**self.case_evidence, **result.get('evidence', {})}
         result['seconds'] = round(time.monotonic() - start, 3)
         self.results.append(result)
         print(json.dumps(result), flush=True)
         return result['status'] == 'passed'
+
+    def blocked(self, case_id, reason):
+        result = {'id': case_id, 'status': 'blocked', 'reason': reason, 'seconds': 0}
+        self.results.append(result)
+        print(json.dumps(result), flush=True)
 
     def authenticate(self):
         self.client.request('/api/auth/login', self.login)
@@ -216,20 +234,41 @@ class Suite:
         return {'endpoint_count': len(endpoints), 'picker_endpoints': len(choices['endpoints'])}
 
     @contextmanager
-    def session(self):
+    def session(self, *, manual=False):
         workspace = self.client.request('/api/workspace/default')
         require(workspace.get('ok') and isinstance(workspace.get('path'), str)
                 and workspace['path'], 'default_workspace_unavailable')
-        obj = self.client.request('/api/session', {
-            'name': self.marker, 'endpoint_id': self.args.endpoint_id,
-            'model': self.args.model, 'skip_validation': 'true',
-            'cwd': workspace['path']}, form=True)
+        template = getattr(self.args, 'manual_template', None) if manual else None
+        source_state = None
+        if template:
+            source_path = '/api/session/' + urllib.parse.quote(template, safe='')
+            source_state = self.client.request(source_path + '/automation')
+            require(source_state['route_mode'] == 'manual', 'template_must_be_manual')
+            require(self.client.request(source_path + '/context_info').get('model') == self.args.model,
+                    'template_model_mismatch')
+            obj = self.client.request(source_path + '/fork', {'keep_count': 0})
+        else:
+            obj = self.client.request('/api/session', {
+                'name': self.marker, 'endpoint_id': self.args.endpoint_id,
+                'model': self.args.model, 'skip_validation': 'true',
+                'cwd': workspace['path']}, form=True)
         sid = obj['id']
         try:
+            if template:
+                self.client.request('/api/session/' + sid,
+                    {'name': self.marker, 'cwd': workspace['path']}, method='PATCH', form=True)
+            if manual:
+                state = self.client.request('/api/session/' + sid + '/automation')
+                require(state['route_mode'] == 'manual', 'auto_routing_requires_manual_template')
+                require(not any(state.get(k) for k in ('followup_enabled', 'preparation_enabled',
+                    'completion_advice_enabled')), 'template_has_extra_model_calls_enabled')
             yield sid
         finally:
             # Never delete a pre-existing session or an id supplied by a model.
             self.client.request('/api/session/' + sid, method='DELETE')
+            if template:
+                require(self.client.request(source_path + '/automation') == source_state,
+                        'source_template_changed')
 
     def new_default(self):
         before = self.client.request('/api/chat-settings')
@@ -255,7 +294,8 @@ class Suite:
             path = '/api/session/' + sid + '/automation'
             state = self.client.request(path)
             saved = self.client.request(path, {'policy_revision': state['policy_revision'],
-                'changes': {'approval_mode': old}}, method='PUT')
+                'changes': {'approval_mode': old,
+                            'followup_enabled': not state.get('followup_enabled', False)}}, method='PUT')
             require(saved['approval_mode'] == old, 'explicit_mode_not_saved')
             self.client.request(path, {'policy_revision': state['policy_revision'],
                 'changes': {'approval_mode': 'yolo'}}, method='PUT', expected=409)
@@ -324,19 +364,28 @@ class Suite:
                       'Do not change any other files or use any other tool: ' + command)
         else:
             prompt = 'Hello. Reply with exactly ' + marker + '. Do not call any tools.'
-        with self.session() as sid:
+        owner_before = self.client.request('/api/chat-settings')
+        with self.session(manual=True) as sid:
             with self.client.response('/api/chat_stream', {'session': sid, 'message': prompt,
                     'mode': 'agent', 'allow_bash': 'true', 'allow_web_search': 'false',
-                    'use_web': 'false', 'use_rag': 'false', 'selected_endpoint_id': self.args.endpoint_id},
+                    'use_web': 'false', 'use_rag': 'false', 'selected_endpoint_id': self.args.endpoint_id,
+                    'selected_model': self.args.model},
                     form=True) as response:
                 events = read_events(response)
-            evidence = verify_turn(events, marker, self.args.model, file_cycle=file_cycle)
+            self.case_evidence = {
+                'event_types': dict(Counter(e.get('type', 'delta') for e in events)),
+                'round_models': [e.get('data', e).get('round_models', [])
+                                 for e in events if e.get('type') == 'metrics'],
+                'tools': [e.get('tool') for e in events if e.get('type') == 'tool_start']}
+            evidence = verify_turn(events, marker, self.args.model, file_cycle=file_cycle,
+                                   endpoint_id=self.args.endpoint_id)
             if file_cycle:
                 require(any(e.get('type') == 'tool_start' and e.get('tool') == 'bash'
                             and e.get('command') == command for e in events), 'native_command_mismatch')
             history = self.client.request('/api/history/' + sid).get('history', [])
             require(any(m.get('role') == 'assistant' and marker in str(m.get('content', ''))
                         for m in history), 'assistant_reply_not_persisted')
+        require(self.client.request('/api/chat-settings') == owner_before, 'owner_configuration_changed')
         return evidence
 
     def run(self):
@@ -353,10 +402,15 @@ class Suite:
                 self.check('NT-01', self.notes)
                 self.check('DC-01', self.documents)
             if self.args.suite in ('provider', 'native'):
-                self.check('MD-02', self.catalog)
-                self.check('CH-01', lambda: self.turn(False))
-            if self.args.suite == 'native':
-                self.check('FS-01', lambda: self.turn(True))
+                catalogue_ok = self.check('MD-02', self.catalog)
+                greeting_ok = catalogue_ok and self.check('CH-01', lambda: self.turn(False))
+                if not catalogue_ok:
+                    self.blocked('CH-01', 'catalogue_preflight_failed')
+                if self.args.suite == 'native':
+                    if greeting_ok:
+                        self.check('FS-01', lambda: self.turn(True))
+                    else:
+                        self.blocked('FS-01', 'provider_greeting_preflight_failed')
         finally:
             if self.client.cookies:
                 self.check('AU-02', self.logout)
@@ -376,6 +430,7 @@ def main(argv=None):
     parser.add_argument('--suite', choices=['read', 'state', 'crud', 'provider', 'native'], default='read')
     parser.add_argument('--endpoint-id')
     parser.add_argument('--model')
+    parser.add_argument('--manual-template', help='Owned disposable Manual chat to fork with zero history when owner defaults use Auto')
     parser.add_argument('--expected-context', type=int)
     parser.add_argument('--output', type=Path, required=True)
     args = parser.parse_args(argv)

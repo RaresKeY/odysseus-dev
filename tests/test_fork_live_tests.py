@@ -10,6 +10,7 @@ import pytest
 from scripts.fork_live_tests import (CheckFailure, Client, Suite, load_login,
                                     local_origin, read_events, verify_turn)
 from scripts.fork_regression_inventory import inventory
+from tests.test_chat_automation_state import store, configured_reviewer
 
 
 @pytest.mark.parametrize('origin', [
@@ -89,15 +90,28 @@ def test_stream_requires_done_and_rejects_oversized_lines():
 
 
 def greeting():
-    return [{'delta': 'synthetic-token'}, {'type': 'metrics', 'data': {'model': 'm', 'agent_rounds': 1}}]
+    return [{'delta': 'synthetic-token'}, {'type': 'metrics', 'data': {'model': 'm', 'round_models': ['m']}}]
+
+
+def test_greeting_oracle_uses_the_app_round_models_contract():
+    assert verify_turn(greeting(), 'synthetic-token', 'm')['agent_rounds'] == 1
+    mixed = greeting()
+    mixed[-1]['data']['round_models'] = ['different-model']
+    with pytest.raises(CheckFailure, match='model_mismatch'):
+        verify_turn(mixed, 'synthetic-token', 'm')
+    endpoint = greeting()
+    endpoint[-1]['data'].update(endpoint_id='actual', round_endpoint_ids=['actual'])
+    assert verify_turn(endpoint, 'synthetic-token', 'm', endpoint_id='actual')['agent_rounds'] == 1
+    with pytest.raises(CheckFailure, match='endpoint_mismatch'):
+        verify_turn(endpoint, 'synthetic-token', 'm', endpoint_id='different')
 
 
 @pytest.mark.parametrize('extra,reason', [
     ({'type': 'error'}, 'error_or_block'),
     ({'type': 'intent_nudge_exhausted'}, 'error_or_block'),
     ({'type': 'tool_start', 'tool': 'write_file'}, 'used_tools'),
-    ({'type': 'metrics', 'data': {'model': 'wrong', 'agent_rounds': 1}}, 'model_mismatch'),
-    ({'type': 'metrics', 'data': {'model': 'm', 'agent_rounds': 3}}, 'repeated_rounds'),
+    ({'type': 'metrics', 'data': {'model': 'wrong', 'round_models': ['wrong']}}, 'model_mismatch'),
+    ({'type': 'metrics', 'data': {'model': 'm', 'round_models': ['m', 'm', 'm']}}, 'repeated_rounds'),
 ])
 def test_greeting_oracle_rejects_guards_tools_repetition_and_wrong_model(extra, reason):
     with pytest.raises(CheckFailure, match=reason):
@@ -138,6 +152,31 @@ def test_owned_session_cleanup_on_failure():
     assert calls[-1] == ('/api/session/owned-synthetic-id', 'DELETE')
 
 
+def test_manual_probe_forks_zero_history_without_changing_source_or_owner_defaults():
+    calls = []
+    source = {'route_mode': 'manual', 'approval_mode': 'always_ask'}
+    class Fake:
+        def request(self, path, value=None, **options):
+            calls.append((path, value, options))
+            if path == '/api/workspace/default': return {'ok': True, 'path': '/synthetic-workspace'}
+            if path == '/api/session/template/automation': return dict(source)
+            if path == '/api/session/template/context_info': return {'model': 'm'}
+            if path.endswith('/fork'):
+                assert value == {'keep_count': 0}
+                return {'id': 'owned-child'}
+            if options.get('method') == 'PATCH':
+                assert set(value) == {'name', 'cwd'}
+                return {}
+            return {'route_mode': 'manual'}
+    suite = Suite(Fake(), {}, SimpleNamespace(endpoint_id='e', model='m', manual_template='template'))
+    with suite.session(manual=True) as sid:
+        assert sid == 'owned-child'
+    assert all(options.get('method') != 'PUT' for _, _, options in calls)
+    assert any(path == '/api/session/owned-child' and options.get('method') == 'DELETE'
+               for path, _, options in calls)
+    assert source == {'route_mode': 'manual', 'approval_mode': 'always_ask'}
+
+
 def test_failed_readiness_still_logs_out_and_wrong_source_never_authenticates():
     class Fake:
         def __init__(self, source):
@@ -168,6 +207,19 @@ def test_report_does_not_include_unexpected_exception_text(capsys):
     assert suite.results[0]['reason'] == 'RuntimeError'
 
 
+def test_failed_provider_identity_preflight_blocks_native_actions():
+    class Harness(Suite):
+        def check(self, case_id, operation):
+            self.called.append(case_id)
+            return case_id != 'CH-01'
+    suite = Harness(SimpleNamespace(cookies={}), {}, SimpleNamespace(suite='native'))
+    suite.called = []
+    suite.run()
+    assert 'FS-01' not in suite.called
+    assert suite.results == [{'id': 'FS-01', 'status': 'blocked',
+                              'reason': 'provider_greeting_preflight_failed', 'seconds': 0}]
+
+
 def test_inventory_reports_pytest_definitions_and_browser_sources_without_importing(tmp_path):
     root = tmp_path / 'tests'
     root.mkdir()
@@ -179,3 +231,39 @@ def test_inventory_reports_pytest_definitions_and_browser_sources_without_import
     assert result['python_definitions'] == 2
     row = next(f for f in result['files'] if f['kind'] == 'pytest')
     assert row['nodes'][0].endswith('::TestCases::test_async')
+
+
+def test_cas_probe_changes_policy_when_retained_mode_already_matches_new_default(store, configured_reviewer):
+    """Exercise the probe against real SQL CAS, including idempotent writes."""
+    from fastapi import HTTPException
+    from core import database as d
+    store.update_chat('alice', 'a', {'approval_mode': 'auto_approve'}, 0)
+    before = store.configuration('alice')
+    class Adapter:
+        def request(self, path, value=None, *, method=None, expected=200, **_options):
+            status, result = 200, None
+            try:
+                if path == '/api/chat-settings': result = store.configuration('alice')
+                elif path == '/api/workspace/default': result = {'ok': True, 'path': '/synthetic-workspace'}
+                elif path == '/api/session':
+                    with store.transaction() as db:
+                        db.add(d.Session(id='probe', name='probe', owner='alice', model='manual', endpoint_url='http://local/v1'))
+                        db.flush()
+                        store.state(db, 'alice', 'probe', new=True)
+                    result = {'id': 'probe'}
+                elif method == 'DELETE':
+                    with store.transaction() as db:
+                        db.query(d.ChatAutomationState).filter_by(session_id='probe').delete()
+                        db.query(d.Session).filter_by(id='probe').delete()
+                    result = {}
+                elif method == 'PUT':
+                    result = store.update_chat('alice', 'probe', value['changes'], value['policy_revision'])
+                else: result = store.policy('alice', 'probe')
+            except HTTPException as exc:
+                status = exc.status_code
+            if status != expected:
+                raise CheckFailure('unexpected_http_' + str(status))
+            return result
+    suite = Suite(Adapter(), {}, SimpleNamespace(endpoint_id='local', model='manual'))
+    assert suite.mode_cas()['stale_write_status'] == 409
+    assert store.configuration('alice') == before

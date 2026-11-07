@@ -178,6 +178,18 @@
         "FS-01"
       ],
       "status": "historical report; fresh execution required"
+    },
+    {
+      "id": "H17",
+      "date": "2026-11-07",
+      "summary": "Initial runner assumptions misread an unselected workspace, no-op CAS revision, canonical round_models evidence and inherited Auto routing. These were harness defects; pin provider probes without changing owner defaults.",
+      "cases": [
+        "AP-02",
+        "CX-01",
+        "CH-01",
+        "MD-17"
+      ],
+      "status": "historical report; fresh execution required"
     }
   ],
   "cases": [
@@ -550,8 +562,8 @@
       "title": "Mode CAS and explicit choice",
       "profile": "live-api",
       "preconditions": "Registered reviewer/selected model; synthetic workspace; no real external effects.",
-      "steps": "Set a synthetic chat to the already-retained explicit owner mode; submit a stale revision.",
-      "expected": "One acknowledged write wins; stale write is 409; owner configuration remains unchanged.",
+      "steps": "Set a synthetic chat to the retained explicit owner mode while toggling only its followup flag; submit a stale revision.",
+      "expected": "A real policy change advances revision; stale write is 409; owner configuration remains unchanged. A no-op save alone is not a stale-write setup.",
       "evidence": "Exact source/environment, observed state or execution receipt, result and cleanup; browser cases also require desktop/mobile captures.",
       "runner_suite": "state",
       "execution": "runner",
@@ -563,7 +575,9 @@
         "tests/test_approval_outage.py",
         "tests/test_approval_provider_compatibility.py"
       ],
-      "history": []
+      "history": [
+        "H17"
+      ]
     },
     {
       "id": "AP-03",
@@ -1199,6 +1213,29 @@
       "history": []
     },
     {
+      "id": "MD-17",
+      "area": "Providers, models and Auto routing",
+      "title": "Exact provider probe without changing Auto defaults",
+      "profile": "live-provider",
+      "preconditions": "Existing private provider registrations; explicit models; bounded paid calls only for selected cases.",
+      "steps": "Use a zero-history fork of an owned disposable Manual template and send exact selected_model/endpoint metadata.",
+      "expected": "Actual model/endpoint matches the intended provider; source template and owner Auto categories/mode remain unchanged.",
+      "evidence": "Exact source/environment, observed state or execution receipt, result and cleanup; browser cases also require desktop/mobile captures.",
+      "runner_suite": null,
+      "execution": "procedure",
+      "automated_references": [
+        "tests/test_approval_provider_compatibility.py",
+        "tests/test_aux_llm_owner_scope.py",
+        "tests/test_chat_provider_binding.py",
+        "tests/test_compare_endpoint_owner_scope.py",
+        "tests/test_cookbook_endpoint_registration.py",
+        "tests/test_decision_provider_boundaries.py"
+      ],
+      "history": [
+        "H17"
+      ]
+    },
+    {
       "id": "CX-01",
       "area": "Context, budgets and usage",
       "title": "Selected model context label",
@@ -1218,7 +1255,8 @@
         "tests/test_compact_calendar_create.py"
       ],
       "history": [
-        "H13"
+        "H13",
+        "H17"
       ]
     },
     {
@@ -1393,7 +1431,8 @@
       ],
       "history": [
         "H14",
-        "H16"
+        "H16",
+        "H17"
       ]
     },
     {

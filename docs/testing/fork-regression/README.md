@@ -1,7 +1,7 @@
 # Fork Regression Suite
 
 This is the reusable acceptance catalogue for the fork. [cases.json](cases.json)
-contains 151 concrete scenarios: prerequisites, actions, observable pass criteria,
+contains 152 concrete scenarios: prerequisites, actions, observable pass criteria,
 evidence, existing test references and historical failure links. It covers every
 current product area, the fork's provider/Auto/approval/workspace changes, and
 deployment/platform boundaries. It cannot enumerate every possible input or
@@ -76,6 +76,17 @@ home is needed. The app continues to enforce its native process containment.
 For a known context, add `--expected-context 262144` or the exact measured value
 for the chosen provider/account/model. Run `provider`/`native` separately for
 each intended model, including Gemma, the selected complex model and OpenAI.
+If the owner's saved routing uses Auto, also pass `--manual-template "$SESSION_ID"`
+for an owned disposable Manual chat already using that exact provider/model,
+with optional followup/preparation/completion
+calls off. The runner forks it with zero history, resets grants through the real
+fork flow, and sends the selected model/endpoint explicitly. It never changes
+the source template or the owner's Auto defaults. Without a suitable template,
+an Auto test chat stops before inference rather than silently testing whichever
+model Jev routes it to. Prepare model-specific Manual fixtures in a disposable
+deployment/state copy; changing a chat's model or route normally also remembers
+the owner's future defaults. Do not switch a user's live defaults merely to
+make a provider test pass.
 Do not silently substitute a model after a failure. The native oracle requires
 one successful exact Bash receipt, exact stdout and successful final absence
 test; an assistant's statement that it wrote/deleted a file does not count.
@@ -113,7 +124,7 @@ Publish only reviewed sanitized summaries.
 
 ## Historical failures
 
-The catalogue's 16 history clusters were reconstructed from four retained local
+The catalogue's 17 history clusters were reconstructed from four retained local
 rollouts and the stored history of 15 named Odysseus threads, including older
 October 21/24/25/30 and November 4 records plus the current work. Raw logs and
 private identifiers stay outside the repository. Debian's host had no retained
@@ -198,6 +209,7 @@ while `procedure` cases name the actual required app/service/browser exercise.
 | MD-14 | OAuth and subscription refresh | procedure |
 | MD-15 | Local engines and proxy dialects | procedure |
 | MD-16 | Endpoint purpose separation | procedure |
+| MD-17 | Exact provider probe without changing Auto defaults | procedure |
 
 ### Context, budgets and usage
 
@@ -377,3 +389,11 @@ while `procedure` cases name the actual required app/service/browser exercise.
 | ST-04 | Vector data volume recovery | procedure |
 | ST-05 | Diagnostics and error redaction | procedure |
 | ST-06 | Admin destructive boundaries | procedure |
+
+## Default-mode browser evidence
+
+These composer crops use the actual deployed app at desktop 1440px and mobile 390px with synthetic text, not mocked APIs. Captured from app source `d50a3dd0`; subsequent suite/evidence changes do not alter its application code. They establish pending-composer/menu default and viewport fit, not GPU performance or every browser scenario.
+
+![Desktop Auto-Approve default](screenshots/auto-approve-desktop.png)
+
+![Mobile Auto-Approve default](screenshots/auto-approve-mobile.png)
