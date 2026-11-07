@@ -2,7 +2,7 @@
 vault_routes.py
 
 Vaultwarden / Bitwarden CLI integration — config and unlock endpoints.
-Stores the BW_SESSION key in data/vault.json with restrictive permissions.
+Stores the BW_SESSION key encrypted in data/vault.json with restrictive permissions.
 """
 
 import json
@@ -61,21 +61,13 @@ def _find_bw() -> str:
 
 
 def _load_config() -> dict:
-    if VAULT_FILE.exists():
-        try:
-            data = json.loads(VAULT_FILE.read_text(encoding="utf-8"))
-            return data if isinstance(data, dict) else {}
-        except Exception:
-            pass
-    return {}
+    from src.vault_storage import load_vault_config
+    return load_vault_config(VAULT_FILE)
 
 
 def _save_config(cfg: dict):
-    VAULT_FILE.parent.mkdir(parents=True, exist_ok=True)
-    VAULT_FILE.write_text(json.dumps(cfg, indent=2), encoding="utf-8")
-    # POSIX: restrict the BW_SESSION store to 0o600. Windows: no-op (profile dir
-    # is ACL-restricted already).
-    safe_chmod(str(VAULT_FILE), 0o600)
+    from src.vault_storage import save_vault_config
+    save_vault_config(VAULT_FILE, cfg)
 
 
 def _bind_config_owner(cfg: dict, request: Request):
