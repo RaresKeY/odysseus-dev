@@ -3341,33 +3341,6 @@ function initializeEventListeners() {
     }, { passive: true });
   })();
 
-  // Elastic overscroll (rubber-band bounce) — desktop wheel only, on chat-history not container
-  (function initElasticScroll() {
-    const hist = el('chat-history');
-    if (!hist) return;
-    const SNAP_BACK = 'transform 0.25s cubic-bezier(0.25, 0.46, 0.45, 0.94)';
-
-    let wheelPull = 0;
-    let wheelTimer = null;
-    hist.addEventListener('wheel', (e) => {
-      const atTop = hist.scrollTop <= 0 && e.deltaY < 0;
-      const atBottom = hist.scrollTop + hist.clientHeight >= hist.scrollHeight - 1 && e.deltaY > 0;
-      if (!atTop && !atBottom) { wheelPull = 0; return; }
-
-      wheelPull += e.deltaY * -0.03;
-      wheelPull = Math.max(-7, Math.min(7, wheelPull));
-      hist.style.transition = 'none';
-      hist.style.transform = `translateY(${wheelPull}px)`;
-
-      clearTimeout(wheelTimer);
-      wheelTimer = setTimeout(() => {
-        wheelPull = 0;
-        hist.style.transition = SNAP_BACK;
-        hist.style.transform = '';
-      }, 120);
-    }, { passive: true });
-  })();
-
   async function _handleNewChatAction({ preferModel = true, focus = true } = {}) {
       if (!sessionModule) return;
       if (_closeCompareIfActive()) return;
@@ -4547,32 +4520,6 @@ function startOdysseusApp() {
   // Initialize mouse-based drag for sidebar sections
   const sidebar = document.getElementById('sidebar');
   const sidebarInner = sidebar ? sidebar.querySelector('.sidebar-inner') : sidebar;
-
-  // ── Subtle elastic overscroll for sidebar ──
-  if (sidebarInner) {
-    const MAX_PULL = 8;
-    let _overscroll = 0;
-    let _resetTimer = null;
-    sidebarInner.addEventListener('wheel', (e) => {
-      const el = sidebarInner;
-      const atTop = el.scrollTop <= 0 && e.deltaY < 0;
-      const atBottom = el.scrollTop + el.clientHeight >= el.scrollHeight - 1 && e.deltaY > 0;
-      if (!atTop && !atBottom) { _overscroll = 0; return; }
-      // Accumulate overscroll with diminishing returns
-      _overscroll += Math.abs(e.deltaY) * 0.15;
-      const pull = Math.min(_overscroll, MAX_PULL);
-      const dir = atTop ? 1 : -1;
-      el.style.transition = 'none';
-      el.style.transform = `translateY(${dir * pull}px)`;
-      // Reset after scrolling stops
-      clearTimeout(_resetTimer);
-      _resetTimer = setTimeout(() => {
-        el.style.transition = 'transform 0.3s cubic-bezier(0.25, 1, 0.5, 1)';
-        el.style.transform = '';
-        _overscroll = 0;
-      }, 120);
-    }, { passive: true });
-  }
 
   // ── Global touch-scroll guard for sidebar ──
   // Suppress click events when the user was scrolling (finger moved).
