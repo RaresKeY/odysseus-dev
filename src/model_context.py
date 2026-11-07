@@ -350,27 +350,38 @@ def get_context_length(endpoint_url: str, model: str, *, headers=None, endpoint_
     return _get_context_length_cached(endpoint_url, model, headers=headers, endpoint_kind=endpoint_kind)[0]
 
 
-def get_session_context_length(session, *, owner) -> int:
+def resolve_session_context_route(session, *, owner):
     """Refresh the owned registration before UI reads use any stored credential."""
     model = getattr(session, "model", "")
     url = getattr(session, "endpoint_url", "")
     endpoint_id = getattr(session, "endpoint_id", None)
     if not endpoint_id:
-        return get_context_length(url, model, headers={})
+        return (url, model, {}) if url and model else None
     from src.owner_identity import effective_storage_owner
     admitted = effective_storage_owner(owner)
     if admitted is None:
-        return DEFAULT_CONTEXT
+        return None
     try:
         from src.model_admission import require_owner_model
         from src.endpoint_resolver import resolve_endpoint_by_id
         require_owner_model(admitted, model)
         route = resolve_endpoint_by_id(endpoint_id, model, owner=admitted, require_exact_model=True)
         if route is None:
-            return DEFAULT_CONTEXT
-        return get_context_length(route[0], route[1], headers=route[2])
+            return None
+        return route
     except Exception as exc:
         logger.debug("Session context admission failed: %s", type(exc).__name__)
+        return None
+
+
+def get_session_context_length(session, *, owner) -> int:
+    route = resolve_session_context_route(session, owner=owner)
+    if route is None:
+        return DEFAULT_CONTEXT
+    try:
+        return get_context_length(route[0], route[1], headers=route[2])
+    except Exception as exc:
+        logger.debug("Session context probe failed: %s", type(exc).__name__)
         return DEFAULT_CONTEXT
 
 
