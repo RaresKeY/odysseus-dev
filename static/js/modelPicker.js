@@ -444,6 +444,11 @@ function _initModelPickerDropdown() {
     autoFeedback.textContent='Models could not be loaded. Refresh to try again.';
   }
   window.addEventListener('resize',positionPicker);
+  // Pane and composer resizes can move this anchor without resizing the window.
+  const pickerLayout = new ResizeObserver(positionPicker);
+  for (const target of [wrap, wrap.closest('.chat-input-bar'), document.getElementById('chat-container')]) {
+    if (target) pickerLayout.observe(target);
+  }
 
   // ── Provider display names and grouping ──
   const _PROVIDER_NAMES = {
