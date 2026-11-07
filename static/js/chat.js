@@ -2375,6 +2375,14 @@ import { invalidateSettings } from './appConfig.js';
       }
     })();
 
+    const autoBootstrap = window.ChatAutomation?.getPolicy();
+    const autoSeed = autoBootstrap?.route_mode === 'auto' ? autoBootstrap.auto_categories?.complex_tasks : null;
+    if (!sessionModule.getCurrentSessionId() && !sessionModule.hasPendingChat?.()
+        && autoSeed?.endpoint_id && autoSeed.model) {
+      // This registered identity only creates the chat; Jev still chooses the actual turn route.
+      sessionModule.createDirectChat('', autoSeed.model, autoSeed.endpoint_id, { source: 'auto' });
+    }
+
     // Materialize pending session (deferred from model click) on first message
     if (sessionModule.hasPendingChat && sessionModule.hasPendingChat()) {
       _sendPerf.mark('pending_session_begin');

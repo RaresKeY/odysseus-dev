@@ -94,6 +94,7 @@ async function currentChat(seed) {
   const existingId=sid(), navigation=navigationGeneration;
   if (!existingId) {
     if (!sessions.hasPendingChat()) {
+      seed ??= policy?.route_mode === 'auto' ? policy.auto_categories?.complex_tasks : null;
       let model;
       if(seed){
         const item=(window.modelsModule?.getCachedItems?.() || []).find(item=>item.endpoint_id===seed.endpoint_id && (item.models || []).concat(item.models_extra || []).includes(seed.model));

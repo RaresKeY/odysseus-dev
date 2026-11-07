@@ -2646,15 +2646,21 @@ export async function materializePendingSession() {
       ? 'Chat' : (pending.modelId || 'model').split('/').pop();
     const name = isIncognito ? 'Nobody' : `${base} ${new Date().toLocaleTimeString()}`;
 
+    const policy = window.ChatAutomation?.getPolicy();
+    const autoSeed = policy?.route_mode === 'auto' && pending.source !== 'manual'
+      ? policy.auto_categories?.complex_tasks : null;
+    // A stale manual default cannot prevent creation with the saved Auto assignments.
+    const route = autoSeed?.endpoint_id && autoSeed.model
+      ? { url: '', modelId: autoSeed.model, endpointId: autoSeed.endpoint_id } : pending;
     const fd = new FormData();
     fd.append('name', name);
-    fd.append('endpoint_url', pending.url || '');
-    fd.append('model', pending.modelId || '');
-    if (pending.url && pending.modelId) {
+    fd.append('endpoint_url', route.url || '');
+    fd.append('model', route.modelId || '');
+    if ((route.url || route.endpointId) && route.modelId) {
       fd.append('skip_validation', 'true');
     }
-    if (pending.endpointId) {
-      fd.append('endpoint_id', pending.endpointId);
+    if (route.endpointId) {
+      fd.append('endpoint_id', route.endpointId);
     }
 
     let res;
