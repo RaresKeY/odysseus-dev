@@ -2542,7 +2542,7 @@ export function createUserMsgFooter(msgElement) {
     }},
   ];
 
-  const defaults = ['edit', 'delete', 'copy'];
+  const defaults = ['edit', 'copy', 'delete'];
   const order = defaults;
   const sorted = [...allActions].sort((a, b) => {
     const ai = order.indexOf(a.id), bi = order.indexOf(b.id);

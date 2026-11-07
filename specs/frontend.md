@@ -232,3 +232,5 @@ Frontend cache revisions retain the established odysseus-vN-pr40-editor-precache
 ## Fork permission default
 
 `static/js/chatAutomation.js` renders the server-declared `default_approval_mode` from owner configuration when the composer has no materialized chat. Existing chats render their acknowledged saved policy instead. The fork server declares Auto-Approve for new chats/forks, while the client retains a conservative Ask fallback until configuration is acknowledged or when connected to an older server. Readiness/unavailable feedback remains unchanged; the declaration adds no folder grant or reviewer bypass. Service-worker cache generation 1155 publishes this default consistently.
+
+Own-message footers show Edit and Copy directly, with Delete and Resend in the existing More actions menu. Assistant footer recent-action behavior is unchanged.

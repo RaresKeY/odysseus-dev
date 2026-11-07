@@ -168,6 +168,17 @@ def _disclosure(answer: str, ledger: EvidenceLedger) -> str:
     return ('\n\n' + summary) if answer.strip() else summary
 
 
+def _last_command_receipt(ledger: EvidenceLedger) -> str:
+    """Report process exit only; it does not attest the command's file effects."""
+    names = {'bash': 'Bash', 'host_shell': 'Host shell', 'python': 'Python'}
+    receipt = next((event for event in reversed(ledger.events)
+                    if event.kind == EvidenceKind.TOOL_RESULT and event.tool in names), None)
+    if (receipt is None or not receipt.authoritative or not receipt.action_id
+            or not receipt.execution_id or receipt.exit_code is None):
+        return ''
+    return f'Last command result: {names[receipt.tool]}, exit code {receipt.exit_code}.'
+
+
 def _completion_answer(text: str, ledger: EvidenceLedger, decision: CompletionDecision) -> tuple[str, str]:
     incomplete = decision.reason if not decision.can_complete and decision.status != CompletionStatus.AWAITING_USER else ''
     execution_required = _execution_obligation(ledger.requirements)
@@ -177,13 +188,18 @@ def _completion_answer(text: str, ledger: EvidenceLedger, decision: CompletionDe
         missing = (' Missing artifacts: ' + ', '.join(decision.missing_artifacts) + '.'
                    if decision.missing_artifacts else '')
         notice = 'The task is incomplete: ' + reason.rstrip('.') + '.' + missing
+        if decision.status == CompletionStatus.FAILED:
+            receipt = _last_command_receipt(ledger)
+            if receipt:
+                notice += ' ' + receipt
         recorded = [path for path in ledger.requirements.required_artifacts
                     if ledger._supports_artifact_claim(EvidenceKind.ARTIFACT_MUTATION, (path,))]
         if removed and recorded:
             notice += ' Recorded artifact mutation: ' + ', '.join(recorded) + '.'
         return notice + ('\n\n' + prose if prose.strip() else ''), reason
     if removed and not execution_required and decision.status != CompletionStatus.VERIFIED:
-        notice = 'Unsupported execution claims were omitted: ' + removed.rstrip('.') + '.'
+        notice = (_last_command_receipt(ledger)
+                  or 'Unsupported execution claims were omitted: ' + removed.rstrip('.') + '.')
         return (prose.rstrip() + '\n\n' + notice) if prose.strip() else notice, removed
     if decision.can_complete and (ledger.requirements.required_artifacts or ledger.requirements.verifier_required or removed):
         facts = []

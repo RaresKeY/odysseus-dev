@@ -1131,8 +1131,8 @@
       "title": "Rate limit and transient failure",
       "profile": "live-provider",
       "preconditions": "Existing private provider registrations; explicit models; bounded paid calls only for selected cases.",
-      "steps": "Return controlled 429/5xx/timeout responses on one provider.",
-      "expected": "Finite visible failure; no silent provider switch, infinite retry or false completion.",
+      "steps": "Return controlled 429/5xx/timeout responses on one provider. Include a 429 after a successful native Bash action, both with and without partial final text.",
+      "expected": "Finite visible failure; no silent provider switch, infinite retry or false completion. The response retains the authoritative command exit result, marks the model response incomplete and makes no claim that prior workspace changes were rolled back.",
       "evidence": "Exact source/environment, observed state or execution receipt, result and cleanup; browser cases also require desktop/mobile captures.",
       "runner_suite": null,
       "execution": "procedure",
@@ -1142,7 +1142,9 @@
         "tests/test_chat_provider_binding.py",
         "tests/test_compare_endpoint_owner_scope.py",
         "tests/test_cookbook_endpoint_registration.py",
-        "tests/test_decision_provider_boundaries.py"
+        "tests/test_decision_provider_boundaries.py",
+        "tests/test_completion_boundary.py",
+        "tests/test_foreground_model_routing.py"
       ],
       "history": [
         "H06",
@@ -2181,8 +2183,8 @@
       "title": "Streaming markdown and tool output",
       "profile": "live-browser",
       "preconditions": "Actual deployed app, desktop and true 390px mobile browser; headless/offscreen captures.",
-      "steps": "Render long code blocks, nested fences, errors, reasoning toggles and images while streaming.",
-      "expected": "Content stays intact and scroll/focus stable; tool status agrees with server receipt.",
+      "steps": "Render long code blocks, nested fences, errors, reasoning toggles and images while streaming. Check own-message Copy in the direct footer and Delete in More actions. Run a real command followed by a model execution claim.",
+      "expected": "Content stays intact and scroll/focus stable; tool status agrees with server receipt. Copy preserves the message text; Delete keeps its confirmation flow. The final answer reports the recorded command outcome instead of an unsupported-claim warning, without inventing artifact verification.",
       "evidence": "Exact source/environment, observed state or execution receipt, result and cleanup; browser cases also require desktop/mobile captures.",
       "runner_suite": null,
       "execution": "procedure",
@@ -2192,7 +2194,8 @@
         "tests/test_chat_automation_api.py",
         "tests/test_chat_automation_boundaries.py",
         "tests/test_chat_automation_ingress.py",
-        "tests/test_chat_automation_policy.py"
+        "tests/test_chat_automation_policy.py",
+        "tests/test_completion_boundary.py"
       ],
       "history": []
     },

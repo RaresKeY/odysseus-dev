@@ -455,3 +455,59 @@ async def test_slice2_quoted_example_does_not_hide_an_unsupported_report():
     assert 'The docs say "5 passed".' in final
     assert 'I ran pytest' not in final
     assert 'The task is incomplete' not in final
+
+
+@pytest.mark.asyncio
+@pytest.mark.parametrize('earlier_success', [False, True])
+@pytest.mark.parametrize('result, expected', [
+    ({'exit_code': 0, 'output': 'OK'}, 'Last command result: Bash, exit code 0.'),
+    ({'exit_code': 7, 'output': 'partial', 'error': 'failed'}, 'Last command result: Bash, exit code 7.'),
+    ({'exit_code': 0, 'blocked': True}, None),
+    ({'output': 'unknown outcome'}, None),
+])
+async def test_command_claim_is_replaced_by_only_the_authoritative_process_result(result, expected, earlier_success):
+    @authoritative_executor
+    async def execute(block):
+        return block.tool_type, result
+
+    @with_completion_gate
+    async def stream(messages):
+        if earlier_success:
+            await _successful_tool(ToolBlock('bash', 'printf earlier'))
+        await execute(ToolBlock('bash', 'printf OK'))
+        yield _event({'type': 'final_response', 'content': 'I executed the command.\n\nOutput: `OK`.'})
+        yield _event({'type': 'metrics', 'data': {}})
+        yield DONE
+
+    chunks = [chunk async for chunk in stream([])]
+    final = next(data['content'] for _, data in _frames(chunks)
+                 if isinstance(data, dict) and data.get('type') == 'final_response')
+    assert 'I executed the command.' not in final
+    assert 'Output: `OK`.' in final
+    if expected:
+        assert expected in final
+        assert 'Unsupported execution claims' not in final
+    else:
+        assert 'Last command result:' not in final
+        assert 'Unsupported execution claims' in final
+
+
+@pytest.mark.asyncio
+async def test_last_command_failure_is_not_hidden_by_an_earlier_success():
+    @authoritative_executor
+    async def execute(block, code):
+        return block.tool_type, {'exit_code': code, 'output': 'result'}
+
+    @with_completion_gate
+    async def stream(messages):
+        await execute(ToolBlock('bash', 'printf OK'), 0)
+        await execute(ToolBlock('bash', 'exit 9'), 9)
+        yield _event({'type': 'final_response', 'content': 'I executed the command successfully.'})
+        yield DONE
+
+    chunks = [chunk async for chunk in stream([])]
+    final = next(data['content'] for _, data in _frames(chunks)
+                 if isinstance(data, dict) and data.get('type') == 'final_response')
+    assert 'Last command result: Bash, exit code 9.' in final
+    assert 'exit code 0' not in final
+    assert 'successfully' not in final

@@ -6,7 +6,7 @@
     "javascript-source": 107,
     "pytest": 1675
   },
-  "python_definitions": 13233,
+  "python_definitions": 13235,
   "files": [
     {
       "path": "tests/KNOWN_FAILURES.md",
@@ -2764,8 +2764,8 @@
     {
       "path": "tests/test_completion_boundary.py",
       "kind": "pytest",
-      "sha256": "7bcf7a122a43ceafaf386431bd01e067d87eb5f654bbc63ad696bbf5b3ae7322",
-      "definitions": 20
+      "sha256": "739560dd58c6dc0ff0f773c61eeecd10d8fdcd2292c3eb7d79ec8ce66886759b",
+      "definitions": 22
     },
     {
       "path": "tests/test_completion_verifier_request.py",
@@ -5840,7 +5840,7 @@
     {
       "path": "tests/test_foreground_model_routing.py",
       "kind": "pytest",
-      "sha256": "1a730c89f1c6c52affd17812dc1521d522994d30472d9ce7aab72e8a549d0f27",
+      "sha256": "01ed529dd56b4daaf484f3ea5b2763813e309af4f36052e00870b19c2f7a1ea6",
       "definitions": 77
     },
     {
