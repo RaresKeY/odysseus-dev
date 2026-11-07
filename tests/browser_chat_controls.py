@@ -122,12 +122,14 @@ FIXTURE = r"""(async () => {
 def composer_checks(browser, width):
     result = browser.js(r"""(async()=>{
       const el=id=>document.getElementById(id),input=el('message'),picker=el('model-picker-wrap'),menu=el('chat-permissions-menu'),trigger=el('chat-approval-mode');
-      const oldDraft=input.value,actualFetch=window.fetch;
+      const bar=document.querySelector('.chat-input-bar'),label=el('model-picker-label');
+      const oldDraft=input.value,actualFetch=window.fetch,oldWidth=bar.style.width,oldLabel=label.textContent;
       const visible=node=>{const r=node.getBoundingClientRect(),s=getComputedStyle(node);return r.width>0 && r.height>0 && s.visibility!=='hidden' && s.opacity!=='0'};
       try {
         if(!menu.hidden)trigger.click();
         input.focus();
-        input.value='Long composer draft '.repeat(20)+'\nSecond line';input.dispatchEvent(new Event('input',{bubbles:true}));
+        const draft='Long composer draft '.repeat(20)+'\nSecond line';
+        input.value=draft;input.dispatchEvent(new Event('input',{bubbles:true}));
         await new Promise(resolve=>setTimeout(resolve,100));
         const pickerVisible=visible(el('model-picker-btn')) && picker.parentElement.classList.contains('chat-input-right');
         const modelRect=picker.getBoundingClientRect(),modeRect=el('mode-agent-btn').getBoundingClientRect();
@@ -146,8 +148,26 @@ def composer_checks(browser, width):
         }));
         const stableMenu=frames.length>5 && frames.every(f=>!f.setup && !f.status && Math.abs(f.height-frames[0].height)<1);
         const icons=[...menu.querySelectorAll('[data-approval-mode]')].map(row=>{const icon=row.querySelector('.chat-permission-icon'),title=row.querySelector('strong');if(!icon)return false;const a=icon.getBoundingClientRect(),b=title.getBoundingClientRect();return icon.getAttribute('aria-hidden')==='true' && a.width===18 && a.right<b.left && Math.abs(a.top-b.top)<3});
-        return {pickerVisible,besideMode,modelMenuFits,stableMenu,permissionIcons:icons.length===3 && icons.every(Boolean),draftPreserved:input.value.endsWith('Second line')};
+        trigger.click();
+        let controlsReachable=true;
+        for(const width of (innerWidth>=700?[420,390,300]:[340,300])){
+          bar.style.width=`${width}px`;label.textContent='provider/a-long-manual-model-name-with-reasoning';
+          await new Promise(resolve=>setTimeout(resolve,150));
+          const bounds=bar.getBoundingClientRect();
+          for(const control of [trigger,el('model-picker-btn'),el('mode-agent-btn'),el('mode-chat-btn'),document.querySelector('.overflow-wrapper > button')]){
+            const r=control.getBoundingClientRect();
+            controlsReachable &&=r.width>0 && r.left>=bounds.left && r.right<=bounds.right && document.elementFromPoint(r.left+r.width/2,r.top+r.height/2)?.closest('button')===control;
+          }
+        }
+        bar.style.width=innerWidth>=700?'680px':'340px';await new Promise(resolve=>setTimeout(resolve,150));
+        el('model-picker-btn').click();await new Promise(resolve=>setTimeout(resolve,250));
+        bar.style.width='300px';await new Promise(resolve=>setTimeout(resolve,250));
+        const resizedMenu=el('model-picker-menu').getBoundingClientRect();
+        const paneResizeFits=resizedMenu.left>=0 && resizedMenu.right<=innerWidth+1 && resizedMenu.top>=0;
+        el('model-picker-btn').click();await new Promise(resolve=>setTimeout(resolve,250));
+        return {pickerVisible,besideMode,modelMenuFits,stableMenu,permissionIcons:icons.length===3 && icons.every(Boolean),controlsReachable,paneResizeFits,draftPreserved:input.value===draft};
       } finally {
+        bar.style.width=oldWidth;label.textContent=oldLabel;
         window.fetch=actualFetch;
         if(!menu.hidden)trigger.click();
         input.value=oldDraft;input.dispatchEvent(new Event('input',{bubbles:true}));
@@ -322,7 +342,7 @@ def main():
           return (await fetch('/api/auth/login',options)).ok;
         })()""")
         results = []
-        for width, height in [(1440, 1000), (390, 844)]:
+        for width, height in [(1440, 1000), (768, 1000), (390, 844)]:
             browser.call('Emulation.setDeviceMetricsOverride', {'width':width,'height':height,'deviceScaleFactor':1,'mobile':width<900})
             browser.call('Emulation.setTouchEmulationEnabled', {'enabled':width<900, 'maxTouchPoints':1})
             browser.js('window.controlNavigation=true')
@@ -331,6 +351,9 @@ def main():
                 if browser.js("!window.controlNavigation && document.readyState==='complete' && Boolean(window.chatModule && window.DecisionActivity)"):
                     break
                 time.sleep(.25)
+            # Close the touch navigation overlay before composer hit tests.
+            if width < 900:
+                browser.js("document.getElementById('sidebar').classList.add('hidden')")
             result = browser.js(FIXTURE)
             browser.js("document.getElementById('chat-decision-toggle').click()")
             time.sleep(.8)

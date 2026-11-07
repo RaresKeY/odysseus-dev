@@ -2603,6 +2603,8 @@ body.bg-pattern-ascii-fireflies {
     }
     .chat-input-bottom {
       display: flex;
+      flex-wrap: wrap;
+      row-gap: 4px;
       justify-content: space-between;
       align-items: center;
       margin-top: 4px;
@@ -2614,7 +2616,8 @@ body.bg-pattern-ascii-fireflies {
       align-items: center;
       flex-wrap: nowrap;
       overflow: hidden;
-      min-width: 0;
+      /* Reserve the overflow and permissions controls before wrapping the model group. */
+      min-width: 100px;
       flex: 1;
     }
     /* Collapsible buttons shrink away; collapsed ones disappear */
@@ -2643,6 +2646,8 @@ body.bg-pattern-ascii-fireflies {
       gap: 8px;
       align-items: center;
       flex-shrink: 0;
+      max-width: 100%;
+      margin-left: auto;
     }
     .chat-input-right > .model-picker-wrap {
       z-index: 250;
