@@ -46,7 +46,7 @@ async function openPermissions() {
   // Keep focus in the acknowledged menu after refresh, unless the user has
   // already moved or closed it.
   const focusSequence=sequence+1;
-  await refresh();
+  await refresh({preserveAvailability:true});
   const menu=$('chat-permissions-menu');
   if(focusSequence!==sequence || menu.hidden || menu.contains(document.activeElement))return;
   (menu.querySelector('[aria-checked="true"]:not(:disabled)') || $('chat-permissions-menu').querySelector('button:not(:disabled):not([hidden])'))?.focus();
@@ -137,11 +137,11 @@ function render() {
   $('chat-resume-input').hidden=!(policy?.task?.pending_question?.kind==='clarification' && policy.task.pending_question.input_card_id);
   positionPermissions();
 }
-async function refresh() {
+async function refresh({preserveAvailability=false}={}) {
   const ticket = ++sequence, id = sid();
-  // A same-chat refresh must not paint temporary unavailable controls over
-  // the acknowledged menu. Admission is revalidated by the settings API.
-  if(!configuration || (policy?.session_id || null)!==id){reviewerAvailability=null;reviewerLoading=true;render();}
+  // Opening the same menu retains its acknowledged presentation; external
+  // changes must immediately invalidate readiness, including open confirmations.
+  if(!preserveAvailability || !configuration || (policy?.session_id || null)!==id){reviewerAvailability=null;reviewerLoading=true;render();}
   try {
     const config = await api('/api/chat-settings');
     const chat = id ? await api(`/api/session/${encodeURIComponent(id)}/automation`) : null;
