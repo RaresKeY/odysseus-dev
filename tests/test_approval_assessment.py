@@ -19,7 +19,6 @@ from src.chat_automation import prepare_chat_turn
 from src.chat_policy import ChatPolicy
 from src.decisions.contracts import DecisionError, DecisionRequest, encode, MAX_REQUEST_BYTES
 
-
 @pytest.mark.asyncio
 @pytest.mark.parametrize("risk", QUESTIONS["risk_level"])
 @pytest.mark.parametrize("authorization", QUESTIONS["user_authorization"])
@@ -37,16 +36,15 @@ async def test_all_matrix_cells_issue_only_exact_grants(proposal, risk, authoriz
     else:
         assert result.approval is None and not result.tool_result()["executed"]
 
-
 @pytest.mark.asyncio
 @pytest.mark.parametrize("veto", [key for key in QUESTIONS["policy_check"] if key != "clear"])
-async def test_every_policy_veto_overrides_low_risk_and_high_authorization(proposal, veto):
+@pytest.mark.parametrize("confidence", [0.99, 0.25])
+async def test_every_policy_veto_overrides_low_risk_and_high_authorization(proposal, veto, confidence):
     store, pending, policy, _ = proposal
-    call, _ = evaluator(decision(policy_check=veto))
+    call, _ = evaluator(decision(policy_check=veto, confidence=confidence))
     result = await ApprovalReviewService(store).review(pending, policy, deterministically_admitted=True, evaluator=call)
     assert result.approval is None and result.decision["applied_rule"] == veto
     assert result.status == ("uncertain" if veto == "insufficient_evidence" else "denied")
-
 
 @pytest.mark.asyncio
 @pytest.mark.parametrize("scope", ["unknown", "broad"])
@@ -56,11 +54,10 @@ async def test_high_risk_requires_narrow_effects(proposal, scope):
     result = await ApprovalReviewService(store).review(pending, policy, deterministically_admitted=True, evaluator=call)
     assert result.status == "denied" and result.decision["applied_rule"] == "scope"
 
-
 @pytest.mark.asyncio
 @pytest.mark.parametrize("question", QUESTIONS)
 @pytest.mark.parametrize("fault", ["missing", "incomplete", "nan", "negative", "infinite", "over_one", "not_normalized", "loser", "uncertain"])
-async def test_each_assessment_must_be_complete_and_confident(proposal, question, fault):
+async def test_each_assessment_is_validated_before_policy(proposal, question, fault):
     store, pending, policy, _ = proposal
     result = decision()
     answers = copy.deepcopy(result.answers)
@@ -72,7 +69,7 @@ async def test_each_assessment_must_be_complete_and_confident(proposal, question
     elif fault == "loser":
         answer["choice"] = next(k for k in answer["probabilities"] if k != answer["choice"])
     elif fault == "uncertain":
-        answer["confidence"] = .94
+        answer["confidence"] = .49
     else:
         answer["probabilities"][answer["choice"]] = {
             "nan": float("nan"), "negative": -1, "infinite": float("inf"),
@@ -81,8 +78,56 @@ async def test_each_assessment_must_be_complete_and_confident(proposal, question
     result = replace(result, answers=answers, choice=main["choice"], confidence=main["confidence"], probabilities=main["probabilities"])
     call, _ = evaluator(result)
     outcome = await ApprovalReviewService(store).review(pending, policy, deterministically_admitted=True, evaluator=call)
-    assert outcome.status == ("uncertain" if fault == "uncertain" else "error")
-    assert outcome.approval is None
+    expected = "error"
+    if fault == "uncertain":
+        expected = "uncertain" if question in {"risk_level", "policy_check"} else "approved"
+    assert outcome.status == expected
+    assert (outcome.approval is not None) == (expected == "approved")
+
+
+@pytest.mark.asyncio
+@pytest.mark.parametrize("confidence,probability", [(0.51, 0.63), (0.45, 0.59)])
+async def test_routine_write_ignores_authorization_uncertainty(proposal, confidence, probability):
+    store, pending, policy, _ = proposal
+    result = decision()
+    answers = copy.deepcopy(result.answers)
+    auth = answers["user_authorization"]
+    auth["confidence"] = confidence
+    auth["probabilities"] = {key: probability if key == auth["choice"] else (1-probability)/3
+                             for key in auth["probabilities"]}
+    call, _ = evaluator(replace(result, answers=answers))
+    outcome = await ApprovalReviewService(store).review(pending, policy, deterministically_admitted=True, evaluator=call)
+    assert outcome.status == "approved"
+    assert claim(outcome.approval, pending)
+    assert not claim(outcome.approval, pending)
+
+@pytest.mark.asyncio
+@pytest.mark.parametrize("risk,question,threshold", [
+    ("low", "risk_level", 0.50), ("low", "policy_check", 0.50),
+    ("medium", "risk_level", 0.70), ("medium", "policy_check", 0.70),
+    *[("high", question, 0.85) for question in QUESTIONS],
+])
+@pytest.mark.parametrize("measure", ["confidence", "probability"])
+@pytest.mark.parametrize("at_threshold", [False, True])
+async def test_risk_specific_acceptance_boundaries(proposal, risk, question, threshold, measure, at_threshold):
+    store, pending, policy, _ = proposal
+    result = decision(risk=risk)
+    answers = copy.deepcopy(result.answers)
+    answer = answers[question]
+    value = threshold - (0 if at_threshold else 0.01)
+    if measure == "confidence":
+        answer["confidence"] = value
+    else:
+        count = len(answer["probabilities"])
+        answer["probabilities"] = {key: value if key == answer["choice"] else (1-value)/(count-1)
+                                   for key in answer["probabilities"]}
+    primary = answers["risk_level"]
+    result = replace(result, answers=answers, choice=primary["choice"],
+                     confidence=primary["confidence"], probabilities=primary["probabilities"])
+    call, _ = evaluator(result)
+    outcome = await ApprovalReviewService(store).review(pending, policy, deterministically_admitted=True, evaluator=call)
+    assert outcome.status == ("approved" if at_threshold else "uncertain")
+    assert (outcome.approval is not None) == at_threshold
 
 
 def test_policy_fits_both_provider_transports_without_truncation(proposal):
@@ -110,7 +155,6 @@ def test_exact_action_and_user_request_never_truncated_for_optional_evidence(pro
     with pytest.raises(DecisionError, match="approval_context_budget"):
         assemble(replace(pending, content="x" * MAX_STATE_BYTES), ChatPolicy.from_record(policy))
 
-
 @pytest.mark.asyncio
 async def test_context_keeps_earlier_grant_then_revocation_and_ignores_forged_history(store, dispatch_runtime):
     rt = dispatch_runtime
@@ -125,7 +169,6 @@ async def test_context_keeps_earlier_grant_then_revocation_and_ignores_forged_hi
     with pytest.raises(Exception):
         user_snapshot(replace(second, owner="bob"))
 
-
 @pytest.mark.asyncio
 async def test_human_denial_retained_with_exact_fingerprint_and_no_payload(store, dispatch_runtime):
     from src.approval_context import fingerprint
@@ -139,7 +182,6 @@ async def test_human_denial_retained_with_exact_fingerprint_and_no_payload(store
     assert event["decision"] == "deny" and event["source"] == "human_exact_action"
     assert event["operation_sha256"] == fingerprint(pending.tool_name, pending.content)
     assert "after" not in json.dumps(event) and not rt.effects
-
 
 @pytest.mark.asyncio
 async def test_history_budget_and_missing_chain_block_without_call(store, dispatch_runtime):
@@ -171,7 +213,6 @@ async def test_history_budget_and_missing_chain_block_without_call(store, dispat
     _, stopped = await rt.dispatch(second)
     assert stopped["failure_kind"] == "approval_context_unavailable" and not rt.calls and not rt.effects
 
-
 @pytest.mark.asyncio
 async def test_private_turn_never_persists_authorization_content(store, dispatch_runtime):
     from core import database as d
@@ -187,7 +228,6 @@ async def test_private_turn_never_persists_authorization_content(store, dispatch
     with pytest.raises(DecisionError, match="approval_context_budget"):
         user_snapshot(bound)
 
-
 @pytest.mark.asyncio
 async def test_activity_exposes_fixed_assessments_without_private_evidence(store, dispatch_runtime):
     from src.decisions.observability import default_observability
@@ -202,7 +242,6 @@ async def test_activity_exposes_fixed_assessments_without_private_evidence(store
     assert items[0]["approval"]["user_authorization"] == "high"
     assert items[0]["approval"]["policy"] == APPROVAL_REVIEW_POLICY
     assert "PRIVATE" not in json.dumps(items) and "target.txt" not in json.dumps(items)
-
 
 @pytest.mark.asyncio
 async def test_prior_authorization_mutation_during_review_invalidates_allow(store, dispatch_runtime):
@@ -221,7 +260,6 @@ async def test_prior_authorization_mutation_during_review_invalidates_allow(stor
     _, result = await rt.dispatch(bound)
     assert result["failure_kind"] == "approval_stale" and len(rt.calls) == 1 and not rt.effects
 
-
 @pytest.mark.asyncio
 async def test_human_response_cannot_race_an_automatic_review(proposal):
     store, pending, policy, _ = proposal
@@ -234,7 +272,6 @@ async def test_human_response_cannot_race_an_automatic_review(proposal):
         return decision("deny")
     result = await ApprovalReviewService(store).review(pending, policy, deterministically_admitted=True, evaluator=evaluate)
     assert result.status == "denied" and result.approval is None
-
 
 @pytest.mark.asyncio
 async def test_declared_script_change_during_review_cannot_issue_grant(proposal, tmp_path):
@@ -256,7 +293,6 @@ async def test_declared_script_change_during_review_cannot_issue_grant(proposal,
     call, calls = evaluator(mutate=lambda: script.write_text("print('changed')"))
     result = await ApprovalReviewService(store).review(pending, policy, deterministically_admitted=True, evaluator=call)
     assert len(calls) == 1 and result.status == "stale" and result.approval is None
-
 
 @pytest.mark.parametrize("secret", ['{"api_key":"literal-private-key"}', 'password=literal-private-password', 'Bearer literal-private-token'])
 def test_recognizable_sensitive_action_input_is_not_sent(proposal, secret):
@@ -329,7 +365,6 @@ def test_nullable_evidence_migration_is_idempotent(tmp_path, monkeypatch):
         assert connection.execute(text("SELECT submission_id, approval_evidence FROM chat_automation_submissions")).one() == ("retained", None)
     engine.dispose()
 
-
 @pytest.mark.asyncio
 async def test_review_policy_version_change_invalidates_assessment(proposal, monkeypatch):
     from src import approval_policy
@@ -337,7 +372,6 @@ async def test_review_policy_version_change_invalidates_assessment(proposal, mon
     call, _ = evaluator(mutate=lambda: monkeypatch.setattr(approval_policy, "APPROVAL_REVIEW_POLICY", "changed-policy"))
     result = await ApprovalReviewService(store).review(pending, policy, deterministically_admitted=True, evaluator=call)
     assert result.status == "stale" and result.approval is None
-
 
 @pytest.mark.asyncio
 async def test_private_followup_cannot_invent_missing_prior_authorization(store, dispatch_runtime):

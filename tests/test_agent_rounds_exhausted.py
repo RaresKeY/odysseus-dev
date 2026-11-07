@@ -693,6 +693,46 @@ def test_emits_intent_nudge_exhausted_when_cap_is_exhausted(monkeypatch):
     assert guard["nudges"] == 2
 
 
+@pytest.mark.parametrize("open_tag,close_tag", [
+    ("<thought>", "</thought>"),
+    ('<thinking time="0.1">', "</thinking>"),
+    ("<|channel>thought\n", "<channel|>"),
+])
+def test_hidden_gemma_greeting_plan_does_not_retry(monkeypatch, tmp_path, open_tag, close_tag):
+    _patch_common(monkeypatch)
+    # Exercise the supervised path from the report, rather than the separate
+    # greeting shortcut, which does not run the intent supervisor.
+    monkeypatch.setattr(al, "_should_use_direct_low_signal_path", lambda **kwargs: False)
+    calls = []
+    answer = "Sup! How can I help you today?"
+    response = open_tag + "The user said sup. I should respond in a friendly and helpful manner." + close_tag + answer
+
+    async def stream(*args, **kwargs):
+        calls.append(1)
+        yield "data: " + json.dumps({"delta": response}) + "\n\n"
+        yield "data: [DONE]\n\n"
+
+    monkeypatch.setattr(al, "stream_llm_with_fallback", stream)
+    events = _types(_collect(al.stream_agent_loop(
+        "http://x/v1", "gemma-4-26b-a4b-it",
+        [{"role": "user", "content": "sup"}],
+        max_rounds=5, relevant_tools={"bash"}, workspace=str(tmp_path),
+    )))
+    from src.text_helpers import strip_think
+    # Normal completion streams deltas; final_response is an optional replacement.
+    visible = strip_think("".join(event.get("delta", "") for event in events))
+    assert visible == answer
+    assert len(calls) == 1
+    assert not any(event.get("type") == "intent_nudge_exhausted" for event in events)
+
+
+def test_visible_action_promise_after_gemma_thought_still_retries(monkeypatch):
+    _patch_common(monkeypatch)
+    events = _run_loop(monkeypatch, "<thought>Choose a tool.</thought>Let me check the logs", max_rounds=5)
+    guard = next(event for event in events if event.get("type") == "intent_nudge_exhausted")
+    assert guard["nudges"] == 2
+
+
 def test_try_different_search_gets_intent_followthrough_nudges(monkeypatch):
     _patch_common(monkeypatch)
 

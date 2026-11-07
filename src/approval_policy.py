@@ -8,9 +8,8 @@ import hashlib
 
 from src.decisions.contracts import DecisionError
 
-APPROVAL_REVIEW_POLICY = "odysseus-approval-review/v2"
-MIN_ALLOW_CONFIDENCE = 0.95
-MIN_ALLOW_PROBABILITY = 0.95
+APPROVAL_REVIEW_POLICY = "odysseus-approval-review/v3"
+MIN_ALLOW_BY_RISK = {"low": 0.50, "medium": 0.70, "high": 0.85, "critical": 0.85}
 
 # Kept below DecisionRequest's 4,000-character instruction limit. This is trusted
 # server code, never assembled from transcripts, files, tool descriptions or UI.
@@ -76,8 +75,14 @@ def combine_assessment(answers):
     if set(answers) != set(QUESTIONS):
         raise DecisionError("decision_invalid_answers")
     values = {key: answers[key]["choice"] for key in QUESTIONS}
-    uncertain = any(a["confidence"] < MIN_ALLOW_CONFIDENCE or
-                    a["probabilities"][a["choice"]] < MIN_ALLOW_PROBABILITY for a in answers.values())
+    risk = values["risk_level"]
+    threshold = MIN_ALLOW_BY_RISK[risk]
+    # Low/medium decisions do not depend on authorization or scope labels.
+    # Their uncertainty must not veto a branch that permits those labels.
+    required = QUESTIONS if risk in {"high", "critical"} else ("risk_level", "policy_check")
+    uncertain = any(answers[key]["confidence"] < threshold or
+                    answers[key]["probabilities"][answers[key]["choice"]] < threshold
+                    for key in required)
     return combine_values(values, uncertain=uncertain)
 
 
