@@ -53,6 +53,8 @@ Exact script URL identity matters. Versioned script tags, unversioned imports, a
 
 `static/style.css` has been removed. `static/index.html` loads numbered `static/css/00-tokens.css` through `17-research.css` in order, followed by the three domain panel stylesheets. `static/sw.js` precaches those exact versioned URLs; cascade order remains part of behavior.
 
+The sidebar owns `--sidebar-text-size: 0.875rem` in `01-agent-chat.css`. Its section and list labels share this root-relative size (14px at the default root size), while generic rows outside the sidebar retain their existing sizing. Phone overrides keep 14px labels and 48px touch targets. Font family, colors, icons and sidebar width retain their existing owners.
+
 New extracted owners include `static/js/turnRendering.js` for live/canonical turn DOM reconciliation, `backgroundToolJobs.js` for deduplicated background deliveries and research status cards, `emailReplyStream.js` for email reply streams, and `chatgptSubscriptionUsage.js` for account usage UI. Settings panel modules now also include `agent.js`, `api.js`, `imageModels.js`, `speech.js`, and `writingStyle.js`.
 
 ## Security Policy
