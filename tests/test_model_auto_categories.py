@@ -222,3 +222,37 @@ async def test_new_chat_defaults_do_not_invalidate_another_chats_admitted_turn(r
     assert bound.current()
     registered.update_configuration('alice', {'decision_provider': None}, registered.configuration('alice')['revision'])
     assert not bound.current()
+
+
+@pytest.mark.parametrize('direct_model_pick', [False, True])
+def test_manual_pick_in_older_chat_preserves_last_saved_category_pair(registered, direct_model_pick):
+    registered.update_chat('alice', 'a', {'auto_categories': CATEGORIES, 'route_mode': 'auto'}, 0)
+    assert registered.policy('alice', 'b')['auto_categories'] == {}
+    if direct_model_pick:
+        with registered.transaction() as db:
+            prefs, state = registered.state(db, 'alice', 'b')
+            state.route_mode = 'manual'
+            registered.remember_model_defaults(prefs, state)
+    else:
+        registered.update_chat('alice', 'b', {'route_mode': 'manual'}, 0)
+    newborn = create_chat_with_model_defaults(registered, 'new')
+    assert newborn['route_mode'] == 'manual'
+    assert newborn['auto_categories'] == CATEGORIES
+    assert registered.policy('alice', 'b')['auto_categories'] == {}
+
+
+def test_manual_pick_does_not_restore_an_older_chats_category_pair(registered):
+    older = {key: CATEGORIES[other] for key, other in
+        [('complex_tasks', 'straightforward_tasks'), ('straightforward_tasks', 'complex_tasks')]}
+    first = registered.update_chat('alice', 'b', {'auto_categories': older}, 0)
+    registered.update_chat('alice', 'a', {'auto_categories': CATEGORIES, 'route_mode': 'auto'}, 0)
+    registered.update_chat('alice', 'b', {'route_mode': 'manual'}, first['policy_revision'])
+    assert create_chat_with_model_defaults(registered, 'new')['auto_categories'] == CATEGORIES
+    registered.update_chat('alice', 'b', {'route_mode': 'auto'}, first['policy_revision'])
+    assert create_chat_with_model_defaults(registered, 'after-auto')['auto_categories'] == older
+
+
+def test_explicit_category_clear_replaces_saved_pair_in_manual_mode(registered):
+    saved = registered.update_chat('alice', 'a', {'auto_categories': CATEGORIES}, 0)
+    registered.update_chat('alice', 'a', {'auto_categories': {}}, saved['policy_revision'])
+    assert create_chat_with_model_defaults(registered, 'new')['auto_categories'] == {}

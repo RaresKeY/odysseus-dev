@@ -759,7 +759,8 @@ async function _pick(m) {
       } catch (_) {}
     };
     const currentSessionId = _deps.getCurrentSessionId();
-    const wasAuto = window.ChatAutomation?.getPolicy()?.route_mode === 'auto';
+    // A new chat may still be loading its saved Auto defaults. Honor the manual pick either way.
+    const needsManual = window.ChatAutomation?.getPolicy()?.route_mode !== 'manual';
     const _pendingChat = _deps.getPendingChat();
 
     // Remember this pick so it surfaces under "Recent" next time the picker
@@ -781,7 +782,7 @@ async function _pick(m) {
     if (!currentSessionId && _pendingChat) {
       // Already have a deferred session — just update the model
       _deps.setPendingChat({ url: m.url, modelId: m.mid, endpointId: m.endpointId, source: 'manual' });
-      if (wasAuto) {
+      if (needsManual) {
         try { await window.ChatAutomation.selectManual(); }
         catch (error) { uiModule.showError('Failed to select manual mode: ' + error.message); finishSwitch(); return; }
       }
@@ -794,7 +795,7 @@ async function _pick(m) {
       // No session yet — create one with this model
       try {
         await _deps.createDirectChat(m.url, m.mid, m.endpointId);
-        if (wasAuto) await window.ChatAutomation.selectManual();
+        if (needsManual) await window.ChatAutomation.selectManual();
       } catch (e) {
         uiModule.showError('Failed to start chat: ' + e);
         finishSwitch();
