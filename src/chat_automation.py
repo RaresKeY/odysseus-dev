@@ -128,10 +128,14 @@ class AutomationStore:
         row.feature_settings = {**(row.feature_settings or {}), 'auto_models': candidates,
                                 'auto_models_source': source}
 
-    def remember_model_defaults(self, prefs, state):
-        defaults = {"route_mode": state.route_mode,
-                    "auto_categories": copy.deepcopy((state.feature_settings or {}).get("auto_categories", {}))}
+    def remember_model_defaults(self, prefs, state, *, remember_categories=False):
         config = copy.deepcopy(prefs.configuration or {})
+        previous = config.get("model_defaults") or {}
+        categories = (state.feature_settings or {}).get("auto_categories", {})
+        # A manual pick in an older chat must not discard the last assigned pair.
+        if not remember_categories and "auto_categories" in previous:
+            categories = previous["auto_categories"]
+        defaults = {"route_mode": state.route_mode, "auto_categories": copy.deepcopy(categories)}
         if config.get("model_defaults") != defaults:
             prefs.configuration = {**config, "model_defaults": defaults}
             prefs.revision += 1
@@ -276,7 +280,7 @@ class AutomationStore:
                         "authority_epoch": p.authority_epoch, "policy_revision": s.policy_revision,
                         "expires_at": self.clock() + 3600}
             if {"auto_categories", "route_mode"} & changes.keys():
-                self.remember_model_defaults(p, s)
+                self.remember_model_defaults(p, s, remember_categories="auto_categories" in changes or route == "auto")
             return self._policy(p, s, owner)
 
     def update_configuration(self, owner, changes, expected_revision):
