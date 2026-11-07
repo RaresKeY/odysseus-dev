@@ -119,6 +119,46 @@ FIXTURE = r"""(async () => {
 
 
 
+def composer_checks(browser, width):
+    result = browser.js(r"""(async()=>{
+      const el=id=>document.getElementById(id),input=el('message'),picker=el('model-picker-wrap'),menu=el('chat-permissions-menu'),trigger=el('chat-approval-mode');
+      const oldDraft=input.value,actualFetch=window.fetch;
+      const visible=node=>{const r=node.getBoundingClientRect(),s=getComputedStyle(node);return r.width>0 && r.height>0 && s.visibility!=='hidden' && s.opacity!=='0'};
+      try {
+        if(!menu.hidden)trigger.click();
+        input.focus();
+        input.value='Long composer draft '.repeat(20)+'\nSecond line';input.dispatchEvent(new Event('input',{bubbles:true}));
+        await new Promise(resolve=>setTimeout(resolve,100));
+        const pickerVisible=visible(el('model-picker-btn')) && picker.parentElement.classList.contains('chat-input-right');
+        const modelRect=picker.getBoundingClientRect(),modeRect=el('mode-agent-btn').getBoundingClientRect();
+        const besideMode=modelRect.right<=modeRect.left+1 && Math.abs(modelRect.top+modelRect.height/2-modeRect.top-modeRect.height/2)<2;
+        el('model-picker-btn').focus();el('model-picker-btn').click();await new Promise(resolve=>setTimeout(resolve,250));
+        const mr=el('model-picker-menu').getBoundingClientRect();
+        const modelMenuFits=mr.left>=0 && mr.right<=innerWidth+1 && mr.top>=0 && visible(el('model-picker-search'));
+        el('model-picker-menu').dispatchEvent(new KeyboardEvent('keydown',{key:'Escape',bubbles:true}));
+        await new Promise(resolve=>setTimeout(resolve,250));
+        window.fetch=async function(url,options){if(String(url)==='/api/chat-settings' && (options?.method || 'GET')==='GET')await new Promise(resolve=>setTimeout(resolve,500));return actualFetch.call(this,url,options)};
+        trigger.click();
+        const frames=[];const start=performance.now();
+        await new Promise(resolve=>requestAnimationFrame(function sample(t){
+          if(!menu.hidden){const r=menu.getBoundingClientRect();frames.push({height:r.height,setup:!el('chat-auto-approve-setup').hidden,status:el('chat-auto-approve-unavailable').hidden?'':el('chat-auto-approve-unavailable').textContent})}
+          if(t-start<750)requestAnimationFrame(sample);else resolve();
+        }));
+        const stableMenu=frames.length>5 && frames.every(f=>!f.setup && !f.status && Math.abs(f.height-frames[0].height)<1);
+        const icons=[...menu.querySelectorAll('[data-approval-mode]')].map(row=>{const icon=row.querySelector('.chat-permission-icon'),title=row.querySelector('strong');if(!icon)return false;const a=icon.getBoundingClientRect(),b=title.getBoundingClientRect();return icon.getAttribute('aria-hidden')==='true' && a.width===18 && a.right<b.left && Math.abs(a.top-b.top)<3});
+        return {pickerVisible,besideMode,modelMenuFits,stableMenu,permissionIcons:icons.length===3 && icons.every(Boolean),draftPreserved:input.value.endsWith('Second line')};
+      } finally {
+        window.fetch=actualFetch;
+        if(!menu.hidden)trigger.click();
+        input.value=oldDraft;input.dispatchEvent(new Event('input',{bubbles:true}));
+      }
+    })()""")
+    if not BASELINE:
+        assert all(result.values()), (width, result)
+    browser.capture(f'composer-controls-{width}.png')
+    return result
+
+
 def security_checks(browser):
     source = Path('/app/static/js/slashCommands.js').read_text()
     start = source.index('function detectProvider(')
@@ -321,6 +361,7 @@ def main():
             result['temperatureReenabled'] = browser.js("!document.querySelector('.generation-control-unavailable') && !(document.querySelector('input[aria-label=Temperature]') || document.querySelector('.chat-context-threshold-slider')).disabled")
             assert result['temperatureReenabled'], result
             result['highlights']=highlight_checks(browser,width)
+            result['composer']=composer_checks(browser,width)
             result['security']=security_checks(browser)
             results.append(result)
         (OUT / 'browser-results.json').write_text(json.dumps(results, indent=2))

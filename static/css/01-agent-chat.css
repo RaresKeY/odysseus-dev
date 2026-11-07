@@ -2508,7 +2508,7 @@ body.bg-pattern-ascii-fireflies {
 	      width: 100%;
 	      position: relative;
 	      display: grid;
-	      grid-template-columns: minmax(0, 1fr) auto;
+	      grid-template-columns: minmax(0, 1fr);
 	      align-items: start;
 	    }
 	    .plan-mode-status {
@@ -2561,29 +2561,6 @@ body.bg-pattern-ascii-fireflies {
 	    .plan-mode-status-toggle:hover {
 	      background: color-mix(in srgb, var(--accent, var(--red)) 30%, transparent);
 	    }
-	    .chat-input-top > .model-picker-wrap {
-	      position: relative;
-	      grid-column: 2;
-	      grid-row: 1;
-	      top: 0;
-	      right: auto;
-	      z-index: 250;
-      transform-origin: top right;
-	      transition: opacity 0.22s ease, transform 0.22s ease;
-	      will-change: opacity, transform;
-	    }
-	    body.plan-mode-active .chat-input-top > .model-picker-wrap {
-	      opacity: 0;
-	      pointer-events: none;
-	      transform: translateY(-4px) scale(0.96);
-	    }
-    .chat-input-top > .model-picker-wrap.model-picker-autohide,
-    .chat-input-top > .model-picker-wrap.picker-auto-hidden {
-      display: none !important;
-      opacity: 0;
-      pointer-events: none;
-      transform: translateY(-4px) scale(0.96);
-    }
     .ghost-text-overlay {
       position: absolute;
       top: 0;
@@ -2630,15 +2607,7 @@ body.bg-pattern-ascii-fireflies {
       align-items: center;
       margin-top: 4px;
     }
-    /* Progressive shrinkage: as the chat input bar gets narrow, sacrifice
-       chrome before the typing area. First the Agent/Chat toggle drops out,
-       then the model picker — textarea + send button always stay. Container
-       queries so it responds to *bar width*, not viewport width (the bar
-       can be in a split pane). */
     .chat-input-bar { container-type: inline-size; container-name: chatbar; }
-    @container chatbar (max-width: 340px) {
-      .chat-input-right .mode-toggle { display: none !important; }
-    }
     .chat-input-left {
       display: flex;
       gap: 4px;
@@ -2674,6 +2643,28 @@ body.bg-pattern-ascii-fireflies {
       gap: 8px;
       align-items: center;
       flex-shrink: 0;
+    }
+    .chat-input-right > .model-picker-wrap {
+      z-index: 250;
+      min-width: 0;
+      max-width: 144px;
+      flex-shrink: 1;
+    }
+    .chat-input-right .model-picker-btn {
+      height: 32px;
+      max-width: 100%;
+    }
+    @container chatbar (max-width: 540px) {
+      .chat-input-right { gap: 4px; }
+      #chat-permissions-label { display: none; }
+      .chat-permissions-short { display: inline; }
+    }
+    /* Use two rows in narrow panes so both model and agent mode stay reachable. */
+    @container chatbar (max-width: 360px) {
+      .chat-input-bottom { flex-wrap: wrap; row-gap: 4px; }
+      .chat-input-left { flex-basis: 100%; }
+      .chat-input-right { width: 100%; }
+      .chat-input-right > .model-picker-wrap { margin-right: auto; }
     }
     /* Reasoning effort dropdown in Chat Context */
     .reasoning-effort-wrap {

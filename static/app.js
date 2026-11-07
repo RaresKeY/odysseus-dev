@@ -78,10 +78,10 @@ function _submitChatFormDirect(form) {
   else form.dispatchEvent(new Event('submit', { bubbles: true, cancelable: true }));
 }
 
+// Typing extends the background-work quiet period, not an active response.
 function _isForegroundChatBusy() {
   const sendBtn = document.querySelector('.send-btn');
   return !!window.__odysseusChatBusy
-    || Date.now() < (window.__odysseusChatBusyUntil || 0)
     || !!document.querySelector('.send-btn[data-mode="streaming"], .send-btn.send-pending')
     || (sendBtn && (sendBtn.title || '').toLowerCase().includes('stop'));
 }
@@ -2354,9 +2354,7 @@ function initializeEventListeners() {
     function checkToolbarOverflow() {
       const inputBottom = inputLeft.parentElement;
       if (!inputBottom) return;
-      const rightEl = document.querySelector('.chat-input-right');
-      const available = inputBottom.clientWidth -
-        (rightEl ? rightEl.offsetWidth : 0) - 16;
+      const available = inputLeft.clientWidth;
 
       // Uncollapse all to measure natural widths
       collapsibleBtns.forEach(btn => btn.classList.remove('toolbar-collapsed'));
@@ -2444,21 +2442,20 @@ function initializeEventListeners() {
     // Re-check when input bar itself resizes (e.g. doc panel drag)
     const inputBottom = inputLeft.parentElement;
     if (inputBottom) {
-      new ResizeObserver(() => requestAnimationFrame(checkToolbarOverflow)).observe(inputBottom);
+      const toolbarObserver = new ResizeObserver(() => requestAnimationFrame(checkToolbarOverflow));
+      toolbarObserver.observe(inputBottom);
+      const right = document.querySelector('.chat-input-right');
+      if (right) toolbarObserver.observe(right);
     }
   })();
 
-  // ── Auto-hide model picker when textarea area is too narrow ──
-  (function initModelPickerResponsive() {
+  // Keep the placeholder compact when the composer is narrow.
+  (function initComposerResponsive() {
     const inputTop = document.querySelector('.chat-input-top');
-    const pickerWrap = el('model-picker-wrap');
-    if (!inputTop || !pickerWrap) return;
+    if (!inputTop) return;
 
     const PLACEHOLDER_COMPACT_WIDTH = 400;
-    const PICKER_HIDE_WIDTH = 220;
-    const TOOLBAR_HIDE_WIDTH = 160;
 	    const textarea = el('message');
-	    const inputBottom = document.querySelector('.chat-input-bottom');
 	    const _isMobile = 'ontouchstart' in window || navigator.maxTouchPoints > 0;
 	    let _placeholderHintOn = false;
 
@@ -2479,30 +2476,13 @@ function initializeEventListeners() {
 	      }, 5000);
 	    }
 
-		    function checkPickerOverflow() {
-		      const w = inputTop.clientWidth || window.innerWidth || 0;
-		      const hasText = !!(textarea && textarea.value && textarea.value.trim());
-		      if (_isMobile) {
-		        // Mobile has much less horizontal room: any typed text should get
-		        // the full composer row, matching plan-mode's collision behavior.
-		        pickerWrap.classList.toggle('picker-auto-hidden', hasText);
-		        setComposerPlaceholder(w);
-		        return;
-		      }
-		      // Hide model picker
-		      pickerWrap.classList.toggle('picker-auto-hidden', w < PICKER_HIDE_WIDTH);
-	      // Keep a prompt inside the composer even when the picker crowds the row.
-	      // A blank placeholder makes the mobile/compact empty state feel broken.
-	      setComposerPlaceholder(w);
-      // Hide entire bottom toolbar (tools, mode toggle) — only send button remains
-      if (inputBottom) {
-        inputBottom.classList.toggle('toolbar-auto-hidden', w < TOOLBAR_HIDE_WIDTH);
-      }
+    function checkComposerWidth() {
+      setComposerPlaceholder(inputTop.clientWidth || window.innerWidth || 0);
     }
 
-    const ro = new ResizeObserver(() => requestAnimationFrame(checkPickerOverflow));
+    const ro = new ResizeObserver(() => requestAnimationFrame(checkComposerWidth));
     ro.observe(inputTop);
-    checkPickerOverflow();
+    checkComposerWidth();
   })();
 
   // TTS Mode toggle (separate from overflow IIFE for safety)
@@ -3985,7 +3965,6 @@ function startOdysseusApp() {
   // ── Dual-purpose send/mic button ──
   const sendBtn = document.querySelector('.send-btn');
   const messageInput = el('message');
-  const modelPickerWrap = document.getElementById('model-picker-wrap');
 
   // ArrowUp/ArrowDown prompt recall on #message lives in
   // static/js/composerArrowUpRecall.js (wired from chat.js). Do not re-add a
@@ -4209,25 +4188,22 @@ function startOdysseusApp() {
     });
   }
 
-  // Toggle mic/send icon on input change + hide model picker after enough text
+  // Toggle mic/send icon and keep the plan hint out of long prompts.
   if (messageInput) {
     const _debouncedUpdateIcon = uiModule.debounce(_updateSendBtnIcon, 50);
-		    const _MODEL_PICKER_HIDE_CHARS = 23;
-		    const _syncModelPickerAutohide = () => {
+		    const _PLAN_STATUS_HIDE_CHARS = 23;
+		    const _syncPlanModeStatus = () => {
 		      const compactMobile = _isMobileChatInput() && !!(messageInput.value || '').trim();
-		      const hidePicker = compactMobile || (messageInput.value || '').replace(/\s/g, '').length >= _MODEL_PICKER_HIDE_CHARS;
-		      if (modelPickerWrap) {
-		        modelPickerWrap.classList.toggle('model-picker-autohide', hidePicker);
-		      }
+		      const hideStatus = compactMobile || (messageInput.value || '').replace(/\s/g, '').length >= _PLAN_STATUS_HIDE_CHARS;
 	      const planStatus = el('plan-mode-status');
 	      if (planStatus) {
-	        planStatus.classList.toggle('plan-mode-status-autohide', hidePicker);
+	        planStatus.classList.toggle('plan-mode-status-autohide', hideStatus);
 	      }
 	    };
-    window._syncModelPickerAutohide = _syncModelPickerAutohide;
-    _syncModelPickerAutohide();
+    window._syncModelPickerAutohide = _syncPlanModeStatus;
+    _syncPlanModeStatus();
     messageInput.addEventListener('input', () => {
-      _syncModelPickerAutohide();
+      _syncPlanModeStatus();
       if (sendBtn && sendBtn.dataset.mode === 'streaming') {
         _updateSendBtnIcon();
       } else {
