@@ -158,3 +158,28 @@ def test_failed_window_probe_keeps_identity_without_falling_back_to_seed(window_
     assert response.json()["model"] == "actual" and response.json()["context_length"] == 0
     view, _ = history._context_window_view(window_api.session, "alice")
     assert context.get_session_context_length(view, owner="alice") == context.DEFAULT_CONTEXT
+
+
+def stream_metadata(api, **changes):
+    metadata = api.session.history[-1].metadata
+    metadata.update(run_id="independent-stream-id", requested_model="planned", requested_endpoint_id="planned-endpoint",
+                    timestamp="2026-11-07T10:13:18.235526Z")
+    metadata.update(changes)
+
+
+def test_persisted_stream_ids_match_by_selected_route_and_completion_time(window_api):
+    stream_metadata(window_api)
+    data = read(window_api).json()
+    assert data["model"] == "actual" and data["model_source"] == "auto_actual"
+
+
+def test_independent_run_id_from_another_endpoint_does_not_override_binding(window_api):
+    stream_metadata(window_api, requested_endpoint_id="other-endpoint")
+    data = read(window_api).json()
+    assert data["model"] == "planned" and data["model_source"] == "auto_selected"
+
+
+def test_previous_reply_on_same_route_does_not_override_new_turn(window_api):
+    stream_metadata(window_api, timestamp="1970-01-01T00:00:00Z")
+    data = read(window_api).json()
+    assert data["model"] == "planned" and data["model_source"] == "auto_selected"
