@@ -32,6 +32,8 @@ disables filesystem/process containment. Execution fails if required
 containment is unavailable. Read-only additional roots remain read-only for
 native filesystem and contained process tools.
 
+A literal “go again” retry derives authority from the nearest trusted user instruction, retaining its exact read/selection and negative tool restrictions, then intersects current request policy. It never derives authority from assistant proposals or untrusted history. A settings revision immediately retires the matching visible approval controls; the server still rejects all cards whose bound policy is stale. Switching modes requires a fresh request rather than reviving an older action.
+
 The canonical dispatcher seals exact operation, backend, filesystem, owned
 resource, process and browser identities before review, and checks them at
 claim/dispatch. New cards allow once or deny, with no broad chat/task grant.

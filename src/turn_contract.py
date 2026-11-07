@@ -143,7 +143,7 @@ _REQUEST_PREFIX = (
 _ACTION_REQUEST = _REQUEST_PREFIX + (
     r"(?:add|create|make|write|draft|edit|rewrite|shorten|revise|change|update|"
     r"replace|append|polish|fix|review|proofread|suggest|delete|remove|cancel|list|show|check|find|search|navigate|read|open|save|publish|set|put|schedule|"
-    r"reschedule|move|block\s+off|reserve|send|reply|remember|forget|run|rerun|repeat|do|use|download|"
+    r"reschedule|move|block\s+off|reserve|send|reply|remember|forget|run|rerun|repeat|go\s+again|do|use|download|"
     r"serve|stop|enable|disable|switch|research|investigate|generate|upscale|transcribe|inspect|browse)\b"
 )
 _ACTION = re.compile(r"^\s*" + _ACTION_REQUEST, re.I)

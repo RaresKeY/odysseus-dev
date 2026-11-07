@@ -2934,6 +2934,24 @@ export function displayMetrics(messageElement, metrics) {
   if (uiModule) uiModule.scrollHistory();
 }
 
+// A settings revision invalidates sealed approvals on the server immediately.
+// Retire the matching controls too, rather than offering a stale Allow button.
+document.addEventListener('odysseus:chat-policy-changed', (event) => {
+  const sessionId = event.detail?.session_id;
+  if (!sessionId) return;
+  document.querySelectorAll('.ask-user-card[data-ask-user-kind="tool_approval"]:not(.ask-user-answered)').forEach((card) => {
+    if (card.dataset.approvalSessionId !== sessionId) return;
+    card.classList.add('ask-user-answered');
+    card.querySelectorAll('button, input').forEach((control) => { control.disabled = true; });
+    card.querySelector('.ask-user-options')?.remove();
+    card.querySelector('.ask-user-other')?.remove();
+    const status = document.createElement('p');
+    status.setAttribute('role', 'status');
+    status.textContent = 'Chat settings changed. Request the action again.';
+    card.appendChild(status);
+  });
+});
+
 /** Remove any unanswered multiple-choice cards currently in the chat. */
 export function removeAskUserCards(root) {
   const scope = root || document.getElementById('chat-history') || document;
@@ -3042,6 +3060,7 @@ export function renderAskUserCard(payload, options) {
   const multi = !!aq.multi;
   const isToolApproval = aq.kind === 'tool_approval' && !!aq.approval_id;
   card.dataset.askUserKind = isToolApproval ? 'tool_approval' : 'question';
+  if (isToolApproval) card.dataset.approvalSessionId = String(aq.session_id || '');
   const emojiText = (value) => svgifyEmoji(uiModule.esc(String(value)));
 
   const question = document.createElement('div');

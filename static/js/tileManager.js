@@ -190,8 +190,8 @@ function _applySnap(content, rect, zoneName) {
   if (!content.dataset._tilePreSnap) {
     content.dataset._tilePreSnap = JSON.stringify({
       position: 'fixed',
-      left:   content.style.left || (Math.round(_fromRect.left) + 'px'),
-      top:    content.style.top  || (Math.round(_fromRect.top)  + 'px'),
+      left:   _fromRect.left + 'px',
+      top:    _fromRect.top + 'px',
       width:  content.style.width,
       height: content.style.height,
       maxHeight: content.style.maxHeight,
@@ -257,8 +257,18 @@ document.addEventListener('pointerdown', (e) => {
   }
 });
 
+function _cancelTracking() {
+  _tracking = null;
+  _activeZone = null;
+  _hideGhost();
+}
+
+document.addEventListener('pointercancel', _cancelTracking);
+window.addEventListener('blur', _cancelTracking);
+
 document.addEventListener('pointermove', (e) => {
   if (!_tracking) return;
+  if (!_tracking.content.isConnected || e.buttons === 0) { _cancelTracking(); return; }
   if (!_isDesktop()) return;
   const dx = e.clientX - _tracking.startX;
   const dy = e.clientY - _tracking.startY;

@@ -339,16 +339,9 @@ class SemanticIntent:
     required_read: RequiredReadOperation | None
 
 
-def interpret_request(request_text, *, history=(), workspace=None, active_document=False,
-                      image_attachment=False):
-    if not isinstance(request_text, str):
-        raise TypeError("Intent requires request text")
-    # Routing may use model/tool history. Admission may only inherit intent
-    # from trusted user requests; a model's proposal or attempted tool call
-    # cannot establish a new authorized operation class.
-    history = tuple(history or ())
+def _trusted_user_history(history):
     trusted_history = []
-    for row in history:
+    for row in history or ():
         get = row.get if isinstance(row, dict) else lambda key, default=None: getattr(row, key, default)
         metadata = get("metadata") or {}
         if isinstance(metadata, str):
@@ -359,6 +352,18 @@ def interpret_request(request_text, *, history=(), workspace=None, active_docume
         if (get("role") == "user" and isinstance(metadata, dict)
                 and metadata.get("trusted") is not False and not metadata.get("tool_gate_untrusted")):
             trusted_history.append({"role": "user", "content": get("content", "")})
+    return trusted_history
+
+
+def interpret_request(request_text, *, history=(), workspace=None, active_document=False,
+                      image_attachment=False):
+    if not isinstance(request_text, str):
+        raise TypeError("Intent requires request text")
+    # Routing may use model/tool history. Admission may only inherit intent
+    # from trusted user requests; a model's proposal or attempted tool call
+    # cannot establish a new authorized operation class.
+    history = tuple(history or ())
+    trusted_history = _trusted_user_history(history)
     families = requested_capabilities(request_text, trusted_history,
         active_document=active_document, workspace=bool(workspace), image_attachment=image_attachment)
     selected = selected_tools_for_request(request_text)
@@ -474,6 +479,19 @@ def create_request_authority(request_text, *, owner=None, session_id=None, works
     """Deterministic server policy over semantic facts, never schema inventory."""
     if not isinstance(request_text, str):
         raise TypeError("Authority requires trusted request text")
+    if re.fullmatch(r"\s*(?:please\s+)?go\s+again[.!?]*\s*", request_text, re.I):
+        # Retry the nearest trusted user instruction, including exact read and
+        # negative-policy limits. Assistant proposals never supply authority.
+        trusted = _trusted_user_history(history)
+        for index in range(len(trusted) - 1, -1, -1):
+            previous = trusted[index]["content"]
+            if re.fullmatch(r"\s*(?:please\s+)?go\s+again[.!?]*\s*", previous, re.I):
+                continue
+            return create_request_authority(previous, owner=owner, session_id=session_id,
+                workspace=workspace, history=trusted[:index], active_document=active_document,
+                image_attachment=image_attachment, capabilities=capabilities,
+                client_runtime_context=client_runtime_context).restrict(policy)
+        history = ()  # Repeated retries without an antecedent grant no action.
     intent = interpret_request(request_text, history=history, active_document=active_document,
                                workspace=workspace, image_attachment=image_attachment)
     families = intent.capabilities

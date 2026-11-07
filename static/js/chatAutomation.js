@@ -164,6 +164,7 @@ function changeChat(changes, context) {
       const previous=policy?.session_id===id ? policy : await api(`/api/session/${encodeURIComponent(id)}/automation`);
       if(context && (context.navigation!==requestedNavigation || context.session_id!==requestedId || (requestedId && context.policy_revision!==previous.policy_revision)))throw new Error(`The chat settings changed. Reopen ${context.label || 'Auto models'} before saving.`);
       const saved=await api(`/api/session/${encodeURIComponent(id)}/automation`,'PUT',{policy_revision:previous.policy_revision,changes});
+      if(id===sid() && previous.policy_revision!==saved.policy_revision) document.dispatchEvent(new CustomEvent('odysseus:chat-policy-changed',{detail:{session_id:id,policy_revision:saved.policy_revision}}));
       if(id===sid() && ticket===sequence){++sequence;policy=saved;reviewerAvailability=saved.auto_approve_availability;reviewerLoading=false;render();}else await refresh();
       return saved;
     } finally {controlsBusy(false);}
