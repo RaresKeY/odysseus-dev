@@ -1722,7 +1722,8 @@ def _browser_decision_runtime(bound, *, owner, session_id, workspace, authority,
 
 async def _review_bound_chat_action(bound, block, *, owner, session_id, workspace,
                                     authority, security_context, active_document_id,
-                                    client_runtime_context, deterministically_admitted):
+                                    client_runtime_context, deterministically_admitted,
+                                    process_operation=None):
     """Propose through the existing store; only this dispatcher claims effects."""
     from src.approval_review import ApprovalReviewService
     from src.approval_context import user_snapshot
@@ -1799,7 +1800,8 @@ async def _review_bound_chat_action(bound, block, *, owner, session_id, workspac
             capabilities=capabilities_for_action(block.tool_type, block.content),
             request_authority=authority, client_runtime_context=client_runtime_context,
             policy_record=policy, policy_validator=current,
-            submission_id=bound.submission_id, bound_turn=bound, review_context_json=review_context_json)
+            submission_id=bound.submission_id, bound_turn=bound, review_context_json=review_context_json,
+            bound_process_operation=process_operation)
     except DecisionError as error:
         return context_failure(error, "Auto-Approve could not inspect the declared script within current permissions and review limits.")
 
@@ -2107,7 +2109,8 @@ async def execute_tool_block(
         exact_approval, paused = await _review_bound_chat_action(bound_chat, block,
             owner=owner, session_id=session_id, workspace=workspace, authority=authority,
             security_context=security_context, active_document_id=active_document_id,
-            client_runtime_context=client_runtime_context, deterministically_admitted=True)
+            client_runtime_context=client_runtime_context, deterministically_admitted=True,
+            process_operation=process_operation)
         if paused is not None:
             label = 'APPROVAL REQUIRED' if paused.get('approval_required') else 'BLOCKED'
             return f"{getattr(block, 'tool_type', '')}: {label}", paused

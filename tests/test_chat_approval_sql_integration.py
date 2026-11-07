@@ -111,3 +111,33 @@ async def test_retry_file_request_reaches_auto_review_with_original_user_context
     evidence = json.loads(runtime.calls[0].content)["state"]["server_context"]["user_evidence"]
     assert original in [row["text"] for row in evidence]
     assert evidence[-1]["text"] == "go again"
+
+
+@pytest.mark.asyncio
+@pytest.mark.parametrize("tool,content", [("bash", "printf probe"), ("python", "print('probe')")])
+async def test_auto_review_reuses_the_dispatcher_process_reservation(store, dispatch_runtime, monkeypatch, tool, content):
+    from src import tool_execution
+    from src.agent_runtime.process_resources import active_process_operation
+    runtime = dispatch_runtime
+    store.update_chat("alice", "a", {"approval_mode": "auto_approve"}, 0)
+    bound = await prepare_chat_turn(store, "alice", runtime.session, "Run the bounded probe in my workspace.")
+    with bound.activate():
+        authority = RequestAuthority("request", "alice", "a", str(runtime.workspace),
+                                     (OperationGrant(tool),))
+    executed = []
+
+    async def executor(block, **kwargs):
+        process = active_process_operation()
+        assert process is not None and process.launch is not None
+        process.validate()
+        executed.append(process.launch)
+        return "probe", {"output": "probe", "exit_code": 0}
+
+    monkeypatch.setattr(tool_execution, "_execute_tool_block_impl", executor)
+    block = namedtuple("Block", ["tool_type", "content"])(tool, content)
+    with bound.activate():
+        _, result = await tool_execution.execute_tool_block(block, owner="alice", session_id="a",
+            workspace=str(runtime.workspace), request_authority=authority,
+            security_context=ToolRunSecurityContext())
+    assert result["exit_code"] == 0, result
+    assert len(runtime.calls) == len(executed) == 1
