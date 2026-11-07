@@ -12,7 +12,7 @@ _SSH_PORT_RE = re.compile(r"^\d{1,5}$")
 def validate_remote_host(v: str | None) -> str | None:
     if v is None or v == "":
         return None
-    if not _REMOTE_HOST_RE.match(v):
+    if not _REMOTE_HOST_RE.fullmatch(v):
         raise HTTPException(
             400,
             "Invalid remote_host — must be host or user@host, no SSH option syntax",

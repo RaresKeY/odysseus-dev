@@ -628,7 +628,7 @@ function detectProvider(input) {
     url = url.replace(/\/api\/(chat|tags|generate)\/?$/i, '/api');
     try {
       const parsed = new URL(url);
-      if (parsed.hostname.endsWith('ollama.com')) url = 'https://ollama.com/api';
+      if ((parsed.hostname === 'ollama.com' || parsed.hostname.endsWith('.ollama.com'))) url = 'https://ollama.com/api';
     } catch(e) {}
     // Add /v1 if bare host:port
     if (/^https?:\/\/[^/]+$/.test(url) && !url.includes('api.') && !url.includes('ollama.com')) url += '/v1';
@@ -652,7 +652,10 @@ function detectProvider(input) {
 function setupChatUrlForEndpoint(detected) {
   const base = (detected.base_url || '').replace(/\/+$/, '');
   if (detected.name === 'Anthropic') return base.replace(/\/v1$/, '') + '/v1/messages';
-  if (base.includes('ollama.com')) return 'https://ollama.com/api/chat';
+  try {
+    const host = new URL(base).hostname;
+    if (host === 'ollama.com' || host.endsWith('.ollama.com')) return 'https://ollama.com/api/chat';
+  } catch {}
   return base + '/chat/completions';
 }
 

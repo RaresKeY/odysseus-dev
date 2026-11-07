@@ -37,9 +37,14 @@ def extract_urls(text: str) -> List[str]:
         # ".../Python_(programming_language)". A ')' is only dropped when it is
         # unbalanced (more ')' than '('), which is the prose-glued case such as
         # "(see https://example.com)".
-        url = re.sub(r'[.,;:!?]+$', '', url)
-        while url.endswith(')') and url.count(')') > url.count('('):
-            url = re.sub(r'[.,;:!?]+$', '', url[:-1])
+        end = len(url.rstrip('.,;:!?'))
+        extra_closing = max(0, url.count(')') - url.count('('))
+        while end and url[end - 1] == ')' and extra_closing:
+            end -= 1
+            extra_closing -= 1
+            while end and url[end - 1] in '.,;:!?':
+                end -= 1
+        url = url[:end]
         cleaned_urls.append(url)
     return cleaned_urls
 

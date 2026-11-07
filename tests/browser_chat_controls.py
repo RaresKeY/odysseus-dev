@@ -119,6 +119,52 @@ FIXTURE = r"""(async () => {
 
 
 
+def security_checks(browser):
+    source = Path('/app/static/js/slashCommands.js').read_text()
+    start = source.index('function detectProvider(')
+    end = source.index('async function connectDetectedSetupEndpoint(', start)
+    # Execute the production helpers through CDP without relaxing page CSP.
+    assert browser.js('(()=>{' + source[start:end] + r"""
+      const falseHosts = ['notollama.com', 'ollama.com.evil.invalid'];
+      for (const host of falseHosts) {
+        const url = 'https://' + host + '/v1';
+        if (detectProvider(url).base_url !== url || setupChatUrlForEndpoint({base_url:url}) !== url+'/chat/completions') throw Error(host);
+      }
+      const pathUrl='https://custom.invalid/ollama.com/v1';
+      if (setupChatUrlForEndpoint({base_url:pathUrl}) !== pathUrl+'/chat/completions') throw Error('provider name in path');
+      if (setupChatUrlForEndpoint(detectProvider('https://ollama.com')) !== 'https://ollama.com/api/chat') throw Error('canonical provider');
+      return true;
+    })()""")
+    admin = Path('/app/static/js/admin.js').read_text()
+    start = admin.index('function _normalizeBaseUrl(')
+    end = admin.index('async function _defaultOllamaUrl(', start)
+    assert browser.js('(()=>{' + admin[start:end] + "return _normalizeBaseUrl('https://notollama.com/v1') === 'https://notollama.com/v1';})()")
+    result = browser.js(r"""(async()=>{
+      const renderer = await import('/static/js/chatRenderer.js');
+      const msg = document.querySelector('.msg-ai');
+      renderer.displayMetrics(msg,{model:'fixture',response_time:1,input_tokens:8000,context_length:10000,context_percent:80});
+      const ring=msg.querySelector('.ctx-ring');
+      if (!ring) throw Error('No context ring: '+msg.outerHTML.slice(-2200));
+      ring.click();
+      const originalFetch = window.fetch;
+      const originalSessions = window.sessionModule;
+      window.sessionModule = {getCurrentSessionId:()=> 'ui-fixture'};
+      window.fetch = async (...args)=>{
+        if (String(args[0]).endsWith('/compact')) throw Error('<img src=x onerror="window.forkCloseoutXss=true">');
+        return originalFetch(...args);
+      };
+      try {
+        document.querySelector('.ctx-compact-btn').click();
+        await new Promise(resolve=>setTimeout(resolve,100));
+        const body=document.querySelector('#chat-history .msg:last-child .body');
+        if (!body.textContent.includes('<img') || body.querySelector('img') || window.forkCloseoutXss) throw Error('compaction error rendered HTML');
+        return {providerBoundaries:true, compactionErrorIsText:true};
+      } finally {window.fetch=originalFetch;window.sessionModule=originalSessions;}
+    })()""")
+    assert result == {'providerBoundaries': True, 'compactionErrorIsText': True}, result
+    return result
+
+
 def highlight_checks(browser, width):
     # Read-only fixtures drive the real menu; no approval choice is submitted.
     if browser.js("Boolean(document.querySelector('.chat-context-popup'))"):
@@ -275,6 +321,7 @@ def main():
             result['temperatureReenabled'] = browser.js("!document.querySelector('.generation-control-unavailable') && !(document.querySelector('input[aria-label=Temperature]') || document.querySelector('.chat-context-threshold-slider')).disabled")
             assert result['temperatureReenabled'], result
             result['highlights']=highlight_checks(browser,width)
+            result['security']=security_checks(browser)
             results.append(result)
         (OUT / 'browser-results.json').write_text(json.dumps(results, indent=2))
         print(json.dumps(results, indent=2), flush=True)

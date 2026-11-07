@@ -61,7 +61,13 @@ def init_youtube():
 def is_youtube_url(url: str) -> bool:
     if not isinstance(url, str):
         return False
-    return "youtube.com" in url or "youtu.be" in url
+    try:
+        parsed = urllib.parse.urlparse(url)
+        return (parsed.scheme.lower() in {'http', 'https'}
+                and parsed.username is None and parsed.password is None
+                and (parsed.hostname or '').lower() in (*_YT_HOSTS, 'youtu.be'))
+    except ValueError:
+        return False
 
 
 # youtube.com-shaped hosts. music.youtube.com serves the same /watch and

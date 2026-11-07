@@ -1916,7 +1916,7 @@ function initEndpointForm() {
     u = u.split('?')[0].split('#')[0];
     try {
       const parsed = new URL(u);
-      if (parsed.hostname.endsWith('ollama.com')) {
+      if ((parsed.hostname === 'ollama.com' || parsed.hostname.endsWith('.ollama.com'))) {
         u = 'https://ollama.com/api';
       }
     } catch(e) {}
