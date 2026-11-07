@@ -138,7 +138,7 @@
       "deployment": "js/features/notes/index.js",
       "legacyImports": [
         {
-          "specifier": "/static/js/ui.js?v=20260916largetoolscroll1",
+          "specifier": "/static/js/ui.js?v=20261107scrollprogress1",
           "reason": "Existing shared UI/platform identity, injected at Notes composition. Remove when that shared responsibility migrates to maintained source."
         },
         {

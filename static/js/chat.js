@@ -7,7 +7,7 @@
 
 import Storage from './storage.js';
 import { whenAutomationSettingsReady } from './chatAutomation.js';
-import uiModule from './ui.js?v=20260916largetoolscroll1';
+import uiModule from './ui.js?v=20261107scrollprogress1';
 import sessionModule from './sessions.js';
 import chatRenderer, { renderToolIcon } from './chatRenderer.js?v=20260914metricssummary1';
 import chatStream from './chatStream.js?v=20261026devsync1';
@@ -8556,7 +8556,7 @@ import { invalidateSettings } from './appConfig.js';
       }
     } catch (e) {
       console.error('open attachment as document failed', e);
-      import('./ui.js?v=20260916largetoolscroll1').then(m => m.showError && m.showError('Could not open attachment')).catch(() => {});
+      import('./ui.js?v=20261107scrollprogress1').then(m => m.showError && m.showError('Could not open attachment')).catch(() => {});
       window.open(url, '_blank');  // fallback so the file is still reachable
     }
   }

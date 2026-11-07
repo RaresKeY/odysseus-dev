@@ -10,7 +10,7 @@ window.cancelActiveTour = function cancelActiveTour() {
 };
 
 import Storage from './storage.js';
-import uiModule from './ui.js?v=20260916largetoolscroll1';
+import uiModule from './ui.js?v=20261107scrollprogress1';
 import sessionModule from './sessions.js';
 import modelsModule from './models.js';
 import chatRenderer from './chatRenderer.js?v=20260914metricssummary1';

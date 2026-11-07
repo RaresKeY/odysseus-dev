@@ -1,7 +1,7 @@
 // static/js/chatRenderer.js
 // Extracted from chat.js — message rendering, sources, images, metrics
 
-import uiModule from './ui.js?v=20260916largetoolscroll1';
+import uiModule from './ui.js?v=20261107scrollprogress1';
 import markdownModule from './markdown.js';
 import { generatedImageResult } from './generatedImageResult.js';
 import { svgifyEmoji } from './markdown.js';

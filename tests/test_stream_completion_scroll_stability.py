@@ -64,7 +64,7 @@ def test_large_tool_output_does_not_abort_enabled_auto_scroll():
 
     assert "!autoScrollEnabled" in smooth_step
     assert "diff > 300" not in smooth_step
-    assert "box.scrollTop = current + diff * factor" in smooth_step
+    assert "box.scrollTop = current + Math.max(1, diff * factor)" in smooth_step
 
 
 def test_programmatic_smooth_scroll_does_not_disable_itself():
