@@ -31,6 +31,7 @@ _BUDGET_S = 4.0
     ('<thought source="gemma">hidden</thought>visible', "visible"),
     ("<|channel>thought\nhidden<channel|><|channel>response\nvisible<channel|>", "visible"),
     ("visible<think>unfinished", "visible"),
+    ("prefilled reasoning</think>visible", "prefilled reasoning</think>visible"),
     ("CASE <THINK>UP</THINK> mix <Think>x</Think>", "CASE mix"),
 ])
 def test_supported_reasoning_is_not_visible(text, visible):

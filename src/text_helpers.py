@@ -143,7 +143,7 @@ def normalize_thinking_markup(text: str) -> str:
     return out
 
 
-def strip_think(text: str, *, prose: bool = False, prompt_echo: bool = True) -> str:
+def strip_think(text: str, *, prose: bool = False, prompt_echo: bool = True, preserve_orphan_closers: bool = False) -> str:
     """Strip `<think>` blocks from model output.
 
     Args:
@@ -155,6 +155,8 @@ def strip_think(text: str, *, prose: bool = False, prompt_echo: bool = True) -> 
         know the input is LLM-only.
       prompt_echo: also strip Qwen "Thinking Process:" blocks and
         "The user asks:" / "We need to" leaked prompt echoes.
+      preserve_orphan_closers: retain unmatched closing tags so agent output
+        handling can recognize a provider-prefilled reasoning prefix.
 
     Robust to:
       * closed `<think>...</think>` (any depth, plus `<thinking>`/`<thought>`)
@@ -179,7 +181,10 @@ def strip_think(text: str, *, prose: bool = False, prompt_echo: bool = True) -> 
     # and sequential blocks without the old lazy re.sub loop's ReDoS rescan.
     out = _sub_delimited(text, _THINK_OPEN_TAG_RE, _THINK_CLOSE_TAG_RE, lambda _inner: "")
     out = _THINK_OPEN_RE.sub("", out)
-    out = _THINK_TAG_RE.sub("", out)
+    if preserve_orphan_closers:
+        out = _THINK_TAG_RE.sub(lambda match: match.group(0) if match.group(0).startswith("</") else "", out)
+    else:
+        out = _THINK_TAG_RE.sub("", out)
     if prompt_echo:
         out = _QWEN_THINKING_RE.sub("", out)
         for _re in _PROMPT_ECHO_RES:

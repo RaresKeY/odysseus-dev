@@ -470,9 +470,13 @@ class ToolApprovalStore:
         submission_id: str = "",
         review_context_json: str = "",
         bound_turn: Any = None,
+        bound_process_operation: BoundProcessOperation | None = None,
     ) -> PendingToolApproval:
         if request_authority is not None and not isinstance(request_authority, RequestAuthority):
             raise TypeError("Approval authority must be server-owned RequestAuthority")
+        from src.agent_runtime.process_resources import BoundProcessOperation
+        if bound_process_operation is not None and not isinstance(bound_process_operation, BoundProcessOperation):
+            raise TypeError("Approval process operation must be server-owned")
         policy_binding = None
         user_intent_digest = ""
         if policy_record is not None:
@@ -532,7 +536,10 @@ class ToolApprovalStore:
                         from dataclasses import replace
                         process_authority = replace(
                             request_authority, launch_scopes=(seal_launch_scope(backend, roots[0]),))
-                process_operation = resolve_process_operation(process_authority, operation, backend)
+                # A synchronous dispatcher already reserved this exact launch.
+                # Reuse its one-use identity instead of minting a second UUID.
+                process_operation = resolve_process_operation(process_authority, operation, backend,
+                    approved=bound_process_operation)
             from src.browser_identity import native_browser, resolve_browser_operation
             if native_browser(operation, backend):
                 if request_authority is None:

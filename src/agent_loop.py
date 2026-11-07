@@ -10184,7 +10184,7 @@ def _strip_think_blocks(text: str) -> str:
     """Use the shared reasoning grammar before judging visible model output."""
     from src.text_helpers import strip_think
 
-    return strip_think(text or "", prompt_echo=False)
+    return strip_think(text or "", prompt_echo=False, preserve_orphan_closers=True)
 
 
 _LOW_SIGNAL_RE = re.compile(r"^[\W_]*$", re.UNICODE)
