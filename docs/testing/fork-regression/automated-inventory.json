@@ -6866,7 +6866,7 @@
     {
       "path": "tests/test_model_auto_categories.py",
       "kind": "pytest",
-      "sha256": "bbd4468d93756d6e9377c06b0118fb1520ab9bdea78167abd1ba748b83e6e2a2",
+      "sha256": "8d570e3c8e08e5ff45154e757f80346518cafef3229d0982a369b24d801f002b",
       "definitions": 17
     },
     {

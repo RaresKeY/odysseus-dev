@@ -53,7 +53,7 @@ def test_same_exact_model_can_be_assigned_to_both_categories_and_forked(register
     reopened.fork('alice','a','b')
     assert reopened.policy('alice','b')['auto_categories'] == assignments
     assert reopened.policy('alice','b')['route_mode'] == 'auto'
-    assert reopened.policy('alice','b')['approval_mode'] == 'always_ask'
+    assert reopened.policy('alice','b')['approval_mode'] == 'auto_approve'
     assert not reopened.policy('alice','b')['effective_roots']
     assert reopened.policy('alice','a') == source
     assert reopened.configuration('alice') == preferences
@@ -168,7 +168,7 @@ def test_last_saved_auto_setup_is_used_only_for_new_chats_of_same_owner(register
     reopened = AutomationStore(registered.session_factory)
     newborn = create_chat_with_model_defaults(reopened, 'new')
     assert newborn['auto_categories'] == CATEGORIES and newborn['route_mode'] == 'auto'
-    assert newborn['approval_mode'] == 'always_ask' and newborn['elevation_grant'] is None
+    assert newborn['approval_mode'] == 'auto_approve' and newborn['elevation_grant'] is None
     assert newborn['followup_enabled'] is False
     assert reopened.policy('alice', 'b')['auto_categories'] == {}
     assert reopened.policy('alice', 'b')['route_mode'] == 'manual'
