@@ -109,7 +109,9 @@ export function makeWindowResizable(content, options = {}) {
     if (hoverCursor) { content.style.cursor = ''; hoverCursor = false; }
   }
   function onHover(ev) {
-    if (resizing) return;
+    // Header drags already own the pointer. A geometry read here would force
+    // layout between the drag write and the snap detector's next input event.
+    if (resizing || ev.buttons) { clearHoverCursor(); return; }
     if (_skip()) { clearHoverCursor(); return; }
     if (ev.target && ev.target.closest && ev.target.closest(INTERACTIVE)) { clearHoverCursor(); return; }
     const c = cursorFor(edgesAt(ev.clientX, ev.clientY));

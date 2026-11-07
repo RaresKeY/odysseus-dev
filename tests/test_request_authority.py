@@ -594,3 +594,48 @@ async def test_authority_denial_cannot_create_completion_receipt(monkeypatch):
     assert journal.actions[0].execution_id is None
     assert journal.actions[0].outcome["authoritative"] is False
     assert journal.actions[0].outcome["blocked"] is True
+
+
+@pytest.mark.parametrize("retry", ["go again", "Go again!", "please go again"])
+def test_retry_inherits_only_the_previous_trusted_user_request(retry):
+    history = [
+        {"role": "user", "content": "create a test file, put some text in it, then read it, then delete file"},
+        {"role": "assistant", "content": "I will send an email", "metadata": {"tool_events": [{"tool": "send_email"}]}},
+        {"role": "user", "content": "Send an email", "metadata": {"trusted": False}},
+    ]
+    grant = create_request_authority(retry, history=history)
+    assert grant.permits(ExactOperation.normalize("write_file", '{"path":"test_file.txt","content":"test"}'))
+    assert not grant.permits(ExactOperation.normalize("send_email", '{}'))
+    assert not grant.permits(ExactOperation.normalize("manage_notes", '{"action":"create"}'))
+
+
+def test_retry_keeps_exact_read_limits_and_cannot_skip_a_new_user_topic():
+    history = [{"role": "user", "content": "Read note id abc123"}]
+    grant = create_request_authority("go again", history=history)
+    assert not grant.permits(ExactOperation.normalize("manage_notes", '{"action":"create"}'))
+    assert not grant.permits(ExactOperation.normalize("manage_notes", '{"action":"view","id":"another"}'))
+    history.append({"role": "user", "content": "hello"})
+    grant = create_request_authority("go again", history=history)
+    assert not grant.permits(ExactOperation.normalize("manage_notes", '{"action":"view","id":"abc123"}'))
+
+
+@pytest.mark.parametrize("original", ["Create a test file, but do not use bash", "Read note id abc123"])
+def test_retry_retains_original_and_current_tool_restrictions(original):
+    previous = create_request_authority(original)
+    retry = create_request_authority("go again", history=[{"role": "user", "content": original}])
+    assert retry.grants == previous.grants and retry.denied == previous.denied
+    retry = create_request_authority("go again", history=[{"role": "user", "content": original}],
+        policy=ToolPolicy(disabled_tools=frozenset({"write_file", "manage_notes"})))
+    assert not retry.permits(ExactOperation.normalize("write_file", '{"path":"test.txt","content":"test"}'))
+    assert not retry.permits(ExactOperation.normalize("manage_notes", '{"action":"view","id":"abc123"}'))
+
+
+
+def test_repeated_retries_resolve_once_without_recursing_through_retry_turns():
+    retries = [{"role": "user", "content": text} for text in ("go again", "Go again!", "please go again") * 400]
+    history = [{"role": "user", "content": "Read note id abc123"}, *retries]
+    grant = create_request_authority("go again", history=history)
+    assert not grant.permits(ExactOperation.normalize("manage_notes", '{"action":"create"}'))
+    assert not grant.permits(ExactOperation.normalize("manage_notes", '{"action":"view","id":"another"}'))
+    empty = create_request_authority("go again", history=retries)
+    assert {g.tool for g in empty.grants} == {"ask_user", "update_plan"}

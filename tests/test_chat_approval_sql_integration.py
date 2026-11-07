@@ -8,7 +8,7 @@ import pytest
 
 from tests.test_chat_automation_state import store  # shared isolated SQL fixture
 from tests.test_approval_review import CONFIG, decision
-from src.agent_runtime.authority import OperationGrant, RequestAuthority
+from src.agent_runtime.authority import OperationGrant, RequestAuthority, create_request_authority
 from src.chat_automation import SqlAttemptStore, prepare_chat_turn
 from src.decisions import DecisionProvider, ResolvedDecisionEndpoint
 from src.tool_approvals import ToolApprovalStore
@@ -53,14 +53,14 @@ def dispatch_runtime(store, tmp_path, monkeypatch):
                                  (OperationGrant("write_file"),))
     block = namedtuple("Block", ["tool_type", "content"])("write_file",
         json.dumps({"path": "target.txt", "content": "after"}))
-    async def dispatch(bound, exact=None):
+    async def dispatch(bound, exact=None, request_authority=authority):
         with bound.activate():
             return await tool_execution.execute_tool_block(block, owner="alice", session_id="a",
-                workspace=str(workspace), request_authority=authority,
+                workspace=str(workspace), request_authority=request_authority,
                 security_context=ToolRunSecurityContext(), exact_approval=exact)
     session = SimpleNamespace(id="a", model="manual", endpoint_url="http://local/v1", headers={}, endpoint_id=None)
     return SimpleNamespace(dispatch=dispatch, session=session, calls=calls, effects=effects,
-                           attempts=attempts, approvals=approvals, hooks=hooks)
+                           attempts=attempts, approvals=approvals, hooks=hooks, workspace=workspace)
 
 
 @pytest.mark.asyncio
@@ -93,3 +93,21 @@ async def test_sql_policy_and_owner_ceiling_revoke_consumed_human_grant(store, d
     store.update_configuration("alice", {"elevation_ceiling": False}, revision + 1)
     _, denied = await runtime.dispatch(bound, grant)
     assert denied["blocked"] and not runtime.effects and not runtime.calls
+
+
+@pytest.mark.asyncio
+async def test_retry_file_request_reaches_auto_review_with_original_user_context(store, dispatch_runtime):
+    runtime = dispatch_runtime
+    store.update_chat("alice", "a", {"approval_mode": "auto_approve"}, 0)
+    original = "create a test file, put some text in it, then read it, then delete file"
+    first = await prepare_chat_turn(store, "alice", runtime.session, original)
+    store.record(first, "completed")
+    bound = await prepare_chat_turn(store, "alice", runtime.session, "go again")
+    with bound.activate():
+        authority = create_request_authority("go again", owner="alice", session_id="a",
+            workspace=str(runtime.workspace), history=[{"role": "user", "content": original}])
+    _, result = await runtime.dispatch(bound, request_authority=authority)
+    assert result["exit_code"] == 0 and len(runtime.calls) == len(runtime.effects) == 1
+    evidence = json.loads(runtime.calls[0].content)["state"]["server_context"]["user_evidence"]
+    assert original in [row["text"] for row in evidence]
+    assert evidence[-1]["text"] == "go again"

@@ -122,6 +122,11 @@ export function makeWindowDraggable(modal, options = {}) {
   let startX = 0, startY = 0;
   let startLeft = 0, startTop = 0;
   let snapHint = null;
+  let moveFrame = null;
+  let pendingMove = null;
+  let translated = false;
+  let dragAnimation = null;
+  let offsetX = 0, offsetY = 0;
   // Whether the pointer actually moved beyond a small threshold this drag.
   // Used to suppress the synthetic click the browser fires on mouseup —
   // header click handlers (e.g. "collapse expanded card / back to list")
@@ -166,6 +171,8 @@ export function makeWindowDraggable(modal, options = {}) {
 
   const _startDrag = (cx, cy) => {
     dragging = true;
+    translated = false;
+    offsetX = offsetY = 0;
     if (modal) modal.classList.add('modal-dragging');
     // Cancel any in-flight open animation so we don't pin a mid-animation
     // rect and then jump once the animation settles.
@@ -188,10 +195,17 @@ export function makeWindowDraggable(modal, options = {}) {
     content.style.top = startTop + 'px';
     content.style.transform = 'none';
     content.style.margin = '0';
+    try {
+      // Inline style mutations invalidate broad attribute selectors elsewhere
+      // in the app. Keep per-frame movement on this element's animation effect.
+      dragAnimation = content.animate([{ transform: 'none', offset: 0 }], { duration: 1, fill: 'both' });
+      dragAnimation.pause();
+      dragAnimation.currentTime = 0;
+    } catch (_) { dragAnimation = null; }
   };
 
-  const _onMove = (cx, cy) => {
-    if (!dragging) return;
+  const _applyMove = (cx, cy) => {
+    if (!dragging || !content.isConnected) return;
     // Fullscreen state: unsnap on drag-down or drag toward either horizontal
     // edge. Update dock hover immediately after exit so a fast release
     // commits the dock instead of dropping the modal mid-air.
@@ -249,8 +263,14 @@ export function makeWindowDraggable(modal, options = {}) {
     if (Math.abs(cx - startX) > MOVE_THRESHOLD || Math.abs(cy - startY) > MOVE_THRESHOLD) {
       movedDuringDrag = true;
     }
-    content.style.left = (startLeft + cx - startX) + 'px';
-    content.style.top = (startTop + cy - startY) + 'px';
+    offsetX = cx - startX;
+    offsetY = cy - startY;
+    // Keep layout geometry stable while moving. Commit coordinates once on
+    // release so resize, persistence and subsequent drags keep their contract.
+    const transform = `translate3d(${offsetX}px, ${offsetY}px, 0)`;
+    if (dragAnimation) dragAnimation.effect.setKeyframes([{ transform, offset: 0 }]);
+    else content.style.transform = transform;
+    translated = true;
     // Corner guard: in the top fullscreen band the side docks stay OFF, so a
     // top corner only ever snaps to fullscreen — never the corner hybrid.
     const inTopBand = cy <= SNAP_PX;
@@ -264,8 +284,29 @@ export function makeWindowDraggable(modal, options = {}) {
     }
   };
 
+  const _flushMove = () => {
+    if (moveFrame !== null) cancelAnimationFrame(moveFrame);
+    moveFrame = null;
+    if (!pendingMove) return;
+    const { cx, cy } = pendingMove;
+    pendingMove = null;
+    _applyMove(cx, cy);
+  };
+  const _onMove = (cx, cy) => {
+    pendingMove = { cx, cy };
+    if (moveFrame === null) moveFrame = requestAnimationFrame(_flushMove);
+  };
+
   const _onEnd = (cx, cy) => {
     if (!dragging) return;
+    _flushMove();
+    if (translated && !content.dataset._tileZone) {
+      content.style.left = (startLeft + offsetX) + 'px';
+      content.style.top = (startTop + offsetY) + 'px';
+      content.style.transform = 'none';
+    }
+    translated = false;
+    if (dragAnimation) { dragAnimation.cancel(); dragAnimation = null; }
     dragging = false;
     if (modal) modal.classList.remove('modal-dragging');
     _showSnapHint(false);
@@ -290,23 +331,31 @@ export function makeWindowDraggable(modal, options = {}) {
     }
     if (rightDock) rightDock.release();
     if (leftDock) leftDock.release();
-    if (onDragEnd) {
+    if (onDragEnd && content.isConnected) {
       const r = content.getBoundingClientRect();
       try { onDragEnd({ rect: r }); } catch (_) {}
     }
   };
 
   header.addEventListener('mousedown', (e) => {
+    if (e.button !== 0 || dragging) return;
     if (mobileSkip > 0 && window.innerWidth <= mobileSkip) return;
     if (skipSelector && e.target.closest(skipSelector)) return;
     e.preventDefault();
     movedDuringDrag = false;
     _startDrag(e.clientX, e.clientY);
-    const onMove = (ev) => _onMove(ev.clientX, ev.clientY);
+    const onMove = (ev) => {
+      if (ev.buttons === 0 || !content.isConnected) { onUp(ev); return; }
+      _onMove(ev.clientX, ev.clientY);
+    };
+    const onPointerUp = () => _flushMove();
     const onUp = (ev) => {
       _onEnd(ev.clientX, ev.clientY);
       document.removeEventListener('mousemove', onMove);
       document.removeEventListener('mouseup', onUp);
+      document.removeEventListener('pointerup', onPointerUp, true);
+      document.removeEventListener('pointercancel', onUp);
+      window.removeEventListener('blur', onUp);
       // If the pointer actually moved, swallow the synthetic click the
       // browser fires next — otherwise a header click handler (collapse
       // expanded card / "back to list") runs and undoes the drag intent.
@@ -322,10 +371,14 @@ export function makeWindowDraggable(modal, options = {}) {
     };
     document.addEventListener('mousemove', onMove);
     document.addEventListener('mouseup', onUp);
+    document.addEventListener('pointerup', onPointerUp, true);
+    document.addEventListener('pointercancel', onUp);
+    window.addEventListener('blur', onUp);
   });
 
   if (enableTouch) {
     header.addEventListener('touchstart', (e) => {
+      if (dragging) return;
       if (mobileSkip > 0 && window.innerWidth <= mobileSkip) return;
       if (skipSelector && e.target.closest(skipSelector)) return;
       const t = e.touches[0];
@@ -334,6 +387,7 @@ export function makeWindowDraggable(modal, options = {}) {
       _startDrag(t.clientX, t.clientY);
       const onMove = (ev) => {
         const tt = ev.touches[0];
+        if (!content.isConnected) { onEnd(ev); return; }
         if (tt) _onMove(tt.clientX, tt.clientY);
       };
       const onEnd = (ev) => {
@@ -342,10 +396,12 @@ export function makeWindowDraggable(modal, options = {}) {
         document.removeEventListener('touchmove', onMove);
         document.removeEventListener('touchend', onEnd);
         document.removeEventListener('touchcancel', onEnd);
+        window.removeEventListener('blur', onEnd);
       };
       document.addEventListener('touchmove', onMove, { passive: true });
       document.addEventListener('touchend', onEnd);
       document.addEventListener('touchcancel', onEnd);
+      window.addEventListener('blur', onEnd);
     }, { passive: true });
   }
 }
