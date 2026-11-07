@@ -6,6 +6,7 @@ import os
 import uuid
 import logging
 import re
+from datetime import datetime
 from typing import Dict, Any, Optional
 
 from fastapi import APIRouter, Request, HTTPException, Depends
@@ -47,6 +48,7 @@ def _context_window_view(session, owner):
         descriptor = dict(latest.descriptor or {}) if latest else {}
         submission_id = latest.submission_id if latest else None
         status = latest.status if latest else None
+        started_at = latest.created_at if latest else None
 
     view = copy.copy(session)
     view.model, view.endpoint_id, view.endpoint_url, view.headers = "", None, "", {}
@@ -67,7 +69,17 @@ def _context_window_view(session, owner):
                 or not isinstance(metadata.get("model"), str) or not metadata["model"].strip()):
             continue
         if source == "auto_selected" and metadata.get("run_id") != submission_id:
-            continue
+            # Stream run IDs are independent of submission IDs. Older persisted
+            # replies carry their requested route and an aware completion time.
+            if (metadata.get("requested_model") != descriptor["model"]
+                    or metadata.get("requested_endpoint_id") != descriptor.get("endpoint_id")):
+                continue
+            try:
+                finished = datetime.fromisoformat(metadata.get("timestamp", "").replace("Z", "+00:00"))
+            except (AttributeError, TypeError, ValueError):
+                continue
+            if finished.tzinfo is None or finished.timestamp() < started_at:
+                continue
         view.model = metadata["model"]
         view.endpoint_id = metadata.get("endpoint_id") or view.endpoint_id
         return view, "auto_actual"
