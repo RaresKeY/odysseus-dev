@@ -40,6 +40,11 @@ def digest(value):
                                      separators=(",", ":"), allow_nan=False).encode()).hexdigest()
 
 
+def _configuration_digest(configuration):
+    # Preferences for future chats cannot invalidate another chat's admitted turn.
+    return digest({key: value for key, value in (configuration or {}).items() if key != "model_defaults"})
+
+
 def _models():
     from core import database as d
     return d
@@ -96,10 +101,13 @@ class AutomationStore:
         prefs = self.owner(db, owner)
         row = db.query(d.ChatAutomationState).filter_by(session_id=str(session_id)).first()
         if row is None:
-            # The owner's last explicit mode is history, not consent for a new chat.
+            # Model preferences carry over only at birth; permissions require fresh consent.
+            defaults = copy.deepcopy((prefs.configuration or {}).get("model_defaults") or {}) if new else {}
             row = d.ChatAutomationState(session_id=str(session_id), owner_key=owner_key(owner),
-                approval_mode="always_ask",
-                policy_revision=0, route_mode="manual", elevation_grant=None)
+                approval_mode="always_ask", policy_revision=0,
+                route_mode="auto" if defaults.get("route_mode") == "auto" else "manual",
+                feature_settings={"auto_categories": defaults["auto_categories"]} if "auto_categories" in defaults else {},
+                elevation_grant=None)
             db.add(row)
             db.flush()
         if row.owner_key != owner_key(owner):
@@ -119,6 +127,14 @@ class AutomationStore:
             candidates, source = [], 'legacy_invalid'
         row.feature_settings = {**(row.feature_settings or {}), 'auto_models': candidates,
                                 'auto_models_source': source}
+
+    def remember_model_defaults(self, prefs, state):
+        defaults = {"route_mode": state.route_mode,
+                    "auto_categories": copy.deepcopy((state.feature_settings or {}).get("auto_categories", {}))}
+        config = copy.deepcopy(prefs.configuration or {})
+        if config.get("model_defaults") != defaults:
+            prefs.configuration = {**config, "model_defaults": defaults}
+            prefs.revision += 1
 
     def configuration(self, owner):
         with self.transaction() as db:
@@ -171,7 +187,7 @@ class AutomationStore:
         return {"contract_version": 1, "owner": owner, "session_id": s.session_id,
                 "approval_mode": s.approval_mode, "policy_revision": s.policy_revision,
                 "authority_epoch": p.authority_epoch, "configuration_revision": p.revision,
-                "configuration_digest": digest(p.configuration or {}),
+                "configuration_digest": _configuration_digest(p.configuration),
                 "elevation_ceiling": bool(p.elevation_ceiling), "elevation_grant": grant,
                 "requested_elevation_grant": requested_grant, "sandbox_state": "required_at_execution",
                 "effective_roots": (grant or {}).get("roots", []),
@@ -259,6 +275,8 @@ class AutomationStore:
                     s.elevation_grant = {"grant_id": uuid.uuid4().hex, "roots": roots,
                         "authority_epoch": p.authority_epoch, "policy_revision": s.policy_revision,
                         "expires_at": self.clock() + 3600}
+            if {"auto_categories", "route_mode"} & changes.keys():
+                self.remember_model_defaults(p, s)
             return self._policy(p, s, owner)
 
     def update_configuration(self, owner, changes, expected_revision):
@@ -407,7 +425,7 @@ class AutomationStore:
                         expected_token=bound.token, lease_expires_at=lease.expires_at if lease else None, now=self.clock())
                     and row.intent_digest == digest(bound.raw_ask)
                     and p.authority_epoch == bound.policy["authority_epoch"]
-                    and digest(p.configuration or {}) == bound.policy["configuration_digest"]
+                    and _configuration_digest(p.configuration) == bound.policy["configuration_digest"]
                     and digest(fresh['effective_roots']) == digest(bound.policy.get('effective_roots', []))
                     and s.policy_revision == bound.policy["policy_revision"])
         except HTTPException:

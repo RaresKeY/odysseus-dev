@@ -2641,7 +2641,9 @@ export async function materializePendingSession() {
 
     const incognitoChk = document.getElementById('incognito-toggle');
     const isIncognito = incognitoChk && incognitoChk.checked;
-    const base = (pending.modelId || 'model').split('/').pop();
+    // Auto chooses a model at send time; the placeholder must not name the chat.
+    const base = window.ChatAutomation?.getPolicy()?.route_mode === 'auto'
+      ? 'Chat' : (pending.modelId || 'model').split('/').pop();
     const name = isIncognito ? 'Nobody' : `${base} ${new Date().toLocaleTimeString()}`;
 
     const fd = new FormData();

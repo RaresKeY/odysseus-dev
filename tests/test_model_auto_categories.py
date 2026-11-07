@@ -99,6 +99,10 @@ async def test_request_uses_full_policy_and_closed_categories_without_model_desc
     bound=await prepare_chat_submission(registered,'alice',session,ASK,decision_provider=reviewer)
     request=reviewer.calls[0]
     assert request.state['task']==ASK and request.state['routing_policy']==model_auto.ROUTING_POLICY
+    trusted_policy = json.dumps(model_auto.ROUTING_POLICY, ensure_ascii=False, separators=(',', ':'))
+    for question in request.questions().values():
+        assert trusted_policy in question['instructions']
+        assert 'unfamiliar model names or absent explicit effort controls do not mean unavailable' in question['instructions']
     assert set(request.choices)=={'complex_tasks','straightforward_tasks','unavailable'}
     assert request.state['categories']['complex_tasks']['endpoint_id']=='one'
     assert request.state['categories']['straightforward_tasks']['endpoint_id']=='two'
@@ -131,7 +135,7 @@ def test_new_category_chats_never_materialize_unrelated_legacy_mapping_history(r
         _, row=registered.state(db,'alice','a')
         assert 'auto_models' not in row.feature_settings
     registered.update_configuration('alice',{'approaches':{
-        key:{**POOL[0],'reasoning_effort':None} for key in names}},1)
+        key:{**POOL[0],'reasoning_effort':None} for key in names}},registered.configuration('alice')['revision'])
     with registered.transaction() as db:
         _, row=registered.state(db,'alice','a')
         assert 'auto_models' not in row.feature_settings
@@ -148,3 +152,73 @@ def test_explicit_assignments_clear_stale_legacy_invalid_guidance_without_deleti
     assert saved['auto_models']==[] and saved['auto_models_source']=='legacy_invalid'
     assert saved['restriction'] is None
     assert registered.policy('alice','a')['restriction'] is None
+
+
+def create_chat_with_model_defaults(store, sid, owner='alice'):
+    with store.transaction() as db:
+        db.add(d.Session(id=sid, name=sid, owner=owner, model='manual', endpoint_url='http://local/v1'))
+        db.flush()
+        store.state(db, owner, sid, new=True)
+    return store.policy(owner, sid)
+
+
+def test_last_saved_auto_setup_is_used_only_for_new_chats_of_same_owner(registered):
+    original = registered.update_chat('alice', 'a', {'auto_categories': CATEGORIES,
+        'route_mode': 'auto', 'approval_mode': 'yolo', 'followup_enabled': True}, 0)
+    reopened = AutomationStore(registered.session_factory)
+    newborn = create_chat_with_model_defaults(reopened, 'new')
+    assert newborn['auto_categories'] == CATEGORIES and newborn['route_mode'] == 'auto'
+    assert newborn['approval_mode'] == 'always_ask' and newborn['elevation_grant'] is None
+    assert newborn['followup_enabled'] is False
+    assert reopened.policy('alice', 'b')['auto_categories'] == {}
+    assert reopened.policy('alice', 'b')['route_mode'] == 'manual'
+    assert create_chat_with_model_defaults(reopened, 'bob-new', 'bob')['auto_categories'] == {}
+    assert reopened.policy('alice', 'a') == original
+    changed = {key: CATEGORIES[other] for key, other in
+        [('complex_tasks', 'straightforward_tasks'), ('straightforward_tasks', 'complex_tasks')]}
+    reopened.update_chat('alice', 'a', {'auto_categories': changed}, original['policy_revision'])
+    assert create_chat_with_model_defaults(reopened, 'newer')['auto_categories'] == changed
+    assert reopened.policy('alice', 'new')['auto_categories'] == CATEGORIES
+
+
+def test_manual_choice_retains_categories_and_becomes_new_chat_default(registered):
+    saved = registered.update_chat('alice', 'a', {'auto_categories': CATEGORIES, 'route_mode': 'auto'}, 0)
+    registered.update_chat('alice', 'a', {'route_mode': 'manual'}, saved['policy_revision'])
+    newborn = create_chat_with_model_defaults(registered, 'new')
+    assert newborn['route_mode'] == 'manual' and newborn['auto_categories'] == CATEGORIES
+    registered.update_chat('alice', 'new', {'route_mode': 'auto'}, newborn['policy_revision'])
+    assert create_chat_with_model_defaults(registered, 'next')['route_mode'] == 'auto'
+
+
+def test_failed_save_does_not_replace_defaults_and_repeated_save_does_not_change_revision(registered):
+    saved = registered.update_chat('alice', 'a', {'auto_categories': CATEGORIES, 'route_mode': 'auto'}, 0)
+    preferences = registered.configuration('alice')
+    registered.update_chat('alice', 'a', {'auto_categories': CATEGORIES, 'route_mode': 'auto'}, saved['policy_revision'])
+    assert registered.configuration('alice') == preferences
+    with pytest.raises(HTTPException):
+        registered.update_chat('alice', 'a', {'auto_categories': {'complex_tasks': POOL[0]}}, saved['policy_revision'])
+    with pytest.raises(HTTPException):
+        registered.update_chat('alice', 'a', {'route_mode': 'manual'}, 0)
+    assert registered.configuration('alice') == preferences
+    assert create_chat_with_model_defaults(registered, 'new')['auto_categories'] == CATEGORIES
+
+
+def test_unavailable_saved_default_remains_auto_without_choosing_another_model(registered):
+    registered.update_chat('alice', 'a', {'auto_categories': CATEGORIES, 'route_mode': 'auto'}, 0)
+    with registered.transaction() as db:
+        db.query(d.ModelEndpoint).filter_by(id='two').one().is_enabled = False
+    newborn = create_chat_with_model_defaults(registered, 'new')
+    assert newborn['route_mode'] == 'auto' and newborn['auto_categories'] == CATEGORIES
+    with pytest.raises(DecisionError):
+        model_auto.category_snapshot('alice', newborn['auto_categories'])
+
+
+@pytest.mark.asyncio
+async def test_new_chat_defaults_do_not_invalidate_another_chats_admitted_turn(registered):
+    registered.update_chat('alice', 'a', {'auto_categories': CATEGORIES, 'route_mode': 'auto'}, 0)
+    session = SimpleNamespace(id='a', name='a', model='manual', endpoint_id=None, thinking_mode='off')
+    bound = await prepare_chat_submission(registered, 'alice', session, ASK, decision_provider=Reviewer())
+    registered.update_chat('alice', 'b', {'auto_categories': categories(POOL[1]), 'route_mode': 'auto'}, 0)
+    assert bound.current()
+    registered.update_configuration('alice', {'decision_provider': None}, registered.configuration('alice')['revision'])
+    assert not bound.current()

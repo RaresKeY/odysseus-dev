@@ -70,6 +70,11 @@ function controlsBusy(busy) {
 export async function whenAutomationSettingsReady() {
   const ready = await settingsWrite;
   if (!ready) settingsWrite = Promise.resolve(true);
+  const id = sid();
+  if (ready && (!policy || policy.session_id !== id)) {
+    await refresh();
+    return !!policy && policy.session_id === id && sid() === id;
+  }
   return ready;
 }
 function writeSettings(operation) {
@@ -138,7 +143,9 @@ async function refresh() {
     const config = await api('/api/chat-settings');
     const chat = id ? await api(`/api/session/${encodeURIComponent(id)}/automation`) : null;
     if (ticket !== sequence || id !== sid()) return;
-    configuration = config; policy = chat;
+    configuration = config;
+    policy = chat || {session_id:null, route_mode:config.model_defaults?.route_mode || 'manual',
+      auto_categories:config.model_defaults?.auto_categories || {}};
     reviewerAvailability=chat?.auto_approve_availability ?? config.auto_approve_availability;
     reviewerLoading=false;render();
     if(activitySessionId!==id){activity?.destroy();activity=null;activitySessionId=id;if(id)activity=window.DecisionActivity?.mount($('chat-decision-activity'),id,{pane:$('chat-decision-pane'),trigger:$('chat-decision-toggle'),closeButton:$('chat-decision-close'),refreshButton:$('chat-decision-refresh')});}
@@ -212,6 +219,7 @@ async function initialize(){
     selectionContext:()=>({session_id:sid(),navigation:navigationGeneration,policy_revision:policy?.policy_revision}),
     saveAutoCategories:(categories,context)=>changeChat({auto_categories:categories,route_mode:'auto'},context),
     enableAuto:()=>changeChat({route_mode:'auto'}),
+    selectManual:()=>changeChat({route_mode:'manual'}),
   };
   $('chat-tool-routing').addEventListener('change',async e=>{
     try {await changeChat({tool_routing:e.target.value});message('Tool routing saved.');}
