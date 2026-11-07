@@ -239,4 +239,17 @@ def test_effort_uses_exact_subscription_catalogue_without_name_inference(registe
     monkeypatch.delitem(chatgpt_subscription.CHATGPT_MODEL_CATALOG_CACHE,'shared',raising=False)
     assert model_auto.registered_candidate('alice',POOL[0])['supported_efforts']==['default']
     monkeypatch.setitem(chatgpt_subscription.CHATGPT_MODEL_CATALOG_CACHE,'shared',{'supported_reasoning_levels':['low','high']})
-    assert model_auto.registered_candidate('alice',POOL[0])['supported_efforts']==['low','high']
+    assert model_auto.registered_candidate('alice',POOL[0])['supported_efforts']==['default']
+    from src.model_capability_cache import remember_catalog, clear
+    from src.endpoint_resolver import build_headers
+    clear()
+    base='https://chatgpt.com/backend-api/codex'
+    try:
+        remember_catalog({'models':[{'slug':'shared','visibility':'list','supported_reasoning_levels':['low','high']}]},
+            base_url=base, headers=build_headers('SYNTHETIC', base), vendor='chatgpt_subscription')
+        assert model_auto.registered_candidate('alice',POOL[0])['supported_efforts']==['low','high']
+        with registered.transaction() as db:
+            db.query(d.ModelEndpoint).filter_by(id='one').one().api_key='OTHER_SYNTHETIC'
+        assert model_auto.registered_candidate('alice',POOL[0])['supported_efforts']==['default']
+    finally:
+        clear()

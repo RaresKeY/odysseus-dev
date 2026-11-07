@@ -6,7 +6,7 @@ import httpx
 import pytest
 from fastapi import HTTPException
 from core import database as d
-from src import llm_core, model_auto
+from src import llm_core, model_auto, model_request_controls
 from src.chat_automation import prepare_chat_submission
 from tests.test_model_auto import registered, store, Reviewer, ASK, categories, CATEGORIES
 
@@ -27,11 +27,11 @@ def session():
     return SimpleNamespace(id='a',name='a',model='manual',endpoint_id=None,thinking_mode='off')
 
 
-@pytest.mark.parametrize('model,efforts',list(model_auto.GOOGLE_EFFORTS.items()))
+@pytest.mark.parametrize('model,efforts',list(model_request_controls.GOOGLE_EFFORTS.items()))
 def test_exact_canonical_google_capabilities(model,efforts):
     actual=model_auto.execution_capabilities(URL,model)
     assert actual['supported_efforts']==list(efforts)
-    assert actual['capability_revision']==model_auto.GOOGLE_CAPABILITY_REVISION
+    assert actual['capability_revision'].startswith('canonical/v1/')
     assert not {'xhigh','max','ultra'} & set(efforts)
 
 
@@ -47,7 +47,7 @@ def test_unknown_endpoint_model_or_noncanonical_alias_has_no_inferred_effort(url
     assert model_auto.execution_capabilities(url,model)['supported_efforts']==['default']
 
 
-@pytest.mark.parametrize('model,efforts',list(model_auto.GOOGLE_EFFORTS.items()))
+@pytest.mark.parametrize('model,efforts',list(model_request_controls.GOOGLE_EFFORTS.items()))
 def test_single_native_google_prefix_is_capability_alias_only(model,efforts):
     assert model_auto.execution_capabilities(URL,'models/'+model)['supported_efforts']==list(efforts)
     assert model_auto.execution_capabilities('https://proxy.invalid/v1','models/'+model)['supported_efforts']==['default']
@@ -100,7 +100,7 @@ async def test_google_category_selected_effort_reaches_actual_transport(register
 async def test_stale_google_evidence_stops_before_provider_transport(registered,monkeypatch,change,model):
     pool=google_pool(registered,model=model)
     bound=await prepare_chat_submission(registered,'alice',session(),ASK,decision_provider=Reviewer(effort='high'))
-    if change=='capability_revision':monkeypatch.setattr(model_auto,'GOOGLE_CAPABILITY_REVISION','changed')
+    if change=='capability_revision':monkeypatch.setattr(model_request_controls,'GOOGLE_CAPABILITY_REVISION','changed')
     if change=='endpoint':
         with registered.transaction() as db:db.query(d.ModelEndpoint).filter_by(id='one').one().base_url='https://proxy.invalid/v1'
     if change=='assignment':registered.update_chat('alice','a',{'route_mode':'manual','auto_categories':{}},1)

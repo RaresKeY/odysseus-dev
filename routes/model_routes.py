@@ -1723,7 +1723,17 @@ def setup_model_routes(model_discovery):
                         curated.append(m)
                 models_metadata = {}
                 from src.model_auto import execution_capabilities
-                auto_capabilities = {mid: execution_capabilities(chat_url, mid) for mid in list(curated) + list(extra)}
+                # Resolve once outside the inventory transaction. An unavailable
+                # account must never borrow another account's catalog evidence.
+                try:
+                    from src.endpoint_resolver import resolve_endpoint_runtime
+                    runtime_base, runtime_key = resolve_endpoint_runtime(ep, owner=ep.owner or owner or None)
+                    capability_url = build_chat_url(runtime_base)
+                    capability_headers = _safe_build_headers(runtime_key, runtime_base)
+                except Exception:
+                    capability_url, capability_headers = '', None
+                auto_capabilities = {mid: execution_capabilities(capability_url, mid, capability_headers)
+                                     for mid in list(curated) + list(extra)}
                 from src.chatgpt_subscription import get_chatgpt_model_metadata
                 for mid in list(curated) + list(extra):
                     meta = get_chatgpt_model_metadata(mid)
