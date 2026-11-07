@@ -312,6 +312,7 @@ body.bg-pattern-ascii-fireflies {
       }
     }
     .sidebar {
+      --sidebar-text-size: 0.875rem;
       width: 240px;
       background: var(--sidebar-bg, var(--panel));
       border-right: 1px solid var(--border);
@@ -1173,7 +1174,7 @@ body.bg-pattern-ascii-fireflies {
       flex: 1; cursor: pointer; user-select: none;
       display: flex; align-items: center; gap: 6px;
       margin: 0; padding: 0; border: none;
-      font-size: 10px; font-weight: 400; font-family: inherit;
+      font-size: var(--sidebar-text-size, 10px); font-weight: 400; font-family: inherit;
       /* 1.3 (not 1) so Fira Code's tall glyph box isn't vertically clipped in
          Chromium/Edge — mirrors the .list-item fix. The title is flex-centred
          in a fixed-height (29px) header, so this adds headroom without reflow. */
@@ -1777,7 +1778,7 @@ body.bg-pattern-ascii-fireflies {
     }
     .list-item span {
       color: var(--fg);
-      font-size: 9.75px;
+      font-size: var(--sidebar-text-size, 9.75px);
     }
     .grow {
       flex: 1;
