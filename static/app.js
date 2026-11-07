@@ -3,7 +3,7 @@
 // ES6 module — entry point, no exports (wires all modules together)
 // ============================================
 import Storage from './js/storage.js';
-import uiModule from './js/ui.js?v=20260916largetoolscroll1';
+import uiModule from './js/ui.js?v=20261107scrollprogress1';
 import workspaceModule from './js/workspace.js';
 import fileHandlerModule from './js/fileHandler.js?v=20260909mobileattachmentedit1';
 import modelsModule from './js/models.js';

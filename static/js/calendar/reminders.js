@@ -9,7 +9,7 @@
 // `start()` kicks off the poll loop + permission request. Call once from
 // the calendar's entry module.
 
-import uiModule from '../ui.js?v=20260916largetoolscroll1';
+import uiModule from '../ui.js?v=20261107scrollprogress1';
 
 const API_BASE = window.location.origin;
 

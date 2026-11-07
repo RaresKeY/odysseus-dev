@@ -647,7 +647,8 @@ function _smoothScrollStep() {
 
   // Lerp: gentle catch-up
   const factor = window.innerWidth <= 768 ? 0.4 : 0.2;
-  box.scrollTop = current + diff * factor;
+  // scrollTop may round subpixel writes; keep the final frames moving.
+  box.scrollTop = current + Math.max(1, diff * factor);
   _scrollRafId = requestAnimationFrame(_smoothScrollStep);
 }
 

@@ -2,7 +2,7 @@
 // SSE event handlers extracted from chat.js handleChatSubmit
 // Handles: ui_control events, background stream management
 
-import uiModule from './ui.js?v=20260916largetoolscroll1';
+import uiModule from './ui.js?v=20261107scrollprogress1';
 import Storage from './storage.js';
 import themeModule from './theme.js?v=20260911organsrain1';
 import markdownModule from './markdown.js';

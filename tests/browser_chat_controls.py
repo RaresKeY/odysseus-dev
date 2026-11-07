@@ -308,6 +308,31 @@ def highlight_checks(browser, width):
     return result
 
 
+def scroll_lifecycle_checks(browser):
+    return browser.js("""(async()=>{
+      const uiURL=Array.from(document.querySelectorAll('script[src],link[href]'))
+        .map(e=>e.src || e.href).find(url=>url.includes('/static/js/ui.js'));
+      const ui=await import(uiURL),box=document.getElementById('chat-history');
+      const saved=ui.captureHistoryScroll(),enabled=ui.getAutoScroll();
+      const fixture=document.createElement('div');fixture.style.cssText='height:4000px;flex:0 0 auto';box.append(fixture);
+      const cases=[];
+      try {
+        for(const gap of [2,5,250]) {
+          ui.setAutoScroll(false);
+          await new Promise(resolve=>setTimeout(resolve,550));
+          box.scrollTop=box.scrollHeight-box.clientHeight-gap;
+          ui.setAutoScroll(true);ui.scrollHistory();
+          const deadline=performance.now()+3000;
+          while(ui.isAutoScrolling() && performance.now()<deadline) await new Promise(requestAnimationFrame);
+          cases.push({gap,remaining:box.scrollHeight-box.clientHeight-box.scrollTop,active:ui.isAutoScrolling()});
+        }
+        return cases;
+      } finally {
+        fixture.remove();ui.restoreHistoryScroll(saved);ui.setAutoScroll(enabled);
+      }
+    })()""")
+
+
 def main():
     env = dict(os.environ)
     env.update(AUTH_ENABLED='true', LOCALHOST_BYPASS='false', HOME='/state/home',
@@ -386,6 +411,8 @@ def main():
             result['highlights']=highlight_checks(browser,width)
             result['composer']=composer_checks(browser,width)
             result['security']=security_checks(browser)
+            result['scrollLifecycle']=scroll_lifecycle_checks(browser)
+            assert all(case['remaining']<=1 and not case['active'] for case in result['scrollLifecycle']), result['scrollLifecycle']
             results.append(result)
         (OUT / 'browser-results.json').write_text(json.dumps(results, indent=2))
         print(json.dumps(results, indent=2), flush=True)

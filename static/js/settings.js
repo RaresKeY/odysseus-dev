@@ -1,7 +1,7 @@
 // static/js/settings.js — Settings panel module (ES6)
 // User-facing preferences: AI models, search, appearance
 
-import uiModule from './ui.js?v=20260916largetoolscroll1';
+import uiModule from './ui.js?v=20261107scrollprogress1';
 import searchModule from './search.js';
 import { byId } from './settings/dom.js';
 import { postSettings as _postSettings } from './settings/api.js';
