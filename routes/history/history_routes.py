@@ -1,5 +1,6 @@
 """History routes — session history, truncation, fork, conversation topics."""
 
+import copy
 import json
 import os
 import uuid
@@ -27,6 +28,50 @@ logger = logging.getLogger(__name__)
 
 _HISTORY_INLINE_MEDIA_THRESHOLD = 200_000
 _DATA_IMAGE_RE = re.compile(r"data:image/[^;,\"]+;base64,[A-Za-z0-9+/=\s]+")
+
+
+def _context_window_view(session, owner):
+    """Project Auto's resolved window without changing the saved Manual route."""
+    from core.database import ChatAutomationState, ChatAutomationSubmission
+    from src.chat_automation import owner_key
+
+    with SessionLocal() as db:
+        state = db.query(ChatAutomationState).filter_by(
+            session_id=session.id, owner_key=owner_key(owner)).first()
+        if state is None or state.route_mode != "auto":
+            return session, "manual"
+        latest = db.query(ChatAutomationSubmission).filter_by(
+            session_id=session.id, owner_key=owner_key(owner)).order_by(
+                ChatAutomationSubmission.created_at.desc(),
+                ChatAutomationSubmission.submission_id.desc()).first()
+        descriptor = dict(latest.descriptor or {}) if latest else {}
+        submission_id = latest.submission_id if latest else None
+        status = latest.status if latest else None
+
+    view = copy.copy(session)
+    view.model, view.endpoint_id, view.endpoint_url, view.headers = "", None, "", {}
+    source = "auto_pending"
+    if (descriptor.get("route_mode") == "auto" and isinstance(descriptor.get("model"), str)
+            and descriptor["model"].strip()):
+        view.model = descriptor["model"]
+        view.endpoint_id = descriptor.get("endpoint_id")
+        view.thinking_mode = "effort:" + (descriptor.get("reasoning_effort") or "")
+        source = "auto_selected"
+    # An unresolved new turn must not inherit the previous turn's model.
+    if status and status not in {"completed", "failed", "cancelled", "detached"}:
+        return view, source
+    for message in reversed(session.history):
+        metadata = getattr(message, "metadata", None)
+        if (getattr(message, "role", None) != "assistant" or not isinstance(metadata, dict)
+                or metadata.get("hidden") or metadata.get("source") == "slash"
+                or not isinstance(metadata.get("model"), str) or not metadata["model"].strip()):
+            continue
+        if source == "auto_selected" and metadata.get("run_id") != submission_id:
+            continue
+        view.model = metadata["model"]
+        view.endpoint_id = metadata.get("endpoint_id") or view.endpoint_id
+        return view, "auto_actual"
+    return view, source
 
 
 def _sft_trace_file_for_owner(owner: str | None) -> str | None:
@@ -914,7 +959,7 @@ def setup_history_routes(session_manager, upload_handler=None) -> APIRouter:
 
     @router.get("/api/session/{session_id}/context")
     async def get_session_context_usage(request: Request, session_id: str) -> Dict[str, Any]:
-        """Return an estimated whole-chat context usage for the session's model.
+        """Return an estimated whole-chat context usage for the resolved context model.
 
         Streaming footers report the prompt size for the last request. This
         endpoint estimates the persisted session context so the header can show
@@ -928,19 +973,27 @@ def setup_history_routes(session_manager, upload_handler=None) -> APIRouter:
 
         try:
             from src.context_compactor import auto_compact_threshold_percent
-            from src.model_context import estimate_tokens, get_session_context_length
+            from src.model_context import estimate_tokens, get_context_length, resolve_session_context_route
             from src.auth_helpers import effective_user
             from src.model_profiles import supports_user_thinking_toggle
 
+            owner = effective_user(request)
+            view, model_source = _context_window_view(session, owner)
+            route = resolve_session_context_route(view, owner=owner)
             messages = session.get_context_messages()
             used = int(estimate_tokens(messages))
-            ctx_len = int(get_session_context_length(session, owner=effective_user(request)) or 0)
-            thinking_supported = supports_user_thinking_toggle(session.model)
+            try:
+                ctx_len = int(get_context_length(route[0], route[1], headers=route[2]) or 0) if route else 0
+            except Exception as exc:
+                logger.debug("Context window probe failed: %s", type(exc).__name__)
+                ctx_len = 0
+            thinking_supported = bool(route and model_source == "manual" and supports_user_thinking_toggle(view.model))
             from src.llm_core import temperature_control_status
-            temperature_control = temperature_control_status(
-                session.endpoint_url, session.model, getattr(session, "headers", None),
-                temperature=getattr(session, "temperature_override", None) if getattr(session, "temperature_override", None) is not None else 1.0,
-            )
+            temperature = getattr(session, "temperature_override", None)
+            temperature_control = (temperature_control_status(
+                route[0], route[1], route[2],
+                temperature=temperature if temperature is not None else 1.0,
+            ) if route else {"enabled": False, "reason": "No available context model is selected."})
             pct = round((used / ctx_len) * 100, 1) if ctx_len else 0.0
             pct = max(0.0, min(100.0, pct))
             auto_threshold = auto_compact_threshold_percent()
@@ -955,9 +1008,10 @@ def setup_history_routes(session_manager, upload_handler=None) -> APIRouter:
             can_compact = used > 0
             return {
                 "session_id": session_id,
-                "model": session.model,
-                "endpoint_url": session.endpoint_url,
-                "endpoint_id": getattr(session, "endpoint_id", None),
+                "model": view.model,
+                "model_source": model_source,
+                "endpoint_url": route[0] if route else None,
+                "endpoint_id": getattr(view, "endpoint_id", None),
                 "used_tokens": used,
                 "context_length": ctx_len,
                 "context_percent": pct,
@@ -970,7 +1024,7 @@ def setup_history_routes(session_manager, upload_handler=None) -> APIRouter:
                 "memory_extraction_enabled": getattr(session, "memory_extraction_enabled", True) is not False,
                 "memory_injection_enabled": getattr(session, "memory_injection_enabled", True) is not False,
                 "skill_injection_enabled": getattr(session, "skill_injection_enabled", True) is not False,
-                "thinking_mode": (getattr(session, "thinking_mode", "") or "off") if thinking_supported else "off",
+                "thinking_mode": (getattr(view, "thinking_mode", "") or "off") if thinking_supported else "off",
                 "thinking_supported": thinking_supported,
                 "temperature_control": temperature_control,
                 "temperature_override": getattr(session, "temperature_override", None),
@@ -1167,7 +1221,8 @@ def setup_history_routes(session_manager, upload_handler=None) -> APIRouter:
             if len(session.history) < 6:
                 return {"status": "ok", "message": "Not enough messages to compact"}
 
-            ctx_len = get_session_context_length(session, owner=effective_user(request))
+            window_view, _ = _context_window_view(session, owner)
+            ctx_len = get_session_context_length(window_view, owner=owner)
             messages_before = session.get_context_messages()
             used_before = estimate_tokens(messages_before)
             pct_before = round((used_before / ctx_len) * 100, 1) if ctx_len else 0
