@@ -16,6 +16,9 @@ class _FakeQuery:
     def filter(self, *args, **kwargs):
         return self
 
+    def filter_by(self, **kwargs):
+        return self
+
     def order_by(self, *args, **kwargs):
         return self
 
@@ -31,6 +34,12 @@ class _FakeDb:
         self.added = []
         self.deleted = []
         self.session_row = SimpleNamespace(message_count=0, updated_at=None)
+
+    def __enter__(self):
+        return self
+
+    def __exit__(self, exc_type, exc_value, traceback):
+        self.close()
 
     def query(self, model):
         if model is history_routes.DbSession:
