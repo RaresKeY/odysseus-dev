@@ -433,7 +433,11 @@ function _initModelPickerDropdown() {
 
   function positionPicker(){
     if(menu.classList.contains('hidden'))return;
-    menu.style.maxHeight=`${Math.max(80,Math.min(window.innerHeight*.7,wrap.getBoundingClientRect().top-28))}px`;
+    const rect=wrap.getBoundingClientRect();
+    const left=Math.max(12,Math.min(rect.right-menu.offsetWidth,window.innerWidth-menu.offsetWidth-12));
+    menu.style.left=`${left-rect.left}px`;
+    menu.style.right='auto';
+    menu.style.maxHeight=`${Math.max(80,Math.min(window.innerHeight*.7,rect.top-28))}px`;
   }
   function pickerLoadFailed(){
     _populate(search.value || '');

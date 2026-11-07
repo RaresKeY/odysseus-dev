@@ -37,7 +37,9 @@
 /* Menu descriptions wrap; do not inherit the global fixed button height. */
 #chat-permissions-menu>button{display:flex;align-items:flex-start;justify-content:space-between;gap:8px;width:100%;height:auto;min-height:40px;box-sizing:border-box;padding:8px;border:1px solid transparent;border-radius:5px;background:transparent;color:var(--fg);font:inherit;text-align:left;cursor:pointer}
 #chat-permissions-menu>[role=menuitemradio]{min-height:62px}
-.chat-permissions-menu>button>span:first-child{min-width:0;flex:1}
+.chat-permission-copy{min-width:0;flex:1}
+.chat-permission-icon{flex:none;margin-top:1px;opacity:.85}
+[data-approval-mode=yolo]>.chat-permission-icon{color:var(--color-warning)}
 .chat-permissions-menu strong{line-height:1.5}
 .chat-permissions-menu .chat-mode-check{flex:none;width:16px;line-height:18px;text-align:center}
 .chat-permissions-menu strong,.model-auto-controls strong{display:block;font-size:12px;font-weight:500}
@@ -81,6 +83,7 @@
 #chat-permissions-menu[hidden]{display:none}
 @media(max-width:540px){
   .chat-automation-route{grid-template-columns:1fr}#chat-automation-dialog{padding:14px}
+  .chat-input-right .model-picker-btn{height:44px}
   #chat-approval-mode{min-height:44px;min-width:44px;padding:0;gap:2px}
   .chat-input-right .mode-toggle{height:44px}
   .chat-input-right .mode-toggle-btn{padding:0 6px;min-width:44px}

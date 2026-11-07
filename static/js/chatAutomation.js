@@ -43,8 +43,8 @@ async function openPermissions() {
   $('chat-permissions-menu').hidden=false;
   positionPermissions();
   $('chat-approval-mode').setAttribute('aria-expanded','true');
-  // Refresh temporarily disables Auto-Approve. Focus the selected item only
-  // after availability settles, unless the user has already moved or closed it.
+  // Keep focus in the acknowledged menu after refresh, unless the user has
+  // already moved or closed it.
   const focusSequence=sequence+1;
   await refresh();
   const menu=$('chat-permissions-menu');
@@ -126,7 +126,7 @@ function render() {
   $('chat-approval-mode').setAttribute('aria-label',`Change permissions: ${label}`);
   $('chat-permissions-control').classList.toggle('mode-unavailable',unavailable);
   $('chat-permissions-control').classList.toggle('mode-yolo',mode==='yolo');
-  $('chat-permissions-mark').setAttribute('d',mode==='yolo'?'m8 8 8 8M16 8l-8 8':'m9 12 2 2 4-4');
+  $('chat-permissions-mark').setAttribute('d',{always_ask:'M9.5 9a2.5 2.5 0 1 1 4.4 1.6c-1 .6-1.9 1.1-1.9 2.4M12 16h.01',auto_approve:'m9 12 2 2 4-4',yolo:'m8 8 8 8M16 8l-8 8'}[mode]);
   $('chat-permissions-menu').querySelectorAll('[data-approval-mode]').forEach(b=>b.setAttribute('aria-checked',String(b.dataset.approvalMode===mode)));
   controlsBusy(saving);
   window.dispatchEvent(new CustomEvent('odysseus:automation-policy',{detail:policy}));
@@ -139,7 +139,9 @@ function render() {
 }
 async function refresh() {
   const ticket = ++sequence, id = sid();
-  reviewerAvailability=null;reviewerLoading=true;render();
+  // A same-chat refresh must not paint temporary unavailable controls over
+  // the acknowledged menu. Admission is revalidated by the settings API.
+  if(!configuration || (policy?.session_id || null)!==id){reviewerAvailability=null;reviewerLoading=true;render();}
   try {
     const config = await api('/api/chat-settings');
     const chat = id ? await api(`/api/session/${encodeURIComponent(id)}/automation`) : null;
@@ -150,7 +152,7 @@ async function refresh() {
     reviewerAvailability=chat?.auto_approve_availability ?? config.auto_approve_availability;
     reviewerLoading=false;render();
     if(activitySessionId!==id){activity?.destroy();activity=null;activitySessionId=id;if(id)activity=window.DecisionActivity?.mount($('chat-decision-activity'),id,{pane:$('chat-decision-pane'),trigger:$('chat-decision-toggle'),closeButton:$('chat-decision-close'),refreshButton:$('chat-decision-refresh')});}
-  } catch(e) { if(ticket===sequence){reviewerLoading=false;render();notice(e.message);} }
+  } catch(e) { if(ticket===sequence){reviewerAvailability=null;reviewerLoading=false;render();notice(e.message);} }
 }
 function changeChat(changes, context) {
   const requestedId=sid(), requestedNavigation=navigationGeneration;
