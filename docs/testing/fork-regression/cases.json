@@ -1,0 +1,3446 @@
+{
+  "schema": "odysseus-fork-regression-catalog/v1",
+  "scope": "All current product surfaces and fork-specific regressions. Catalogue membership is not a passing test result.",
+  "history_scope": "Four retained workstation rollouts and stored history for 15 named Odysseus threads, including October 21/24/25/30 and November 4/6/7. Debian host had no retained Codex rollouts; copied workbench context is supplementary, not a substitute for logs.",
+  "history": [
+    {
+      "id": "H01",
+      "date": "2026-11-06",
+      "summary": "Older work recap reported empty successful network-filesystem writes.",
+      "cases": [
+        "FS-02",
+        "FS-03",
+        "FS-13"
+      ],
+      "status": "historical report; fresh execution required"
+    },
+    {
+      "id": "H02",
+      "date": "2026-11-06",
+      "summary": "Older work recap reported Stop leaving background processes alive.",
+      "cases": [
+        "CH-07",
+        "FS-12"
+      ],
+      "status": "historical report; fresh execution required"
+    },
+    {
+      "id": "H03",
+      "date": "2026-11-06",
+      "summary": "Older work recap reported nested fences truncating commands and Windows newline rewriting.",
+      "cases": [
+        "FS-04",
+        "FS-05",
+        "CX-06"
+      ],
+      "status": "historical report; fresh execution required"
+    },
+    {
+      "id": "H04",
+      "date": "2026-10-21",
+      "summary": "Earlier runtime investigation found TLS trust differences between Python, Chromium and gRPC.",
+      "cases": [
+        "RT-07"
+      ],
+      "status": "historical report; fresh execution required"
+    },
+    {
+      "id": "H05",
+      "date": "2026-10-25",
+      "summary": "Earlier Jev campaign stopped on a malformed distribution; remaining attempts were not executed.",
+      "cases": [
+        "BR-04",
+        "BR-06",
+        "AP-08"
+      ],
+      "status": "historical report; fresh execution required"
+    },
+    {
+      "id": "H06",
+      "date": "2026-10-25",
+      "summary": "Older BYOK validation reported Google HTTP 400 and incomplete live-provider coverage.",
+      "cases": [
+        "MD-08",
+        "MD-09",
+        "MD-13"
+      ],
+      "status": "historical report; fresh execution required"
+    },
+    {
+      "id": "H07",
+      "date": "2026-10-30",
+      "summary": "Missing approval control, intrusive refresh, unclear decisions and missing default workspace were reported.",
+      "cases": [
+        "UI-01",
+        "UI-06",
+        "FS-06"
+      ],
+      "status": "historical report; fresh execution required"
+    },
+    {
+      "id": "H08",
+      "date": "2026-10-30",
+      "summary": "A live file write was blocked by the former blanket 95 percent assessment threshold.",
+      "cases": [
+        "AP-09",
+        "FS-01"
+      ],
+      "status": "historical report; fresh execution required"
+    },
+    {
+      "id": "H09",
+      "date": "2026-11-04",
+      "summary": "Saved recap recorded CI failures around service-worker and stylesheet expectations.",
+      "cases": [
+        "RT-04",
+        "UI-09"
+      ],
+      "status": "historical report; fresh execution required"
+    },
+    {
+      "id": "H10",
+      "date": "2026-11-07",
+      "summary": "New chats lost Auto settings and showed a stale Gemini 2.5 identity or unsupported effort.",
+      "cases": [
+        "MD-03",
+        "MD-04",
+        "MD-05",
+        "MD-07",
+        "MD-09"
+      ],
+      "status": "historical report; fresh execution required"
+    },
+    {
+      "id": "H11",
+      "date": "2026-11-07",
+      "summary": "Sidebar text/icons, drag responsiveness and scroll-driven scaling/rendering were reported.",
+      "cases": [
+        "UI-03",
+        "UI-04",
+        "UI-05"
+      ],
+      "status": "historical report; fresh execution required"
+    },
+    {
+      "id": "H12",
+      "date": "2026-11-07",
+      "summary": "Long composer text hid model controls and the permission menu flickered.",
+      "cases": [
+        "UI-01",
+        "UI-02"
+      ],
+      "status": "historical report; fresh execution required"
+    },
+    {
+      "id": "H13",
+      "date": "2026-11-07",
+      "summary": "Context panel displayed the bootstrap model instead of the effective execution model.",
+      "cases": [
+        "CX-01",
+        "CX-02",
+        "UI-07"
+      ],
+      "status": "historical report; fresh execution required"
+    },
+    {
+      "id": "H14",
+      "date": "2026-11-07",
+      "summary": "Gemma thought-tag reasoning triggered a false action guard and concatenated greetings.",
+      "cases": [
+        "CH-01",
+        "CH-03",
+        "CH-04"
+      ],
+      "status": "historical report; fresh execution required"
+    },
+    {
+      "id": "H15",
+      "date": "2026-11-07",
+      "summary": "Native file cycle encountered reservation mismatch, missing runtime Bubblewrap, unsupported tool names and provider 429.",
+      "cases": [
+        "FS-01",
+        "FS-08",
+        "FS-11",
+        "CH-05",
+        "MD-13"
+      ],
+      "status": "historical report; fresh execution required"
+    },
+    {
+      "id": "H16",
+      "date": "2026-11-07",
+      "summary": "OpenAI key was added; persisted-key catalogue refresh passed but inference had not been tested.",
+      "cases": [
+        "AU-08",
+        "MD-02",
+        "MD-10",
+        "CH-01",
+        "FS-01"
+      ],
+      "status": "historical report; fresh execution required"
+    }
+  ],
+  "cases": [
+    {
+      "id": "RT-01",
+      "area": "Runtime and deployment",
+      "title": "Readiness and exact source",
+      "profile": "live-api",
+      "preconditions": "Explicit source SHA; isolated deployment and private login.",
+      "steps": "Read version and health, log in, then read readiness.",
+      "expected": "Healthy app and expected source; no stale deployment.",
+      "evidence": "Exact source/environment, observed state or execution receipt, result and cleanup; browser cases also require desktop/mobile captures.",
+      "runner_suite": "read",
+      "execution": "runner",
+      "automated_references": [
+        "tests/test_agent_runtime_context.py",
+        "tests/test_app_initializer_memory_vector_degraded.py",
+        "tests/test_builtin_skills_startup_order.py",
+        "tests/test_markitdown_runtime.py",
+        "tests/test_pdf_runtime.py",
+        "tests/test_research_chat_runtime.py"
+      ],
+      "history": []
+    },
+    {
+      "id": "RT-02",
+      "area": "Runtime and deployment",
+      "title": "Restart persistence",
+      "profile": "live-api",
+      "preconditions": "Explicit source SHA; isolated deployment and private login.",
+      "steps": "Create labelled state, restart the exact owned runtime, log in and read it.",
+      "expected": "State, encrypted providers, models and account survive; source stays pinned.",
+      "evidence": "Exact source/environment, observed state or execution receipt, result and cleanup; browser cases also require desktop/mobile captures.",
+      "runner_suite": null,
+      "execution": "procedure",
+      "automated_references": [
+        "tests/test_agent_runtime_context.py",
+        "tests/test_app_initializer_memory_vector_degraded.py",
+        "tests/test_builtin_skills_startup_order.py",
+        "tests/test_markitdown_runtime.py",
+        "tests/test_pdf_runtime.py",
+        "tests/test_research_chat_runtime.py"
+      ],
+      "history": []
+    },
+    {
+      "id": "RT-03",
+      "area": "Runtime and deployment",
+      "title": "Bridge recovery",
+      "profile": "live-api",
+      "preconditions": "Explicit source SHA; isolated deployment and private login.",
+      "steps": "Stop and restart the owning localhost bridge and open the app.",
+      "expected": "The bridge reaches the current protected socket; no stale runtime or public listener.",
+      "evidence": "Exact source/environment, observed state or execution receipt, result and cleanup; browser cases also require desktop/mobile captures.",
+      "runner_suite": null,
+      "execution": "procedure",
+      "automated_references": [
+        "tests/test_agent_runtime_context.py",
+        "tests/test_app_initializer_memory_vector_degraded.py",
+        "tests/test_builtin_skills_startup_order.py",
+        "tests/test_markitdown_runtime.py",
+        "tests/test_pdf_runtime.py",
+        "tests/test_research_chat_runtime.py"
+      ],
+      "history": []
+    },
+    {
+      "id": "RT-04",
+      "area": "Runtime and deployment",
+      "title": "Static asset generation",
+      "profile": "live-api",
+      "preconditions": "Explicit source SHA; isolated deployment and private login.",
+      "steps": "Load the page and its module/service-worker graph after deploy and after reload.",
+      "expected": "One current generation loads with no 404, mixed version or stale cached module.",
+      "evidence": "Exact source/environment, observed state or execution receipt, result and cleanup; browser cases also require desktop/mobile captures.",
+      "runner_suite": null,
+      "execution": "procedure",
+      "automated_references": [
+        "tests/test_agent_runtime_context.py",
+        "tests/test_app_initializer_memory_vector_degraded.py",
+        "tests/test_builtin_skills_startup_order.py",
+        "tests/test_markitdown_runtime.py",
+        "tests/test_pdf_runtime.py",
+        "tests/test_research_chat_runtime.py"
+      ],
+      "history": [
+        "H09"
+      ]
+    },
+    {
+      "id": "RT-05",
+      "area": "Runtime and deployment",
+      "title": "Unavailable dependency",
+      "profile": "live-api",
+      "preconditions": "Explicit source SHA; isolated deployment and private login.",
+      "steps": "In a disposable deployment, remove each optional service/dependency in turn.",
+      "expected": "Affected feature gives an explicit degraded result; unrelated chat/CRUD still works.",
+      "evidence": "Exact source/environment, observed state or execution receipt, result and cleanup; browser cases also require desktop/mobile captures.",
+      "runner_suite": null,
+      "execution": "procedure",
+      "automated_references": [
+        "tests/test_agent_runtime_context.py",
+        "tests/test_app_initializer_memory_vector_degraded.py",
+        "tests/test_builtin_skills_startup_order.py",
+        "tests/test_markitdown_runtime.py",
+        "tests/test_pdf_runtime.py",
+        "tests/test_research_chat_runtime.py"
+      ],
+      "history": []
+    },
+    {
+      "id": "RT-06",
+      "area": "Runtime and deployment",
+      "title": "Cold install matrix",
+      "profile": "live-api",
+      "preconditions": "Explicit source SHA; isolated deployment and private login.",
+      "steps": "Run first launch on supported Linux native/container and macOS; record Windows separately.",
+      "expected": "Setup, login, ready, model picker and one turn succeed on each qualified platform.",
+      "evidence": "Exact source/environment, observed state or execution receipt, result and cleanup; browser cases also require desktop/mobile captures.",
+      "runner_suite": null,
+      "execution": "procedure",
+      "automated_references": [
+        "tests/test_agent_runtime_context.py",
+        "tests/test_app_initializer_memory_vector_degraded.py",
+        "tests/test_builtin_skills_startup_order.py",
+        "tests/test_markitdown_runtime.py",
+        "tests/test_pdf_runtime.py",
+        "tests/test_research_chat_runtime.py"
+      ],
+      "history": []
+    },
+    {
+      "id": "RT-07",
+      "area": "Runtime and deployment",
+      "title": "TLS client parity",
+      "profile": "live-api",
+      "preconditions": "Explicit source SHA; isolated deployment and private login.",
+      "steps": "Use controlled valid/invalid TLS fixtures through Python, curl, Chromium and gRPC clients.",
+      "expected": "Valid trust succeeds; invalid chains fail consistently in every enabled client.",
+      "evidence": "Exact source/environment, observed state or execution receipt, result and cleanup; browser cases also require desktop/mobile captures.",
+      "runner_suite": null,
+      "execution": "procedure",
+      "automated_references": [
+        "tests/test_agent_runtime_context.py",
+        "tests/test_app_initializer_memory_vector_degraded.py",
+        "tests/test_builtin_skills_startup_order.py",
+        "tests/test_markitdown_runtime.py",
+        "tests/test_pdf_runtime.py",
+        "tests/test_research_chat_runtime.py"
+      ],
+      "history": [
+        "H04"
+      ]
+    },
+    {
+      "id": "RT-08",
+      "area": "Runtime and deployment",
+      "title": "Resource and recovery limits",
+      "profile": "live-api",
+      "preconditions": "Explicit source SHA; isolated deployment and private login.",
+      "steps": "Bound CPU/memory/PIDs, interrupt one owned app, recover from its matching state copy.",
+      "expected": "No duplicate writer; correct source/data pairing; recovery is explicit and verified.",
+      "evidence": "Exact source/environment, observed state or execution receipt, result and cleanup; browser cases also require desktop/mobile captures.",
+      "runner_suite": null,
+      "execution": "procedure",
+      "automated_references": [
+        "tests/test_agent_runtime_context.py",
+        "tests/test_app_initializer_memory_vector_degraded.py",
+        "tests/test_builtin_skills_startup_order.py",
+        "tests/test_markitdown_runtime.py",
+        "tests/test_pdf_runtime.py",
+        "tests/test_research_chat_runtime.py"
+      ],
+      "history": []
+    },
+    {
+      "id": "AU-01",
+      "area": "Authentication and ownership",
+      "title": "Anonymous access denied",
+      "profile": "live-api",
+      "preconditions": "Two synthetic owners and a disposable app for destructive/account cases.",
+      "steps": "Request session and private data APIs without a cookie.",
+      "expected": "401/403 with no records, secrets or internal paths.",
+      "evidence": "Exact source/environment, observed state or execution receipt, result and cleanup; browser cases also require desktop/mobile captures.",
+      "runner_suite": "read",
+      "execution": "runner",
+      "automated_references": [
+        "tests/test_admin_routes_auth_disabled.py",
+        "tests/test_ai_interaction_owner_scope.py",
+        "tests/test_api_token_routes.py",
+        "tests/test_api_token_tool_authority.py",
+        "tests/test_api_token_user_route_gate.py",
+        "tests/test_auth_config_lock_concurrency.py"
+      ],
+      "history": []
+    },
+    {
+      "id": "AU-02",
+      "area": "Authentication and ownership",
+      "title": "Logout revokes access",
+      "profile": "live-api",
+      "preconditions": "Two synthetic owners and a disposable app for destructive/account cases.",
+      "steps": "Log in, log out, then repeat a private request with the same client.",
+      "expected": "Private requests fail after logout.",
+      "evidence": "Exact source/environment, observed state or execution receipt, result and cleanup; browser cases also require desktop/mobile captures.",
+      "runner_suite": "read",
+      "execution": "runner",
+      "automated_references": [
+        "tests/test_admin_routes_auth_disabled.py",
+        "tests/test_ai_interaction_owner_scope.py",
+        "tests/test_api_token_routes.py",
+        "tests/test_api_token_tool_authority.py",
+        "tests/test_api_token_user_route_gate.py",
+        "tests/test_auth_config_lock_concurrency.py"
+      ],
+      "history": []
+    },
+    {
+      "id": "AU-03",
+      "area": "Authentication and ownership",
+      "title": "Login persistence and reset",
+      "profile": "live-api",
+      "preconditions": "Two synthetic owners and a disposable app for destructive/account cases.",
+      "steps": "Log in across new clients; in a disposable account reset password and retry old credentials.",
+      "expected": "New password works; old password/session cannot retain access.",
+      "evidence": "Exact source/environment, observed state or execution receipt, result and cleanup; browser cases also require desktop/mobile captures.",
+      "runner_suite": null,
+      "execution": "procedure",
+      "automated_references": [
+        "tests/test_admin_routes_auth_disabled.py",
+        "tests/test_ai_interaction_owner_scope.py",
+        "tests/test_api_token_routes.py",
+        "tests/test_api_token_tool_authority.py",
+        "tests/test_api_token_user_route_gate.py",
+        "tests/test_auth_config_lock_concurrency.py"
+      ],
+      "history": []
+    },
+    {
+      "id": "AU-04",
+      "area": "Authentication and ownership",
+      "title": "Cross-owner isolation",
+      "profile": "live-api",
+      "preconditions": "Two synthetic owners and a disposable app for destructive/account cases.",
+      "steps": "Owner B reads, edits, forks and deletes exact IDs created by owner A.",
+      "expected": "Every foreign operation fails without disclosing object contents.",
+      "evidence": "Exact source/environment, observed state or execution receipt, result and cleanup; browser cases also require desktop/mobile captures.",
+      "runner_suite": null,
+      "execution": "procedure",
+      "automated_references": [
+        "tests/test_admin_routes_auth_disabled.py",
+        "tests/test_ai_interaction_owner_scope.py",
+        "tests/test_api_token_routes.py",
+        "tests/test_api_token_tool_authority.py",
+        "tests/test_api_token_user_route_gate.py",
+        "tests/test_auth_config_lock_concurrency.py"
+      ],
+      "history": []
+    },
+    {
+      "id": "AU-05",
+      "area": "Authentication and ownership",
+      "title": "CSRF and origin checks",
+      "profile": "live-api",
+      "preconditions": "Two synthetic owners and a disposable app for destructive/account cases.",
+      "steps": "Submit a settings/tool mutation with a foreign Origin and same-site credentials.",
+      "expected": "Mutation is rejected and stored revision/content stays unchanged.",
+      "evidence": "Exact source/environment, observed state or execution receipt, result and cleanup; browser cases also require desktop/mobile captures.",
+      "runner_suite": null,
+      "execution": "procedure",
+      "automated_references": [
+        "tests/test_admin_routes_auth_disabled.py",
+        "tests/test_ai_interaction_owner_scope.py",
+        "tests/test_api_token_routes.py",
+        "tests/test_api_token_tool_authority.py",
+        "tests/test_api_token_user_route_gate.py",
+        "tests/test_auth_config_lock_concurrency.py"
+      ],
+      "history": []
+    },
+    {
+      "id": "AU-06",
+      "area": "Authentication and ownership",
+      "title": "Delegated API scopes",
+      "profile": "live-api",
+      "preconditions": "Two synthetic owners and a disposable app for destructive/account cases.",
+      "steps": "Use read-only and domain-scoped synthetic API tokens against allowed and disallowed routes.",
+      "expected": "Only declared scopes work; tokens cannot change interactive permissions or become admin.",
+      "evidence": "Exact source/environment, observed state or execution receipt, result and cleanup; browser cases also require desktop/mobile captures.",
+      "runner_suite": null,
+      "execution": "procedure",
+      "automated_references": [
+        "tests/test_admin_routes_auth_disabled.py",
+        "tests/test_ai_interaction_owner_scope.py",
+        "tests/test_api_token_routes.py",
+        "tests/test_api_token_tool_authority.py",
+        "tests/test_api_token_user_route_gate.py",
+        "tests/test_auth_config_lock_concurrency.py"
+      ],
+      "history": []
+    },
+    {
+      "id": "AU-07",
+      "area": "Authentication and ownership",
+      "title": "Revocation and privilege change",
+      "profile": "live-api",
+      "preconditions": "Two synthetic owners and a disposable app for destructive/account cases.",
+      "steps": "Revoke token, demote user, rename and delete synthetic users while authenticated.",
+      "expected": "Old cached authorities fail; owned data follows only the intended rename.",
+      "evidence": "Exact source/environment, observed state or execution receipt, result and cleanup; browser cases also require desktop/mobile captures.",
+      "runner_suite": null,
+      "execution": "procedure",
+      "automated_references": [
+        "tests/test_admin_routes_auth_disabled.py",
+        "tests/test_ai_interaction_owner_scope.py",
+        "tests/test_api_token_routes.py",
+        "tests/test_api_token_tool_authority.py",
+        "tests/test_api_token_user_route_gate.py",
+        "tests/test_auth_config_lock_concurrency.py"
+      ],
+      "history": []
+    },
+    {
+      "id": "AU-08",
+      "area": "Authentication and ownership",
+      "title": "Credential custody",
+      "profile": "live-api",
+      "preconditions": "Two synthetic owners and a disposable app for destructive/account cases.",
+      "steps": "Register a synthetic provider key, read list/export/error routes and inspect private storage.",
+      "expected": "Key is encrypted at rest and absent from replies, browser storage, logs and test artifacts.",
+      "evidence": "Exact source/environment, observed state or execution receipt, result and cleanup; browser cases also require desktop/mobile captures.",
+      "runner_suite": null,
+      "execution": "procedure",
+      "automated_references": [
+        "tests/test_admin_routes_auth_disabled.py",
+        "tests/test_ai_interaction_owner_scope.py",
+        "tests/test_api_token_routes.py",
+        "tests/test_api_token_tool_authority.py",
+        "tests/test_api_token_user_route_gate.py",
+        "tests/test_auth_config_lock_concurrency.py"
+      ],
+      "history": [
+        "H16"
+      ]
+    },
+    {
+      "id": "AP-01",
+      "area": "Approval modes and authority",
+      "title": "New chat defaults to Auto-Approve",
+      "profile": "live-api",
+      "preconditions": "Registered reviewer/selected model; synthetic workspace; no real external effects.",
+      "steps": "Create a real session, read automation, log in again and reread it.",
+      "expected": "Auto-Approve revision zero persists; no inherited folder grant or owner-setting rewrite.",
+      "evidence": "Exact source/environment, observed state or execution receipt, result and cleanup; browser cases also require desktop/mobile captures.",
+      "runner_suite": "state",
+      "execution": "runner",
+      "automated_references": [
+        "tests/approvalActivity.test.mjs",
+        "tests/test_approval_adapter_boundaries.py",
+        "tests/test_approval_assessment.py",
+        "tests/test_approval_fallback.py",
+        "tests/test_approval_outage.py",
+        "tests/test_approval_provider_compatibility.py"
+      ],
+      "history": []
+    },
+    {
+      "id": "AP-02",
+      "area": "Approval modes and authority",
+      "title": "Mode CAS and explicit choice",
+      "profile": "live-api",
+      "preconditions": "Registered reviewer/selected model; synthetic workspace; no real external effects.",
+      "steps": "Set a synthetic chat to the already-retained explicit owner mode; submit a stale revision.",
+      "expected": "One acknowledged write wins; stale write is 409; owner configuration remains unchanged.",
+      "evidence": "Exact source/environment, observed state or execution receipt, result and cleanup; browser cases also require desktop/mobile captures.",
+      "runner_suite": "state",
+      "execution": "runner",
+      "automated_references": [
+        "tests/approvalActivity.test.mjs",
+        "tests/test_approval_adapter_boundaries.py",
+        "tests/test_approval_assessment.py",
+        "tests/test_approval_fallback.py",
+        "tests/test_approval_outage.py",
+        "tests/test_approval_provider_compatibility.py"
+      ],
+      "history": []
+    },
+    {
+      "id": "AP-03",
+      "area": "Approval modes and authority",
+      "title": "Fork default and source preservation",
+      "profile": "live-api",
+      "preconditions": "Registered reviewer/selected model; synthetic workspace; no real external effects.",
+      "steps": "Fork chats saved in Ask/Auto/YOLO with known history and a bounded grant.",
+      "expected": "New fork uses Auto-Approve and copied model/history; no grant; source is byte-for-byte unchanged.",
+      "evidence": "Exact source/environment, observed state or execution receipt, result and cleanup; browser cases also require desktop/mobile captures.",
+      "runner_suite": null,
+      "execution": "procedure",
+      "automated_references": [
+        "tests/approvalActivity.test.mjs",
+        "tests/test_approval_adapter_boundaries.py",
+        "tests/test_approval_assessment.py",
+        "tests/test_approval_fallback.py",
+        "tests/test_approval_outage.py",
+        "tests/test_approval_provider_compatibility.py"
+      ],
+      "history": []
+    },
+    {
+      "id": "AP-04",
+      "area": "Approval modes and authority",
+      "title": "Existing and legacy chat modes",
+      "profile": "live-api",
+      "preconditions": "Registered reviewer/selected model; synthetic workspace; no real external effects.",
+      "steps": "Resume saved Ask/Auto/YOLO chats and a legacy chat with no automation row.",
+      "expected": "Saved choices persist; legacy chat stays Ask; new default does not migrate historical consent.",
+      "evidence": "Exact source/environment, observed state or execution receipt, result and cleanup; browser cases also require desktop/mobile captures.",
+      "runner_suite": null,
+      "execution": "procedure",
+      "automated_references": [
+        "tests/approvalActivity.test.mjs",
+        "tests/test_approval_adapter_boundaries.py",
+        "tests/test_approval_assessment.py",
+        "tests/test_approval_fallback.py",
+        "tests/test_approval_outage.py",
+        "tests/test_approval_provider_compatibility.py"
+      ],
+      "history": []
+    },
+    {
+      "id": "AP-05",
+      "area": "Approval modes and authority",
+      "title": "No reviewer path",
+      "profile": "live-api",
+      "preconditions": "Registered reviewer/selected model; synthetic workspace; no real external effects.",
+      "steps": "Disable both reviewer and selected-model fallback on an owned disposable chat; propose a write.",
+      "expected": "Visible unavailable/blocked error, no mutation, no silent YOLO or human approval card.",
+      "evidence": "Exact source/environment, observed state or execution receipt, result and cleanup; browser cases also require desktop/mobile captures.",
+      "runner_suite": null,
+      "execution": "procedure",
+      "automated_references": [
+        "tests/approvalActivity.test.mjs",
+        "tests/test_approval_adapter_boundaries.py",
+        "tests/test_approval_assessment.py",
+        "tests/test_approval_fallback.py",
+        "tests/test_approval_outage.py",
+        "tests/test_approval_provider_compatibility.py"
+      ],
+      "history": []
+    },
+    {
+      "id": "AP-06",
+      "area": "Approval modes and authority",
+      "title": "Jev success",
+      "profile": "live-api",
+      "preconditions": "Registered reviewer/selected model; synthetic workspace; no real external effects.",
+      "steps": "Ask for one harmless exact file operation using configured Jev.",
+      "expected": "One independent review binds the exact operation and one execution receipt.",
+      "evidence": "Exact source/environment, observed state or execution receipt, result and cleanup; browser cases also require desktop/mobile captures.",
+      "runner_suite": null,
+      "execution": "procedure",
+      "automated_references": [
+        "tests/approvalActivity.test.mjs",
+        "tests/test_approval_adapter_boundaries.py",
+        "tests/test_approval_assessment.py",
+        "tests/test_approval_fallback.py",
+        "tests/test_approval_outage.py",
+        "tests/test_approval_provider_compatibility.py"
+      ],
+      "history": []
+    },
+    {
+      "id": "AP-07",
+      "area": "Approval modes and authority",
+      "title": "Selected-model technical fallback",
+      "profile": "live-api",
+      "preconditions": "Registered reviewer/selected model; synthetic workspace; no real external effects.",
+      "steps": "Make Jev technically unavailable while retaining a usable selected conversation model.",
+      "expected": "At most the configured fallback review occurs; no fallback after a valid denial.",
+      "evidence": "Exact source/environment, observed state or execution receipt, result and cleanup; browser cases also require desktop/mobile captures.",
+      "runner_suite": null,
+      "execution": "procedure",
+      "automated_references": [
+        "tests/approvalActivity.test.mjs",
+        "tests/test_approval_adapter_boundaries.py",
+        "tests/test_approval_assessment.py",
+        "tests/test_approval_fallback.py",
+        "tests/test_approval_outage.py",
+        "tests/test_approval_provider_compatibility.py"
+      ],
+      "history": []
+    },
+    {
+      "id": "AP-08",
+      "area": "Approval modes and authority",
+      "title": "Denial and uncertainty",
+      "profile": "live-api",
+      "preconditions": "Registered reviewer/selected model; synthetic workspace; no real external effects.",
+      "steps": "Use deterministic deny, uncertain, malformed and timeout reviewer fixtures.",
+      "expected": "Operation stops, emits an actionable error, produces no individual human card and no effects.",
+      "evidence": "Exact source/environment, observed state or execution receipt, result and cleanup; browser cases also require desktop/mobile captures.",
+      "runner_suite": null,
+      "execution": "procedure",
+      "automated_references": [
+        "tests/approvalActivity.test.mjs",
+        "tests/test_approval_adapter_boundaries.py",
+        "tests/test_approval_assessment.py",
+        "tests/test_approval_fallback.py",
+        "tests/test_approval_outage.py",
+        "tests/test_approval_provider_compatibility.py"
+      ],
+      "history": [
+        "H05"
+      ]
+    },
+    {
+      "id": "AP-09",
+      "area": "Approval modes and authority",
+      "title": "Risk-specific assessment floors",
+      "profile": "live-api",
+      "preconditions": "Registered reviewer/selected model; synthetic workspace; no real external effects.",
+      "steps": "Replay low/medium/high cases immediately below, at and above their configured floors.",
+      "expected": "50/70/85 percent rules match policy; explicit vetoes and complete answer validation still win.",
+      "evidence": "Exact source/environment, observed state or execution receipt, result and cleanup; browser cases also require desktop/mobile captures.",
+      "runner_suite": null,
+      "execution": "procedure",
+      "automated_references": [
+        "tests/approvalActivity.test.mjs",
+        "tests/test_approval_adapter_boundaries.py",
+        "tests/test_approval_assessment.py",
+        "tests/test_approval_fallback.py",
+        "tests/test_approval_outage.py",
+        "tests/test_approval_provider_compatibility.py"
+      ],
+      "history": [
+        "H08"
+      ]
+    },
+    {
+      "id": "AP-10",
+      "area": "Approval modes and authority",
+      "title": "Exact one-use human approval",
+      "profile": "live-api",
+      "preconditions": "Registered reviewer/selected model; synthetic workspace; no real external effects.",
+      "steps": "In Ask mode approve one action; replay its card, change args and reuse its token.",
+      "expected": "Only the exact first action executes; replay/stale/changed identity fail.",
+      "evidence": "Exact source/environment, observed state or execution receipt, result and cleanup; browser cases also require desktop/mobile captures.",
+      "runner_suite": null,
+      "execution": "procedure",
+      "automated_references": [
+        "tests/approvalActivity.test.mjs",
+        "tests/test_approval_adapter_boundaries.py",
+        "tests/test_approval_assessment.py",
+        "tests/test_approval_fallback.py",
+        "tests/test_approval_outage.py",
+        "tests/test_approval_provider_compatibility.py"
+      ],
+      "history": []
+    },
+    {
+      "id": "AP-11",
+      "area": "Approval modes and authority",
+      "title": "Expired approval recovery",
+      "profile": "live-api",
+      "preconditions": "Registered reviewer/selected model; synthetic workspace; no real external effects.",
+      "steps": "Expire a card, request advice, then explicitly request a fresh operation.",
+      "expected": "Expired action cannot execute; new request gets a distinct valid identity.",
+      "evidence": "Exact source/environment, observed state or execution receipt, result and cleanup; browser cases also require desktop/mobile captures.",
+      "runner_suite": null,
+      "execution": "procedure",
+      "automated_references": [
+        "tests/approvalActivity.test.mjs",
+        "tests/test_approval_adapter_boundaries.py",
+        "tests/test_approval_assessment.py",
+        "tests/test_approval_fallback.py",
+        "tests/test_approval_outage.py",
+        "tests/test_approval_provider_compatibility.py"
+      ],
+      "history": []
+    },
+    {
+      "id": "AP-12",
+      "area": "Approval modes and authority",
+      "title": "Owner ceiling and grant revocation",
+      "profile": "live-api",
+      "preconditions": "Registered reviewer/selected model; synthetic workspace; no real external effects.",
+      "steps": "Toggle ceiling off/on and edit settings during an admitted turn.",
+      "expected": "Old grants/leases fail; mode changes do not widen deployment roots.",
+      "evidence": "Exact source/environment, observed state or execution receipt, result and cleanup; browser cases also require desktop/mobile captures.",
+      "runner_suite": null,
+      "execution": "procedure",
+      "automated_references": [
+        "tests/approvalActivity.test.mjs",
+        "tests/test_approval_adapter_boundaries.py",
+        "tests/test_approval_assessment.py",
+        "tests/test_approval_fallback.py",
+        "tests/test_approval_outage.py",
+        "tests/test_approval_provider_compatibility.py"
+      ],
+      "history": []
+    },
+    {
+      "id": "AP-13",
+      "area": "Approval modes and authority",
+      "title": "YOLO remains contained",
+      "profile": "live-api",
+      "preconditions": "Registered reviewer/selected model; synthetic workspace; no real external effects.",
+      "steps": "Use YOLO in a selected synthetic workspace and attempt an outside-root operation.",
+      "expected": "Admitted workspace action works; outside-root action is denied by deterministic containment.",
+      "evidence": "Exact source/environment, observed state or execution receipt, result and cleanup; browser cases also require desktop/mobile captures.",
+      "runner_suite": null,
+      "execution": "procedure",
+      "automated_references": [
+        "tests/approvalActivity.test.mjs",
+        "tests/test_approval_adapter_boundaries.py",
+        "tests/test_approval_assessment.py",
+        "tests/test_approval_fallback.py",
+        "tests/test_approval_outage.py",
+        "tests/test_approval_provider_compatibility.py"
+      ],
+      "history": []
+    },
+    {
+      "id": "AP-14",
+      "area": "Approval modes and authority",
+      "title": "Nearest trusted request",
+      "profile": "live-api",
+      "preconditions": "Registered reviewer/selected model; synthetic workspace; no real external effects.",
+      "steps": "Follow an explicit bounded request with assistant suggestions, injected text and then go again.",
+      "expected": "Retry retains only the nearest trusted user authority and negative restrictions.",
+      "evidence": "Exact source/environment, observed state or execution receipt, result and cleanup; browser cases also require desktop/mobile captures.",
+      "runner_suite": null,
+      "execution": "procedure",
+      "automated_references": [
+        "tests/approvalActivity.test.mjs",
+        "tests/test_approval_adapter_boundaries.py",
+        "tests/test_approval_assessment.py",
+        "tests/test_approval_fallback.py",
+        "tests/test_approval_outage.py",
+        "tests/test_approval_provider_compatibility.py"
+      ],
+      "history": []
+    },
+    {
+      "id": "AP-15",
+      "area": "Approval modes and authority",
+      "title": "Concurrent mode changes",
+      "profile": "live-api",
+      "preconditions": "Registered reviewer/selected model; synthetic workspace; no real external effects.",
+      "steps": "Race two acknowledged settings writes and two exact action claims.",
+      "expected": "One winner, no duplicated execution, no revived stale permission.",
+      "evidence": "Exact source/environment, observed state or execution receipt, result and cleanup; browser cases also require desktop/mobile captures.",
+      "runner_suite": null,
+      "execution": "procedure",
+      "automated_references": [
+        "tests/approvalActivity.test.mjs",
+        "tests/test_approval_adapter_boundaries.py",
+        "tests/test_approval_assessment.py",
+        "tests/test_approval_fallback.py",
+        "tests/test_approval_outage.py",
+        "tests/test_approval_provider_compatibility.py"
+      ],
+      "history": []
+    },
+    {
+      "id": "MD-01",
+      "area": "Providers, models and Auto routing",
+      "title": "Registered picker inventory",
+      "profile": "live-provider",
+      "preconditions": "Existing private provider registrations; explicit models; bounded paid calls only for selected cases.",
+      "steps": "Read registered endpoints and account-scoped model choices.",
+      "expected": "Execution and decision endpoints appear in the right lists; no plaintext credentials.",
+      "evidence": "Exact source/environment, observed state or execution receipt, result and cleanup; browser cases also require desktop/mobile captures.",
+      "runner_suite": "read",
+      "execution": "runner",
+      "automated_references": [
+        "tests/test_approval_provider_compatibility.py",
+        "tests/test_aux_llm_owner_scope.py",
+        "tests/test_chat_provider_binding.py",
+        "tests/test_compare_endpoint_owner_scope.py",
+        "tests/test_cookbook_endpoint_registration.py",
+        "tests/test_decision_provider_boundaries.py"
+      ],
+      "history": []
+    },
+    {
+      "id": "MD-02",
+      "area": "Providers, models and Auto routing",
+      "title": "Saved-key catalogue refresh",
+      "profile": "live-provider",
+      "preconditions": "Existing private provider registrations; explicit models; bounded paid calls only for selected cases.",
+      "steps": "Refresh one registered provider catalogue using its stored credential.",
+      "expected": "Fresh response is marked refreshed and includes the selected visible model, not merely cached data.",
+      "evidence": "Exact source/environment, observed state or execution receipt, result and cleanup; browser cases also require desktop/mobile captures.",
+      "runner_suite": "provider",
+      "execution": "runner",
+      "automated_references": [
+        "tests/test_approval_provider_compatibility.py",
+        "tests/test_aux_llm_owner_scope.py",
+        "tests/test_chat_provider_binding.py",
+        "tests/test_compare_endpoint_owner_scope.py",
+        "tests/test_cookbook_endpoint_registration.py",
+        "tests/test_decision_provider_boundaries.py"
+      ],
+      "history": [
+        "H16"
+      ]
+    },
+    {
+      "id": "MD-03",
+      "area": "Providers, models and Auto routing",
+      "title": "Auto categories persist",
+      "profile": "live-provider",
+      "preconditions": "Existing private provider registrations; explicit models; bounded paid calls only for selected cases.",
+      "steps": "Set both categories in one chat, create another, reload and open an older chat.",
+      "expected": "New chat inherits exact pair/route mode; older chat retains its own pair.",
+      "evidence": "Exact source/environment, observed state or execution receipt, result and cleanup; browser cases also require desktop/mobile captures.",
+      "runner_suite": null,
+      "execution": "procedure",
+      "automated_references": [
+        "tests/test_approval_provider_compatibility.py",
+        "tests/test_aux_llm_owner_scope.py",
+        "tests/test_chat_provider_binding.py",
+        "tests/test_compare_endpoint_owner_scope.py",
+        "tests/test_cookbook_endpoint_registration.py",
+        "tests/test_decision_provider_boundaries.py"
+      ],
+      "history": [
+        "H10"
+      ]
+    },
+    {
+      "id": "MD-04",
+      "area": "Providers, models and Auto routing",
+      "title": "Manual selection preserves pair",
+      "profile": "live-provider",
+      "preconditions": "Existing private provider registrations; explicit models; bounded paid calls only for selected cases.",
+      "steps": "Choose Manual in an older chat with no categories; create another chat.",
+      "expected": "Manual is remembered without deleting the previously saved category assignments.",
+      "evidence": "Exact source/environment, observed state or execution receipt, result and cleanup; browser cases also require desktop/mobile captures.",
+      "runner_suite": null,
+      "execution": "procedure",
+      "automated_references": [
+        "tests/test_approval_provider_compatibility.py",
+        "tests/test_aux_llm_owner_scope.py",
+        "tests/test_chat_provider_binding.py",
+        "tests/test_compare_endpoint_owner_scope.py",
+        "tests/test_cookbook_endpoint_registration.py",
+        "tests/test_decision_provider_boundaries.py"
+      ],
+      "history": [
+        "H10"
+      ]
+    },
+    {
+      "id": "MD-05",
+      "area": "Providers, models and Auto routing",
+      "title": "No stale manual bootstrap",
+      "profile": "live-provider",
+      "preconditions": "Existing private provider registrations; explicit models; bounded paid calls only for selected cases.",
+      "steps": "Make the global manual default stale while both Auto categories remain registered.",
+      "expected": "New Auto chat boots from exact Complex tasks identity without a manual-model substitute.",
+      "evidence": "Exact source/environment, observed state or execution receipt, result and cleanup; browser cases also require desktop/mobile captures.",
+      "runner_suite": null,
+      "execution": "procedure",
+      "automated_references": [
+        "tests/test_approval_provider_compatibility.py",
+        "tests/test_aux_llm_owner_scope.py",
+        "tests/test_chat_provider_binding.py",
+        "tests/test_compare_endpoint_owner_scope.py",
+        "tests/test_cookbook_endpoint_registration.py",
+        "tests/test_decision_provider_boundaries.py"
+      ],
+      "history": [
+        "H10"
+      ]
+    },
+    {
+      "id": "MD-06",
+      "area": "Providers, models and Auto routing",
+      "title": "Same model in both categories",
+      "profile": "live-provider",
+      "preconditions": "Existing private provider registrations; explicit models; bounded paid calls only for selected cases.",
+      "steps": "Assign the same exact endpoint/model to both categories and send greeting/task.",
+      "expected": "Both mappings save and dispatch exactly; no artificial uniqueness rule.",
+      "evidence": "Exact source/environment, observed state or execution receipt, result and cleanup; browser cases also require desktop/mobile captures.",
+      "runner_suite": null,
+      "execution": "procedure",
+      "automated_references": [
+        "tests/test_approval_provider_compatibility.py",
+        "tests/test_aux_llm_owner_scope.py",
+        "tests/test_chat_provider_binding.py",
+        "tests/test_compare_endpoint_owner_scope.py",
+        "tests/test_cookbook_endpoint_registration.py",
+        "tests/test_decision_provider_boundaries.py"
+      ],
+      "history": []
+    },
+    {
+      "id": "MD-07",
+      "area": "Providers, models and Auto routing",
+      "title": "Unavailable selected assignment",
+      "profile": "live-provider",
+      "preconditions": "Existing private provider registrations; explicit models; bounded paid calls only for selected cases.",
+      "steps": "Disable/hide/remove one mapped model, then send in Auto.",
+      "expected": "Exact assignment remains visible and admission stops; no Gemini 2.5 or guessed fallback.",
+      "evidence": "Exact source/environment, observed state or execution receipt, result and cleanup; browser cases also require desktop/mobile captures.",
+      "runner_suite": null,
+      "execution": "procedure",
+      "automated_references": [
+        "tests/test_approval_provider_compatibility.py",
+        "tests/test_aux_llm_owner_scope.py",
+        "tests/test_chat_provider_binding.py",
+        "tests/test_compare_endpoint_owner_scope.py",
+        "tests/test_cookbook_endpoint_registration.py",
+        "tests/test_decision_provider_boundaries.py"
+      ],
+      "history": [
+        "H10"
+      ]
+    },
+    {
+      "id": "MD-08",
+      "area": "Providers, models and Auto routing",
+      "title": "Model and effort dispatch",
+      "profile": "live-provider",
+      "preconditions": "Existing private provider registrations; explicit models; bounded paid calls only for selected cases.",
+      "steps": "Run representative simple, bounded and complex tasks; compare decision to provider receipt.",
+      "expected": "Selected category/model/effort is supported and matches actual request metadata.",
+      "evidence": "Exact source/environment, observed state or execution receipt, result and cleanup; browser cases also require desktop/mobile captures.",
+      "runner_suite": null,
+      "execution": "procedure",
+      "automated_references": [
+        "tests/test_approval_provider_compatibility.py",
+        "tests/test_aux_llm_owner_scope.py",
+        "tests/test_chat_provider_binding.py",
+        "tests/test_compare_endpoint_owner_scope.py",
+        "tests/test_cookbook_endpoint_registration.py",
+        "tests/test_decision_provider_boundaries.py"
+      ],
+      "history": [
+        "H06"
+      ]
+    },
+    {
+      "id": "MD-09",
+      "area": "Providers, models and Auto routing",
+      "title": "Google effort compatibility",
+      "profile": "live-provider",
+      "preconditions": "Existing private provider registrations; explicit models; bounded paid calls only for selected cases.",
+      "steps": "Exercise exact supported Google effort combinations, default-only and unsupported values.",
+      "expected": "Valid payloads succeed; unsupported combinations fail visibly before dispatch, no HTTP 400 loop.",
+      "evidence": "Exact source/environment, observed state or execution receipt, result and cleanup; browser cases also require desktop/mobile captures.",
+      "runner_suite": null,
+      "execution": "procedure",
+      "automated_references": [
+        "tests/test_approval_provider_compatibility.py",
+        "tests/test_aux_llm_owner_scope.py",
+        "tests/test_chat_provider_binding.py",
+        "tests/test_compare_endpoint_owner_scope.py",
+        "tests/test_cookbook_endpoint_registration.py",
+        "tests/test_decision_provider_boundaries.py"
+      ],
+      "history": [
+        "H06",
+        "H10"
+      ]
+    },
+    {
+      "id": "MD-10",
+      "area": "Providers, models and Auto routing",
+      "title": "OpenAI payload compatibility",
+      "profile": "live-provider",
+      "preconditions": "Existing private provider registrations; explicit models; bounded paid calls only for selected cases.",
+      "steps": "Run one selected OpenAI model with default effort, tools and configured sampling controls.",
+      "expected": "Provider accepts payload; reported model/usage/stream match execution; unsupported controls are omitted.",
+      "evidence": "Exact source/environment, observed state or execution receipt, result and cleanup; browser cases also require desktop/mobile captures.",
+      "runner_suite": null,
+      "execution": "procedure",
+      "automated_references": [
+        "tests/test_approval_provider_compatibility.py",
+        "tests/test_aux_llm_owner_scope.py",
+        "tests/test_chat_provider_binding.py",
+        "tests/test_compare_endpoint_owner_scope.py",
+        "tests/test_cookbook_endpoint_registration.py",
+        "tests/test_decision_provider_boundaries.py"
+      ],
+      "history": [
+        "H16"
+      ]
+    },
+    {
+      "id": "MD-11",
+      "area": "Providers, models and Auto routing",
+      "title": "Unknown model capabilities",
+      "profile": "live-provider",
+      "preconditions": "Existing private provider registrations; explicit models; bounded paid calls only for selected cases.",
+      "steps": "Register a controlled model with identity-only metadata and send default effort.",
+      "expected": "Default-only is disclosed; unfamiliar name is not guessed unavailable or assigned invented capability.",
+      "evidence": "Exact source/environment, observed state or execution receipt, result and cleanup; browser cases also require desktop/mobile captures.",
+      "runner_suite": null,
+      "execution": "procedure",
+      "automated_references": [
+        "tests/test_approval_provider_compatibility.py",
+        "tests/test_aux_llm_owner_scope.py",
+        "tests/test_chat_provider_binding.py",
+        "tests/test_compare_endpoint_owner_scope.py",
+        "tests/test_cookbook_endpoint_registration.py",
+        "tests/test_decision_provider_boundaries.py"
+      ],
+      "history": []
+    },
+    {
+      "id": "MD-12",
+      "area": "Providers, models and Auto routing",
+      "title": "Provider/account identity change",
+      "profile": "live-provider",
+      "preconditions": "Existing private provider registrations; explicit models; bounded paid calls only for selected cases.",
+      "steps": "Rotate a synthetic key or OAuth account during admission and resume old stream.",
+      "expected": "Stale credentials/capability revisions cannot dispatch; fresh exact registration can.",
+      "evidence": "Exact source/environment, observed state or execution receipt, result and cleanup; browser cases also require desktop/mobile captures.",
+      "runner_suite": null,
+      "execution": "procedure",
+      "automated_references": [
+        "tests/test_approval_provider_compatibility.py",
+        "tests/test_aux_llm_owner_scope.py",
+        "tests/test_chat_provider_binding.py",
+        "tests/test_compare_endpoint_owner_scope.py",
+        "tests/test_cookbook_endpoint_registration.py",
+        "tests/test_decision_provider_boundaries.py"
+      ],
+      "history": []
+    },
+    {
+      "id": "MD-13",
+      "area": "Providers, models and Auto routing",
+      "title": "Rate limit and transient failure",
+      "profile": "live-provider",
+      "preconditions": "Existing private provider registrations; explicit models; bounded paid calls only for selected cases.",
+      "steps": "Return controlled 429/5xx/timeout responses on one provider.",
+      "expected": "Finite visible failure; no silent provider switch, infinite retry or false completion.",
+      "evidence": "Exact source/environment, observed state or execution receipt, result and cleanup; browser cases also require desktop/mobile captures.",
+      "runner_suite": null,
+      "execution": "procedure",
+      "automated_references": [
+        "tests/test_approval_provider_compatibility.py",
+        "tests/test_aux_llm_owner_scope.py",
+        "tests/test_chat_provider_binding.py",
+        "tests/test_compare_endpoint_owner_scope.py",
+        "tests/test_cookbook_endpoint_registration.py",
+        "tests/test_decision_provider_boundaries.py"
+      ],
+      "history": [
+        "H06",
+        "H15"
+      ]
+    },
+    {
+      "id": "MD-14",
+      "area": "Providers, models and Auto routing",
+      "title": "OAuth and subscription refresh",
+      "profile": "live-provider",
+      "preconditions": "Existing private provider registrations; explicit models; bounded paid calls only for selected cases.",
+      "steps": "Expire synthetic OAuth credentials and switch linked account during a pending turn.",
+      "expected": "Refresh/account scope is correct; tokens remain server-side; no cross-account catalogue reuse.",
+      "evidence": "Exact source/environment, observed state or execution receipt, result and cleanup; browser cases also require desktop/mobile captures.",
+      "runner_suite": null,
+      "execution": "procedure",
+      "automated_references": [
+        "tests/test_approval_provider_compatibility.py",
+        "tests/test_aux_llm_owner_scope.py",
+        "tests/test_chat_provider_binding.py",
+        "tests/test_compare_endpoint_owner_scope.py",
+        "tests/test_cookbook_endpoint_registration.py",
+        "tests/test_decision_provider_boundaries.py"
+      ],
+      "history": []
+    },
+    {
+      "id": "MD-15",
+      "area": "Providers, models and Auto routing",
+      "title": "Local engines and proxy dialects",
+      "profile": "live-provider",
+      "preconditions": "Existing private provider registrations; explicit models; bounded paid calls only for selected cases.",
+      "steps": "Use retained Ollama/LM Studio/llama.cpp/vLLM/proxy fixtures for catalogue plus one streamed turn.",
+      "expected": "Correct native/compatible transport, model identity and tool-result shape per engine.",
+      "evidence": "Exact source/environment, observed state or execution receipt, result and cleanup; browser cases also require desktop/mobile captures.",
+      "runner_suite": null,
+      "execution": "procedure",
+      "automated_references": [
+        "tests/test_approval_provider_compatibility.py",
+        "tests/test_aux_llm_owner_scope.py",
+        "tests/test_chat_provider_binding.py",
+        "tests/test_compare_endpoint_owner_scope.py",
+        "tests/test_cookbook_endpoint_registration.py",
+        "tests/test_decision_provider_boundaries.py"
+      ],
+      "history": []
+    },
+    {
+      "id": "MD-16",
+      "area": "Providers, models and Auto routing",
+      "title": "Endpoint purpose separation",
+      "profile": "live-provider",
+      "preconditions": "Existing private provider registrations; explicit models; bounded paid calls only for selected cases.",
+      "steps": "Try a decision-only, image-only, hidden and foreign endpoint as a chat model.",
+      "expected": "Rejected before chat dispatch; execution provider stays separate from Jev.",
+      "evidence": "Exact source/environment, observed state or execution receipt, result and cleanup; browser cases also require desktop/mobile captures.",
+      "runner_suite": null,
+      "execution": "procedure",
+      "automated_references": [
+        "tests/test_approval_provider_compatibility.py",
+        "tests/test_aux_llm_owner_scope.py",
+        "tests/test_chat_provider_binding.py",
+        "tests/test_compare_endpoint_owner_scope.py",
+        "tests/test_cookbook_endpoint_registration.py",
+        "tests/test_decision_provider_boundaries.py"
+      ],
+      "history": []
+    },
+    {
+      "id": "CX-01",
+      "area": "Context, budgets and usage",
+      "title": "Selected model context label",
+      "profile": "live-provider",
+      "preconditions": "Known exact model context; synthetic histories; registered account-scoped evidence.",
+      "steps": "Create session, open context_info and compare model/context/workspace to selected descriptor.",
+      "expected": "Correct model and positive limit; known Gemma limit is 262144; existing workspace is visible.",
+      "evidence": "Exact source/environment, observed state or execution receipt, result and cleanup; browser cases also require desktop/mobile captures.",
+      "runner_suite": "state",
+      "execution": "runner",
+      "automated_references": [
+        "tests/test_agent_prompt_cache_metrics.py",
+        "tests/test_agent_runtime_context.py",
+        "tests/test_agent_unknown_context_budget.py",
+        "tests/test_chat_document_owner_context.py",
+        "tests/test_chat_url_prefetch_failure_context.py",
+        "tests/test_compact_calendar_create.py"
+      ],
+      "history": [
+        "H13"
+      ]
+    },
+    {
+      "id": "CX-02",
+      "area": "Context, budgets and usage",
+      "title": "Auto execution context",
+      "profile": "live-provider",
+      "preconditions": "Known exact model context; synthetic histories; registered account-scoped evidence.",
+      "steps": "Route a turn to each category and compare context panel with actual execution metrics.",
+      "expected": "Panel names the effective execution model rather than a stale bootstrap/default model.",
+      "evidence": "Exact source/environment, observed state or execution receipt, result and cleanup; browser cases also require desktop/mobile captures.",
+      "runner_suite": null,
+      "execution": "procedure",
+      "automated_references": [
+        "tests/test_agent_prompt_cache_metrics.py",
+        "tests/test_agent_runtime_context.py",
+        "tests/test_agent_unknown_context_budget.py",
+        "tests/test_chat_document_owner_context.py",
+        "tests/test_chat_url_prefetch_failure_context.py",
+        "tests/test_compact_calendar_create.py"
+      ],
+      "history": [
+        "H13"
+      ]
+    },
+    {
+      "id": "CX-03",
+      "area": "Context, budgets and usage",
+      "title": "Scoped context evidence",
+      "profile": "live-provider",
+      "preconditions": "Known exact model context; synthetic histories; registered account-scoped evidence.",
+      "steps": "Probe two controlled endpoints/accounts with same model ID and different limits.",
+      "expected": "Evidence and cached limits do not cross provider/account boundaries.",
+      "evidence": "Exact source/environment, observed state or execution receipt, result and cleanup; browser cases also require desktop/mobile captures.",
+      "runner_suite": null,
+      "execution": "procedure",
+      "automated_references": [
+        "tests/test_agent_prompt_cache_metrics.py",
+        "tests/test_agent_runtime_context.py",
+        "tests/test_agent_unknown_context_budget.py",
+        "tests/test_chat_document_owner_context.py",
+        "tests/test_chat_url_prefetch_failure_context.py",
+        "tests/test_compact_calendar_create.py"
+      ],
+      "history": []
+    },
+    {
+      "id": "CX-04",
+      "area": "Context, budgets and usage",
+      "title": "Budget enforcement",
+      "profile": "live-provider",
+      "preconditions": "Known exact model context; synthetic histories; registered account-scoped evidence.",
+      "steps": "Use a small controlled limit and oversized history/tool result with output reservation.",
+      "expected": "Fit/compaction/error honors exact model limit; output budget is preserved.",
+      "evidence": "Exact source/environment, observed state or execution receipt, result and cleanup; browser cases also require desktop/mobile captures.",
+      "runner_suite": null,
+      "execution": "procedure",
+      "automated_references": [
+        "tests/test_agent_prompt_cache_metrics.py",
+        "tests/test_agent_runtime_context.py",
+        "tests/test_agent_unknown_context_budget.py",
+        "tests/test_chat_document_owner_context.py",
+        "tests/test_chat_url_prefetch_failure_context.py",
+        "tests/test_compact_calendar_create.py"
+      ],
+      "history": []
+    },
+    {
+      "id": "CX-05",
+      "area": "Context, budgets and usage",
+      "title": "Prompt cache usage",
+      "profile": "live-provider",
+      "preconditions": "Known exact model context; synthetic histories; registered account-scoped evidence.",
+      "steps": "Repeat a stable-prefix request and change only the user tail.",
+      "expected": "Cached/input/output counts and costs reflect provider evidence; missing usage is unknown, not zero.",
+      "evidence": "Exact source/environment, observed state or execution receipt, result and cleanup; browser cases also require desktop/mobile captures.",
+      "runner_suite": null,
+      "execution": "procedure",
+      "automated_references": [
+        "tests/test_agent_prompt_cache_metrics.py",
+        "tests/test_agent_runtime_context.py",
+        "tests/test_agent_unknown_context_budget.py",
+        "tests/test_chat_document_owner_context.py",
+        "tests/test_chat_url_prefetch_failure_context.py",
+        "tests/test_compact_calendar_create.py"
+      ],
+      "history": []
+    },
+    {
+      "id": "CX-06",
+      "area": "Context, budgets and usage",
+      "title": "Compaction and history safety",
+      "profile": "live-provider",
+      "preconditions": "Known exact model context; synthetic histories; registered account-scoped evidence.",
+      "steps": "Compact a long synthetic chat with tool calls and nested fences, then continue.",
+      "expected": "Trusted instructions, exact tool pairing and current ask survive; malformed compact response preserves history.",
+      "evidence": "Exact source/environment, observed state or execution receipt, result and cleanup; browser cases also require desktop/mobile captures.",
+      "runner_suite": null,
+      "execution": "procedure",
+      "automated_references": [
+        "tests/test_agent_prompt_cache_metrics.py",
+        "tests/test_agent_runtime_context.py",
+        "tests/test_agent_unknown_context_budget.py",
+        "tests/test_chat_document_owner_context.py",
+        "tests/test_chat_url_prefetch_failure_context.py",
+        "tests/test_compact_calendar_create.py"
+      ],
+      "history": [
+        "H03"
+      ]
+    },
+    {
+      "id": "CX-07",
+      "area": "Context, budgets and usage",
+      "title": "Memory/skill injection switches",
+      "profile": "live-provider",
+      "preconditions": "Known exact model context; synthetic histories; registered account-scoped evidence.",
+      "steps": "Toggle memory and skill injection independently and inspect controlled prompt capture.",
+      "expected": "Only enabled, owned, budgeted context is injected; no external text becomes authority.",
+      "evidence": "Exact source/environment, observed state or execution receipt, result and cleanup; browser cases also require desktop/mobile captures.",
+      "runner_suite": null,
+      "execution": "procedure",
+      "automated_references": [
+        "tests/test_agent_prompt_cache_metrics.py",
+        "tests/test_agent_runtime_context.py",
+        "tests/test_agent_unknown_context_budget.py",
+        "tests/test_chat_document_owner_context.py",
+        "tests/test_chat_url_prefetch_failure_context.py",
+        "tests/test_compact_calendar_create.py"
+      ],
+      "history": []
+    },
+    {
+      "id": "CX-08",
+      "area": "Context, budgets and usage",
+      "title": "Usage across reconnect",
+      "profile": "live-provider",
+      "preconditions": "Known exact model context; synthetic histories; registered account-scoped evidence.",
+      "steps": "Disconnect and reconnect while streaming; compare durable decision and turn totals.",
+      "expected": "No duplicate billing/counting and unresolved usage remains explicit.",
+      "evidence": "Exact source/environment, observed state or execution receipt, result and cleanup; browser cases also require desktop/mobile captures.",
+      "runner_suite": null,
+      "execution": "procedure",
+      "automated_references": [
+        "tests/test_agent_prompt_cache_metrics.py",
+        "tests/test_agent_runtime_context.py",
+        "tests/test_agent_unknown_context_budget.py",
+        "tests/test_chat_document_owner_context.py",
+        "tests/test_chat_url_prefetch_failure_context.py",
+        "tests/test_compact_calendar_create.py"
+      ],
+      "history": []
+    },
+    {
+      "id": "CH-01",
+      "area": "Chat, streaming and Gemma",
+      "title": "One-round greeting",
+      "profile": "live-provider",
+      "preconditions": "Explicit selected model; synthetic marker; bounded stream; no retries hidden by harness.",
+      "steps": "Send a marker greeting through real agent SSE and reread history.",
+      "expected": "One agent round, zero tools, correct actual model, no guard/concatenation; assistant reply persists.",
+      "evidence": "Exact source/environment, observed state or execution receipt, result and cleanup; browser cases also require desktop/mobile captures.",
+      "runner_suite": "provider",
+      "execution": "runner",
+      "automated_references": [
+        "tests/smoke/test_chat_smoke.py",
+        "tests/streaming/invariant.test.mjs",
+        "tests/streaming/segmenter.test.mjs",
+        "tests/streamingRendererRaf.test.mjs",
+        "tests/test_agent_bash_tmux_env.py",
+        "tests/test_agent_bash_windows.py"
+      ],
+      "history": [
+        "H14",
+        "H16"
+      ]
+    },
+    {
+      "id": "CH-02",
+      "area": "Chat, streaming and Gemma",
+      "title": "Buffered and streamed parity",
+      "profile": "live-provider",
+      "preconditions": "Explicit selected model; synthetic marker; bounded stream; no retries hidden by harness.",
+      "steps": "Send controlled prompts through buffered and SSE routes.",
+      "expected": "Both reach provider and persist one complete assistant response.",
+      "evidence": "Exact source/environment, observed state or execution receipt, result and cleanup; browser cases also require desktop/mobile captures.",
+      "runner_suite": null,
+      "execution": "procedure",
+      "automated_references": [
+        "tests/smoke/test_chat_smoke.py",
+        "tests/streaming/invariant.test.mjs",
+        "tests/streaming/segmenter.test.mjs",
+        "tests/streamingRendererRaf.test.mjs",
+        "tests/test_agent_bash_tmux_env.py",
+        "tests/test_agent_bash_windows.py"
+      ],
+      "history": []
+    },
+    {
+      "id": "CH-03",
+      "area": "Chat, streaming and Gemma",
+      "title": "Gemma reasoning tags",
+      "profile": "live-provider",
+      "preconditions": "Explicit selected model; synthetic marker; bounded stream; no retries hidden by harness.",
+      "steps": "Replay thought/think/orphan-closing-tag variants; send a real Gemma greeting.",
+      "expected": "Reasoning normalization preserves valid visible answer; no false promised-action retry.",
+      "evidence": "Exact source/environment, observed state or execution receipt, result and cleanup; browser cases also require desktop/mobile captures.",
+      "runner_suite": null,
+      "execution": "procedure",
+      "automated_references": [
+        "tests/smoke/test_chat_smoke.py",
+        "tests/streaming/invariant.test.mjs",
+        "tests/streaming/segmenter.test.mjs",
+        "tests/streamingRendererRaf.test.mjs",
+        "tests/test_agent_bash_tmux_env.py",
+        "tests/test_agent_bash_windows.py"
+      ],
+      "history": [
+        "H14"
+      ]
+    },
+    {
+      "id": "CH-04",
+      "area": "Chat, streaming and Gemma",
+      "title": "Real promised action guard",
+      "profile": "live-provider",
+      "preconditions": "Explicit selected model; synthetic marker; bounded stream; no retries hidden by harness.",
+      "steps": "Have controlled provider repeatedly announce an action without calling a tool.",
+      "expected": "Finite guard stop; no false success and no concatenated repeated answers.",
+      "evidence": "Exact source/environment, observed state or execution receipt, result and cleanup; browser cases also require desktop/mobile captures.",
+      "runner_suite": null,
+      "execution": "procedure",
+      "automated_references": [
+        "tests/smoke/test_chat_smoke.py",
+        "tests/streaming/invariant.test.mjs",
+        "tests/streaming/segmenter.test.mjs",
+        "tests/streamingRendererRaf.test.mjs",
+        "tests/test_agent_bash_tmux_env.py",
+        "tests/test_agent_bash_windows.py"
+      ],
+      "history": [
+        "H14"
+      ]
+    },
+    {
+      "id": "CH-05",
+      "area": "Chat, streaming and Gemma",
+      "title": "Native tool names and arguments",
+      "profile": "live-provider",
+      "preconditions": "Explicit selected model; synthetic marker; bounded stream; no retries hidden by harness.",
+      "steps": "Ask exact file task on each selected real model and inspect declared versus requested tool names.",
+      "expected": "Only declared tools accepted; invalid shell alias/args stops visibly without pretending execution.",
+      "evidence": "Exact source/environment, observed state or execution receipt, result and cleanup; browser cases also require desktop/mobile captures.",
+      "runner_suite": null,
+      "execution": "procedure",
+      "automated_references": [
+        "tests/smoke/test_chat_smoke.py",
+        "tests/streaming/invariant.test.mjs",
+        "tests/streaming/segmenter.test.mjs",
+        "tests/streamingRendererRaf.test.mjs",
+        "tests/test_agent_bash_tmux_env.py",
+        "tests/test_agent_bash_windows.py"
+      ],
+      "history": [
+        "H15"
+      ]
+    },
+    {
+      "id": "CH-06",
+      "area": "Chat, streaming and Gemma",
+      "title": "Stream detach and reconnect",
+      "profile": "live-provider",
+      "preconditions": "Explicit selected model; synthetic marker; bounded stream; no retries hidden by harness.",
+      "steps": "Detach subscriber during a controlled slow turn, then reconnect.",
+      "expected": "One producer/submission persists; reconnect subscribes without replaying provider/tool effects.",
+      "evidence": "Exact source/environment, observed state or execution receipt, result and cleanup; browser cases also require desktop/mobile captures.",
+      "runner_suite": null,
+      "execution": "procedure",
+      "automated_references": [
+        "tests/smoke/test_chat_smoke.py",
+        "tests/streaming/invariant.test.mjs",
+        "tests/streaming/segmenter.test.mjs",
+        "tests/streamingRendererRaf.test.mjs",
+        "tests/test_agent_bash_tmux_env.py",
+        "tests/test_agent_bash_windows.py"
+      ],
+      "history": []
+    },
+    {
+      "id": "CH-07",
+      "area": "Chat, streaming and Gemma",
+      "title": "Stop during generation and tools",
+      "profile": "live-provider",
+      "preconditions": "Explicit selected model; synthetic marker; bounded stream; no retries hidden by harness.",
+      "steps": "Stop a slow stream and a child/grandchild process, then inspect process tree.",
+      "expected": "Generation and owned descendants stop; no zombie background operation or false completed reply.",
+      "evidence": "Exact source/environment, observed state or execution receipt, result and cleanup; browser cases also require desktop/mobile captures.",
+      "runner_suite": null,
+      "execution": "procedure",
+      "automated_references": [
+        "tests/smoke/test_chat_smoke.py",
+        "tests/streaming/invariant.test.mjs",
+        "tests/streaming/segmenter.test.mjs",
+        "tests/streamingRendererRaf.test.mjs",
+        "tests/test_agent_bash_tmux_env.py",
+        "tests/test_agent_bash_windows.py"
+      ],
+      "history": [
+        "H02"
+      ]
+    },
+    {
+      "id": "CH-08",
+      "area": "Chat, streaming and Gemma",
+      "title": "Concurrent chats",
+      "profile": "live-provider",
+      "preconditions": "Explicit selected model; synthetic marker; bounded stream; no retries hidden by harness.",
+      "steps": "Send different markers to two chats and navigate while both streams are active.",
+      "expected": "Deltas, prompts, metrics, approvals and history remain bound to the correct chat.",
+      "evidence": "Exact source/environment, observed state or execution receipt, result and cleanup; browser cases also require desktop/mobile captures.",
+      "runner_suite": null,
+      "execution": "procedure",
+      "automated_references": [
+        "tests/smoke/test_chat_smoke.py",
+        "tests/streaming/invariant.test.mjs",
+        "tests/streaming/segmenter.test.mjs",
+        "tests/streamingRendererRaf.test.mjs",
+        "tests/test_agent_bash_tmux_env.py",
+        "tests/test_agent_bash_windows.py"
+      ],
+      "history": []
+    },
+    {
+      "id": "CH-09",
+      "area": "Chat, streaming and Gemma",
+      "title": "Message edit, delete and fork",
+      "profile": "live-provider",
+      "preconditions": "Explicit selected model; synthetic marker; bounded stream; no retries hidden by harness.",
+      "steps": "Edit/retry one message, delete another and fork through an exact message ID.",
+      "expected": "Exact history boundaries and IDs persist; source fork metadata is not mutated.",
+      "evidence": "Exact source/environment, observed state or execution receipt, result and cleanup; browser cases also require desktop/mobile captures.",
+      "runner_suite": null,
+      "execution": "procedure",
+      "automated_references": [
+        "tests/smoke/test_chat_smoke.py",
+        "tests/streaming/invariant.test.mjs",
+        "tests/streaming/segmenter.test.mjs",
+        "tests/streamingRendererRaf.test.mjs",
+        "tests/test_agent_bash_tmux_env.py",
+        "tests/test_agent_bash_windows.py"
+      ],
+      "history": []
+    },
+    {
+      "id": "CH-10",
+      "area": "Chat, streaming and Gemma",
+      "title": "Attachment and Unicode turn",
+      "profile": "live-provider",
+      "preconditions": "Explicit selected model; synthetic marker; bounded stream; no retries hidden by harness.",
+      "steps": "Attach synthetic text/image and send multiline Unicode text.",
+      "expected": "Provider receives intended content, UI/history preserve Unicode and attachment ownership.",
+      "evidence": "Exact source/environment, observed state or execution receipt, result and cleanup; browser cases also require desktop/mobile captures.",
+      "runner_suite": null,
+      "execution": "procedure",
+      "automated_references": [
+        "tests/smoke/test_chat_smoke.py",
+        "tests/streaming/invariant.test.mjs",
+        "tests/streaming/segmenter.test.mjs",
+        "tests/streamingRendererRaf.test.mjs",
+        "tests/test_agent_bash_tmux_env.py",
+        "tests/test_agent_bash_windows.py"
+      ],
+      "history": []
+    },
+    {
+      "id": "CH-11",
+      "area": "Chat, streaming and Gemma",
+      "title": "Export and resume",
+      "profile": "live-provider",
+      "preconditions": "Explicit selected model; synthetic marker; bounded stream; no retries hidden by harness.",
+      "steps": "Export a labelled synthetic chat and reload its persisted form.",
+      "expected": "Roles, model, tool pairing and timestamps are preserved without decrypted credentials.",
+      "evidence": "Exact source/environment, observed state or execution receipt, result and cleanup; browser cases also require desktop/mobile captures.",
+      "runner_suite": null,
+      "execution": "procedure",
+      "automated_references": [
+        "tests/smoke/test_chat_smoke.py",
+        "tests/streaming/invariant.test.mjs",
+        "tests/streaming/segmenter.test.mjs",
+        "tests/streamingRendererRaf.test.mjs",
+        "tests/test_agent_bash_tmux_env.py",
+        "tests/test_agent_bash_windows.py"
+      ],
+      "history": []
+    },
+    {
+      "id": "FS-01",
+      "area": "Filesystem, processes and workspace",
+      "title": "Actual create/read/delete",
+      "profile": "live-provider",
+      "preconditions": "Dedicated synthetic workspace; native Bubblewrap profile; no user files.",
+      "steps": "Ask exact unique bash printf/cat/rm/test command through Auto-Approve.",
+      "expected": "One exact native receipt, expected bytes, zero exit status and verified absence after delete.",
+      "evidence": "Exact source/environment, observed state or execution receipt, result and cleanup; browser cases also require desktop/mobile captures.",
+      "runner_suite": "native",
+      "execution": "runner",
+      "automated_references": [
+        "tests/test_action_intents_shell_verbs.py",
+        "tests/test_bg_job_tools.py",
+        "tests/test_bg_jobs_store.py",
+        "tests/test_bound_turn_workspace.py",
+        "tests/test_chat_preprocess_tool_policy.py",
+        "tests/test_clean_v3_native_workspace.py"
+      ],
+      "history": [
+        "H08",
+        "H15",
+        "H16"
+      ]
+    },
+    {
+      "id": "FS-02",
+      "area": "Filesystem, processes and workspace",
+      "title": "Write durability including network mounts",
+      "profile": "live-provider",
+      "preconditions": "Dedicated synthetic workspace; native Bubblewrap profile; no user files.",
+      "steps": "On a disposable supported local/NFS mount write nonempty bytes, flush, read via independent client and replace atomically.",
+      "expected": "Reported success means exact durable bytes; empty/partial writes fail clearly.",
+      "evidence": "Exact source/environment, observed state or execution receipt, result and cleanup; browser cases also require desktop/mobile captures.",
+      "runner_suite": null,
+      "execution": "procedure",
+      "automated_references": [
+        "tests/test_action_intents_shell_verbs.py",
+        "tests/test_bg_job_tools.py",
+        "tests/test_bg_jobs_store.py",
+        "tests/test_bound_turn_workspace.py",
+        "tests/test_chat_preprocess_tool_policy.py",
+        "tests/test_clean_v3_native_workspace.py"
+      ],
+      "history": [
+        "H01"
+      ]
+    },
+    {
+      "id": "FS-03",
+      "area": "Filesystem, processes and workspace",
+      "title": "Empty and binary file semantics",
+      "profile": "live-provider",
+      "preconditions": "Dedicated synthetic workspace; native Bubblewrap profile; no user files.",
+      "steps": "Write/read zero-byte, binary, large bounded and Unicode-named synthetic files.",
+      "expected": "Byte-exact round trip and correct size; no implicit newline or encoding rewrite.",
+      "evidence": "Exact source/environment, observed state or execution receipt, result and cleanup; browser cases also require desktop/mobile captures.",
+      "runner_suite": null,
+      "execution": "procedure",
+      "automated_references": [
+        "tests/test_action_intents_shell_verbs.py",
+        "tests/test_bg_job_tools.py",
+        "tests/test_bg_jobs_store.py",
+        "tests/test_bound_turn_workspace.py",
+        "tests/test_chat_preprocess_tool_policy.py",
+        "tests/test_clean_v3_native_workspace.py"
+      ],
+      "history": [
+        "H01"
+      ]
+    },
+    {
+      "id": "FS-04",
+      "area": "Filesystem, processes and workspace",
+      "title": "Nested fences and quoting",
+      "profile": "live-provider",
+      "preconditions": "Dedicated synthetic workspace; native Bubblewrap profile; no user files.",
+      "steps": "Execute synthetic commands containing nested Markdown fences, dollar signs, quotes and newlines.",
+      "expected": "Complete intended command reaches process once; no fence truncation or shell interpolation by harness.",
+      "evidence": "Exact source/environment, observed state or execution receipt, result and cleanup; browser cases also require desktop/mobile captures.",
+      "runner_suite": null,
+      "execution": "procedure",
+      "automated_references": [
+        "tests/test_action_intents_shell_verbs.py",
+        "tests/test_bg_job_tools.py",
+        "tests/test_bg_jobs_store.py",
+        "tests/test_bound_turn_workspace.py",
+        "tests/test_chat_preprocess_tool_policy.py",
+        "tests/test_clean_v3_native_workspace.py"
+      ],
+      "history": [
+        "H03"
+      ]
+    },
+    {
+      "id": "FS-05",
+      "area": "Filesystem, processes and workspace",
+      "title": "Windows newline preservation",
+      "profile": "live-provider",
+      "preconditions": "Dedicated synthetic workspace; native Bubblewrap profile; no user files.",
+      "steps": "On disposable Windows/WSL fixtures write LF/CRLF content through each editing path.",
+      "expected": "Intentional line endings and file bytes survive; unsupported paths are explicit.",
+      "evidence": "Exact source/environment, observed state or execution receipt, result and cleanup; browser cases also require desktop/mobile captures.",
+      "runner_suite": null,
+      "execution": "procedure",
+      "automated_references": [
+        "tests/test_action_intents_shell_verbs.py",
+        "tests/test_bg_job_tools.py",
+        "tests/test_bg_jobs_store.py",
+        "tests/test_bound_turn_workspace.py",
+        "tests/test_chat_preprocess_tool_policy.py",
+        "tests/test_clean_v3_native_workspace.py"
+      ],
+      "history": [
+        "H03"
+      ]
+    },
+    {
+      "id": "FS-06",
+      "area": "Filesystem, processes and workspace",
+      "title": "Workspace default and switching",
+      "profile": "live-provider",
+      "preconditions": "Dedicated synthetic workspace; native Bubblewrap profile; no user files.",
+      "steps": "Start with no selection, create vetted folder, switch while a chat is open and use file/process tools.",
+      "expected": "One canonical workspace/cwd across UI, session, file tool and process; existing files remain accessible.",
+      "evidence": "Exact source/environment, observed state or execution receipt, result and cleanup; browser cases also require desktop/mobile captures.",
+      "runner_suite": null,
+      "execution": "procedure",
+      "automated_references": [
+        "tests/test_action_intents_shell_verbs.py",
+        "tests/test_bg_job_tools.py",
+        "tests/test_bg_jobs_store.py",
+        "tests/test_bound_turn_workspace.py",
+        "tests/test_chat_preprocess_tool_policy.py",
+        "tests/test_clean_v3_native_workspace.py"
+      ],
+      "history": [
+        "H07"
+      ]
+    },
+    {
+      "id": "FS-07",
+      "area": "Filesystem, processes and workspace",
+      "title": "Traversal and symlink races",
+      "profile": "live-provider",
+      "preconditions": "Dedicated synthetic workspace; native Bubblewrap profile; no user files.",
+      "steps": "Attempt parent traversal, redirected symlink and renamed granted directory during operation.",
+      "expected": "Identity checks reject escape/race before effects; no outside file read or write.",
+      "evidence": "Exact source/environment, observed state or execution receipt, result and cleanup; browser cases also require desktop/mobile captures.",
+      "runner_suite": null,
+      "execution": "procedure",
+      "automated_references": [
+        "tests/test_action_intents_shell_verbs.py",
+        "tests/test_bg_job_tools.py",
+        "tests/test_bg_jobs_store.py",
+        "tests/test_bound_turn_workspace.py",
+        "tests/test_chat_preprocess_tool_policy.py",
+        "tests/test_clean_v3_native_workspace.py"
+      ],
+      "history": []
+    },
+    {
+      "id": "FS-08",
+      "area": "Filesystem, processes and workspace",
+      "title": "Missing containment",
+      "profile": "live-provider",
+      "preconditions": "Dedicated synthetic workspace; native Bubblewrap profile; no user files.",
+      "steps": "Remove native launcher in disposable profile and attempt a process action in every mode.",
+      "expected": "Execution refuses to run; no uncontained fallback even in YOLO.",
+      "evidence": "Exact source/environment, observed state or execution receipt, result and cleanup; browser cases also require desktop/mobile captures.",
+      "runner_suite": null,
+      "execution": "procedure",
+      "automated_references": [
+        "tests/test_action_intents_shell_verbs.py",
+        "tests/test_bg_job_tools.py",
+        "tests/test_bg_jobs_store.py",
+        "tests/test_bound_turn_workspace.py",
+        "tests/test_chat_preprocess_tool_policy.py",
+        "tests/test_clean_v3_native_workspace.py"
+      ],
+      "history": [
+        "H15"
+      ]
+    },
+    {
+      "id": "FS-09",
+      "area": "Filesystem, processes and workspace",
+      "title": "Private server-state exclusion",
+      "profile": "live-provider",
+      "preconditions": "Dedicated synthetic workspace; native Bubblewrap profile; no user files.",
+      "steps": "Place synthetic sentinel outside workspace and try to read it through native child.",
+      "expected": "Contained child cannot see server state or provider credentials.",
+      "evidence": "Exact source/environment, observed state or execution receipt, result and cleanup; browser cases also require desktop/mobile captures.",
+      "runner_suite": null,
+      "execution": "procedure",
+      "automated_references": [
+        "tests/test_action_intents_shell_verbs.py",
+        "tests/test_bg_job_tools.py",
+        "tests/test_bg_jobs_store.py",
+        "tests/test_bound_turn_workspace.py",
+        "tests/test_chat_preprocess_tool_policy.py",
+        "tests/test_clean_v3_native_workspace.py"
+      ],
+      "history": []
+    },
+    {
+      "id": "FS-10",
+      "area": "Filesystem, processes and workspace",
+      "title": "Read-only additional root",
+      "profile": "live-provider",
+      "preconditions": "Dedicated synthetic workspace; native Bubblewrap profile; no user files.",
+      "steps": "Grant one synthetic root read-only and attempt reads then writes from native and file tools.",
+      "expected": "Reads work, writes fail; deployment/owner ceilings stay enforced.",
+      "evidence": "Exact source/environment, observed state or execution receipt, result and cleanup; browser cases also require desktop/mobile captures.",
+      "runner_suite": null,
+      "execution": "procedure",
+      "automated_references": [
+        "tests/test_action_intents_shell_verbs.py",
+        "tests/test_bg_job_tools.py",
+        "tests/test_bg_jobs_store.py",
+        "tests/test_bound_turn_workspace.py",
+        "tests/test_chat_preprocess_tool_policy.py",
+        "tests/test_clean_v3_native_workspace.py"
+      ],
+      "history": []
+    },
+    {
+      "id": "FS-11",
+      "area": "Filesystem, processes and workspace",
+      "title": "One-use process reservation",
+      "profile": "live-provider",
+      "preconditions": "Dedicated synthetic workspace; native Bubblewrap profile; no user files.",
+      "steps": "Approve synchronous process action and inspect review, claim and execution identity.",
+      "expected": "One original server reservation is reused; no mismatch, duplicate claim or second execution.",
+      "evidence": "Exact source/environment, observed state or execution receipt, result and cleanup; browser cases also require desktop/mobile captures.",
+      "runner_suite": null,
+      "execution": "procedure",
+      "automated_references": [
+        "tests/test_action_intents_shell_verbs.py",
+        "tests/test_bg_job_tools.py",
+        "tests/test_bg_jobs_store.py",
+        "tests/test_bound_turn_workspace.py",
+        "tests/test_chat_preprocess_tool_policy.py",
+        "tests/test_clean_v3_native_workspace.py"
+      ],
+      "history": [
+        "H15"
+      ]
+    },
+    {
+      "id": "FS-12",
+      "area": "Filesystem, processes and workspace",
+      "title": "Background job ownership",
+      "profile": "live-provider",
+      "preconditions": "Dedicated synthetic workspace; native Bubblewrap profile; no user files.",
+      "steps": "Create two owned jobs, poll, stop one and try cross-owner polling/stopping.",
+      "expected": "Lifecycle/output stay owned, bounded and cancellable; no lingering descendants.",
+      "evidence": "Exact source/environment, observed state or execution receipt, result and cleanup; browser cases also require desktop/mobile captures.",
+      "runner_suite": null,
+      "execution": "procedure",
+      "automated_references": [
+        "tests/test_action_intents_shell_verbs.py",
+        "tests/test_bg_job_tools.py",
+        "tests/test_bg_jobs_store.py",
+        "tests/test_bound_turn_workspace.py",
+        "tests/test_chat_preprocess_tool_policy.py",
+        "tests/test_clean_v3_native_workspace.py"
+      ],
+      "history": [
+        "H02"
+      ]
+    },
+    {
+      "id": "FS-13",
+      "area": "Filesystem, processes and workspace",
+      "title": "Filesystem error and interruption",
+      "profile": "live-provider",
+      "preconditions": "Dedicated synthetic workspace; native Bubblewrap profile; no user files.",
+      "steps": "Force disk-full, denied write and mid-replace interruption on disposable storage.",
+      "expected": "Original survives atomic failure; no successful empty-write claim or partial corruption.",
+      "evidence": "Exact source/environment, observed state or execution receipt, result and cleanup; browser cases also require desktop/mobile captures.",
+      "runner_suite": null,
+      "execution": "procedure",
+      "automated_references": [
+        "tests/test_action_intents_shell_verbs.py",
+        "tests/test_bg_job_tools.py",
+        "tests/test_bg_jobs_store.py",
+        "tests/test_bound_turn_workspace.py",
+        "tests/test_chat_preprocess_tool_policy.py",
+        "tests/test_clean_v3_native_workspace.py"
+      ],
+      "history": [
+        "H01"
+      ]
+    },
+    {
+      "id": "UI-01",
+      "area": "Browser and interaction",
+      "title": "Permission menu stability",
+      "profile": "live-browser",
+      "preconditions": "Actual deployed app, desktop and true 390px mobile browser; headless/offscreen captures.",
+      "steps": "Open permission menu with delayed availability response, navigate all three states and close/reopen.",
+      "expected": "No wrong-menu flicker, focus loss or offscreen popup; each state has its correct left icon.",
+      "evidence": "Exact source/environment, observed state or execution receipt, result and cleanup; browser cases also require desktop/mobile captures.",
+      "runner_suite": null,
+      "execution": "procedure",
+      "automated_references": [
+        "tests/sidebarNewChat.test.mjs",
+        "tests/test_agent_bash_windows.py",
+        "tests/test_chat_automation_api.py",
+        "tests/test_chat_automation_boundaries.py",
+        "tests/test_chat_automation_ingress.py",
+        "tests/test_chat_automation_policy.py"
+      ],
+      "history": [
+        "H07",
+        "H12"
+      ]
+    },
+    {
+      "id": "UI-02",
+      "area": "Browser and interaction",
+      "title": "Composer model control while typing",
+      "profile": "live-browser",
+      "preconditions": "Actual deployed app, desktop and true 390px mobile browser; headless/offscreen captures.",
+      "steps": "Type long wrapped input and resize narrow/wide; open model menu.",
+      "expected": "Auto/model selector remains visible by Agent/Chat and does not cover send or input.",
+      "evidence": "Exact source/environment, observed state or execution receipt, result and cleanup; browser cases also require desktop/mobile captures.",
+      "runner_suite": null,
+      "execution": "procedure",
+      "automated_references": [
+        "tests/sidebarNewChat.test.mjs",
+        "tests/test_agent_bash_windows.py",
+        "tests/test_chat_automation_api.py",
+        "tests/test_chat_automation_boundaries.py",
+        "tests/test_chat_automation_ingress.py",
+        "tests/test_chat_automation_policy.py"
+      ],
+      "history": [
+        "H12"
+      ]
+    },
+    {
+      "id": "UI-03",
+      "area": "Browser and interaction",
+      "title": "Sidebar text and icons",
+      "profile": "live-browser",
+      "preconditions": "Actual deployed app, desktop and true 390px mobile browser; headless/offscreen captures.",
+      "steps": "Compare collapsed and expanded sidebar at default zoom on deployed desktop/mobile.",
+      "expected": "Readable established font/icon sizes, no deployment-specific scaling or clipped labels.",
+      "evidence": "Exact source/environment, observed state or execution receipt, result and cleanup; browser cases also require desktop/mobile captures.",
+      "runner_suite": null,
+      "execution": "procedure",
+      "automated_references": [
+        "tests/sidebarNewChat.test.mjs",
+        "tests/test_agent_bash_windows.py",
+        "tests/test_chat_automation_api.py",
+        "tests/test_chat_automation_boundaries.py",
+        "tests/test_chat_automation_ingress.py",
+        "tests/test_chat_automation_policy.py"
+      ],
+      "history": [
+        "H11"
+      ]
+    },
+    {
+      "id": "UI-04",
+      "area": "Browser and interaction",
+      "title": "Scroll scale and text rendering",
+      "profile": "live-browser",
+      "preconditions": "Actual deployed app, desktop and true 390px mobile browser; headless/offscreen captures.",
+      "steps": "Scroll long chat/menus repeatedly with touchpad/wheel; inspect zoom/transform/computed font and capture.",
+      "expected": "No scroll-driven zoom, scale transform, subpixel resize or text-size jump.",
+      "evidence": "Exact source/environment, observed state or execution receipt, result and cleanup; browser cases also require desktop/mobile captures.",
+      "runner_suite": null,
+      "execution": "procedure",
+      "automated_references": [
+        "tests/sidebarNewChat.test.mjs",
+        "tests/test_agent_bash_windows.py",
+        "tests/test_chat_automation_api.py",
+        "tests/test_chat_automation_boundaries.py",
+        "tests/test_chat_automation_ingress.py",
+        "tests/test_chat_automation_policy.py"
+      ],
+      "history": [
+        "H11"
+      ]
+    },
+    {
+      "id": "UI-05",
+      "area": "Browser and interaction",
+      "title": "Drag and resize responsiveness",
+      "profile": "live-browser",
+      "preconditions": "Actual deployed app, desktop and true 390px mobile browser; headless/offscreen captures.",
+      "steps": "Drag/resize windows on long chat with decision panel open; record input/frame timings.",
+      "expected": "One bounded update per frame, correct final position and no runaway listeners/layout work.",
+      "evidence": "Exact source/environment, observed state or execution receipt, result and cleanup; browser cases also require desktop/mobile captures.",
+      "runner_suite": null,
+      "execution": "procedure",
+      "automated_references": [
+        "tests/sidebarNewChat.test.mjs",
+        "tests/test_agent_bash_windows.py",
+        "tests/test_chat_automation_api.py",
+        "tests/test_chat_automation_boundaries.py",
+        "tests/test_chat_automation_ingress.py",
+        "tests/test_chat_automation_policy.py"
+      ],
+      "history": [
+        "H11"
+      ]
+    },
+    {
+      "id": "UI-06",
+      "area": "Browser and interaction",
+      "title": "Decision panel placement and refresh",
+      "profile": "live-browser",
+      "preconditions": "Actual deployed app, desktop and true 390px mobile browser; headless/offscreen captures.",
+      "steps": "Open panel, refresh during a live decision and navigate away/back.",
+      "expected": "Panel does not cover composer; manual refresh does not reset unrelated UI or duplicate entries.",
+      "evidence": "Exact source/environment, observed state or execution receipt, result and cleanup; browser cases also require desktop/mobile captures.",
+      "runner_suite": null,
+      "execution": "procedure",
+      "automated_references": [
+        "tests/sidebarNewChat.test.mjs",
+        "tests/test_agent_bash_windows.py",
+        "tests/test_chat_automation_api.py",
+        "tests/test_chat_automation_boundaries.py",
+        "tests/test_chat_automation_ingress.py",
+        "tests/test_chat_automation_policy.py"
+      ],
+      "history": [
+        "H07"
+      ]
+    },
+    {
+      "id": "UI-07",
+      "area": "Browser and interaction",
+      "title": "Context panel accuracy",
+      "profile": "live-browser",
+      "preconditions": "Actual deployed app, desktop and true 390px mobile browser; headless/offscreen captures.",
+      "steps": "Switch manual/Auto models and open context panel before and after one turn.",
+      "expected": "Effective model, context limit and usage match server evidence; no stale Gemini label.",
+      "evidence": "Exact source/environment, observed state or execution receipt, result and cleanup; browser cases also require desktop/mobile captures.",
+      "runner_suite": null,
+      "execution": "procedure",
+      "automated_references": [
+        "tests/sidebarNewChat.test.mjs",
+        "tests/test_agent_bash_windows.py",
+        "tests/test_chat_automation_api.py",
+        "tests/test_chat_automation_boundaries.py",
+        "tests/test_chat_automation_ingress.py",
+        "tests/test_chat_automation_policy.py"
+      ],
+      "history": [
+        "H13"
+      ]
+    },
+    {
+      "id": "UI-08",
+      "area": "Browser and interaction",
+      "title": "Unavailable temperature control",
+      "profile": "live-browser",
+      "preconditions": "Actual deployed app, desktop and true 390px mobile browser; headless/offscreen captures.",
+      "steps": "Select models that omit sampling controls then a model that accepts them.",
+      "expected": "Disabled/gray state follows actual request policy; control value is sent only when supported.",
+      "evidence": "Exact source/environment, observed state or execution receipt, result and cleanup; browser cases also require desktop/mobile captures.",
+      "runner_suite": null,
+      "execution": "procedure",
+      "automated_references": [
+        "tests/sidebarNewChat.test.mjs",
+        "tests/test_agent_bash_windows.py",
+        "tests/test_chat_automation_api.py",
+        "tests/test_chat_automation_boundaries.py",
+        "tests/test_chat_automation_ingress.py",
+        "tests/test_chat_automation_policy.py"
+      ],
+      "history": []
+    },
+    {
+      "id": "UI-09",
+      "area": "Browser and interaction",
+      "title": "Reload, offline and service worker",
+      "profile": "live-browser",
+      "preconditions": "Actual deployed app, desktop and true 390px mobile browser; headless/offscreen captures.",
+      "steps": "Reload after deployment, simulate offline, then restore connectivity.",
+      "expected": "Committed module graph loads consistently; explicit offline status, no stale hybrid UI.",
+      "evidence": "Exact source/environment, observed state or execution receipt, result and cleanup; browser cases also require desktop/mobile captures.",
+      "runner_suite": null,
+      "execution": "procedure",
+      "automated_references": [
+        "tests/sidebarNewChat.test.mjs",
+        "tests/test_agent_bash_windows.py",
+        "tests/test_chat_automation_api.py",
+        "tests/test_chat_automation_boundaries.py",
+        "tests/test_chat_automation_ingress.py",
+        "tests/test_chat_automation_policy.py"
+      ],
+      "history": [
+        "H09"
+      ]
+    },
+    {
+      "id": "UI-10",
+      "area": "Browser and interaction",
+      "title": "Keyboard, touch and reduced motion",
+      "profile": "live-browser",
+      "preconditions": "Actual deployed app, desktop and true 390px mobile browser; headless/offscreen captures.",
+      "steps": "Navigate menus with keyboard/Escape, tap on mobile, and enable reduced motion.",
+      "expected": "Focus/ARIA state, touch targets and animations remain usable without accidental actions.",
+      "evidence": "Exact source/environment, observed state or execution receipt, result and cleanup; browser cases also require desktop/mobile captures.",
+      "runner_suite": null,
+      "execution": "procedure",
+      "automated_references": [
+        "tests/sidebarNewChat.test.mjs",
+        "tests/test_agent_bash_windows.py",
+        "tests/test_chat_automation_api.py",
+        "tests/test_chat_automation_boundaries.py",
+        "tests/test_chat_automation_ingress.py",
+        "tests/test_chat_automation_policy.py"
+      ],
+      "history": []
+    },
+    {
+      "id": "UI-11",
+      "area": "Browser and interaction",
+      "title": "Streaming markdown and tool output",
+      "profile": "live-browser",
+      "preconditions": "Actual deployed app, desktop and true 390px mobile browser; headless/offscreen captures.",
+      "steps": "Render long code blocks, nested fences, errors, reasoning toggles and images while streaming.",
+      "expected": "Content stays intact and scroll/focus stable; tool status agrees with server receipt.",
+      "evidence": "Exact source/environment, observed state or execution receipt, result and cleanup; browser cases also require desktop/mobile captures.",
+      "runner_suite": null,
+      "execution": "procedure",
+      "automated_references": [
+        "tests/sidebarNewChat.test.mjs",
+        "tests/test_agent_bash_windows.py",
+        "tests/test_chat_automation_api.py",
+        "tests/test_chat_automation_boundaries.py",
+        "tests/test_chat_automation_ingress.py",
+        "tests/test_chat_automation_policy.py"
+      ],
+      "history": []
+    },
+    {
+      "id": "UI-12",
+      "area": "Browser and interaction",
+      "title": "Theme and layout persistence",
+      "profile": "live-browser",
+      "preconditions": "Actual deployed app, desktop and true 390px mobile browser; headless/offscreen captures.",
+      "steps": "Change existing theme/sidebar state, open another chat and log in again.",
+      "expected": "Supported preferences persist without altering model or permission settings.",
+      "evidence": "Exact source/environment, observed state or execution receipt, result and cleanup; browser cases also require desktop/mobile captures.",
+      "runner_suite": null,
+      "execution": "procedure",
+      "automated_references": [
+        "tests/sidebarNewChat.test.mjs",
+        "tests/test_agent_bash_windows.py",
+        "tests/test_chat_automation_api.py",
+        "tests/test_chat_automation_boundaries.py",
+        "tests/test_chat_automation_ingress.py",
+        "tests/test_chat_automation_policy.py"
+      ],
+      "history": []
+    },
+    {
+      "id": "NT-01",
+      "area": "Notes",
+      "title": "Note CRUD",
+      "profile": "live-api",
+      "preconditions": "Only uniquely labelled synthetic notes; cleanup exact created IDs.",
+      "steps": "Create note, read exact text, edit and delete, then read deleted ID.",
+      "expected": "Exact text/edit persists; deleted ID is 404.",
+      "evidence": "Exact source/environment, observed state or execution receipt, result and cleanup; browser cases also require desktop/mobile captures.",
+      "runner_suite": "crud",
+      "execution": "runner",
+      "automated_references": [
+        "tests/cli/test_notes_cli_items.py",
+        "tests/noteTestOracle.test.mjs",
+        "tests/notesApplication.test.mjs",
+        "tests/notesCharacterization.test.mjs",
+        "tests/notesDraftAutosave.test.mjs",
+        "tests/notesInfrastructure.test.mjs"
+      ],
+      "history": []
+    },
+    {
+      "id": "NT-02",
+      "area": "Notes",
+      "title": "Note recurrence and reminders",
+      "profile": "live-api",
+      "preconditions": "Only uniquely labelled synthetic notes; cleanup exact created IDs.",
+      "steps": "Create synthetic recurring reminder in DST/timezone fixtures and advance controlled clock.",
+      "expected": "Expected occurrences fire once with correct local time; pause/delete prevents delivery.",
+      "evidence": "Exact source/environment, observed state or execution receipt, result and cleanup; browser cases also require desktop/mobile captures.",
+      "runner_suite": null,
+      "execution": "procedure",
+      "automated_references": [
+        "tests/cli/test_notes_cli_items.py",
+        "tests/noteTestOracle.test.mjs",
+        "tests/notesApplication.test.mjs",
+        "tests/notesCharacterization.test.mjs",
+        "tests/notesDraftAutosave.test.mjs",
+        "tests/notesInfrastructure.test.mjs"
+      ],
+      "history": []
+    },
+    {
+      "id": "NT-03",
+      "area": "Notes",
+      "title": "Notes desktop/mobile/offline",
+      "profile": "live-api",
+      "preconditions": "Only uniquely labelled synthetic notes; cleanup exact created IDs.",
+      "steps": "Edit and reorder a synthetic note in actual browser, reload and exercise offline reconnect.",
+      "expected": "Draft, selection and saved state survive; no duplicated reminders or lost edit.",
+      "evidence": "Exact source/environment, observed state or execution receipt, result and cleanup; browser cases also require desktop/mobile captures.",
+      "runner_suite": null,
+      "execution": "procedure",
+      "automated_references": [
+        "tests/cli/test_notes_cli_items.py",
+        "tests/noteTestOracle.test.mjs",
+        "tests/notesApplication.test.mjs",
+        "tests/notesCharacterization.test.mjs",
+        "tests/notesDraftAutosave.test.mjs",
+        "tests/notesInfrastructure.test.mjs"
+      ],
+      "history": []
+    },
+    {
+      "id": "DC-01",
+      "area": "Documents, uploads and RAG",
+      "title": "Versioned document restore",
+      "profile": "live-api",
+      "preconditions": "Synthetic documents/attachments only; retained index service for RAG cases.",
+      "steps": "Create, edit with a forced version, inspect versions, restore v1 and delete.",
+      "expected": "Exact original content returns; version history and owned cleanup work.",
+      "evidence": "Exact source/environment, observed state or execution receipt, result and cleanup; browser cases also require desktop/mobile captures.",
+      "runner_suite": "crud",
+      "execution": "runner",
+      "automated_references": [
+        "tests/smoke/test_documents_rag_smoke.py",
+        "tests/smoke/test_documents_smoke.py",
+        "tests/smoke/test_uploads_smoke.py",
+        "tests/test_active_document_clear.py",
+        "tests/test_active_document_mutation_guard.py",
+        "tests/test_active_document_visibility_contract.py"
+      ],
+      "history": []
+    },
+    {
+      "id": "DC-02",
+      "area": "Documents, uploads and RAG",
+      "title": "Attachment bytes and ownership",
+      "profile": "live-api",
+      "preconditions": "Synthetic documents/attachments only; retained index service for RAG cases.",
+      "steps": "Upload unique binary/text bytes, fetch, query stats, try foreign access and delete.",
+      "expected": "Byte equality, MIME/size and owner enforcement; no orphan file after cleanup.",
+      "evidence": "Exact source/environment, observed state or execution receipt, result and cleanup; browser cases also require desktop/mobile captures.",
+      "runner_suite": null,
+      "execution": "procedure",
+      "automated_references": [
+        "tests/smoke/test_documents_rag_smoke.py",
+        "tests/smoke/test_documents_smoke.py",
+        "tests/smoke/test_uploads_smoke.py",
+        "tests/test_active_document_clear.py",
+        "tests/test_active_document_mutation_guard.py",
+        "tests/test_active_document_visibility_contract.py"
+      ],
+      "history": []
+    },
+    {
+      "id": "DC-03",
+      "area": "Documents, uploads and RAG",
+      "title": "RAG retrieval with evidence",
+      "profile": "live-api",
+      "preconditions": "Synthetic documents/attachments only; retained index service for RAG cases.",
+      "steps": "Index synthetic text/PDF/Office file containing unique facts; query each fact.",
+      "expected": "Relevant owned chunks/citations returned; unrelated/private documents absent.",
+      "evidence": "Exact source/environment, observed state or execution receipt, result and cleanup; browser cases also require desktop/mobile captures.",
+      "runner_suite": null,
+      "execution": "procedure",
+      "automated_references": [
+        "tests/smoke/test_documents_rag_smoke.py",
+        "tests/smoke/test_documents_smoke.py",
+        "tests/smoke/test_uploads_smoke.py",
+        "tests/test_active_document_clear.py",
+        "tests/test_active_document_mutation_guard.py",
+        "tests/test_active_document_visibility_contract.py"
+      ],
+      "history": []
+    },
+    {
+      "id": "DC-04",
+      "area": "Documents, uploads and RAG",
+      "title": "OCR and optional parsers",
+      "profile": "live-api",
+      "preconditions": "Synthetic documents/attachments only; retained index service for RAG cases.",
+      "steps": "Upload controlled image/scanned PDF with OCR/parser available and unavailable.",
+      "expected": "Correct extracted text or explicit degraded result; rejection does not lose original attachment.",
+      "evidence": "Exact source/environment, observed state or execution receipt, result and cleanup; browser cases also require desktop/mobile captures.",
+      "runner_suite": null,
+      "execution": "procedure",
+      "automated_references": [
+        "tests/smoke/test_documents_rag_smoke.py",
+        "tests/smoke/test_documents_smoke.py",
+        "tests/smoke/test_uploads_smoke.py",
+        "tests/test_active_document_clear.py",
+        "tests/test_active_document_mutation_guard.py",
+        "tests/test_active_document_visibility_contract.py"
+      ],
+      "history": []
+    },
+    {
+      "id": "DC-05",
+      "area": "Documents, uploads and RAG",
+      "title": "Rich content and export",
+      "profile": "live-api",
+      "preconditions": "Synthetic documents/attachments only; retained index service for RAG cases.",
+      "steps": "Round-trip tables, nested lists, math, code and PDF/form export through editor.",
+      "expected": "Structure and rendered/exported bytes match intent; no lost header or embedded active content.",
+      "evidence": "Exact source/environment, observed state or execution receipt, result and cleanup; browser cases also require desktop/mobile captures.",
+      "runner_suite": null,
+      "execution": "procedure",
+      "automated_references": [
+        "tests/smoke/test_documents_rag_smoke.py",
+        "tests/smoke/test_documents_smoke.py",
+        "tests/smoke/test_uploads_smoke.py",
+        "tests/test_active_document_clear.py",
+        "tests/test_active_document_mutation_guard.py",
+        "tests/test_active_document_visibility_contract.py"
+      ],
+      "history": []
+    },
+    {
+      "id": "DC-06",
+      "area": "Documents, uploads and RAG",
+      "title": "Index deletion and failure recovery",
+      "profile": "live-api",
+      "preconditions": "Synthetic documents/attachments only; retained index service for RAG cases.",
+      "steps": "Interrupt indexing, retry exact owned upload and then delete document.",
+      "expected": "No duplicate chunks; deleted document cannot be recalled; errors preserve source bytes.",
+      "evidence": "Exact source/environment, observed state or execution receipt, result and cleanup; browser cases also require desktop/mobile captures.",
+      "runner_suite": null,
+      "execution": "procedure",
+      "automated_references": [
+        "tests/smoke/test_documents_rag_smoke.py",
+        "tests/smoke/test_documents_smoke.py",
+        "tests/smoke/test_uploads_smoke.py",
+        "tests/test_active_document_clear.py",
+        "tests/test_active_document_mutation_guard.py",
+        "tests/test_active_document_visibility_contract.py"
+      ],
+      "history": []
+    },
+    {
+      "id": "CA-01",
+      "area": "Calendar, contacts, tasks and delivery",
+      "title": "Calendar event CRUD",
+      "profile": "live-external",
+      "preconditions": "Synthetic local calendar/contact/mail servers; disabled real outbound delivery.",
+      "steps": "Create synthetic event, list its time window, edit, read and delete by exact UID.",
+      "expected": "Correct event appears once with intended timezone; deleted UID disappears.",
+      "evidence": "Exact source/environment, observed state or execution receipt, result and cleanup; browser cases also require desktop/mobile captures.",
+      "runner_suite": null,
+      "execution": "procedure",
+      "automated_references": [
+        "tests/cli/test_calendar_cli_name.py",
+        "tests/cli/test_contacts_cli_rows.py",
+        "tests/smoke/test_calendar_smoke.py",
+        "tests/test_action_intents_calendar.py",
+        "tests/test_automation_task_state.py",
+        "tests/test_caldav_bidirectional_sync.py"
+      ],
+      "history": []
+    },
+    {
+      "id": "CA-02",
+      "area": "Calendar, contacts, tasks and delivery",
+      "title": "Calendar recurrence and DST",
+      "profile": "live-external",
+      "preconditions": "Synthetic local calendar/contact/mail servers; disabled real outbound delivery.",
+      "steps": "Create recurring/all-day events spanning DST and cross-midnight timezones.",
+      "expected": "Occurrence windows and edits/deletions match independent calendar oracle.",
+      "evidence": "Exact source/environment, observed state or execution receipt, result and cleanup; browser cases also require desktop/mobile captures.",
+      "runner_suite": null,
+      "execution": "procedure",
+      "automated_references": [
+        "tests/cli/test_calendar_cli_name.py",
+        "tests/cli/test_contacts_cli_rows.py",
+        "tests/smoke/test_calendar_smoke.py",
+        "tests/test_action_intents_calendar.py",
+        "tests/test_automation_task_state.py",
+        "tests/test_caldav_bidirectional_sync.py"
+      ],
+      "history": []
+    },
+    {
+      "id": "CA-03",
+      "area": "Calendar, contacts, tasks and delivery",
+      "title": "CalDAV/CardDAV synchronization",
+      "profile": "live-external",
+      "preconditions": "Synthetic local calendar/contact/mail servers; disabled real outbound delivery.",
+      "steps": "Change same synthetic record on each side, sync twice and inject controlled redirect.",
+      "expected": "Bidirectional values converge without duplicates; credentials never follow unsafe redirect.",
+      "evidence": "Exact source/environment, observed state or execution receipt, result and cleanup; browser cases also require desktop/mobile captures.",
+      "runner_suite": null,
+      "execution": "procedure",
+      "automated_references": [
+        "tests/cli/test_calendar_cli_name.py",
+        "tests/cli/test_contacts_cli_rows.py",
+        "tests/smoke/test_calendar_smoke.py",
+        "tests/test_action_intents_calendar.py",
+        "tests/test_automation_task_state.py",
+        "tests/test_caldav_bidirectional_sync.py"
+      ],
+      "history": []
+    },
+    {
+      "id": "CA-04",
+      "area": "Calendar, contacts, tasks and delivery",
+      "title": "Contact resolution",
+      "profile": "live-external",
+      "preconditions": "Synthetic local calendar/contact/mail servers; disabled real outbound delivery.",
+      "steps": "Create two similarly named contacts and ask ambiguous then exact lookup.",
+      "expected": "Exact match is selected or clarification requested; no guessed recipient.",
+      "evidence": "Exact source/environment, observed state or execution receipt, result and cleanup; browser cases also require desktop/mobile captures.",
+      "runner_suite": null,
+      "execution": "procedure",
+      "automated_references": [
+        "tests/cli/test_calendar_cli_name.py",
+        "tests/cli/test_contacts_cli_rows.py",
+        "tests/smoke/test_calendar_smoke.py",
+        "tests/test_action_intents_calendar.py",
+        "tests/test_automation_task_state.py",
+        "tests/test_caldav_bidirectional_sync.py"
+      ],
+      "history": []
+    },
+    {
+      "id": "CA-05",
+      "area": "Calendar, contacts, tasks and delivery",
+      "title": "Task scheduling and pause",
+      "profile": "live-external",
+      "preconditions": "Synthetic local calendar/contact/mail servers; disabled real outbound delivery.",
+      "steps": "Create far-future task on disposable scheduler, inspect next run, pause and delete.",
+      "expected": "Correct next occurrence, paused task cannot run, cleanup leaves no active task.",
+      "evidence": "Exact source/environment, observed state or execution receipt, result and cleanup; browser cases also require desktop/mobile captures.",
+      "runner_suite": null,
+      "execution": "procedure",
+      "automated_references": [
+        "tests/cli/test_calendar_cli_name.py",
+        "tests/cli/test_contacts_cli_rows.py",
+        "tests/smoke/test_calendar_smoke.py",
+        "tests/test_action_intents_calendar.py",
+        "tests/test_automation_task_state.py",
+        "tests/test_caldav_bidirectional_sync.py"
+      ],
+      "history": []
+    },
+    {
+      "id": "CA-06",
+      "area": "Calendar, contacts, tasks and delivery",
+      "title": "Task ownership and webhook token",
+      "profile": "live-external",
+      "preconditions": "Synthetic local calendar/contact/mail servers; disabled real outbound delivery.",
+      "steps": "Invoke correct, wrong, reused and revoked synthetic webhook tokens across owners.",
+      "expected": "Only authorized current token can schedule exact action; no permission inheritance.",
+      "evidence": "Exact source/environment, observed state or execution receipt, result and cleanup; browser cases also require desktop/mobile captures.",
+      "runner_suite": null,
+      "execution": "procedure",
+      "automated_references": [
+        "tests/cli/test_calendar_cli_name.py",
+        "tests/cli/test_contacts_cli_rows.py",
+        "tests/smoke/test_calendar_smoke.py",
+        "tests/test_action_intents_calendar.py",
+        "tests/test_automation_task_state.py",
+        "tests/test_caldav_bidirectional_sync.py"
+      ],
+      "history": []
+    },
+    {
+      "id": "CA-07",
+      "area": "Calendar, contacts, tasks and delivery",
+      "title": "Delivery idempotency and cancellation",
+      "profile": "live-external",
+      "preconditions": "Synthetic local calendar/contact/mail servers; disabled real outbound delivery.",
+      "steps": "Trigger one synthetic reminder/task twice, cancel during execution and reconnect.",
+      "expected": "At most one delivery; cancelled work stays cancelled; provenance and status persist.",
+      "evidence": "Exact source/environment, observed state or execution receipt, result and cleanup; browser cases also require desktop/mobile captures.",
+      "runner_suite": null,
+      "execution": "procedure",
+      "automated_references": [
+        "tests/cli/test_calendar_cli_name.py",
+        "tests/cli/test_contacts_cli_rows.py",
+        "tests/smoke/test_calendar_smoke.py",
+        "tests/test_action_intents_calendar.py",
+        "tests/test_automation_task_state.py",
+        "tests/test_caldav_bidirectional_sync.py"
+      ],
+      "history": []
+    },
+    {
+      "id": "EM-01",
+      "area": "Email",
+      "title": "List, search and read correct mail",
+      "profile": "live-external",
+      "preconditions": "Disposable IMAP/SMTP fixture and synthetic recipients only; never real inbox mutation/sending.",
+      "steps": "Seed similar subjects/senders, search exact unique token, select and read.",
+      "expected": "Correct message ID/body and pagination; ambiguity asks for clarification.",
+      "evidence": "Exact source/environment, observed state or execution receipt, result and cleanup; browser cases also require desktop/mobile captures.",
+      "runner_suite": null,
+      "execution": "procedure",
+      "automated_references": [
+        "tests/emailReplyBrowser.test.mjs",
+        "tests/emailReplyStream.test.mjs",
+        "tests/smoke/test_email_smoke.py",
+        "tests/test_active_email_reply_guard.py",
+        "tests/test_ajax_email_live.py",
+        "tests/test_compact_email_editor.py"
+      ],
+      "history": []
+    },
+    {
+      "id": "EM-02",
+      "area": "Email",
+      "title": "Draft/reply/send boundary",
+      "profile": "live-external",
+      "preconditions": "Disposable IMAP/SMTP fixture and synthetic recipients only; never real inbox mutation/sending.",
+      "steps": "Draft reply with attachment, then separately authorize sending to synthetic SMTP sink.",
+      "expected": "Draft does not send; authorized send has exact recipient/thread/attachment and one sink message.",
+      "evidence": "Exact source/environment, observed state or execution receipt, result and cleanup; browser cases also require desktop/mobile captures.",
+      "runner_suite": null,
+      "execution": "procedure",
+      "automated_references": [
+        "tests/emailReplyBrowser.test.mjs",
+        "tests/emailReplyStream.test.mjs",
+        "tests/smoke/test_email_smoke.py",
+        "tests/test_active_email_reply_guard.py",
+        "tests/test_ajax_email_live.py",
+        "tests/test_compact_email_editor.py"
+      ],
+      "history": []
+    },
+    {
+      "id": "EM-03",
+      "area": "Email",
+      "title": "Move, archive and selective delete",
+      "profile": "live-external",
+      "preconditions": "Disposable IMAP/SMTP fixture and synthetic recipients only; never real inbox mutation/sending.",
+      "steps": "Move multiple synthetic UIDs; force partial server failure then expunge exact selected UIDs.",
+      "expected": "No unrelated mail deleted; failed move stays visible and status matches server.",
+      "evidence": "Exact source/environment, observed state or execution receipt, result and cleanup; browser cases also require desktop/mobile captures.",
+      "runner_suite": null,
+      "execution": "procedure",
+      "automated_references": [
+        "tests/emailReplyBrowser.test.mjs",
+        "tests/emailReplyStream.test.mjs",
+        "tests/smoke/test_email_smoke.py",
+        "tests/test_active_email_reply_guard.py",
+        "tests/test_ajax_email_live.py",
+        "tests/test_compact_email_editor.py"
+      ],
+      "history": []
+    },
+    {
+      "id": "EM-04",
+      "area": "Email",
+      "title": "Unread and folder state",
+      "profile": "live-external",
+      "preconditions": "Disposable IMAP/SMTP fixture and synthetic recipients only; never real inbox mutation/sending.",
+      "steps": "Read/mark unread, change folder and reconnect a second client.",
+      "expected": "Counts, flags and folder cache agree with actual IMAP state.",
+      "evidence": "Exact source/environment, observed state or execution receipt, result and cleanup; browser cases also require desktop/mobile captures.",
+      "runner_suite": null,
+      "execution": "procedure",
+      "automated_references": [
+        "tests/emailReplyBrowser.test.mjs",
+        "tests/emailReplyStream.test.mjs",
+        "tests/smoke/test_email_smoke.py",
+        "tests/test_active_email_reply_guard.py",
+        "tests/test_ajax_email_live.py",
+        "tests/test_compact_email_editor.py"
+      ],
+      "history": []
+    },
+    {
+      "id": "EM-05",
+      "area": "Email",
+      "title": "Mail OAuth and scope",
+      "profile": "live-external",
+      "preconditions": "Disposable IMAP/SMTP fixture and synthetic recipients only; never real inbox mutation/sending.",
+      "steps": "Expire fixture OAuth, deny send scope, switch account and retry exact action.",
+      "expected": "Refresh/scope/account boundaries hold; read permission cannot become send permission.",
+      "evidence": "Exact source/environment, observed state or execution receipt, result and cleanup; browser cases also require desktop/mobile captures.",
+      "runner_suite": null,
+      "execution": "procedure",
+      "automated_references": [
+        "tests/emailReplyBrowser.test.mjs",
+        "tests/emailReplyStream.test.mjs",
+        "tests/smoke/test_email_smoke.py",
+        "tests/test_active_email_reply_guard.py",
+        "tests/test_ajax_email_live.py",
+        "tests/test_compact_email_editor.py"
+      ],
+      "history": []
+    },
+    {
+      "id": "EM-06",
+      "area": "Email",
+      "title": "Scheduled mail and cancellation",
+      "profile": "live-external",
+      "preconditions": "Disposable IMAP/SMTP fixture and synthetic recipients only; never real inbox mutation/sending.",
+      "steps": "Schedule synthetic message, edit/cancel and advance controlled clock.",
+      "expected": "Only current approved version sends once; cancelled version never sends.",
+      "evidence": "Exact source/environment, observed state or execution receipt, result and cleanup; browser cases also require desktop/mobile captures.",
+      "runner_suite": null,
+      "execution": "procedure",
+      "automated_references": [
+        "tests/emailReplyBrowser.test.mjs",
+        "tests/emailReplyStream.test.mjs",
+        "tests/smoke/test_email_smoke.py",
+        "tests/test_active_email_reply_guard.py",
+        "tests/test_ajax_email_live.py",
+        "tests/test_compact_email_editor.py"
+      ],
+      "history": []
+    },
+    {
+      "id": "EM-07",
+      "area": "Email",
+      "title": "Injection in mail and attachments",
+      "profile": "live-external",
+      "preconditions": "Disposable IMAP/SMTP fixture and synthetic recipients only; never real inbox mutation/sending.",
+      "steps": "Place hostile tool instructions in synthetic message/attachment and ask a bounded summary.",
+      "expected": "Content remains untrusted; no extra action, scope expansion or secret disclosure.",
+      "evidence": "Exact source/environment, observed state or execution receipt, result and cleanup; browser cases also require desktop/mobile captures.",
+      "runner_suite": null,
+      "execution": "procedure",
+      "automated_references": [
+        "tests/emailReplyBrowser.test.mjs",
+        "tests/emailReplyStream.test.mjs",
+        "tests/smoke/test_email_smoke.py",
+        "tests/test_active_email_reply_guard.py",
+        "tests/test_ajax_email_live.py",
+        "tests/test_compact_email_editor.py"
+      ],
+      "history": []
+    },
+    {
+      "id": "MM-01",
+      "area": "Memory and skills",
+      "title": "Memory CRUD and search",
+      "profile": "live-api",
+      "preconditions": "Synthetic owner-scoped records; explicit model calls for extraction/evaluation only.",
+      "steps": "Add unique fact, find via keyword/vector search, edit and delete it.",
+      "expected": "Owned fact is exact and discoverable; deletion removes all recall paths.",
+      "evidence": "Exact source/environment, observed state or execution receipt, result and cleanup; browser cases also require desktop/mobile captures.",
+      "runner_suite": null,
+      "execution": "procedure",
+      "automated_references": [
+        "tests/cli/test_memory_cli_rows.py",
+        "tests/cli/test_skills_cli_preview.py",
+        "tests/cli/test_skills_cli_rows.py",
+        "tests/skillsApproval.test.mjs",
+        "tests/smoke/test_memory_smoke.py",
+        "tests/test_app_initializer_memory_vector_degraded.py"
+      ],
+      "history": []
+    },
+    {
+      "id": "MM-02",
+      "area": "Memory and skills",
+      "title": "Memory extraction correctness",
+      "profile": "live-api",
+      "preconditions": "Synthetic owner-scoped records; explicit model calls for extraction/evaluation only.",
+      "steps": "Use synthetic conversation with negated/outdated facts; run extraction and inspect source evidence.",
+      "expected": "Only supported current facts persist with correct owner/provenance; model errors cannot wipe store.",
+      "evidence": "Exact source/environment, observed state or execution receipt, result and cleanup; browser cases also require desktop/mobile captures.",
+      "runner_suite": null,
+      "execution": "procedure",
+      "automated_references": [
+        "tests/cli/test_memory_cli_rows.py",
+        "tests/cli/test_skills_cli_preview.py",
+        "tests/cli/test_skills_cli_rows.py",
+        "tests/skillsApproval.test.mjs",
+        "tests/smoke/test_memory_smoke.py",
+        "tests/test_app_initializer_memory_vector_degraded.py"
+      ],
+      "history": []
+    },
+    {
+      "id": "MM-03",
+      "area": "Memory and skills",
+      "title": "Skill create/upload/update/delete",
+      "profile": "live-api",
+      "preconditions": "Synthetic owner-scoped records; explicit model calls for extraction/evaluation only.",
+      "steps": "Create and upload synthetic skill frontmatter/content, revise and remove it.",
+      "expected": "Exact owned content round-trips; invalid schema fails without partial writes.",
+      "evidence": "Exact source/environment, observed state or execution receipt, result and cleanup; browser cases also require desktop/mobile captures.",
+      "runner_suite": null,
+      "execution": "procedure",
+      "automated_references": [
+        "tests/cli/test_memory_cli_rows.py",
+        "tests/cli/test_skills_cli_preview.py",
+        "tests/cli/test_skills_cli_rows.py",
+        "tests/skillsApproval.test.mjs",
+        "tests/smoke/test_memory_smoke.py",
+        "tests/test_app_initializer_memory_vector_degraded.py"
+      ],
+      "history": []
+    },
+    {
+      "id": "MM-04",
+      "area": "Memory and skills",
+      "title": "Skill retrieval and audit",
+      "profile": "live-api",
+      "preconditions": "Synthetic owner-scoped records; explicit model calls for extraction/evaluation only.",
+      "steps": "Retrieve relevant synthetic skill; run controlled audit/evaluation including timeout/cancel.",
+      "expected": "Correct skill/version is used; one-use authority and terminal job status are durable.",
+      "evidence": "Exact source/environment, observed state or execution receipt, result and cleanup; browser cases also require desktop/mobile captures.",
+      "runner_suite": null,
+      "execution": "procedure",
+      "automated_references": [
+        "tests/cli/test_memory_cli_rows.py",
+        "tests/cli/test_skills_cli_preview.py",
+        "tests/cli/test_skills_cli_rows.py",
+        "tests/skillsApproval.test.mjs",
+        "tests/smoke/test_memory_smoke.py",
+        "tests/test_app_initializer_memory_vector_degraded.py"
+      ],
+      "history": []
+    },
+    {
+      "id": "MM-05",
+      "area": "Memory and skills",
+      "title": "Untrusted context and isolation",
+      "profile": "live-api",
+      "preconditions": "Synthetic owner-scoped records; explicit model calls for extraction/evaluation only.",
+      "steps": "Inject hostile instruction into recalled memory and skill, then cross-owner query.",
+      "expected": "No new authority or foreign content; disabled injection remains disabled.",
+      "evidence": "Exact source/environment, observed state or execution receipt, result and cleanup; browser cases also require desktop/mobile captures.",
+      "runner_suite": null,
+      "execution": "procedure",
+      "automated_references": [
+        "tests/cli/test_memory_cli_rows.py",
+        "tests/cli/test_skills_cli_preview.py",
+        "tests/cli/test_skills_cli_rows.py",
+        "tests/skillsApproval.test.mjs",
+        "tests/smoke/test_memory_smoke.py",
+        "tests/test_app_initializer_memory_vector_degraded.py"
+      ],
+      "history": []
+    },
+    {
+      "id": "SR-01",
+      "area": "Search and research",
+      "title": "Search and source fetch",
+      "profile": "live-external",
+      "preconditions": "Controlled local search/fetch fixtures first; real external service explicitly configured for provider run.",
+      "steps": "Search unique fixture phrase, follow selected public result and render citation.",
+      "expected": "Relevant exact source text and citation; no private/metadata URL fetch or hidden redirect.",
+      "evidence": "Exact source/environment, observed state or execution receipt, result and cleanup; browser cases also require desktop/mobile captures.",
+      "runner_suite": null,
+      "execution": "procedure",
+      "automated_references": [
+        "tests/cli/test_docs_cli_search.py",
+        "tests/cli/test_research_cli_preview.py",
+        "tests/cli/test_research_cli_status.py",
+        "tests/cli/test_research_cli_status_filter.py",
+        "tests/cli/test_research_cli_store.py",
+        "tests/researchMobileButtons.test.mjs"
+      ],
+      "history": []
+    },
+    {
+      "id": "SR-02",
+      "area": "Search and research",
+      "title": "Deep research lifecycle",
+      "profile": "live-external",
+      "preconditions": "Controlled local search/fetch fixtures first; real external service explicitly configured for provider run.",
+      "steps": "Start bounded synthetic research, observe progress, cancel then run completion case.",
+      "expected": "Cancellation stops work; completed report contains supported sources and persistent library entry.",
+      "evidence": "Exact source/environment, observed state or execution receipt, result and cleanup; browser cases also require desktop/mobile captures.",
+      "runner_suite": null,
+      "execution": "procedure",
+      "automated_references": [
+        "tests/cli/test_docs_cli_search.py",
+        "tests/cli/test_research_cli_preview.py",
+        "tests/cli/test_research_cli_status.py",
+        "tests/cli/test_research_cli_status_filter.py",
+        "tests/cli/test_research_cli_store.py",
+        "tests/researchMobileButtons.test.mjs"
+      ],
+      "history": []
+    },
+    {
+      "id": "SR-03",
+      "area": "Search and research",
+      "title": "Research owner and library CRUD",
+      "profile": "live-external",
+      "preconditions": "Controlled local search/fetch fixtures first; real external service explicitly configured for provider run.",
+      "steps": "Create research in owner A, browse/search/export/delete and attempt owner B access.",
+      "expected": "Owned report round-trips and deleted sources/results cannot leak across owners.",
+      "evidence": "Exact source/environment, observed state or execution receipt, result and cleanup; browser cases also require desktop/mobile captures.",
+      "runner_suite": null,
+      "execution": "procedure",
+      "automated_references": [
+        "tests/cli/test_docs_cli_search.py",
+        "tests/cli/test_research_cli_preview.py",
+        "tests/cli/test_research_cli_status.py",
+        "tests/cli/test_research_cli_status_filter.py",
+        "tests/cli/test_research_cli_store.py",
+        "tests/researchMobileButtons.test.mjs"
+      ],
+      "history": []
+    },
+    {
+      "id": "SR-04",
+      "area": "Search and research",
+      "title": "Search unavailable and rate-limited",
+      "profile": "live-external",
+      "preconditions": "Controlled local search/fetch fixtures first; real external service explicitly configured for provider run.",
+      "steps": "Disable configured search provider and return controlled timeout/429.",
+      "expected": "Explicit unavailable/finite failure; no fabricated sources or unapproved provider fallback.",
+      "evidence": "Exact source/environment, observed state or execution receipt, result and cleanup; browser cases also require desktop/mobile captures.",
+      "runner_suite": null,
+      "execution": "procedure",
+      "automated_references": [
+        "tests/cli/test_docs_cli_search.py",
+        "tests/cli/test_research_cli_preview.py",
+        "tests/cli/test_research_cli_status.py",
+        "tests/cli/test_research_cli_status_filter.py",
+        "tests/cli/test_research_cli_store.py",
+        "tests/researchMobileButtons.test.mjs"
+      ],
+      "history": []
+    },
+    {
+      "id": "CP-01",
+      "area": "Compare and model serving",
+      "title": "Compare stream, vote and reveal",
+      "profile": "live-external",
+      "preconditions": "Retained local stub/model server; no downloads, GPU rental or package installation.",
+      "steps": "Compare two exact registered models with a unique prompt, vote and reveal.",
+      "expected": "Both streams and actual identities match; one owned vote persists and blind ordering is correct.",
+      "evidence": "Exact source/environment, observed state or execution receipt, result and cleanup; browser cases also require desktop/mobile captures.",
+      "runner_suite": null,
+      "execution": "procedure",
+      "automated_references": [
+        "tests/cli/test_cookbook_cli_state.py",
+        "tests/e2e/photo-editor/app-compare-mobile.spec.js",
+        "tests/e2e/photo-editor/compare-mode.spec.js",
+        "tests/smoke/test_compare_smoke.py",
+        "tests/smoke/test_cookbook_smoke.py",
+        "tests/test_blind_compare_redaction.py"
+      ],
+      "history": []
+    },
+    {
+      "id": "CP-02",
+      "area": "Compare and model serving",
+      "title": "Compare cancellation and ownership",
+      "profile": "live-external",
+      "preconditions": "Retained local stub/model server; no downloads, GPU rental or package installation.",
+      "steps": "Cancel one slow side and try cross-owner history/vote access.",
+      "expected": "Bounded cleanup, explicit partial failure, no foreign result or duplicate vote.",
+      "evidence": "Exact source/environment, observed state or execution receipt, result and cleanup; browser cases also require desktop/mobile captures.",
+      "runner_suite": null,
+      "execution": "procedure",
+      "automated_references": [
+        "tests/cli/test_cookbook_cli_state.py",
+        "tests/e2e/photo-editor/app-compare-mobile.spec.js",
+        "tests/e2e/photo-editor/compare-mode.spec.js",
+        "tests/smoke/test_compare_smoke.py",
+        "tests/smoke/test_cookbook_smoke.py",
+        "tests/test_blind_compare_redaction.py"
+      ],
+      "history": []
+    },
+    {
+      "id": "CP-03",
+      "area": "Compare and model serving",
+      "title": "Cookbook hardware and empty catalogue",
+      "profile": "live-external",
+      "preconditions": "Retained local stub/model server; no downloads, GPU rental or package installation.",
+      "steps": "Open hardware/fit panel with existing inventory and with empty synthetic catalogue.",
+      "expected": "Actual device data or explicit unsupported status; empty case offers rescan, no fake recommendation.",
+      "evidence": "Exact source/environment, observed state or execution receipt, result and cleanup; browser cases also require desktop/mobile captures.",
+      "runner_suite": null,
+      "execution": "procedure",
+      "automated_references": [
+        "tests/cli/test_cookbook_cli_state.py",
+        "tests/e2e/photo-editor/app-compare-mobile.spec.js",
+        "tests/e2e/photo-editor/compare-mode.spec.js",
+        "tests/smoke/test_compare_smoke.py",
+        "tests/smoke/test_cookbook_smoke.py",
+        "tests/test_blind_compare_redaction.py"
+      ],
+      "history": []
+    },
+    {
+      "id": "CP-04",
+      "area": "Compare and model serving",
+      "title": "Serve start/adopt/stop",
+      "profile": "live-external",
+      "preconditions": "Retained local stub/model server; no downloads, GPU rental or package installation.",
+      "steps": "Start a retained local model, register/adopt, run one turn and stop exact owned process.",
+      "expected": "Ownership proof and endpoint match; stop releases owned descendants/resources only.",
+      "evidence": "Exact source/environment, observed state or execution receipt, result and cleanup; browser cases also require desktop/mobile captures.",
+      "runner_suite": null,
+      "execution": "procedure",
+      "automated_references": [
+        "tests/cli/test_cookbook_cli_state.py",
+        "tests/e2e/photo-editor/app-compare-mobile.spec.js",
+        "tests/e2e/photo-editor/compare-mode.spec.js",
+        "tests/smoke/test_compare_smoke.py",
+        "tests/smoke/test_cookbook_smoke.py",
+        "tests/test_blind_compare_redaction.py"
+      ],
+      "history": []
+    },
+    {
+      "id": "CP-05",
+      "area": "Compare and model serving",
+      "title": "Dead serve recovery including Windows",
+      "profile": "live-external",
+      "preconditions": "Retained local stub/model server; no downloads, GPU rental or package installation.",
+      "steps": "Crash controlled serve task, then use retry/remediation on Linux and Windows fixture.",
+      "expected": "Verified dead serve can recover; live/unowned PID cannot be killed or adopted.",
+      "evidence": "Exact source/environment, observed state or execution receipt, result and cleanup; browser cases also require desktop/mobile captures.",
+      "runner_suite": null,
+      "execution": "procedure",
+      "automated_references": [
+        "tests/cli/test_cookbook_cli_state.py",
+        "tests/e2e/photo-editor/app-compare-mobile.spec.js",
+        "tests/e2e/photo-editor/compare-mode.spec.js",
+        "tests/smoke/test_compare_smoke.py",
+        "tests/smoke/test_cookbook_smoke.py",
+        "tests/test_blind_compare_redaction.py"
+      ],
+      "history": []
+    },
+    {
+      "id": "CP-06",
+      "area": "Compare and model serving",
+      "title": "Remote serve validation",
+      "profile": "live-external",
+      "preconditions": "Retained local stub/model server; no downloads, GPU rental or package installation.",
+      "steps": "Use controlled SSH command metadata with option-like host/model arguments.",
+      "expected": "Arguments stay data; no option injection, arbitrary server or copied credentials.",
+      "evidence": "Exact source/environment, observed state or execution receipt, result and cleanup; browser cases also require desktop/mobile captures.",
+      "runner_suite": null,
+      "execution": "procedure",
+      "automated_references": [
+        "tests/cli/test_cookbook_cli_state.py",
+        "tests/e2e/photo-editor/app-compare-mobile.spec.js",
+        "tests/e2e/photo-editor/compare-mode.spec.js",
+        "tests/smoke/test_compare_smoke.py",
+        "tests/smoke/test_cookbook_smoke.py",
+        "tests/test_blind_compare_redaction.py"
+      ],
+      "history": []
+    },
+    {
+      "id": "ME-01",
+      "area": "Gallery, editor and speech",
+      "title": "Gallery and generated image ownership",
+      "profile": "live-external",
+      "preconditions": "Synthetic images/audio; retained providers/models only; no downloads or external publication.",
+      "steps": "Generate/import a small controlled image, list, fetch, edit metadata and delete.",
+      "expected": "Correct owner/attribution/content type and cache invalidation; foreign access fails.",
+      "evidence": "Exact source/environment, observed state or execution receipt, result and cleanup; browser cases also require desktop/mobile captures.",
+      "runner_suite": null,
+      "execution": "procedure",
+      "automated_references": [
+        "tests/cli/test_gallery_cli_album_count.py",
+        "tests/cli/test_gallery_cli_preview.py",
+        "tests/cli/test_gallery_cli_tag_filters.py",
+        "tests/e2e/photo-editor/adjustment-layers.spec.js",
+        "tests/e2e/photo-editor/app-compare-mobile.spec.js",
+        "tests/e2e/photo-editor/brush-cursor.spec.js"
+      ],
+      "history": []
+    },
+    {
+      "id": "ME-02",
+      "area": "Gallery, editor and speech",
+      "title": "Editor document and undo",
+      "profile": "live-external",
+      "preconditions": "Synthetic images/audio; retained providers/models only; no downloads or external publication.",
+      "steps": "Load synthetic layered image, transform/text/filter, undo/redo, save draft and export.",
+      "expected": "Expected pixels/layers/history persist; exported image opens with correct dimensions/alpha.",
+      "evidence": "Exact source/environment, observed state or execution receipt, result and cleanup; browser cases also require desktop/mobile captures.",
+      "runner_suite": null,
+      "execution": "procedure",
+      "automated_references": [
+        "tests/cli/test_gallery_cli_album_count.py",
+        "tests/cli/test_gallery_cli_preview.py",
+        "tests/cli/test_gallery_cli_tag_filters.py",
+        "tests/e2e/photo-editor/adjustment-layers.spec.js",
+        "tests/e2e/photo-editor/app-compare-mobile.spec.js",
+        "tests/e2e/photo-editor/brush-cursor.spec.js"
+      ],
+      "history": []
+    },
+    {
+      "id": "ME-03",
+      "area": "Gallery, editor and speech",
+      "title": "Editor mobile and lifecycle",
+      "profile": "live-external",
+      "preconditions": "Synthetic images/audio; retained providers/models only; no downloads or external publication.",
+      "steps": "Use true mobile touch gestures, resize, switch panels, close/reopen and repeat.",
+      "expected": "No accumulating listeners/canvases, clipped controls, lost draft or runaway redraw.",
+      "evidence": "Exact source/environment, observed state or execution receipt, result and cleanup; browser cases also require desktop/mobile captures.",
+      "runner_suite": null,
+      "execution": "procedure",
+      "automated_references": [
+        "tests/cli/test_gallery_cli_album_count.py",
+        "tests/cli/test_gallery_cli_preview.py",
+        "tests/cli/test_gallery_cli_tag_filters.py",
+        "tests/e2e/photo-editor/adjustment-layers.spec.js",
+        "tests/e2e/photo-editor/app-compare-mobile.spec.js",
+        "tests/e2e/photo-editor/brush-cursor.spec.js"
+      ],
+      "history": []
+    },
+    {
+      "id": "ME-04",
+      "area": "Gallery, editor and speech",
+      "title": "Transcription provider matrix",
+      "profile": "live-external",
+      "preconditions": "Synthetic images/audio; retained providers/models only; no downloads or external publication.",
+      "steps": "Transcribe short known speech via configured Whisper/Granite service; disable backend.",
+      "expected": "Text/timing/provider match and missing optional runtime gives explicit degraded status.",
+      "evidence": "Exact source/environment, observed state or execution receipt, result and cleanup; browser cases also require desktop/mobile captures.",
+      "runner_suite": null,
+      "execution": "procedure",
+      "automated_references": [
+        "tests/cli/test_gallery_cli_album_count.py",
+        "tests/cli/test_gallery_cli_preview.py",
+        "tests/cli/test_gallery_cli_tag_filters.py",
+        "tests/e2e/photo-editor/adjustment-layers.spec.js",
+        "tests/e2e/photo-editor/app-compare-mobile.spec.js",
+        "tests/e2e/photo-editor/brush-cursor.spec.js"
+      ],
+      "history": []
+    },
+    {
+      "id": "ME-05",
+      "area": "Gallery, editor and speech",
+      "title": "TTS playback and cancellation",
+      "profile": "live-external",
+      "preconditions": "Synthetic images/audio; retained providers/models only; no downloads or external publication.",
+      "steps": "Synthesize fixed text with configured provider, play/stop and repeat.",
+      "expected": "Valid nonempty audio; stop cancels playback/generation; no leaked stream or cache ownership.",
+      "evidence": "Exact source/environment, observed state or execution receipt, result and cleanup; browser cases also require desktop/mobile captures.",
+      "runner_suite": null,
+      "execution": "procedure",
+      "automated_references": [
+        "tests/cli/test_gallery_cli_album_count.py",
+        "tests/cli/test_gallery_cli_preview.py",
+        "tests/cli/test_gallery_cli_tag_filters.py",
+        "tests/e2e/photo-editor/adjustment-layers.spec.js",
+        "tests/e2e/photo-editor/app-compare-mobile.spec.js",
+        "tests/e2e/photo-editor/brush-cursor.spec.js"
+      ],
+      "history": []
+    },
+    {
+      "id": "IN-01",
+      "area": "Integrations and MCP",
+      "title": "MCP discovery and permission filtering",
+      "profile": "live-external",
+      "preconditions": "Synthetic MCP/webhook/companion servers; scoped tokens; no real third-party messages.",
+      "steps": "Connect two controlled servers with overlapping tools and one timeout.",
+      "expected": "Stable names, correct schema and permission-filtered catalogue; one failure does not erase other server.",
+      "evidence": "Exact source/environment, observed state or execution receipt, result and cleanup; browser cases also require desktop/mobile captures.",
+      "runner_suite": null,
+      "execution": "procedure",
+      "automated_references": [
+        "tests/cli/test_mcp_cli_env_serialize.py",
+        "tests/cli/test_mcp_cli_json.py",
+        "tests/cli/test_webhook_cli_mask.py",
+        "tests/test_api_call_integration_routing.py",
+        "tests/test_builtin_mcp_bg_tasks.py",
+        "tests/test_builtin_mcp_npx_cache.py"
+      ],
+      "history": []
+    },
+    {
+      "id": "IN-02",
+      "area": "Integrations and MCP",
+      "title": "MCP action and cancellation",
+      "profile": "live-external",
+      "preconditions": "Synthetic MCP/webhook/companion servers; scoped tokens; no real third-party messages.",
+      "steps": "Run bounded synthetic tool, stream result, cancel and disconnect server mid-call.",
+      "expected": "Exact receipt or explicit failure; no duplicate execution or background leak.",
+      "evidence": "Exact source/environment, observed state or execution receipt, result and cleanup; browser cases also require desktop/mobile captures.",
+      "runner_suite": null,
+      "execution": "procedure",
+      "automated_references": [
+        "tests/cli/test_mcp_cli_env_serialize.py",
+        "tests/cli/test_mcp_cli_json.py",
+        "tests/cli/test_webhook_cli_mask.py",
+        "tests/test_api_call_integration_routing.py",
+        "tests/test_builtin_mcp_bg_tasks.py",
+        "tests/test_builtin_mcp_npx_cache.py"
+      ],
+      "history": []
+    },
+    {
+      "id": "IN-03",
+      "area": "Integrations and MCP",
+      "title": "Companion pairing and revocation",
+      "profile": "live-external",
+      "preconditions": "Synthetic MCP/webhook/companion servers; scoped tokens; no real third-party messages.",
+      "steps": "Pair a synthetic companion, use approved route then revoke pairing.",
+      "expected": "Only current approved owner/device authority works; revoked channel stops.",
+      "evidence": "Exact source/environment, observed state or execution receipt, result and cleanup; browser cases also require desktop/mobile captures.",
+      "runner_suite": null,
+      "execution": "procedure",
+      "automated_references": [
+        "tests/cli/test_mcp_cli_env_serialize.py",
+        "tests/cli/test_mcp_cli_json.py",
+        "tests/cli/test_webhook_cli_mask.py",
+        "tests/test_api_call_integration_routing.py",
+        "tests/test_builtin_mcp_bg_tasks.py",
+        "tests/test_builtin_mcp_npx_cache.py"
+      ],
+      "history": []
+    },
+    {
+      "id": "IN-04",
+      "area": "Integrations and MCP",
+      "title": "Integration token and tool authority",
+      "profile": "live-external",
+      "preconditions": "Synthetic MCP/webhook/companion servers; scoped tokens; no real third-party messages.",
+      "steps": "Call Codex/Claude/scoped API paths with permitted and forbidden domains.",
+      "expected": "Scoped domain only; no email-send/calendar/admin authority from historical transcript.",
+      "evidence": "Exact source/environment, observed state or execution receipt, result and cleanup; browser cases also require desktop/mobile captures.",
+      "runner_suite": null,
+      "execution": "procedure",
+      "automated_references": [
+        "tests/cli/test_mcp_cli_env_serialize.py",
+        "tests/cli/test_mcp_cli_json.py",
+        "tests/cli/test_webhook_cli_mask.py",
+        "tests/test_api_call_integration_routing.py",
+        "tests/test_builtin_mcp_bg_tasks.py",
+        "tests/test_builtin_mcp_npx_cache.py"
+      ],
+      "history": []
+    },
+    {
+      "id": "IN-05",
+      "area": "Integrations and MCP",
+      "title": "Webhook authenticity and replay",
+      "profile": "live-external",
+      "preconditions": "Synthetic MCP/webhook/companion servers; scoped tokens; no real third-party messages.",
+      "steps": "Deliver signed, invalid, repeated and expired synthetic webhook events.",
+      "expected": "Only valid fresh event creates one exact owned effect.",
+      "evidence": "Exact source/environment, observed state or execution receipt, result and cleanup; browser cases also require desktop/mobile captures.",
+      "runner_suite": null,
+      "execution": "procedure",
+      "automated_references": [
+        "tests/cli/test_mcp_cli_env_serialize.py",
+        "tests/cli/test_mcp_cli_json.py",
+        "tests/cli/test_webhook_cli_mask.py",
+        "tests/test_api_call_integration_routing.py",
+        "tests/test_builtin_mcp_bg_tasks.py",
+        "tests/test_builtin_mcp_npx_cache.py"
+      ],
+      "history": []
+    },
+    {
+      "id": "BR-01",
+      "area": "Private browser and decisions",
+      "title": "Browser qualification boundary",
+      "profile": "live-external",
+      "preconditions": "Qualified sandboxed Chromium private-pipe profile, otherwise explicitly blocked.",
+      "steps": "Attempt browser action without qualification, then with matching approved binary/manifest.",
+      "expected": "Unqualified path fails closed; qualified browser uses intended sandbox/pipe identity.",
+      "evidence": "Exact source/environment, observed state or execution receipt, result and cleanup; browser cases also require desktop/mobile captures.",
+      "runner_suite": null,
+      "execution": "procedure",
+      "automated_references": [
+        "tests/test_background_chat_completion_ui_static.py",
+        "tests/test_browser_automation.py",
+        "tests/test_browser_control_api.py",
+        "tests/test_browser_identity_transport.py",
+        "tests/test_browser_lifecycle.py",
+        "tests/test_browser_observation.py"
+      ],
+      "history": []
+    },
+    {
+      "id": "BR-02",
+      "area": "Private browser and decisions",
+      "title": "Observed-node action binding",
+      "profile": "live-external",
+      "preconditions": "Qualified sandboxed Chromium private-pipe profile, otherwise explicitly blocked.",
+      "steps": "Capture synthetic page, select permitted observed node, change page then replay old handle.",
+      "expected": "Only fresh exact node/action can execute; stale or fabricated handle fails.",
+      "evidence": "Exact source/environment, observed state or execution receipt, result and cleanup; browser cases also require desktop/mobile captures.",
+      "runner_suite": null,
+      "execution": "procedure",
+      "automated_references": [
+        "tests/test_background_chat_completion_ui_static.py",
+        "tests/test_browser_automation.py",
+        "tests/test_browser_control_api.py",
+        "tests/test_browser_identity_transport.py",
+        "tests/test_browser_lifecycle.py",
+        "tests/test_browser_observation.py"
+      ],
+      "history": []
+    },
+    {
+      "id": "BR-03",
+      "area": "Private browser and decisions",
+      "title": "Browser-required decisions",
+      "profile": "live-external",
+      "preconditions": "Qualified sandboxed Chromium private-pipe profile, otherwise explicitly blocked.",
+      "steps": "Replay tasks needing page interaction versus simple HTTP/content reading.",
+      "expected": "Decision distinguishes observed browser need; no unapproved page action or unnecessary browser loop.",
+      "evidence": "Exact source/environment, observed state or execution receipt, result and cleanup; browser cases also require desktop/mobile captures.",
+      "runner_suite": null,
+      "execution": "procedure",
+      "automated_references": [
+        "tests/test_background_chat_completion_ui_static.py",
+        "tests/test_browser_automation.py",
+        "tests/test_browser_control_api.py",
+        "tests/test_browser_identity_transport.py",
+        "tests/test_browser_lifecycle.py",
+        "tests/test_browser_observation.py"
+      ],
+      "history": []
+    },
+    {
+      "id": "BR-04",
+      "area": "Private browser and decisions",
+      "title": "Complete decision distributions",
+      "profile": "live-external",
+      "preconditions": "Qualified sandboxed Chromium private-pipe profile, otherwise explicitly blocked.",
+      "steps": "Return missing choice, NaN, wrong normalization, timeout and valid finite vectors.",
+      "expected": "Invalid response stops once and records unresolved usage; valid complete vectors proceed.",
+      "evidence": "Exact source/environment, observed state or execution receipt, result and cleanup; browser cases also require desktop/mobile captures.",
+      "runner_suite": null,
+      "execution": "procedure",
+      "automated_references": [
+        "tests/test_background_chat_completion_ui_static.py",
+        "tests/test_browser_automation.py",
+        "tests/test_browser_control_api.py",
+        "tests/test_browser_identity_transport.py",
+        "tests/test_browser_lifecycle.py",
+        "tests/test_browser_observation.py"
+      ],
+      "history": [
+        "H05"
+      ]
+    },
+    {
+      "id": "BR-05",
+      "area": "Private browser and decisions",
+      "title": "Completion evidence gate",
+      "profile": "live-external",
+      "preconditions": "Qualified sandboxed Chromium private-pipe profile, otherwise explicitly blocked.",
+      "steps": "Have provider claim success after a failed/no-op action, then supply real matching receipt.",
+      "expected": "Missing/failed evidence cannot become success; correct actual outcome may complete.",
+      "evidence": "Exact source/environment, observed state or execution receipt, result and cleanup; browser cases also require desktop/mobile captures.",
+      "runner_suite": null,
+      "execution": "procedure",
+      "automated_references": [
+        "tests/test_background_chat_completion_ui_static.py",
+        "tests/test_browser_automation.py",
+        "tests/test_browser_control_api.py",
+        "tests/test_browser_identity_transport.py",
+        "tests/test_browser_lifecycle.py",
+        "tests/test_browser_observation.py"
+      ],
+      "history": []
+    },
+    {
+      "id": "BR-06",
+      "area": "Private browser and decisions",
+      "title": "Decision accounting and export",
+      "profile": "live-external",
+      "preconditions": "Qualified sandboxed Chromium private-pipe profile, otherwise explicitly blocked.",
+      "steps": "Exercise success/failure/cancellation and export metadata for one synthetic run.",
+      "expected": "Owner/run IDs, timings, usage and policy revision align; no hidden chain of thought or credentials.",
+      "evidence": "Exact source/environment, observed state or execution receipt, result and cleanup; browser cases also require desktop/mobile captures.",
+      "runner_suite": null,
+      "execution": "procedure",
+      "automated_references": [
+        "tests/test_background_chat_completion_ui_static.py",
+        "tests/test_browser_automation.py",
+        "tests/test_browser_control_api.py",
+        "tests/test_browser_identity_transport.py",
+        "tests/test_browser_lifecycle.py",
+        "tests/test_browser_observation.py"
+      ],
+      "history": [
+        "H05"
+      ]
+    },
+    {
+      "id": "ST-01",
+      "area": "Settings, persistence and recovery",
+      "title": "Preferences across logins",
+      "profile": "live-api",
+      "preconditions": "Disposable state copy for backup/import/reset; preserve real deployment and credentials.",
+      "steps": "Change one synthetic preference, log out and read via new login, then restore.",
+      "expected": "Acknowledged setting persists and unrelated owner/model/approval state stays unchanged.",
+      "evidence": "Exact source/environment, observed state or execution receipt, result and cleanup; browser cases also require desktop/mobile captures.",
+      "runner_suite": null,
+      "execution": "procedure",
+      "automated_references": [
+        "tests/smoke/test_settings_smoke.py",
+        "tests/test_agent_migration_manifest.py",
+        "tests/test_ask_user_persistence.py",
+        "tests/test_auth_session_persistence.py",
+        "tests/test_backup_cli_security.py",
+        "tests/test_backup_import_cross_user_dedup.py"
+      ],
+      "history": []
+    },
+    {
+      "id": "ST-02",
+      "area": "Settings, persistence and recovery",
+      "title": "Backup and restore round trip",
+      "profile": "live-api",
+      "preconditions": "Disposable state copy for backup/import/reset; preserve real deployment and credentials.",
+      "steps": "Cold-backup synthetic SQL/JSON/attachment state and restore to an isolated empty target.",
+      "expected": "Object counts/content/owners/encrypted credential usability match; source remains untouched.",
+      "evidence": "Exact source/environment, observed state or execution receipt, result and cleanup; browser cases also require desktop/mobile captures.",
+      "runner_suite": null,
+      "execution": "procedure",
+      "automated_references": [
+        "tests/smoke/test_settings_smoke.py",
+        "tests/test_agent_migration_manifest.py",
+        "tests/test_ask_user_persistence.py",
+        "tests/test_auth_session_persistence.py",
+        "tests/test_backup_cli_security.py",
+        "tests/test_backup_import_cross_user_dedup.py"
+      ],
+      "history": []
+    },
+    {
+      "id": "ST-03",
+      "area": "Settings, persistence and recovery",
+      "title": "Database migrations and concurrency",
+      "profile": "live-api",
+      "preconditions": "Disposable state copy for backup/import/reset; preserve real deployment and credentials.",
+      "steps": "Upgrade representative old synthetic schema and race state writes during startup.",
+      "expected": "Idempotent migration, one writer, intact foreign keys, no lost session/model settings.",
+      "evidence": "Exact source/environment, observed state or execution receipt, result and cleanup; browser cases also require desktop/mobile captures.",
+      "runner_suite": null,
+      "execution": "procedure",
+      "automated_references": [
+        "tests/smoke/test_settings_smoke.py",
+        "tests/test_agent_migration_manifest.py",
+        "tests/test_ask_user_persistence.py",
+        "tests/test_auth_session_persistence.py",
+        "tests/test_backup_cli_security.py",
+        "tests/test_backup_import_cross_user_dedup.py"
+      ],
+      "history": []
+    },
+    {
+      "id": "ST-04",
+      "area": "Settings, persistence and recovery",
+      "title": "Vector data volume recovery",
+      "profile": "live-api",
+      "preconditions": "Disposable state copy for backup/import/reset; preserve real deployment and credentials.",
+      "steps": "Use a retained compatible vector image and synthetic index, stop writers, copy and restore.",
+      "expected": "Persistent chunks/counts survive; no empty-volume overwrite or silent data loss.",
+      "evidence": "Exact source/environment, observed state or execution receipt, result and cleanup; browser cases also require desktop/mobile captures.",
+      "runner_suite": null,
+      "execution": "procedure",
+      "automated_references": [
+        "tests/smoke/test_settings_smoke.py",
+        "tests/test_agent_migration_manifest.py",
+        "tests/test_ask_user_persistence.py",
+        "tests/test_auth_session_persistence.py",
+        "tests/test_backup_cli_security.py",
+        "tests/test_backup_import_cross_user_dedup.py"
+      ],
+      "history": []
+    },
+    {
+      "id": "ST-05",
+      "area": "Settings, persistence and recovery",
+      "title": "Diagnostics and error redaction",
+      "profile": "live-api",
+      "preconditions": "Disposable state copy for backup/import/reset; preserve real deployment and credentials.",
+      "steps": "Trigger synthetic errors through diagnostics, backup, tasks, mail and MCP paths.",
+      "expected": "Useful bounded diagnostics contain no secrets, session tokens or raw sensitive messages.",
+      "evidence": "Exact source/environment, observed state or execution receipt, result and cleanup; browser cases also require desktop/mobile captures.",
+      "runner_suite": null,
+      "execution": "procedure",
+      "automated_references": [
+        "tests/smoke/test_settings_smoke.py",
+        "tests/test_agent_migration_manifest.py",
+        "tests/test_ask_user_persistence.py",
+        "tests/test_auth_session_persistence.py",
+        "tests/test_backup_cli_security.py",
+        "tests/test_backup_import_cross_user_dedup.py"
+      ],
+      "history": []
+    },
+    {
+      "id": "ST-06",
+      "area": "Settings, persistence and recovery",
+      "title": "Admin destructive boundaries",
+      "profile": "live-api",
+      "preconditions": "Disposable state copy for backup/import/reset; preserve real deployment and credentials.",
+      "steps": "On a disposable instance test export/import/reset with non-admin and stale token.",
+      "expected": "Only explicit current admin can act; no real deployment wipe or unscoped path write.",
+      "evidence": "Exact source/environment, observed state or execution receipt, result and cleanup; browser cases also require desktop/mobile captures.",
+      "runner_suite": null,
+      "execution": "procedure",
+      "automated_references": [
+        "tests/smoke/test_settings_smoke.py",
+        "tests/test_agent_migration_manifest.py",
+        "tests/test_ask_user_persistence.py",
+        "tests/test_auth_session_persistence.py",
+        "tests/test_backup_cli_security.py",
+        "tests/test_backup_import_cross_user_dedup.py"
+      ],
+      "history": []
+    }
+  ]
+}
