@@ -10181,35 +10181,10 @@ def _is_native_artifact_workspace_turn(
 
 
 def _strip_think_blocks(text: str) -> str:
-    """Linear-time equivalent of
-    ``re.sub(r'<think>.*?</think>', '', text, flags=DOTALL|IGNORECASE)``.
+    """Use the shared reasoning grammar before judging visible model output."""
+    from src.text_helpers import strip_think
 
-    The lazy regex rescans to end-of-string from every ``<think>`` opener when
-    a closer is missing -> O(n^2) on untrusted model output (prompt injection
-    can echo thousands of openers). This forward-only scan pairs each opener
-    with the next closer in a single pass. Output is byte-for-byte identical to
-    the original narrow regex: only literal ``<think>``/``</think>`` (any case)
-    are matched, a dangling opener with no closer is left intact, and an orphan
-    ``</think>`` is never stripped.
-    """
-    if not text:
-        return text
-    lowered = text.lower()
-    parts = []
-    pos = 0
-    while True:
-        start = lowered.find("<think>", pos)
-        if start == -1:
-            parts.append(text[pos:])
-            break
-        end = lowered.find("</think>", start + 7)
-        if end == -1:
-            # No closer for this opener: lazy regex matches nothing here.
-            parts.append(text[pos:])
-            break
-        parts.append(text[pos:start])
-        pos = end + 8  # len("</think>")
-    return "".join(parts)
+    return strip_think(text or "", prompt_echo=False)
 
 
 _LOW_SIGNAL_RE = re.compile(r"^[\W_]*$", re.UNICODE)

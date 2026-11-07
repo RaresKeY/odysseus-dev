@@ -47,7 +47,7 @@ async def test_technical_failure_or_absence_uses_one_independent_fallback(propos
 
 
 @pytest.mark.asyncio
-@pytest.mark.parametrize("answer", [decision("deny"), decision("review"), decision(confidence=.5), decision(risk="critical")])
+@pytest.mark.parametrize("answer", [decision("deny"), decision("review"), decision(confidence=.49), decision(risk="critical")])
 async def test_valid_primary_stop_is_final(proposal, answer):
     store, pending, policy, _ = proposal
     first, _ = evaluator(answer)

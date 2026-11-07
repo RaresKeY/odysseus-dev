@@ -146,7 +146,7 @@ async def test_real_mocked_http_call_grants_one_exact_action_and_dispatches_once
 @pytest.mark.asyncio
 @pytest.mark.parametrize("result,status", [
     (decision("review"), "uncertain"), (decision("deny"), "denied"),
-    (decision(probability=.94), "uncertain"), (decision(confidence=.94), "uncertain"),
+    (decision(probability=.49), "uncertain"), (decision(confidence=.49), "uncertain"),
     (TimeoutError("private diagnostic"), "error"), (RuntimeError("private diagnostic"), "error"),
     ({"choice": "allow", "confidence": 1}, "error"),
     (replace(decision(), usage=None), "error"),

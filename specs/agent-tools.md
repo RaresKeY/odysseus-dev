@@ -201,6 +201,10 @@ Filesystem postconditions derive exact requested content from the producer trans
 
 `src/tool_execution.py` strips caller-provided `_odysseus_*` fields from qualified/legacy MCP JSON and parsed tool arguments. Dispatch then injects trusted owner/session context for email and trusted owner for image MCP tools; missing trusted context does not preserve a forged claim. `_call_mcp_tool()` forwards owner through native/unavailable/disconnected direct fallback paths. Image results from qualified dispatch receive promoted image fields. The image MCP server persists the trimmed owner and registers fresh files; this transport attribution does not replace route authorization.
 
+## Response supervision
+
+Agent response supervision uses the shared `src.text_helpers.strip_think` grammar before judging visible action promises and completion. This includes `<thought>`, `<thinking>` and Gemma thought/response channels; hidden planning cannot trigger intent-without-action retries. Genuine visible promises retain bounded nudges. Dangling reasoning is omitted, and the shared scanner preserves forward-only delimiter handling.
+
 ## Current Gaps
 
 - Tool descriptions are duplicated across `FUNCTION_TOOL_SCHEMAS`, agent prompt sections, and `BUILTIN_TOOL_DESCRIPTIONS`.
