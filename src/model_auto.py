@@ -9,7 +9,6 @@ import hashlib
 import copy
 from pathlib import Path
 import json
-from urllib.parse import urlsplit
 
 from src.decisions import DecisionError, DecisionRequest, DecisionResult
 from src.decisions.contracts import MAX_TASK_BYTES, validate_answers
@@ -26,19 +25,6 @@ CATEGORY_CRITERIA = {
 }
 
 MAX_CANDIDATES = 32
-GOOGLE_CAPABILITY_REVISION = 'google-openai-thinking/2026-10-25-v2'
-# Exact canonical-provider contracts, not model-name family guesses or routing
-# rankings. Evidence: ai.google.dev/gemini-api/docs/openai#thinking and
-# /docs/thinking plus /docs/generate-content/gemini-3 (reviewed 2026-10-25).
-GOOGLE_EFFORTS = {
-    'gemini-2.5-pro': ('minimal', 'low', 'medium', 'high'),
-    'gemini-2.5-flash': ('none', 'minimal', 'low', 'medium', 'high'),
-    'gemini-2.5-flash-lite': ('none', 'minimal', 'low', 'medium', 'high'),
-    'gemini-3-pro-preview': ('low', 'high'),
-    'gemini-3-flash-preview': ('minimal', 'low', 'medium', 'high'),
-    'gemini-3.1-pro-preview': ('low', 'medium', 'high'),
-    'gemini-3.1-flash-lite': ('minimal', 'low', 'medium', 'high'),
-}
 EFFORT_COPY = {
     'default': 'Use the model default; no explicit reasoning control is supplied.',
     'none': 'No additional reasoning.',
@@ -71,32 +57,13 @@ def validate_candidates(value):
     return result
 
 
-def execution_capabilities(url, model):
-    """Pure, endpoint-specific effort evidence for the picker and dispatch."""
-    from src.chatgpt_subscription import is_chatgpt_subscription_base, CHATGPT_MODEL_CATALOG_CACHE
-    try:
-        parts = urlsplit(url)
-        google = (parts.scheme == 'https' and parts.hostname == 'generativelanguage.googleapis.com'
-            and parts.port in (None, 443) and parts.username is None and parts.password is None
-            and not parts.query and not parts.fragment
-            and parts.path.rstrip('/') in {'/v1beta/openai', '/v1beta/openai/chat/completions'})
-    except (ValueError, TypeError):
-        google = False
-    # Google's native catalogue uses one models/ prefix. Older registrations
-    # retain that exact identity. Normalize only this capability lookup on the
-    # canonical provider; keep pool, descriptor and actual payload unchanged.
-    google_id = model.removeprefix('models/') if isinstance(model, str) else model
-    if google and google_id in GOOGLE_EFFORTS:
-        return {'supported_efforts': list(GOOGLE_EFFORTS[google_id]), 'capability_revision': GOOGLE_CAPABILITY_REVISION}
-    meta = CHATGPT_MODEL_CATALOG_CACHE.get(model) if is_chatgpt_subscription_base(url) else None
-    levels = (meta or {}).get('supported_reasoning_levels') or []
-    if not isinstance(levels, list) or len(levels) > len(EFFORT_COPY):
-        raise DecisionError('auto_model_effort_metadata_invalid')
-    efforts = [level if isinstance(level, str) else level.get('effort') if isinstance(level, dict) else None for level in levels]
-    if any(level not in EFFORT_COPY or level == 'default' for level in efforts):
-        raise DecisionError('auto_model_effort_metadata_invalid')
-    return {'supported_efforts': list(dict.fromkeys(efforts)) or ['default'],
-            'capability_revision': 'chatgpt-runtime/v1' if efforts else 'default-only/v1'}
+def execution_capabilities(url, model, headers=None):
+    """Project the same scoped evidence used by the actual request adapter."""
+    from src.model_request_controls import request_controls_for, DIALECT_OPENAI_CHAT, DIALECT_CODEX_RESPONSES
+    from src.chatgpt_subscription import is_chatgpt_subscription_base
+    dialect = DIALECT_CODEX_RESPONSES if is_chatgpt_subscription_base(url) else DIALECT_OPENAI_CHAT
+    controls = request_controls_for(url, model, headers, dialect=dialect)
+    return controls.effort_offer(tuple(key for key in EFFORT_COPY if key != 'default'))
 
 
 def legacy_candidates(configuration):
@@ -163,7 +130,7 @@ def registered_candidate(owner, item):
     return {'identity': {key: item[key] for key in ('endpoint_id', 'model')}, 'route': route,
             'label': descriptor.get('endpoint_label', item['endpoint_id']),
             **({'description': item['description']} if 'description' in item else {}),
-            **execution_capabilities(route[0], item['model'])}
+            **execution_capabilities(route[0], item['model'], route[2])}
 
 
 def candidate_snapshot(owner, candidates, *, resolver=None):

@@ -1553,29 +1553,8 @@ CHATGPT_FORBIDDEN_PAYLOAD_KEYS = frozenset({
 
 
 def _request_controls_for(url, model, headers, *, provider, dialect):
-    """Bind cached evidence to the route already selected by this transport."""
-    from src.model_capability_cache import cached_model_record, scope_for_endpoint
-    from src.model_request_controls import RequestControls
-    from src.provider_capability_schemas import resolve_provider
-
-    # The legacy detector calls every compatible custom endpoint "openai".
-    # That is a dialect fallback, not vendor identity. Prefer canonical host
-    # identity, then native evidence from this exact endpoint snapshot.
-    vendor = resolve_provider(base_url=url).provider_id
-    if provider == "chatgpt-subscription":
-        vendor = "chatgpt_subscription"
-    record = cached_model_record(model, base_url=url, headers=headers)
-    if vendor in {"unknown", "generic_openai"} and record is not None and not record.fallback:
-        vendor = record.vendor
-    if record is not None and record.vendor != vendor:
-        record = None
-    return RequestControls(
-        vendor=vendor,
-        dialect=dialect,
-        model=model,
-        endpoint_scope=scope_for_endpoint(url, headers),
-        record=record,
-    )
+    from src.model_request_controls import request_controls_for
+    return request_controls_for(url, model, headers, provider=provider, dialect=dialect)
 
 
 def _apply_openai_request_controls(payload, url, model, headers, provider):

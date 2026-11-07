@@ -1,6 +1,6 @@
 # Canonical Provider And Model Capability Layer
 
-Last updated: dev@86b886c | 2026-10-14
+Last updated: fork dev@080e01c6 | 2026-11-07 (runtime integration)
 
 ## Scope
 
@@ -15,9 +15,19 @@ This spec covers the implementation introduced on current `dev` in:
 - regression coverage in `tests/test_model_capabilities.py` and
   `tests/test_model_capability_readers.py`.
 
-The layer normalizes already-fetched JSON-compatible values. It performs no network I/O, does not shape provider requests, does not persist its output, and does not authorize model or tool use. No production caller currently consumes the canonical records outside this package; runtime integration remains later work.
+The layer normalizes already-fetched JSON-compatible values. It performs no network I/O, does not shape provider requests, does not persist its output, and does not authorize model or tool use. Runtime discovery caches canonical records and request shaping and Auto selection consume the scoped control evidence described below.
 
 There is no `src/provider_capability_schemas.py`, capability-specific diagnostics module, or runtime model-quirk registry on current `dev`.
+
+## Runtime Control Evidence
+
+`src/model_capability_cache.py` owns the bounded five-minute catalog cache. Its identity hashes the exact normalized route and complete request headers; raw provider payloads and header values are not retained. Missing, expired, ambiguous or vendor-inconsistent evidence stays unknown.
+
+`src/model_request_controls.py:request_controls_for()` binds the selected route, model, account headers and dialect to a `RequestControls` value. Both `src/llm_core.py` and `src/model_auto.py:execution_capabilities()` use this owner. Auto offers only recognized explicit reasoning-effort values accepted by the transport constraints; unknown evidence offers `default`. It does not use the model-only subscription compatibility cache. The preserved exact Google compatible-route contracts live in the shared owner and constrain request shaping too; they do not authorize proxy or look-alike routes. Conflicting constraints intersect rather than selecting the first claim.
+
+The model picker resolves each endpoint's current runtime headers outside its inventory transaction. Auto execution uses the resolved candidate headers. Frozen offers carry a revision derived from model control evidence, without exposing credential fingerprints; dispatch also compares the private resolved routes and headers before sending a request. Changed capabilities, credentials, model assignments or endpoint availability invalidate a selection. No new network discovery occurs in the capability query.
+
+The reader and display-shape sections below describe the original schema foundation; the runtime consumers above supersede the older disconnected-runtime notes.
 
 ## Layer Boundaries
 
@@ -132,12 +142,12 @@ Focused tests pin:
 - OpenRouter, Google, Ollama, LM Studio, and llama.cpp mappings;
 - negative cases that avoid name-based media/capability inference.
 
-The provider detector has narrow production consumers in `src/ai_interaction.py` and `routes/gallery/gallery_routes.py` for selecting OpenRouter media request behavior. `ModelCapabilityRecord` normalization remains disconnected from runtime model discovery and request builders; helper reuse must not be described as full canonical integration.
+The provider detector has narrow production consumers in `src/ai_interaction.py` and `routes/gallery/gallery_routes.py` for selecting OpenRouter media request behavior. Runtime model discovery and request builders now also consume scoped `ModelCapabilityRecord` evidence as described above.
 
 ## Current Gaps
 
-- Canonical records are not yet used by runtime discovery, endpoint resolution, model context, request shaping, or frontend pickers.
-- Reader output is not persisted, refreshed, merged, or expired.
+- Canonical controls now feed runtime request shaping and Auto offers; broader modality/display queries still have separate consumers.
+- Runtime catalog records expire from an in-memory cache; there is no durable capability history.
 - Provider detection still uses common-port hints; consumers must not promote normalization hints into trust decisions.
 - Only seven concrete readers exist; placeholder and other providers use the
   identity-only generic reader.
