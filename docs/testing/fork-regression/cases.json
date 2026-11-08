@@ -1997,6 +1997,24 @@
       "history": []
     },
     {
+      "id": "FS-15",
+      "area": "Filesystem, processes and workspace",
+      "title": "Workspace permission across natural clarification replies",
+      "profile": "live-provider",
+      "preconditions": "Selected vetted workspace, Auto-Approve Agent mode, registered provider and owned Manual template.",
+      "steps": "Run scripts/fork_workspace_followup_live.py against the exact deployed source with credentials on stdin. The first turn asks for a uniquely named file and a plain-text content question; reply anything. Repeat for Gemma and another provider model.",
+      "expected": "Native workspace write remains available, reaches exact action review and produces nonempty readable bytes. Disabled tools, stale/delegated callers and folder boundaries remain enforced. Remove only the reported uniquely named scratch file after checking its recorded hash; temporary chats are removed by the runner.",
+      "evidence": "Source/model, receipts, file size/hash, cleanup. A provider 429 is reported separately, never treated as a passing app test.",
+      "runner_suite": null,
+      "execution": "procedure",
+      "automated_references": [
+        "tests/test_interactive_workspace_permissions.py",
+        "tests/test_approval_retention.py",
+        "tests/test_workspace_confine.py"
+      ],
+      "history": []
+    },
+    {
       "id": "UI-01",
       "area": "Browser and interaction",
       "title": "Permission menu stability",

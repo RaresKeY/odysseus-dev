@@ -1,7 +1,7 @@
 # Fork Regression Suite
 
 This is the reusable acceptance catalogue for the fork. [cases.json](cases.json)
-contains 153 concrete scenarios: prerequisites, actions, observable pass criteria,
+contains 154 concrete scenarios: prerequisites, actions, observable pass criteria,
 evidence, existing test references and historical failure links. It covers every
 current product area, the fork's provider/Auto/approval/workspace changes, and
 deployment/platform boundaries. It cannot enumerate every possible input or
@@ -425,3 +425,15 @@ On Debian, `scripts/debian_stop_tests.py --deployment FIXTURE_DEPLOYMENT_JSON --
 Plans optionally select `content_probe: true` for exact write_file/read_file/byte-verification cleanup, `native_delay_seconds: 60` for explicit provider pacing, and `reported_model` for an exact known alias snapshot. None enables automatic action retries or provider substitution.
 
 Combine a previous deployed report with exact-source browser/Stop receipts using `--profiles receipts --previous-report PREVIOUS_JSON --receipt SUPPLEMENT_JSON`. This mode performs no login or model actions. Retain original failed runs, including provider 429s, alongside later probes.
+
+## Workspace clarification regression (FS-15)
+
+`scripts/fork_workspace_followup_live.py` accepts `--expected-source`,
+`--endpoint-id`, `--model`, `--manual-template` and `--output`.
+Feed the private login JSON on stdin. It forks the owned Manual template, keeps
+Auto-Approve, requests a plain-text content question and answers “anything”.
+It checks action receipts and independent nonempty file readback, then removes
+its temporary chat. The output records a unique scratch filename and revision;
+remove only that exact hash-matched artifact through the deployment verification
+workflow. A failed stream may still have produced the file, so inspect the
+report before cleanup. No provider retries or fallback are performed.

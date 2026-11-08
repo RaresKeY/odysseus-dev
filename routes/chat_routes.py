@@ -1682,6 +1682,8 @@ def _resolve_request_workspace(request, raw_value) -> tuple:
     stream can tell an admin client (which believes a workspace is active)
     that it was dropped.
     """
+    if raw_value is not None and not isinstance(raw_value, str):
+        raise HTTPException(422, "workspace must be a path string")
     requested = (raw_value or "").strip()
     if not requested:
         return "", ""
@@ -2591,6 +2593,7 @@ def setup_chat_routes(
         # Workspace: confine the agent's file/shell tools to this folder.
         workspace, workspace_rejected = _resolve_request_workspace(
             request, form_data.get("workspace") or form_data.get("cwd")
+            or (body or {}).get("workspace") or (body or {}).get("cwd")
         )
         # Plan mode is a modifier on agent mode — it only makes sense with tools.
         if plan_mode:
@@ -3675,8 +3678,9 @@ def setup_chat_routes(
             # that have no canvas to drive.
             "photo_editor_open": bool(editor_session),
         }
-        # Capture permission state before schema selection/reconciliation.
-        # Only deterministic request intent supplies grants, never inventory.
+        # Capture execution permissions before model/schema selection. An
+        # interactive selected workspace retains its profile across turns;
+        # semantic approval evaluates each action against the submission chain.
         # The strict router (spec) surface picks its tools in src/spec_router.py
         # AFTER authority is built, so its admission is keyed off the surface.
         try:
@@ -3685,9 +3689,15 @@ def setup_chat_routes(
             ) == "spec"
         except Exception:
             _spec_surface = False
+        from src.agent_runtime.authority import interactive_workspace_tools
+        _workspace_profile_tools = interactive_workspace_tools(
+            request, owner=_user, session_id=session, workspace=workspace,
+            agent_mode=chat_mode == "agent",
+        )
         _request_authority = request_authority_for_http(
             request, message, owner=_user, session_id=session, workspace=workspace,
             history=_turn_history, policy=tool_policy,
+            workspace_tools=_workspace_profile_tools,
             client_runtime_context=client_runtime_context,
             active_document=bool(active_doc),
             image_attachment=any(str(a.get('mime') or '').startswith('image/')
@@ -3826,9 +3836,14 @@ def setup_chat_routes(
             _turn_contract = resolve_turn_contract(
                 capabilities=_turn_capabilities, schemas=_contract_schemas,
                 policy=_contract_policy, required_tools=_required_tools,
-                required_capabilities=_active_turn_capabilities,
+                required_capabilities=(_active_turn_capabilities - {"unknown"}
+                                       if _workspace_profile_tools else _active_turn_capabilities),
                 selected_tools=_selected_tools,
-                always_available_tools=(FAMILY_TOOLS["documents"] if active_doc else ()),
+                always_available_tools=(
+                    set(FAMILY_TOOLS["documents"] if active_doc else ())
+                    | {g.tool for g in _request_authority.grants
+                       if g.tool in _workspace_profile_tools}
+                ),
                 warm_tools=_warm_tools,
                 message=message, history=getattr(sess, "history", []) or [],
             )

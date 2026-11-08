@@ -75,6 +75,16 @@ and emits a blocked error, never an individual approval card. Explicitly changin
 mode and issuing a new request remains available. Tools and options live in More
 tools → Chat settings. The model menu owns Auto and searchable pool editing.
 
+## Interactive workspace permissions
+
+A selected, vetted workspace in an active owner-authenticated Agent turn supplies a stable native workspace permission profile. File read/write/edit/navigation, sandboxed Bash/Python and owned background-job management do not require the latest sentence to repeat a tool or file keyword. Native tool offerings use that same admitted profile, intersected with current tool policy. Unknown lexical intent is not a missing workspace capability. Existing exact reader bindings remain narrower than the baseline.
+
+This separates three responsibilities: the workspace/profile defines the execution ceiling; routing selects useful schemas; Always Ask or Auto-Approve admits each exact action. Auto-Approve uses the complete retained user-submission chain, including prior requests whose response turn completed while asking a clarification. A reply such as “anything” need not revive the previous producer or mint consent from assistant prose. YOLO retains its explicit bypass semantics within the execution ceiling. Filesystem containment, current policy, owner privileges and one-use action binding remain enforced.
+
+The profile is admitted only at direct interactive ingress with a current matching owner/chat binding and a selected workspace. Delegated tokens, internal tool loopbacks, nested requests, stale bindings and plain Chat receive no new profile. It adds no host-shell, remote-service, browser, or dynamic MCP permissions. Those surfaces retain their existing admission contracts. Model schemas, observations and tool outputs cannot create the profile.
+
+The design follows Codex CLI's separation of environment permission profiles, exact action approval and sandbox execution, rather than treating a lexical task classifier as the workspace permission boundary. References: [Codex approvals and security](https://learn.chatgpt.com/docs/agent-approvals-security), [tool orchestrator](https://github.com/openai/codex/blob/main/codex-rs/core/src/tools/orchestrator.rs). Regression coverage: `tests/test_interactive_workspace_permissions.py`.
+
 ## Browser and evidence
 
 The original agent-browser page-action denial and identity-only sidecar remain.
