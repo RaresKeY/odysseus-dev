@@ -92,7 +92,7 @@ def main():
                     screen("file-"+str(width))
                     browser.evaluate("document.querySelector('[aria-label=\"Close files\"]').click()")
                     check("close-focus-"+str(width), "document.activeElement?.matches('#files-synthetic-message button')")
-                    check("trigger-bounds-"+str(width), "(()=>{const r=document.getElementById('chat-files-toggle').getBoundingClientRect();return r.x>=-1&&r.right<=innerWidth+1&&r.width>=32;})()")
+                    check("trigger-bounds-"+str(width), "(()=>{const r=document.getElementById('chat-panel-toggle').getBoundingClientRect();return r.x>=-1&&r.right<=innerWidth+1&&r.width>=32;})()")
                     browser.evaluate("document.getElementById('files-synthetic-message').remove()")
 
                 browser.call("Emulation.setDeviceMetricsOverride", {"width": 1440, "height": 1000, "deviceScaleFactor": 1, "mobile": False})

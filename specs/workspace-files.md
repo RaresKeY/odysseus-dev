@@ -8,7 +8,7 @@ Last updated: 2026-11-08
 
 ## Interaction
 
-Files starts closed. Its chat-header button opens a desktop side pane or a native full-screen modal at 900px and below. Clicking a filename in assistant inline code, a local Markdown link or a native read/write/edit tool icon opens that file. HTTP links, app hashes, scoped upload URLs, modified clicks and fenced executable code keep their existing behavior. Links request no file bytes until clicked.
+Files starts closed. One upper-right side-panel toggle opens the last selected Files or Decisions pane; the shared header switches between them and the toggle or close button collapses the pane. Files opens as a desktop side pane or a native full-screen modal at 900px and below. Selecting the active header tab retains the pane; arrow/Home/End keys switch available tabs. Close/Escape returns to the side-panel toggle or the initiating filename link. Clicking a filename in assistant inline code, a local Markdown link or a native read/write/edit tool icon opens that file. HTTP links, app hashes, scoped upload URLs, modified clicks and fenced executable code keep their existing behavior. Links request no file bytes until clicked.
 
 The Workspace tab browses the currently selected vetted workspace, with folder breadcrumbs, a filter for the loaded folder, bounded directory entries and file sizes. Text defaults to read-only; Edit enables explicit Save or Ctrl/Command-S. Drafts survive file, tab, panel and chat changes in memory, with a browser navigation warning for unsaved changes. They do not survive reload. Clean drafts refresh from disk on reopening. Late reads cannot replace a newer file/chat/workspace selection.
 

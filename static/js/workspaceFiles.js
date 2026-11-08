@@ -1,4 +1,5 @@
 import {getWorkspace} from './workspace.js';
+import {registerChatPanel, chatPanelToggle} from './chatSidePanel.js';
 import {workspaceFilePath, fileLanguage} from './workspaceFileLinks.js';
 import markdown from './markdown.js';
 
@@ -265,7 +266,7 @@ function closePanel(restore=true) {
   if(!panel?.open)return;
   ++loadSequence;++treeSequence;++docSequence;readController?.abort();treeController?.abort();
   panel.close();trigger.setAttribute('aria-expanded','false');releaseImage();
-  if(restore)(returnFocus?.isConnected?returnFocus:trigger).focus({preventScroll:true});
+  if(restore)(returnFocus?.isConnected && returnFocus !== trigger ? returnFocus : chatPanelToggle()).focus({preventScroll:true});
 }
 function ensurePanel() {
   if(panel)return;
@@ -277,7 +278,7 @@ function ensurePanel() {
   const actions=node('div','files-header-actions');
   actions.append(button('Refresh files',()=>tab==='workspace'?loadDirectory(directory):loadDocuments(),'refresh'),
     button('Expand files panel',()=>{full=!full;applyWidth();},'expand'));
-  closeButton=button('Close files',()=>closePanel(),'close');actions.append(closeButton);header.append(heading,actions);
+  closeButton=button('Close files',()=>closePanel(),'close');closeButton.dataset.panelClose='';actions.append(closeButton);header.append(heading,actions);
   const tabs=node('div','files-tabs');tabs.setAttribute('role','tablist');tabs.setAttribute('aria-label','File sources');
   workspaceTab=button('Workspace',()=>setTab('workspace'));documentsTab=button('Documents',()=>setTab('documents'));
   for(const [item,id] of [[workspaceTab,'workspace'],[documentsTab,'documents']]){
@@ -314,6 +315,7 @@ function ensurePanel() {
   panel.append(separator,header,tabs,body);
   const before=document.getElementById('chat-decision-pane');
   if(before)before.before(panel);else document.getElementById('chat-container')?.after(panel);
+  registerChatPanel('files',trigger,panel);
   panel.addEventListener('cancel',event=>{event.preventDefault();closePanel();});
   document.addEventListener('keydown',event=>{if(event.key==='Escape'&&panel.open&&!event.defaultPrevented&&![...document.querySelectorAll('dialog:modal')].some(item=>item!==panel)){event.preventDefault();closePanel();}});
   separator.addEventListener('pointerdown',event=>{
@@ -339,10 +341,12 @@ function ensurePanel() {
 }
 export function openWorkspaceFile(path,source){return openFile(path,source);}
 export function initWorkspaceFiles() {
-  const meta=document.querySelector('.chat-meta-overlay');if(!meta||document.getElementById('chat-files-toggle'))return;
+  if(!document.getElementById('chat-panel-tabs')||document.getElementById('chat-files-toggle'))return;
   trigger=button('Files',()=>{ensurePanel();returnFocus=trigger;if(panel.open)closePanel();else {showPanel();setTab(tab);}});
   trigger.id='chat-files-toggle';trigger.className='decision-activity-trigger files-trigger';trigger.innerHTML=FILE_ICON+'<span>Files</span>';
-  trigger.setAttribute('aria-controls','workspace-files-pane');trigger.setAttribute('aria-expanded','false');meta.append(trigger);
+  trigger.setAttribute('aria-controls','workspace-files-pane');trigger.setAttribute('aria-expanded','false');
+  registerChatPanel('files',trigger);
+  registerChatPanel('decisions',document.getElementById('chat-decision-toggle'),document.getElementById('chat-decision-pane'));
   const getSession=()=>window.sessionModule?.getCurrentSessionId?.()||'';
   sessionId=getSession();
   window.addEventListener('odysseus:session-changed',event=>{

@@ -3641,7 +3641,7 @@ body.bg-pattern-ascii-fireflies {
     }
     .model-picker-action-btn:hover svg,
     .model-picker-action-btn:focus-visible svg {
-      transform: rotate(90deg);
+      transform: none;
     }
     .model-picker-list {
       max-height: min(280px, 50dvh);

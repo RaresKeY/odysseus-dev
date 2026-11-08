@@ -203,7 +203,7 @@ function mount(container, sessionId, {pane, trigger, closeButton, refreshButton}
         stopPolling();
         if (pane.open) pane.close();
         trigger.setAttribute('aria-expanded', 'false');
-        if (restore && !destroyed) trigger.focus();
+        if (restore && !destroyed) (document.getElementById('chat-panel-toggle') || trigger).focus();
     }
     function open() {
         if (destroyed || pane.open) return;
