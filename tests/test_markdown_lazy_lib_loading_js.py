@@ -103,6 +103,9 @@ globalThis.document = {
 globalThis.MutationObserver = class { observe() {} };
 
 let source = fs.readFileSync('./static/js/markdown.js', 'utf8');
+const fileLinksUrl = 'data:text/javascript;base64,' +
+  Buffer.from(fs.readFileSync('./static/js/workspaceFileLinks.js', 'utf8')).toString('base64');
+source = source.replace(/(['"])\.\/workspaceFileLinks\.js\1/g, () => JSON.stringify(fileLinksUrl));
 source = source.replace(/import uiModule from ['"]\.\/ui\.js(?:[?#][^'"]*)?['"];?/, '');
 source = source.replace(
   /import \{ splitTableRow \} from ['"]\.\/markdown\/tableRow\.js['"];/,

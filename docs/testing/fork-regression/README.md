@@ -1,7 +1,7 @@
 # Fork Regression Suite
 
 This is the reusable acceptance catalogue for the fork. [cases.json](cases.json)
-contains 152 concrete scenarios: prerequisites, actions, observable pass criteria,
+contains 153 concrete scenarios: prerequisites, actions, observable pass criteria,
 evidence, existing test references and historical failure links. It covers every
 current product area, the fork's provider/Auto/approval/workspace changes, and
 deployment/platform boundaries. It cannot enumerate every possible input or

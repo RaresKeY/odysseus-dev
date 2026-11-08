@@ -3,10 +3,10 @@
   "scope": "Every file under tests except symlinks and generated caches. Pytest files, JavaScript scenario/support sources and remaining fixture/support files are distinguished; definitions are not expanded parametrizations.",
   "counts": {
     "fixture-or-support": 64,
-    "javascript-source": 107,
-    "pytest": 1677
+    "javascript-source": 108,
+    "pytest": 1678
   },
-  "python_definitions": 13244,
+  "python_definitions": 13260,
   "files": [
     {
       "path": "tests/KNOWN_FAILURES.md",
@@ -1070,7 +1070,7 @@
     {
       "path": "tests/streaming/markdownHarness.mjs",
       "kind": "javascript-source",
-      "sha256": "a55cf30b60a2406d38ddb26874175470df760aeb06f715c05dcb7c39768ce1de"
+      "sha256": "e4f0297e2667b129a2d61a483a8bc165babf20e976152d19ca994055f19ea7e7"
     },
     {
       "path": "tests/streaming/segmenter.test.mjs",
@@ -1517,7 +1517,7 @@
     {
       "path": "tests/test_approval_review.py",
       "kind": "pytest",
-      "sha256": "2afd72603acafa6844da5182a3f53c93155caab5f945090c1d15b3d9843fa35c",
+      "sha256": "cc962ef25931a08c9fdd36c7a9395cc431ac4f01e8676de88a66ed7523b7b5a2",
       "definitions": 18
     },
     {
@@ -2218,8 +2218,8 @@
     {
       "path": "tests/test_chat_approval_sql_integration.py",
       "kind": "pytest",
-      "sha256": "9e03717cd99fcbfc073d2ab7926b69ebd94a24213d33e1fb39aed59b04dd11dd",
-      "definitions": 4
+      "sha256": "f00945b123e6a83dc15f900cb168bccca53adef2cc2b871a8dd2622a634e050d",
+      "definitions": 5
     },
     {
       "path": "tests/test_chat_attachment_picker.py",
@@ -3166,7 +3166,7 @@
     {
       "path": "tests/test_copy_message_strips_thinking_js.py",
       "kind": "pytest",
-      "sha256": "e2d201c198e2454a459329496652e2cbeefab4a93d84030d1b596afedb1b355c",
+      "sha256": "69a2f7e79dcc1967f433fcd0ff4e705f82737776b3a7593ab0afd7c79bee0528",
       "definitions": 7
     },
     {
@@ -7010,13 +7010,13 @@
     {
       "path": "tests/test_markdown_lazy_lib_loading_js.py",
       "kind": "pytest",
-      "sha256": "9293a3f1cce0f45896ba0567bec75efb2a22bdfe83bee738cc5b0ee6010607ee",
+      "sha256": "4645cc53c139c471252c8262405970ff46e897b9d5f59dbde85da25e9e5a66f9",
       "definitions": 15
     },
     {
       "path": "tests/test_markdown_rendering_js.py",
       "kind": "pytest",
-      "sha256": "8fb70ded2bc3ddd6dc42a9a5e9104558ea1e2a10eab95c48a671e0e79327ad76",
+      "sha256": "811c4f206957c17f2ebf9901d5883ccc3c0a9f1d644d5a3946d416d0a2808404",
       "definitions": 30
     },
     {
@@ -8468,8 +8468,8 @@
     {
       "path": "tests/test_request_authority.py",
       "kind": "pytest",
-      "sha256": "dcde01526e1e45e44e1c7808099c4b54715814cee1a1fe943144b651dbc0b675",
-      "definitions": 42
+      "sha256": "aa5d2d95766462ee206c9f52d6938e50ee5eabf0078e3034282e6d6b1c31b195",
+      "definitions": 45
     },
     {
       "path": "tests/test_required_read_operation.py",
@@ -10842,6 +10842,12 @@
       "definitions": 4
     },
     {
+      "path": "tests/test_workspace_files.py",
+      "kind": "pytest",
+      "sha256": "5dfaaa6bceade61e3b74654193a6258a2a17c01bec5422a46bef32e3d5c48677",
+      "definitions": 12
+    },
+    {
       "path": "tests/test_write_file_empty_body.py",
       "kind": "pytest",
       "sha256": "9a5402aedbb574f79d95211d1adfe76be8b488c8f7e01309a9c7b3d6af09bb2a",
@@ -10924,6 +10930,11 @@
       "path": "tests/turnRendering.test.mjs",
       "kind": "javascript-source",
       "sha256": "a759d38b8d536f1d23c37654778f8a47552efbd220986eb909e0d560a8245b61"
+    },
+    {
+      "path": "tests/workspaceFileLinks.test.mjs",
+      "kind": "javascript-source",
+      "sha256": "caf2e4ca169aa7cc78123e067950b9f7e6eb684883306a6a2a464af5d37f5eb1"
     }
   ]
 }

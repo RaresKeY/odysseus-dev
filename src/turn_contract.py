@@ -677,6 +677,29 @@ def _damerau_distance(left: str, right: str) -> int:
     return rows[-1][-1]
 
 
+def _named_file_creation_families(text: str) -> frozenset[str]:
+    """A literal output filename supplies intent even without the word 'file'."""
+    match = re.match(
+        r"^\s*" + _REQUEST_PREFIX + r"(?:make|create|write|save|generate|produce)\s+"
+        r"(?:(?:a|an|the|new|plain|text|sample)\s+)*"
+        r"(?:(?P<kind>[A-Za-z]+)\s+)?"
+        r"[\x60\"']?(?P<path>[A-Za-z0-9_.-]+\."
+        r"(?:txt|md|markdown|json|jsonl|csv|tsv|ya?ml|toml|ini|cfg|conf|log|"
+        r"py|js|ts|tsx|jsx|html?|css|sh|sql|xml))\b(?![\w./-])",
+        text, re.I,
+    )
+    if not match or re.search(r"\b(?:library|editor)\b", text, re.I):
+        return frozenset()
+    kind = (match["kind"] or "").casefold()
+    document = kind in {"doc", "docs"} or (6 <= len(kind) <= 11 and min(
+        _damerau_distance(kind, noun) for noun in ("document", "documents")) <= 2)
+    if kind and kind not in {"file", "files"} and not document:
+        return frozenset()
+    # Preserve Documents as an available destination when named, while the
+    # explicit filename also admits the workspace writer selected by the model.
+    return frozenset({"shell_files", "documents"} if document else {"shell_files"})
+
+
 def _has_cookbook_server_reference(text: str) -> bool:
     """Recognize the named Cookbook server surface with a small human typo."""
     if not re.search(r"\bcookbo{1,2}k\b", str(text or ""), re.I):
@@ -4790,6 +4813,8 @@ def requested_capabilities(message: str, history: Iterable = (), *, active_docum
         return frozenset({'image_generation'} | ({'documents'} if 'update_document' in image_tools else set()))
     if standalone_code_request(raw_text):
         return frozenset({'documents'})
+    if filename_families := _named_file_creation_families(text):
+        return filename_families
     repeated_subject = _subject_tokens(text) & _immediate_prior_user_subject_tokens(history)
     scope_text = " ".join(
         token for token in re.findall(r"[\w'-]+", text)

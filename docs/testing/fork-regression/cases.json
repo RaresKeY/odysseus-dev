@@ -1977,6 +1977,25 @@
       ]
     },
     {
+      "id": "FS-14",
+      "area": "Filesystem, processes and workspace",
+      "title": "Literal filename creation and document wording",
+      "profile": "live-provider",
+      "preconditions": "Fresh Auto-Approve Agent chat; unique synthetic text filename in an isolated workspace; configured real provider.",
+      "steps": "Run “make a doicument <unique>.txt wiht some random tet in it”, then separate “make <unique>.txt” and “create <unique>.txt” turns. Inspect actual file bytes and action receipts; click the filename to open Files. Separately verify a titled/library document stays a Documents request and explicit disabled tools remain denied.",
+      "expected": "Each explicit file creation reaches normal review and records a successful write plus nonempty exact file bytes; no false outside-permissions failure. Documents remains available when named. Missing authority reports a request mismatch; policy denials remain enforced. Remove only this test’s files and chats.",
+      "evidence": "Exact source/model/endpoint, tool receipts, file byte count and cleanup; no credential or provider body logging.",
+      "runner_suite": null,
+      "execution": "procedure",
+      "automated_references": [
+        "tests/test_request_authority.py",
+        "tests/test_chat_approval_sql_integration.py",
+        "tests/test_approval_review.py",
+        "tests/test_bound_turn_workspace.py"
+      ],
+      "history": []
+    },
+    {
       "id": "UI-01",
       "area": "Browser and interaction",
       "title": "Permission menu stability",

@@ -172,13 +172,16 @@ class ApprovalReviewService:
         if not self._current(pending, policy):
             self._retire(pending)
             return ReviewOutcome("stale", pending, reason="The action or its approval policy is no longer current.")
+        admitted = deterministically_admitted and _authority_admits(pending)
         requirement = review_requirement(policy, tool_name=pending.tool_name,
-                                         deterministically_admitted=(deterministically_admitted
-                                                                     and _authority_admits(pending)),
+                                         deterministically_admitted=admitted,
                                          hard_denied=hard_denied)
         if requirement is ReviewRequirement.DENY:
             self._retire(pending)
-            return ReviewOutcome("blocked", pending, reason="This action is outside current permissions.")
+            reason = ("This action is outside current permissions." if hard_denied or admitted else
+                      "This tool action does not match the current request. Choose an action "
+                      "covered by the request, or request the action explicitly.")
+            return ReviewOutcome("blocked", pending, reason=reason)
         if requirement is ReviewRequirement.HUMAN:
             return ReviewOutcome("manual", pending, reason="Review this exact action before it runs.")
         if requirement is ReviewRequirement.NONE:
