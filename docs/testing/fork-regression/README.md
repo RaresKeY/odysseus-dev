@@ -101,6 +101,20 @@ only that exact owned file after inspecting the failed receipt. Do not run
 external-effect cases against real inboxes, contacts, scheduled deliveries or
 user files. Those procedures require synthetic services/state copies.
 
+## Debian deployed suite
+
+`scripts/debian_deployed_tests.py` runs live checks plus fork/mode/category/admission checks and writes the complete 152-case matrix with each historical problem linked to its outcomes. Copy `debian-plan.example.json` to a private operator directory and set the exact deployed source SHA and registered endpoint/model IDs:
+
+```sh
+python scripts/debian_deployed_tests.py --plan "$PLAN_FILE" --login-file "$LOGIN_FILE" --socket "$APP_SOCKET" --profiles core,extended --isolated-state --output "$ARTIFACT_DIR/debian.json"
+```
+
+Extended, provider and native profiles require a disposable deployment/state copy. Add `provider` or `native` and `--allow-paid` for bounded model calls. Each model is tested independently; a failed greeting prevents its native action. Other selected variants retain their own results. The runner needs the protected app socket and one private login file; it needs no SSH, engine socket, provider key or host home. Keep the owner deployment separate.
+
+Supplementary browser/service receipts use schema `odysseus-debian-supplement/v1`, the exact `expected_source`, and `results` containing existing case IDs/status/evidence. Supply them with repeatable `--receipt` arguments; stale revisions and unknown case IDs fail. Unexecuted procedures remain `not_run`. Exit 0 means the complete catalogue passed, 1 means an executed check failed, and 2 means coverage is incomplete. Unit-test references do not become live passes.
+
+`scripts/debian_smoke_tests.py --expected-source "$SOURCE_SHA" --output "$ARTIFACT_DIR/smoke.json"` runs the existing release smoke suite through the ordinary dev launcher in a temporary source/state copy, using prepared dependencies and synthetic model/email services. It disables scheduled effects and vectors, installs nothing, stops its own instance, and records skips. The caller must verify the source export and SHA. Synthetic-service smoke and real-provider acceptance remain separate results.
+
 ## Run order and result contract
 
 1. Run focused offline tests for changed behavior and the runner itself. Run the

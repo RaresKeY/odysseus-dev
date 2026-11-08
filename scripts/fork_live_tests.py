@@ -28,6 +28,10 @@ MAX_EVENTS = 4096
 class CheckFailure(Exception):
     """A fixed diagnostic code, with no provider/application body attached."""
 
+    def __init__(self, code, evidence=None):
+        super().__init__(code)
+        self.evidence = evidence or {}
+
 
 def require(condition, code):
     if not condition:
@@ -136,7 +140,15 @@ def read_events(response):
         event = json.loads(raw)
         require(isinstance(event, dict), 'invalid_stream_event')
         events.append(event)
-    require(done, 'stream_incomplete')
+    if not done:
+        statuses = set()
+        for event in events:
+            value = event.get('status')
+            if type(value) is int and 400 <= value <= 599:
+                statuses.add(value)
+            for match in __import__('re').finditer(r'HTTP[ :]+([45][0-9]{2})', str(event.get('error', ''))):
+                statuses.add(int(match.group(1)))
+        raise CheckFailure('stream_incomplete', {'event_count': len(events), 'http_statuses': sorted(statuses)})
     return events
 
 
@@ -193,7 +205,7 @@ class Suite:
             evidence = operation() or {}
             result = {'id': case_id, 'status': 'passed', 'evidence': evidence}
         except CheckFailure as exc:
-            result = {'id': case_id, 'status': 'failed', 'reason': str(exc)}
+            result = {'id': case_id, 'status': 'failed', 'reason': str(exc), 'evidence': exc.evidence}
         except Exception as exc:
             # Exception strings can contain server bodies or credentials.
             result = {'id': case_id, 'status': 'failed', 'reason': type(exc).__name__}

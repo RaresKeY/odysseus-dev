@@ -46,6 +46,8 @@ project documentation.
 
 ## Subsystem Map
 
+- [debian-deployed-testing.md](debian-deployed-testing.md): exact-source Debian tests, disposable-state profiles, complete catalogue outcomes and isolated release smoke.
+
 - [runtime.md](runtime.md): FastAPI startup, router registration, static serving, lifespan, app-wide middleware.
 - [auth-security.md](auth-security.md): auth, privileges, API tokens, security headers, untrusted data, SSRF and admin boundaries.
 - [persistence.md](persistence.md): SQLite models, startup migrations, encrypted columns, ownership columns, data directory rules.

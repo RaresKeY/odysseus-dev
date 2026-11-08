@@ -1,3 +1,7 @@
+import asyncio
+
+import pytest
+
 from src import llm_core
 
 
@@ -12,65 +16,40 @@ def _tool():
     }
 
 
-def test_openai_chat_tools_force_gpt5_reasoning_effort_none():
-    payload = {"tools": [_tool()], "reasoning_effort": "high"}
-
-    llm_core._scrub_openai_chat_tool_reasoning(
-        payload,
-        "https://api.openai.com/v1/chat/completions",
-        "gpt-5.6-luna",
-    )
-
-    assert payload["reasoning_effort"] == "none"
-
-
-def test_openai_chat_tools_match_gpt5_variants():
-    for model in ["gpt-5", "gpt-5.6-sol", "gpt-5.6-terra", "gpt-5.6-luna", "openai/gpt-5.6-luna"]:
-        payload = {"tools": [_tool()], "reasoning_effort": "medium"}
-
-        llm_core._scrub_openai_chat_tool_reasoning(
-            payload,
-            "https://api.openai.com/v1/chat/completions",
-            model,
-        )
-
-        assert payload["reasoning_effort"] == "none"
+class _Response:
+    status_code = 200
+    async def aiter_lines(self):
+        yield 'data: {"choices":[{"delta":{"content":"OK"}}]}'
+        yield 'data: [DONE]'
+    async def __aenter__(self):
+        return self
+    async def __aexit__(self, *args):
+        return False
 
 
-def test_openai_chat_no_tools_leaves_reasoning_effort_unchanged():
-    payload = {"reasoning_effort": "high"}
-
-    llm_core._scrub_openai_chat_tool_reasoning(
-        payload,
-        "https://api.openai.com/v1/chat/completions",
-        "gpt-5.6-luna",
-    )
-
-    assert payload["reasoning_effort"] == "high"
-
-
-def test_non_openai_host_leaves_reasoning_effort_unchanged():
-    payload = {"tools": [_tool()], "reasoning_effort": "high"}
-
-    llm_core._scrub_openai_chat_tool_reasoning(
-        payload,
-        "https://openrouter.ai/api/v1/chat/completions",
-        "openai/gpt-5.6-luna",
-    )
-
-    assert payload["reasoning_effort"] == "high"
-
-
-def test_non_gpt5_model_leaves_reasoning_effort_unchanged():
-    payload = {"tools": [_tool()], "reasoning_effort": "high"}
-
-    llm_core._scrub_openai_chat_tool_reasoning(
-        payload,
-        "https://api.openai.com/v1/chat/completions",
-        "gpt-4.1",
-    )
-
-    assert payload["reasoning_effort"] == "high"
+@pytest.mark.parametrize("model", ["gpt-5", "gpt-5-mini", "gpt-5-nano", "gpt-5-mini-2025-08-07", "gpt-5.6-luna"])
+@pytest.mark.parametrize("effort", [None, "minimal", "low", "medium", "high"])
+def test_streamed_openai_tools_preserve_selected_effort(monkeypatch, model, effort):
+    seen = {}
+    class Client:
+        def stream(self, method, url, **kwargs):
+            seen.update(kwargs["json"])
+            return _Response()
+    monkeypatch.setattr(llm_core, "_get_http_client", lambda: Client())
+    monkeypatch.setattr(llm_core, "_is_host_dead", lambda url: False)
+    async def run():
+        return [chunk async for chunk in llm_core.stream_llm(
+            "https://api.openai.com/v1/chat/completions", model,
+            [{"role": "user", "content": "Hello"}], tools=[_tool()],
+            reasoning_effort=effort)]
+    chunks = asyncio.run(run())
+    assert any("OK" in chunk for chunk in chunks)
+    assert seen["model"] == model
+    assert seen["tools"] == [_tool()]
+    if effort is None:
+        assert "reasoning_effort" not in seen
+    else:
+        assert seen["reasoning_effort"] == effort
 
 
 def test_deepseek_v4_reasoning_defaults_are_explicit_and_bounded():
