@@ -1,3 +1,4 @@
+import {workspaceFilePath} from './workspaceFileLinks.js';
 // static/js/chatRenderer.js
 // Extracted from chat.js — message rendering, sources, images, metrics
 
@@ -327,6 +328,13 @@ export function getToolActionTarget(tool, command, data = null) {
 
 export function renderToolIcon(tool, command, data = null) {
   const icon = getToolIcon(tool);
+  if (/^(read_file|write_file|edit_file)$/.test(String(tool))) {
+    let args;
+    try { args = JSON.parse(command || '{}'); } catch (_) {}
+    const raw = args?.path || args?.file_path || String(command || '').split('\n')[0].replace(/^path:\s*/i, '').trim();
+    const path = workspaceFilePath(raw);
+    if (path) return `<button type="button" class="agent-thread-tool-icon workspace-file-link" data-workspace-file="${uiModule.esc(path)}" title="Open ${uiModule.esc(path)} in Files" aria-label="Open ${uiModule.esc(path)} in Files">${icon}</button>`;
+  }
   if (!icon) return '';
   const target = getToolActionTarget(tool, command, data);
   if (!target) return `<span class="agent-thread-tool-icon">${icon}</span>`;

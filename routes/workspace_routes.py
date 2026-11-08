@@ -108,4 +108,6 @@ def setup_workspace_routes():
         resolved = vet_workspace(backend_workspace_path(configured))
         return {"ok": resolved is not None, "path": resolved}
 
+    from routes.workspace_files import setup_workspace_file_routes
+    router.include_router(setup_workspace_file_routes())
     return router
