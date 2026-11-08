@@ -4,9 +4,9 @@
   "counts": {
     "fixture-or-support": 64,
     "javascript-source": 107,
-    "pytest": 1675
+    "pytest": 1677
   },
-  "python_definitions": 13235,
+  "python_definitions": 13243,
   "files": [
     {
       "path": "tests/KNOWN_FAILURES.md",
@@ -2350,7 +2350,7 @@
     {
       "path": "tests/test_chat_provider_binding.py",
       "kind": "pytest",
-      "sha256": "1b9a7ff7f7110e0b4641bb9c9d95428c1b787f1f0039d6b9d89b963273e06f86",
+      "sha256": "61ecb986271c3ff3caef1f80aa36031810af185c361f75f96fff67b3f5c50aa8",
       "definitions": 7
     },
     {
@@ -3234,6 +3234,18 @@
       "kind": "pytest",
       "sha256": "264ccbd5e2b52cbcf785657422c3d1b859dfc5d043b6cd9318cf70c6da9b84ed",
       "definitions": 3
+    },
+    {
+      "path": "tests/test_debian_deployed_tests.py",
+      "kind": "pytest",
+      "sha256": "e734a9ad2a2084fa5f2e46aa15f6540c9bb0d7afb8cd5c51aa85e0a85317eb37",
+      "definitions": 11
+    },
+    {
+      "path": "tests/test_debian_stop_observer.py",
+      "kind": "pytest",
+      "sha256": "587a9a4576b061a451ef778e56b53469780b8e3987c16f013e8d9d76e645fa14",
+      "definitions": 1
     },
     {
       "path": "tests/test_decision_experiment_reports.py",
@@ -6764,8 +6776,8 @@
     {
       "path": "tests/test_llm_core_openai_reasoning_tools.py",
       "kind": "pytest",
-      "sha256": "220781dfc5c19d3d0c61a03dabc16cc3fa0229d33d53ac1d8673d7ee9389d595",
-      "definitions": 8
+      "sha256": "fe60bce2bd9a8af39b446cfd20ae2b108b9e9961516e217491f6e7118187f85a",
+      "definitions": 4
     },
     {
       "path": "tests/test_llm_core_reasoning.py",

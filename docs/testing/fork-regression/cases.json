@@ -190,6 +190,17 @@
         "MD-17"
       ],
       "status": "historical report; fresh execution required"
+    },
+    {
+      "id": "H18",
+      "date": "2026-11-08",
+      "summary": "Deployed GPT-5 mini returned HTTP 400 because a broad tools scrub forced reasoning_effort none. Preserve selected controls and verify the actual streamed payload and live model.",
+      "cases": [
+        "MD-08",
+        "MD-10",
+        "CH-01"
+      ],
+      "status": "reproduced; exact payload fix and fresh deployment checks required"
     }
   ],
   "cases": [

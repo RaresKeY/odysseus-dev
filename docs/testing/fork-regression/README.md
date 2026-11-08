@@ -109,7 +109,9 @@ user files. Those procedures require synthetic services/state copies.
 python scripts/debian_deployed_tests.py --plan "$PLAN_FILE" --login-file "$LOGIN_FILE" --socket "$APP_SOCKET" --profiles core,extended --isolated-state --output "$ARTIFACT_DIR/debian.json"
 ```
 
-Extended, provider and native profiles require a disposable deployment/state copy. Add `provider` or `native` and `--allow-paid` for bounded model calls. Each model is tested independently; a failed greeting prevents its native action. Other selected variants retain their own results. The runner needs the protected app socket and one private login file; it needs no SSH, engine socket, provider key or host home. Keep the owner deployment separate.
+Extended, provider and native profiles require a disposable deployment/state copy. Add `provider` or `native` and `--allow-paid` for bounded model calls. Each model is tested independently; a failed greeting prevents its native action. Other selected variants retain their own results. If a provider resolves an alias to a dated snapshot, declare its exact `reported_model` in the plan; there is no implicit alias guessing or provider substitution. The runner needs the protected app socket and one private login file; it needs no SSH, engine socket, provider key or host home. Keep the owner deployment separate.
+
+`scripts/debian_browser_tests.py --origin "$BRIDGE_URL" --expected-source "$SOURCE_SHA" --login-file "$LOGIN_FILE" --isolated-state --output "$ARTIFACT_DIR/browser.json"` uses a preinstalled headless Chromium and real app APIs at desktop and phone widths. It checks long composer controls, repeated permission-menu opening/icons and real scroll scale. Run it from a machine with Chromium over the deployment’s private loopback bridge; login JSON may instead arrive on stdin. It installs nothing and uses a temporary browser profile. The target must be disposable because opening pending-chat permissions can materialize empty test chats.
 
 Supplementary browser/service receipts use schema `odysseus-debian-supplement/v1`, the exact `expected_source`, and `results` containing existing case IDs/status/evidence. Supply them with repeatable `--receipt` arguments; stale revisions and unknown case IDs fail. Unexecuted procedures remain `not_run`. Exit 0 means the complete catalogue passed, 1 means an executed check failed, and 2 means coverage is incomplete. Unit-test references do not become live passes.
 
@@ -140,7 +142,7 @@ Publish only reviewed sanitized summaries.
 
 ## Historical failures
 
-The catalogue's 17 history clusters were reconstructed from four retained local
+The catalogue's 18 history clusters were reconstructed from four retained local
 rollouts and the stored history of 15 named Odysseus threads, including older
 October 21/24/25/30 and November 4 records plus the current work. Raw logs and
 private identifiers stay outside the repository. Debian's host had no retained
@@ -413,3 +415,13 @@ These composer crops use the actual deployed app at desktop 1440px and mobile 39
 ![Desktop Auto-Approve default](screenshots/auto-approve-desktop.png)
 
 ![Mobile Auto-Approve default](screenshots/auto-approve-mobile.png)
+
+### Additional Debian profiles
+
+Run `scripts/debian_browser_tests.py --origin http://127.0.0.1:7825 --login-file PRIVATE_LOGIN_JSON --expected-source FULL_SHA --isolated-state --output PRIVATE_RESULTS_JSON` using preinstalled Chromium and a private loopback SSH bridge to the disposable deployment. It uses a temporary profile and tests desktop/phone composer visibility, permission icons/opening stability and actual wheel scrolling.
+
+On Debian, `scripts/debian_stop_tests.py --deployment FIXTURE_DEPLOYMENT_JSON --expected-source FULL_SHA --login-file PRIVATE_LOGIN_JSON --endpoint-id SAVED_ENDPOINT_ID --model MODEL_ID --output PRIVATE_RESULTS_JSON` verifies active generation and real native process-tree cancellation. Only the named disposable fixture is permitted. It reads the container namespace with Podman; model actions go through the app's ordinary containment.
+
+Plans optionally select `content_probe: true` for exact write_file/read_file/byte-verification cleanup, `native_delay_seconds: 60` for explicit provider pacing, and `reported_model` for an exact known alias snapshot. None enables automatic action retries or provider substitution.
+
+Combine a previous deployed report with exact-source browser/Stop receipts using `--profiles receipts --previous-report PREVIOUS_JSON --receipt SUPPLEMENT_JSON`. This mode performs no login or model actions. Retain original failed runs, including provider 429s, alongside later probes.

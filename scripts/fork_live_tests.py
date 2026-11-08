@@ -72,10 +72,13 @@ class Client:
         self.cookies = SimpleCookie()
 
     @contextmanager
-    def response(self, path, value=None, *, method=None, form=False, expected=200):
+    def response(self, path, value=None, *, method=None, form=False, expected=200, run_id=None):
         require(path.startswith('/api/') and '\r' not in path and '\n' not in path,
                 'invalid_api_path')
         headers = {'Origin': self.origin, 'Sec-Fetch-Site': 'same-origin'}
+        if run_id is not None:
+            require(isinstance(run_id, str) and bool(__import__('re').fullmatch(r'[0-9a-f]{32}', run_id)), 'invalid_run_id')
+            headers['X-Odysseus-Run-Id'] = run_id
         if self.cookies:
             headers['Cookie'] = '; '.join(m.OutputString() for m in self.cookies.values())
         body = None
@@ -148,7 +151,9 @@ def read_events(response):
                 statuses.add(value)
             for match in __import__('re').finditer(r'HTTP[ :]+([45][0-9]{2})', str(event.get('error', ''))):
                 statuses.add(int(match.group(1)))
-        raise CheckFailure('stream_incomplete', {'event_count': len(events), 'http_statuses': sorted(statuses)})
+        receipts = [{k: event.get(k) for k in ('tool', 'execution_attempted', 'exit_code', 'blocked')} for event in events if event.get('type') == 'tool_output']
+        command_hashes = [__import__('hashlib').sha256(str(event.get('command', '')).encode()).hexdigest() for event in events if event.get('type') == 'tool_start']
+        raise CheckFailure('stream_incomplete', {'event_count': len(events), 'http_statuses': sorted(statuses), 'tool_receipts': receipts, 'command_sha256': command_hashes})
     return events
 
 
@@ -383,13 +388,18 @@ class Suite:
                     'use_web': 'false', 'use_rag': 'false', 'selected_endpoint_id': self.args.endpoint_id,
                     'selected_model': self.args.model},
                     form=True) as response:
-                events = read_events(response)
+                try:
+                    events = read_events(response)
+                except CheckFailure as exc:
+                    if file_cycle:
+                        exc.evidence['expected_command_sha256'] = __import__('hashlib').sha256(command.encode()).hexdigest()
+                    raise
             self.case_evidence = {
                 'event_types': dict(Counter(e.get('type', 'delta') for e in events)),
                 'round_models': [e.get('data', e).get('round_models', [])
                                  for e in events if e.get('type') == 'metrics'],
                 'tools': [e.get('tool') for e in events if e.get('type') == 'tool_start']}
-            evidence = verify_turn(events, marker, self.args.model, file_cycle=file_cycle,
+            evidence = verify_turn(events, marker, getattr(self.args, 'reported_model', None) or self.args.model, file_cycle=file_cycle,
                                    endpoint_id=self.args.endpoint_id)
             if file_cycle:
                 require(any(e.get('type') == 'tool_start' and e.get('tool') == 'bash'
@@ -420,6 +430,10 @@ class Suite:
                     self.blocked('CH-01', 'catalogue_preflight_failed')
                 if self.args.suite == 'native':
                     if greeting_ok:
+                        delay = getattr(self.args, 'native_delay_seconds', 0)
+                        if delay:
+                            print(json.dumps({'phase': 'planned_native_pacing', 'seconds': delay}), flush=True)
+                            time.sleep(delay)
                         self.check('FS-01', lambda: self.turn(True))
                     else:
                         self.blocked('FS-01', 'provider_greeting_preflight_failed')
@@ -442,6 +456,7 @@ def main(argv=None):
     parser.add_argument('--suite', choices=['read', 'state', 'crud', 'provider', 'native'], default='read')
     parser.add_argument('--endpoint-id')
     parser.add_argument('--model')
+    parser.add_argument('--reported-model', help='Explicit provider snapshot reported for the selected alias; defaults to the requested model')
     parser.add_argument('--manual-template', help='Owned disposable Manual chat to fork with zero history when owner defaults use Auto')
     parser.add_argument('--expected-context', type=int)
     parser.add_argument('--output', type=Path, required=True)

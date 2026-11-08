@@ -20,7 +20,7 @@ _spec = importlib.util.spec_from_file_location("fork_live", Path(__file__).with_
 live = importlib.util.module_from_spec(_spec)
 _spec.loader.exec_module(live)
 ROOT = Path(__file__).resolve().parents[1]
-PROFILES = {"core", "extended", "provider", "native"}
+PROFILES = {"core", "extended", "provider", "native", "receipts"}
 
 
 def read_plan(path):
@@ -33,11 +33,13 @@ def read_plan(path):
     live.require(isinstance(variants, list) and 0 < len(variants) <= 8, "invalid_variants")
     names = set()
     for v in variants:
-        live.require(isinstance(v, dict) and set(v) <= {"name", "endpoint_id", "model", "expected_context"}, "invalid_variant")
-        for key in ("name", "endpoint_id", "model"):
+        live.require(isinstance(v, dict) and set(v) <= {"name", "endpoint_id", "model", "reported_model", "expected_context", "content_probe", "native_delay_seconds"}, "invalid_variant")
+        for key in ("name", "endpoint_id", "model", *(["reported_model"] if "reported_model" in v else [])):
             value = v.get(key)
             live.require(isinstance(value, str) and 0 < len(value) <= 200 and all(ord(c) >= 32 for c in value), "invalid_variant_identifier")
         live.require(v["name"] not in names and re.fullmatch(r"[a-z0-9_-]+", v["name"]), "duplicate_or_invalid_variant_name")
+        live.require(type(v.get("content_probe", False)) is bool, "invalid_content_probe")
+        live.require(type(v.get("native_delay_seconds", 0)) is int and 0 <= v.get("native_delay_seconds", 0) <= 60, "invalid_native_delay")
         names.add(v["name"])
     return plan
 
@@ -57,6 +59,29 @@ def merge_catalog(catalog, observations):
                      "preconditions": case["preconditions"],
                      "automated_references": case.get("automated_references", [])})
     return rows
+
+
+def verify_content_probe(events, marker, command, model, endpoint):
+    # A final claim alone cannot prove the exact byte write/read/delete cycle.
+    live.require(not any(e.get("type") in {"error", "intent_nudge_exhausted", "approval_required", "tool_approval_required"}
+                         or e.get("blocked") or e.get("failed") or e.get("error") for e in events), "content_probe_error")
+    text = "".join(str(e.get("delta", "")) + str(e.get("response", "")) + str(e.get("content", "")) for e in events)
+    live.require(marker in text and "[Agent guard:" not in text, "content_probe_final_missing")
+    metrics = [e.get("data", e) for e in events if e.get("type") == "metrics"]
+    models = [v for m in metrics for v in m.get("round_models", [m.get("model")])]
+    endpoints = [v for m in metrics for v in m.get("round_endpoint_ids", [m.get("endpoint_id")])]
+    live.require(models and all(v == model for v in models), "actual_model_mismatch")
+    live.require(endpoints and all(v == endpoint for v in endpoints), "actual_endpoint_mismatch")
+    starts = [e for e in events if e.get("type") == "tool_start"]
+    outputs = [e for e in events if e.get("type") == "tool_output"]
+    live.require([e.get("tool") for e in starts] == ["write_file", "read_file", "bash"],
+                 "content_probe_tool_sequence_mismatch")
+    live.require(len(outputs) == 3 and not any(e.get("blocked") or e.get("failed") or e.get("error") for e in outputs),
+                 "content_probe_failed_receipt")
+    live.require(starts[-1].get("command") == command, "content_probe_command_mismatch")
+    live.require(outputs[-1].get("tool") == "bash" and outputs[-1].get("execution_attempted") is True
+                 and outputs[-1].get("exit_code") == 0 and str(outputs[-1].get("output", "")).strip() == marker,
+                 "content_probe_byte_or_cleanup_mismatch")
 
 
 class Extended(live.Suite):
@@ -98,30 +123,82 @@ class Extended(live.Suite):
         return {"fork_default": "auto_approve", "source_unchanged": True, "cleanup": True}
 
     def invalid_assignment(self):
-        before = self.client.request("/api/chat-settings")
-        mappings = json.loads(json.dumps(before["approaches"]))
-        live.require(isinstance(mappings, dict) and len(mappings) == 3, "three_approach_fixture_required")
-        key = next(iter(mappings))
-        mappings[key] = {**mappings[key], "endpoint_id": "missing-" + uuid.uuid4().hex, "model": self.args.model}
-        self.client.request("/api/chat-settings", {"revision": before["revision"], "changes": {
-            "approaches": mappings}}, method="PUT", expected=422)
-        live.require(self.client.request("/api/chat-settings") == before, "rejected_assignment_changed_settings")
+        owner = self.client.request("/api/chat-settings")
+        with self.session() as sid:
+            path = "/api/session/" + sid + "/automation"
+            before = self.client.request(path)
+            pair = {"endpoint_id": self.args.endpoint_id, "model": self.args.model}
+            missing = {"endpoint_id": "missing-" + uuid.uuid4().hex, "model": self.args.model}
+            self.client.request(path, {"policy_revision": before["policy_revision"], "changes": {
+                "route_mode": "auto", "auto_categories": {"complex_tasks": pair, "straightforward_tasks": missing}}}, method="PUT", expected=422)
+            live.require(self.client.request(path) == before, "rejected_assignment_changed_chat")
+        live.require(self.client.request("/api/chat-settings") == owner, "rejected_assignment_changed_defaults")
         return {"unavailable_assignment_rejected": True}
 
     def categories_persist(self):
-        before = self.client.request("/api/chat-settings")
-        with self.session():
-            self.client.request("/api/auth/logout", {})
-            self.authenticate()
-            live.require(self.client.request("/api/chat-settings") == before, "categories_changed_after_new_chat")
-        return {"configuration_unchanged_across_new_chat_and_login": True}
+        pair = {"endpoint_id": self.args.endpoint_id, "model": self.args.model}
+        categories = {"complex_tasks": pair, "straightforward_tasks": pair}
+        with self.session() as first:
+            path = "/api/session/" + first + "/automation"
+            old = self.client.request(path)
+            try:
+                self.client.request(path, {"policy_revision": old["policy_revision"], "changes": {
+                    "route_mode": "auto", "auto_categories": categories}}, method="PUT")
+                with self.session() as second:
+                    self.client.request("/api/auth/logout", {})
+                    self.authenticate()
+                    policy = self.client.request("/api/session/" + second + "/automation")
+                    live.require(policy["route_mode"] == "auto" and policy["auto_categories"] == categories, "new_chat_lost_auto_categories")
+            finally:
+                now = self.client.request(path)
+                self.client.request(path, {"policy_revision": now["policy_revision"], "changes": {
+                    "route_mode": old["route_mode"], "auto_categories": old["auto_categories"]}}, method="PUT")
+        return {"new_chat_inherits_auto_categories": True, "same_model_in_both_categories": True, "restored_fixture_defaults": True}
 
     def decision_separation(self):
         data = self.client.request("/api/chat-settings/models")
         chats = {x["id"] for x in data["endpoints"]}
         decisions = {x["id"] for x in data["decision_endpoints"]}
-        live.require(decisions and not chats.intersection(decisions), "decision_endpoint_in_chat_picker")
+        decision_only = {x["id"] for x in data["decision_endpoints"] if x.get("model_type") == "decision"}
+        live.require(decision_only and not chats.intersection(decision_only) and all(x.get("model_type") == "llm" for x in data["endpoints"]), "decision_only_endpoint_in_chat_picker")
         return {"separate_chat_and_decision_endpoints": True}
+
+    def content_probe(self):
+        import hashlib
+        marker = self.marker + "-content"
+        name = marker + ".txt"
+        content = "Nested fence\r\n```python\r\nprint('λ')\r\n```\r\n" + marker + "\r\n"
+        digest = hashlib.sha256(content.encode()).hexdigest()
+        command = "printf '%s  %s\\n' '" + digest + "' '" + name + "' | sha256sum --check --status && rm -- " + name + " && test ! -e " + name + " && printf '%s' '" + marker + "'"
+        prompt = ("Use exactly three tools in order: write_file, read_file, bash. "
+                  "Write this JSON string decoded as exact UTF-8 bytes to " + name + ": " + json.dumps(content) +
+                  ". Read that same file. Then run this exact bash command once: " + command +
+                  ". Reply with " + marker + ". Do not modify any other file.")
+        with self.session(manual=True) as sid:
+            with self.client.response("/api/chat_stream", {"session": sid, "message": prompt,
+                    "mode": "agent", "allow_bash": "true", "allow_web_search": "false",
+                    "use_web": "false", "use_rag": "false", "selected_endpoint_id": self.args.endpoint_id,
+                    "selected_model": self.args.model}, form=True) as response:
+                events = live.read_events(response)
+            self.case_evidence = {"tools": [e.get("tool") for e in events if e.get("type") == "tool_start"],
+                                  "content_sha256": digest}
+            verify_content_probe(events, marker, command,
+                                 self.args.reported_model or self.args.model, self.args.endpoint_id)
+        return {"exact_utf8_bytes": True, "nested_fences": True, "crlf": True,
+                "content_sha256": digest, "own_scratch_deleted": True}
+
+    def run(self):
+        super().run()
+        if self.args.suite == "native" and getattr(self.args, "content_probe", False):
+            if not any(r["id"] == "FS-01" and r["status"] == "passed" for r in self.results):
+                self.blocked("FS-04", "native_preflight_failed")
+                return
+            try:
+                self.authenticate()
+                self.check("FS-04", self.content_probe)
+            finally:
+                if self.client.cookies:
+                    self.check("AU-02", self.logout)
 
     def run_extended(self):
         try:
@@ -130,6 +207,7 @@ class Extended(live.Suite):
             self.check("AP-03", self.fork_policy)
             self.check("AP-04", self.saved_modes)
             self.check("MD-03", self.categories_persist)
+            self.check("MD-06", self.categories_persist)
             self.check("MD-07", self.invalid_assignment)
             self.check("MD-16", self.decision_separation)
         finally:
@@ -148,6 +226,7 @@ def main(argv=None):
     parser.add_argument("--isolated-state", action="store_true", help="Confirm this target is a disposable deployment/state copy")
     parser.add_argument("--allow-paid", action="store_true")
     parser.add_argument("--receipt", type=Path, action="append", default=[], help="Additional exact-source browser/smoke results in the documented receipt schema")
+    parser.add_argument("--previous-report", type=Path, help="Aggregate prior exact-source observations without replaying actions")
     parser.add_argument("--output", type=Path, required=True)
     args = parser.parse_args(argv)
     profiles = set(args.profiles.split(","))
@@ -157,8 +236,12 @@ def main(argv=None):
     live.require(not (profiles & {"provider", "native"}) or (args.allow_paid and args.isolated_state), "paid_profiles_require_explicit_disposable_target")
     plan = read_plan(args.plan)
     catalog = json.loads(args.catalog.read_text())
-    login = live.load_login(args.login_file)
+    login = live.load_login(args.login_file) if profiles != {"receipts"} else {}
     observations = []
+    if args.previous_report:
+        previous = json.loads(args.previous_report.read_text())
+        live.require(previous.get("schema") == "odysseus-debian-test-results/v1" and previous.get("expected_source") == plan["expected_source"], "stale_or_invalid_previous_report")
+        observations.extend(row for case in previous["cases"] for row in case["runs"])
     for index, variant in enumerate(plan["variants"]):
         for profile in ("core", "extended", "provider", "native"):
             if profile not in profiles or (profile == "provider" and "native" in profiles):
@@ -168,13 +251,13 @@ def main(argv=None):
             client = live.Client(args.origin, args.socket)
             options = SimpleNamespace(suite="crud" if profile == "core" else profile,
                 expected_source=plan["expected_source"], endpoint_id=variant["endpoint_id"],
-                model=variant["model"], expected_context=variant.get("expected_context"), manual_template=None)
+                model=variant["model"], reported_model=variant.get("reported_model"), content_probe=variant.get("content_probe", False), native_delay_seconds=variant.get("native_delay_seconds", 0), expected_context=variant.get("expected_context"), manual_template=None)
             suite = Extended(client, login, options)
             if profile == "extended":
                 suite.run_extended()
             else:
                 suite.run()
-            observations.extend({**r, "variant": variant["name"], "profile": profile} for r in suite.results)
+            observations.extend({**r, "fixture_marker": suite.marker, "variant": variant["name"], "profile": profile} for r in suite.results)
     # Supplemental receipts are accepted only for this exact deployed revision.
     for path in args.receipt:
         receipt = json.loads(path.read_text())
