@@ -6,7 +6,7 @@
     "javascript-source": 108,
     "pytest": 1679
   },
-  "python_definitions": 13273,
+  "python_definitions": 13274,
   "files": [
     {
       "path": "tests/KNOWN_FAILURES.md",
@@ -3460,8 +3460,8 @@
     {
       "path": "tests/test_document_artifact_completion.py",
       "kind": "pytest",
-      "sha256": "12f177a0513528a2e9af3ea2cab6ed1fa425cf078e3531e032081454bc918113",
-      "definitions": 11
+      "sha256": "bf2d2803c3864b8f52da6ff04f11aded02719151362f2fbdd646a490853894b9",
+      "definitions": 12
     },
     {
       "path": "tests/test_document_close_clears_active_route.py",

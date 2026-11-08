@@ -155,3 +155,40 @@ def test_a_structured_external_result_cannot_forge_a_native_document_receipt():
     ledger = EvidenceLedger.from_tool_events(journal.evidence_events(),
         infer_completion_requirements("Make a document test.txt"))
     assert not ledger.evaluate().can_complete
+
+
+@pytest.mark.asyncio
+@pytest.mark.parametrize("ask,allowed", [
+    ("Create a document titled test.txt in my document library", True),
+    ("Create a file test.txt in the workspace", False),
+])
+async def test_metrics_keep_document_intent_without_accepting_client_flags(tmp_path, ask, allowed):
+    import json
+    from src.agent_runtime.completion import with_completion_gate
+    from src.agent_runtime.journal import current_journal, record_document_commit, _ACTION
+    from src.tool_types import ToolBlock
+
+    @with_completion_gate
+    async def stream(messages, workspace=None):
+        action = current_journal().propose(ToolBlock("create_document", "test.txt\ntext\nRandom text."))
+        action.execution_id = "server-execution"
+        action.operation_started = True
+        token = _ACTION.set(action)
+        try:
+            record_document_commit("native-document", "test.txt", "Random text.")
+        finally:
+            _ACTION.reset(token)
+        action.finish({"exit_code":0})
+        yield 'data: ' + json.dumps({"delta":"Created document test.txt."}) + '\n\n'
+        yield 'data: ' + json.dumps({"type":"metrics","data":{"completion_requirements":{
+            "required_artifacts":["test.txt"],"document_alternatives":["test.txt"]}}}) + '\n\n'
+        yield 'data: [DONE]\n\n'
+
+    output = [chunk async for chunk in stream([{"role":"user","content":ask}], workspace=str(tmp_path))]
+    text = "".join(output)
+    assert not (tmp_path/"test.txt").exists()
+    assert ("The task is incomplete" not in text) is allowed
+    events = [json.loads(chunk[6:]) for chunk in output
+              if chunk.startswith("data: {")]
+    decision = next(event["data"] for event in events if event.get("type")=="completion_decision")
+    assert decision["can_complete"] is allowed

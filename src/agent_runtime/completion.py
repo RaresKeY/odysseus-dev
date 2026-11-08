@@ -289,7 +289,9 @@ def with_completion_gate(func):
                         declared = (data.get('data') or {}).get('completion_requirements')
                         awaiting |= bool((data.get('data') or {}).get('missing_workspace'))
                         if isinstance(declared, dict):
-                            requirements = requirements_from_runtime_context({'completion_requirements': declared})
+                            # Preserve the request that gives these outputs their type.
+                            requirements = requirements_from_runtime_context(
+                                {'completion_requirements': declared}, instruction=instruction)
                             requirements = replace(requirements, workspace_root=trusted_workspace or '')
                             # New obligations affect future receipts only. Never
                             # backfill historical versions with present bytes.
