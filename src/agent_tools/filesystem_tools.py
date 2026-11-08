@@ -362,7 +362,7 @@ def _write_new_file_without_overwrite(path: str, body: str) -> None:
     )
 
     try:
-        with os.fdopen(fd, "w", encoding="utf-8") as temporary_file:
+        with os.fdopen(fd, "w", encoding="utf-8", newline="") as temporary_file:
             fd = None
             temporary_file.write(body)
         os.link(temporary_path, path)
@@ -511,12 +511,14 @@ class WriteFileTool:
                                 raise _EmptyBodyWouldTruncate(path, existing_bytes)
                             return old, 0
                         raise
-                    return old, len(body)
+                    return old, len(body.encode("utf-8"))
 
                 attempted.append(True)
-                with open(path, "w", encoding="utf-8") as f:
+                # Preserve the requested text bytes on every platform and report
+                # UTF-8 bytes, rather than Python's Unicode character count.
+                with open(path, "w", encoding="utf-8", newline="") as f:
                     f.write(body)
-                return old, len(body)
+                return old, len(body.encode("utf-8"))
             old_content, size = await asyncio.to_thread(_write)
         except _EmptyBodyWouldTruncate as e:
             clear_call = json.dumps({"path": raw_path, "content": ""})

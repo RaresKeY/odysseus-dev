@@ -544,3 +544,18 @@ async def test_raw_openai_call_legacy_command_whitespace_is_rejected(tmp_path):
     blocks = parse_tool_blocks(raw_call)
     assert len(blocks) == 0
     assert target.read_bytes() == initial
+
+
+@pytest.mark.asyncio
+@pytest.mark.parametrize('newline', ['\n', '\r\n'])
+async def test_native_write_preserves_exact_nested_fence_unicode_and_newline_bytes(tmp_path, monkeypatch, newline):
+    from tests.runtime_evidence_helpers import server_authorized_executor
+    monkeypatch.setattr(te, '_owner_is_admin', lambda owner: True)
+    target = tmp_path / 'transport.txt'
+    body = newline.join(['Nested fence $HOME', '```python', "print('λ')", '```', 'end', ''])
+    block = function_call_to_tool_block('write_file', json.dumps({'path':str(target), 'content':body}))
+    _, result = await server_authorized_executor(te.execute_tool_block)(
+        block, workspace=str(tmp_path), owner='admin', security_context=te.NO_TOOL_SECURITY_CONTEXT)
+    assert result['exit_code'] == 0, result
+    assert target.read_bytes() == body.encode('utf-8')
+    assert f'Wrote {len(body.encode())} bytes' in result['output']

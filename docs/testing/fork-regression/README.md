@@ -142,7 +142,7 @@ Publish only reviewed sanitized summaries.
 
 ## Historical failures
 
-The catalogue's 18 history clusters were reconstructed from four retained local
+The catalogue's 19 history clusters were reconstructed from four retained local
 rollouts and the stored history of 15 named Odysseus threads, including older
 October 21/24/25/30 and November 4 records plus the current work. Raw logs and
 private identifiers stay outside the repository. Debian's host had no retained

@@ -122,6 +122,9 @@ def test_content_oracle_requires_exact_byte_verification_and_native_receipt():
     events += [{'type':'tool_output','tool':tool,'execution_attempted':True,'exit_code':0,'output':'marker' if tool=='bash' else ''} for tool in ['write_file','read_file','bash']]
     events += [{'type':'final_response','content':'marker'}, {'type':'metrics','data':{'round_models':['actual']*4,'round_endpoint_ids':['saved']*4}}]
     m.verify_content_probe(events, 'marker', 'exact-check', 'actual', 'saved')
+    import hashlib
+    assert m._provider_write_digest({"action_receipt":{"provider_arguments":json.dumps({"content":"λ\r\n"})}}) == hashlib.sha256("λ\r\n".encode()).hexdigest()
+    assert m._provider_write_digest({}) is None
     for index, key, value in [(2,'command','different'), (5,'exit_code',1), (5,'execution_attempted',False)]:
         bad=copy.deepcopy(events);bad[index][key]=value
         with pytest.raises(m.live.CheckFailure):

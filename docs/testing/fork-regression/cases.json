@@ -201,6 +201,16 @@
         "CH-01"
       ],
       "status": "reproduced; exact payload fix and fresh deployment checks required"
+    },
+    {
+      "id": "H19",
+      "date": "2026-11-08",
+      "summary": "Live Unicode write succeeded but reported characters as byte count. Native writes must preserve requested text bytes and report the UTF-8 byte count.",
+      "cases": [
+        "FS-01",
+        "FS-04"
+      ],
+      "status": "reproduced with failing LF/CRLF dispatcher byte-count assertions; patch requires current-source checks"
     }
   ],
   "cases": [
@@ -1044,7 +1054,8 @@
         "tests/test_decision_provider_boundaries.py"
       ],
       "history": [
-        "H06"
+        "H06",
+        "H18"
       ]
     },
     {
@@ -1091,7 +1102,8 @@
         "tests/test_decision_provider_boundaries.py"
       ],
       "history": [
-        "H16"
+        "H16",
+        "H18"
       ]
     },
     {
@@ -1445,7 +1457,8 @@
       "history": [
         "H14",
         "H16",
-        "H17"
+        "H17",
+        "H18"
       ]
     },
     {
@@ -1688,7 +1701,8 @@
       "history": [
         "H08",
         "H15",
-        "H16"
+        "H16",
+        "H19"
       ]
     },
     {
@@ -1757,7 +1771,8 @@
         "tests/test_clean_v3_native_workspace.py"
       ],
       "history": [
-        "H03"
+        "H03",
+        "H19"
       ]
     },
     {

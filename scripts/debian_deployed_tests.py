@@ -61,6 +61,15 @@ def merge_catalog(catalog, observations):
     return rows
 
 
+def _provider_write_digest(event):
+    import hashlib
+    try:
+        value = json.loads(event["action_receipt"]["provider_arguments"])["content"]
+        return hashlib.sha256(value.encode("utf-8")).hexdigest() if isinstance(value, str) else None
+    except (KeyError, TypeError, ValueError):
+        return None
+
+
 def verify_content_probe(events, marker, command, model, endpoint):
     # A final claim alone cannot prove the exact byte write/read/delete cycle.
     live.require(not any(e.get("type") in {"error", "intent_nudge_exhausted", "approval_required", "tool_approval_required"}
@@ -181,7 +190,14 @@ class Extended(live.Suite):
                     "selected_model": self.args.model}, form=True) as response:
                 events = live.read_events(response)
             self.case_evidence = {"tools": [e.get("tool") for e in events if e.get("type") == "tool_start"],
-                                  "content_sha256": digest}
+                "content_sha256": digest,
+                "tool_receipts": [{k: e.get(k) for k in ("tool", "exit_code", "execution_attempted", "blocked")}
+                                  for e in events if e.get("type") == "tool_output"],
+                "authorization_denied": any(t.get("stage") == "authorization_denied"
+                    for e in events for t in (e.get("action_receipt") or {}).get("transitions", [])),
+                "provider_write_matches_expected": [
+                    _provider_write_digest(e) == digest for e in events
+                    if e.get("type") == "tool_output" and e.get("tool") == "write_file"]}
             verify_content_probe(events, marker, command,
                                  self.args.reported_model or self.args.model, self.args.endpoint_id)
         return {"exact_utf8_bytes": True, "nested_fences": True, "crlf": True,
@@ -219,7 +235,7 @@ def main(argv=None):
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--plan", type=Path, required=True)
     parser.add_argument("--catalog", type=Path, default=ROOT / "docs/testing/fork-regression/cases.json")
-    parser.add_argument("--login-file", required=True)
+    parser.add_argument("--login-file")
     parser.add_argument("--socket")
     parser.add_argument("--origin", default="http://127.0.0.1:7824")
     parser.add_argument("--profiles", default="core,extended")
@@ -236,6 +252,7 @@ def main(argv=None):
     live.require(not (profiles & {"provider", "native"}) or (args.allow_paid and args.isolated_state), "paid_profiles_require_explicit_disposable_target")
     plan = read_plan(args.plan)
     catalog = json.loads(args.catalog.read_text())
+    live.require(profiles == {"receipts"} or args.login_file, "login_file_required")
     login = live.load_login(args.login_file) if profiles != {"receipts"} else {}
     observations = []
     if args.previous_report:

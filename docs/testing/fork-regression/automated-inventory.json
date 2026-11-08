@@ -6,7 +6,7 @@
     "javascript-source": 107,
     "pytest": 1677
   },
-  "python_definitions": 13243,
+  "python_definitions": 13244,
   "files": [
     {
       "path": "tests/KNOWN_FAILURES.md",
@@ -3238,7 +3238,7 @@
     {
       "path": "tests/test_debian_deployed_tests.py",
       "kind": "pytest",
-      "sha256": "e734a9ad2a2084fa5f2e46aa15f6540c9bb0d7afb8cd5c51aa85e0a85317eb37",
+      "sha256": "8349bc5fc3ad5e7d81072b7ad7a0a673224a72aa403f6669884c0003bb3ec7fc",
       "definitions": 11
     },
     {
@@ -10844,8 +10844,8 @@
     {
       "path": "tests/test_write_file_empty_body.py",
       "kind": "pytest",
-      "sha256": "1913cf39475603518dfa926905833b64886801ed76c0a57105e8f49aba3601a3",
-      "definitions": 34
+      "sha256": "9a5402aedbb574f79d95211d1adfe76be8b488c8f7e01309a9c7b3d6af09bb2a",
+      "definitions": 35
     },
     {
       "path": "tests/test_youtube_comments_timeout.py",

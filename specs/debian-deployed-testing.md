@@ -27,3 +27,5 @@ Optional per-variant `content_probe` exercises real write_file/read_file followe
 The trusted Debian Stop observer is restricted to an explicitly named disposable fixture. It binds Stop to the stream's opaque run ID, requires acceptance, observes a real Bash/sleep child, and verifies all original PID/birth identities disappear, including reparented children. Its controller never executes model commands on the host.
 
 `--profiles receipts --previous-report FILE --receipt FILE` combines exact-source observations without logging in or replaying actions. Earlier failures remain failures; missing scenarios remain not_run. Browser results qualify composer/menu/scroll CSS behavior at the recorded viewports, not GPU antialiasing or drag latency on all platforms.
+
+Native text writes preserve requested line endings and report UTF-8 byte counts. LF/CRLF and nested-fence/Unicode dispatcher checks compare actual disk bytes and the reported count. Platform-specific live qualification remains separate.
