@@ -8,7 +8,7 @@ import hashlib
 
 from src.decisions.contracts import DecisionError
 
-APPROVAL_REVIEW_POLICY = "odysseus-approval-review/v3"
+APPROVAL_REVIEW_POLICY = "odysseus-approval-review/v4"
 MIN_ALLOW_BY_RISK = {"low": 0.50, "medium": 0.70, "high": 0.85, "critical": 0.85}
 
 # Kept below DecisionRequest's 4,000-character instruction limit. This is trusted

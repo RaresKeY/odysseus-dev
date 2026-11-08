@@ -8,6 +8,7 @@ import argparse
 import json
 from pathlib import Path
 import sys
+import time
 import urllib.parse
 import uuid
 
@@ -21,13 +22,16 @@ def main():
     parser.add_argument("--model", required=True)
     parser.add_argument("--manual-template", required=True)
     parser.add_argument("--output", type=Path, required=True)
+    parser.add_argument("--turn-delay-seconds", type=int, default=0, choices=range(121),
+                        metavar="0..120", help="Planned provider pacing between turns, never a retry")
     args = parser.parse_args()
     login = json.load(sys.stdin)
     client = Client("http://127.0.0.1:7824", timeout=180)
     suite = Suite(client, {k: login[k] for k in ("username", "password")}, args)
     name = "codex_workspace_followup_" + uuid.uuid4().hex[:12] + ".txt"
     report = {"case": "FS-15", "source": args.expected_source,
-              "model": args.model, "scratch_name": name, "checks": {}, "turns": []}
+              "model": args.model, "scratch_name": name, "checks": {}, "turns": [],
+              "turn_delay_seconds": args.turn_delay_seconds}
     try:
         suite.runtime()
         before = client.request("/api/chat-settings")
@@ -45,6 +49,9 @@ def main():
                 "anything",
             ]
             for index, message in enumerate(messages):
+                if index and args.turn_delay_seconds:
+                    print(json.dumps({"phase":"planned_turn_pacing", "seconds":args.turn_delay_seconds}), flush=True)
+                    time.sleep(args.turn_delay_seconds)
                 try:
                     with client.response("/api/chat_stream", {
                         "session": sid, "message": message, "mode": "agent", "workspace": workspace,

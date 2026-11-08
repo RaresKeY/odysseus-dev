@@ -179,3 +179,71 @@ def test_previous_assistant_is_untrusted_and_bounded(answer, omitted):
     assert bool(observed.get('omitted')) is omitted
     assert ('text' not in observed) is omitted
     assert bound.prior_task['previous_answer'] == answer
+
+@pytest.mark.asyncio
+@pytest.mark.parametrize('mode,expected', [('auto_approve','bypass'), ('always_ask','manual')])
+@pytest.mark.parametrize('tool', ['get_workspace','read_file'])
+async def test_native_workspace_reads_use_policy_without_model_calls(store, tmp_path, mode, expected, tool):
+    from src.approval_review import ApprovalReviewService
+    from src.tool_approvals import ToolApprovalStore
+    from src.tool_capabilities import capabilities_for_action
+    from tests.test_approval_review import evaluator
+    (tmp_path/'file.txt').write_text('fixture')
+    bound = store.acquire('alice','a','anything','interactive')
+    with bound.activate():
+        authority = admitted(request(), 'anything', tmp_path)
+    policy = {'contract_version':1,'owner':'alice','session_id':'a','approval_mode':mode,
+              'policy_revision':1,'authority_epoch':1,'elevation_ceiling':False,
+              'elevation_grant':None,'effective_roots':[str(tmp_path)]}
+    content = 'file.txt' if tool == 'read_file' else '{}'
+    approvals = ToolApprovalStore()
+    pending = approvals.create(owner='alice',session_id='a',origin_run_id='run',tool_name=tool,
+        content=content,workspace=str(tmp_path),request_text='anything',request_authority=authority,
+        capabilities=capabilities_for_action(tool,content),policy_record=policy,
+        external_untrusted_context_seen=True,policy_validator=lambda p: True)
+    evaluate,calls = evaluator()
+    service = ApprovalReviewService(approvals)
+    result = await service.review(pending,policy,deterministically_admitted=True,evaluator=evaluate)
+    assert result.status == expected
+    assert not calls
+    if mode == 'auto_approve':
+        assert result.decision['decision_source'] == 'deterministic'
+        assert result.decision['applied_rule'] == 'workspace_read'
+        replay = await service.review(pending,policy,deterministically_admitted=True,evaluator=evaluate)
+        assert replay.status == 'stale'
+
+
+@pytest.mark.asyncio
+@pytest.mark.parametrize('case', ['missing_authority','hard_denied','changed_target','outside_workspace','already_reviewing'])
+async def test_read_policy_never_overrides_denials_or_unresolved_resources(store, tmp_path, case):
+    from dataclasses import replace
+    from src.approval_review import ApprovalReviewService
+    from src.tool_approvals import ToolApprovalStore
+    from src.tool_capabilities import capabilities_for_action
+    from src.agent_runtime.resources import FilesystemRoot
+    workspace = tmp_path/'workspace';workspace.mkdir()
+    target = workspace/'file.txt';target.write_text('fixture')
+    bound = store.acquire('alice','a','anything','interactive')
+    with bound.activate():
+        authority = admitted(request(), 'anything', workspace)
+    content = 'file.txt'
+    if case == 'outside_workspace':
+        extra = tmp_path/'extra';extra.mkdir();target = extra/'file.txt';target.write_text('other')
+        authority = replace(authority,resource_roots=(*authority.resource_roots,FilesystemRoot.seal(extra,owner='alice')))
+        content = str(target)
+    policy = {'contract_version':1,'owner':'alice','session_id':'a','approval_mode':'auto_approve',
+              'policy_revision':1,'authority_epoch':1,'elevation_ceiling':False,
+              'elevation_grant':None,'effective_roots':[str(workspace)]}
+    approvals = ToolApprovalStore()
+    pending = approvals.create(owner='alice',session_id='a',origin_run_id='run',tool_name='read_file',
+        content=content,workspace=str(workspace),request_text='anything',request_authority=authority,
+        capabilities=capabilities_for_action('read_file',content),policy_record=policy,
+        external_untrusted_context_seen=False,policy_validator=lambda p: True)
+    if case == 'changed_target':
+        target.unlink()
+    if case == 'already_reviewing':
+        assert approvals.begin_review(pending)
+    result = await ApprovalReviewService(approvals).review(pending,policy,
+        deterministically_admitted=case!='missing_authority',hard_denied=case=='hard_denied')
+    assert result.status in {'blocked','unavailable'}
+    assert result.approval is None
