@@ -1726,7 +1726,7 @@ async def _review_bound_chat_action(bound, block, *, owner, session_id, workspac
                                     process_operation=None):
     """Propose through the existing store; only this dispatcher claims effects."""
     from src.approval_review import ApprovalReviewService
-    from src.approval_context import user_snapshot
+    from src.approval_context import user_snapshot, previous_assistant_observation
     from src.decisions.contracts import DecisionError
     from src.chat_policy import policy_matches_binding
     from src.chat_automation import SqlAttemptStore
@@ -1836,7 +1836,8 @@ async def _review_bound_chat_action(bound, block, *, owner, session_id, workspac
             if grant is not None:
                 from src.browser_automation import redact_prepared_evidence
                 evidence = redact_prepared_evidence(evidence, grant)
-    evidence = {"recent_tool_results": list(getattr(bound, "review_observations", [])),
+    evidence = {"previous_assistant_response": previous_assistant_observation(bound),
+                "recent_tool_results": list(getattr(bound, "review_observations", [])),
                 "older_results_omitted": bool(getattr(bound, "review_observations_omitted", False)),
                 "browser_observation": evidence}
     outcome = await ApprovalReviewService(tool_approval_store).review(

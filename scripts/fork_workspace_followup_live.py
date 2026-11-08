@@ -45,20 +45,25 @@ def main():
                 "anything",
             ]
             for index, message in enumerate(messages):
-                with client.response("/api/chat_stream", {
-                    "session": sid, "message": message, "mode": "agent", "workspace": workspace,
-                    "allow_bash": "true", "allow_web_search": "false", "use_web": "false",
-                    "use_rag": "false", "selected_endpoint_id": args.endpoint_id,
-                    "selected_model": args.model}, form=True) as response:
-                    events = read_events(response)
+                try:
+                    with client.response("/api/chat_stream", {
+                        "session": sid, "message": message, "mode": "agent", "workspace": workspace,
+                        "allow_bash": "true", "allow_web_search": "false", "use_web": "false",
+                        "use_rag": "false", "selected_endpoint_id": args.endpoint_id,
+                        "selected_model": args.model}, form=True) as response:
+                        events = read_events(response)
+                finally:
+                    report["decisions"] = client.request("/api/session/" + sid + "/decisions")["items"]
                 receipts = [e for e in events if e.get("type") == "tool_output"]
                 report["turns"].append({
-                    "receipts": [{k: e.get(k) for k in (
-                        "tool", "exit_code", "execution_attempted", "blocked", "failure_kind")}
+                    "receipts": [{**{k: e.get(k) for k in (
+                        "tool", "exit_code", "execution_attempted", "blocked", "failure_kind")},
+                        "failure_summary": str(e.get("error") or e.get("output", ""))[:1000] if e.get("blocked") else ""}
                         for e in receipts],
                     "error_statuses": [e.get("status") for e in events if e.get("type") == "error"],
+                    "event_types": sorted({str(e.get("type", "delta")) for e in events}),
                 })
-                text = "".join(str(e.get("delta", "")) + str(e.get("response", ""))
+                text = "".join(str(e.get("delta", "")) + str(e.get("response", "")) + str(e.get("content", ""))
                                for e in events)
                 if index == 0:
                     require(not receipts and "?" in text, "clarification_not_reproduced")
