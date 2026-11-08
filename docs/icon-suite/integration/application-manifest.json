@@ -518,9 +518,10 @@
           "selector": "[data-ui-icon=\"sidebar-close\"]"
         }
       ],
-      "explanation": "Use the new close glyph on the active external toggle only while the sidebar is expanded. Keep the old hamburger to open it. The captured in-sidebar toggle is hidden by CSS.",
+      "explanation": "Owner requested the normal sidebar outline without the close badge. Reuse the existing panel-left geometry for the expanded toggle; keep the opening hamburger, accessible labels and state transitions.",
       "captured_role": "action-or-status-icon",
-      "applied_role": "sidebar-expanded-icon"
+      "applied_role": "sidebar-expanded-icon",
+      "geometry_source": "static/icons/ui/panel-left.svg"
     },
     {
       "id": "dock",

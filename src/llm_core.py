@@ -1388,21 +1388,6 @@ def _provider_label(url: str) -> str:
     return host or "provider"
 
 
-def _is_openai_hosted_chat_url(url: str) -> bool:
-    try:
-        parsed = urlparse(url or "")
-    except Exception:
-        return False
-    path = (parsed.path or "").rstrip("/")
-    return _host_match(url, "openai.com") and path.endswith("/chat/completions")
-
-
-def _model_disallows_reasoning_effort_with_chat_tools(model: str) -> bool:
-    """OpenAI GPT 5.x variants reject reasoning_effort + tools on chat completions."""
-    m = (model or "").strip().lower()
-    return bool(re.match(r"^(?:openai/)?gpt-5(?:[.\-]\d+)?(?:[-_:].*)?$", m))
-
-
 # gpt-oss (harmony) ships BUILT-IN tools named `python` and `browser`, invoked
 # with the raw body as the argument (`to=python` + bare source), while custom
 # functions use `to=functions.NAME` + JSON. A tool we expose under a built-in's
@@ -1452,16 +1437,6 @@ def _unalias_harmony_tool_name(name: str, model: str) -> str:
     if not _is_harmony_model(model):
         return name
     return _HARMONY_TOOL_ALIASES_REVERSE.get(name, name)
-
-
-def _scrub_openai_chat_tool_reasoning(payload: Dict, target_url: str, model: str) -> None:
-    if not payload.get("tools"):
-        return
-    if not _is_openai_hosted_chat_url(target_url):
-        return
-    if not _model_disallows_reasoning_effort_with_chat_tools(model):
-        return
-    payload["reasoning_effort"] = "none"
 
 
 def _apply_deepseek_v4_reasoning_defaults(
@@ -3299,7 +3274,6 @@ async def _stream_llm_inner(url: str, model: str, messages: List[Dict], temperat
             payload, target_url, model, thinking_mode
         )
         _apply_explicit_nonstream_reasoning_effort(payload, reasoning_effort)
-        _scrub_openai_chat_tool_reasoning(payload, target_url, model)
         _apply_openai_request_controls(payload, url, model, headers, provider)
         h = _provider_headers(provider, headers)
         if provider == "copilot":

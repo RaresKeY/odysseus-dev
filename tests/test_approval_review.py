@@ -191,7 +191,9 @@ async def test_missing_server_authority_and_hard_denial_never_reach_provider(pro
     store._pending[pending.approval_id] = without
     call, calls = evaluator()
     service = ApprovalReviewService(store)
-    assert (await service.review(without, policy, deterministically_admitted=True, evaluator=call)).status == "blocked"
+    outcome = await service.review(without, policy, deterministically_admitted=True, evaluator=call)
+    assert outcome.status == "blocked"
+    assert "does not match the current request" in outcome.reason
     assert (await service.review(without, policy, deterministically_admitted=True, evaluator=call, hard_denied=True)).status == "stale"
     assert not calls and store.peek(pending.approval_id) is None
 

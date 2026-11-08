@@ -5,6 +5,7 @@
 import Storage from './js/storage.js';
 import uiModule from './js/ui.js?v=20261107scrollprogress1';
 import workspaceModule from './js/workspace.js';
+import {initWorkspaceFiles} from './js/workspaceFiles.js';
 import fileHandlerModule from './js/fileHandler.js?v=20260909mobileattachmentedit1';
 import modelsModule from './js/models.js';
 import ragModule from './js/rag.js';
@@ -2024,7 +2025,7 @@ function initializeEventListeners() {
   }
   setupToggle('web-toggle-btn', 'web-toggle', 'web');
   setupToggle('bash-toggle-btn', 'bash-toggle', 'bash');
-  try { workspaceModule.initWorkspace(); } catch (_) {}
+  try { workspaceModule.initWorkspace(); initWorkspaceFiles(); } catch (_) {}
 
   // Document editor toggle (special: uses module panel, not a checkbox)
   function bringOpenDocumentToFrontOnMobile() {

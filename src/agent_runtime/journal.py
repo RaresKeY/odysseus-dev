@@ -8,6 +8,7 @@ from dataclasses import dataclass, field, asdict
 from functools import wraps
 from inspect import signature
 import logging
+import hashlib
 from typing import Any
 from uuid import uuid4
 
@@ -55,6 +56,10 @@ class ActionReceipt:
             'blocked': denied,
             'output_sha256': digest(result.get('output') or result.get('error') or result.get('stdout') or ''),
         }
+        document = getattr(self, "_native_document", None)
+        if (self.tool == "create_document" and self.outcome["success"]
+                and self.outcome["authoritative"] and document is not None):
+            self.outcome["document"] = document
         self.transition('outcome', **self.outcome)
 
     def to_dict(self) -> dict[str, Any]:
@@ -139,7 +144,8 @@ class ActionJournal:
                      execution_attempted=bool((a.outcome or {}).get('authoritative')),
                      blocked=(a.outcome or {}).get('blocked', False),
                      action_id=a.action_id, execution_id=a.execution_id,
-                     artifact_versions=a.artifact_versions, artifact_changes=a.artifact_changes)
+                     artifact_versions=a.artifact_versions, artifact_changes=a.artifact_changes,
+                     **({"document_result": a.outcome["document"]} if (a.outcome or {}).get("document") else {}))
                 for a in self.actions if a.outcome is not None]
 
 
@@ -156,6 +162,17 @@ def bind_journal(journal: ActionJournal):
     finally:
         _ACTION.reset(action_token)
         _JOURNAL.reset(token)
+
+
+def record_document_commit(document_id: str, title: str, content: str) -> None:
+    """Called only by the native writer after its owner-scoped SQL commit."""
+    action = _ACTION.get()
+    if (action is not None and action.tool == "create_document"
+            and action.execution_id and action.operation_started):
+        action._native_document = {
+            "id": document_id, "title": title, "nonempty": bool(content.strip()),
+            "content_sha256": hashlib.sha256(content.encode("utf-8")).hexdigest(),
+        }
 
 
 def current_journal() -> ActionJournal | None:

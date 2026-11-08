@@ -53,9 +53,9 @@ def dispatch_runtime(store, tmp_path, monkeypatch):
                                  (OperationGrant("write_file"),))
     block = namedtuple("Block", ["tool_type", "content"])("write_file",
         json.dumps({"path": "target.txt", "content": "after"}))
-    async def dispatch(bound, exact=None, request_authority=authority):
+    async def dispatch(bound, exact=None, request_authority=authority, tool_block=block):
         with bound.activate():
-            return await tool_execution.execute_tool_block(block, owner="alice", session_id="a",
+            return await tool_execution.execute_tool_block(tool_block, owner="alice", session_id="a",
                 workspace=str(workspace), request_authority=request_authority,
                 security_context=ToolRunSecurityContext(), exact_approval=exact)
     session = SimpleNamespace(id="a", model="manual", endpoint_url="http://local/v1", headers={}, endpoint_id=None)
@@ -111,6 +111,29 @@ async def test_retry_file_request_reaches_auto_review_with_original_user_context
     evidence = json.loads(runtime.calls[0].content)["state"]["server_context"]["user_evidence"]
     assert original in [row["text"] for row in evidence]
     assert evidence[-1]["text"] == "go again"
+
+
+@pytest.mark.asyncio
+@pytest.mark.parametrize("prompt", [
+    "make a doicument test.txt wiht some random tet in it",
+    "make a document test.txt with some random text in it",
+    "create test.txt with some random text in it",
+    "make test.txt with some random text in it",
+])
+async def test_named_file_creation_reaches_review_and_dispatch(store, dispatch_runtime, prompt):
+    runtime = dispatch_runtime
+    store.update_chat("alice", "a", {"approval_mode": "auto_approve"}, 0)
+    bound = await prepare_chat_turn(store, "alice", runtime.session, prompt)
+    with bound.activate():
+        authority = create_request_authority(prompt, owner="alice", session_id="a",
+            workspace=str(runtime.workspace))
+    block = namedtuple("Block", ["tool_type", "content"])("write_file",
+        json.dumps({"path": "test.txt", "content": "Random text."}))
+    _, result = await runtime.dispatch(bound, request_authority=authority, tool_block=block)
+    assert result["exit_code"] == 0, result
+    assert len(runtime.calls) == len(runtime.effects) == 1
+    evidence = json.loads(runtime.calls[0].content)["state"]["server_context"]["user_evidence"]
+    assert evidence[-1]["text"] == prompt
 
 
 @pytest.mark.asyncio

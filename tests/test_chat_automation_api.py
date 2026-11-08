@@ -39,8 +39,8 @@ async def test_owner_cas_roundtrip_and_no_cross_owner_state(api):
 
 
 @pytest.mark.asyncio
-@pytest.mark.parametrize('saved_mode', ['auto_approve', 'yolo'])
-async def test_created_session_api_defaults_to_ask_and_keeps_saved_chat(api, store, configured_reviewer, monkeypatch, saved_mode):
+@pytest.mark.parametrize('saved_mode', ['always_ask', 'auto_approve', 'yolo'])
+async def test_created_session_api_defaults_to_auto_approve_and_keeps_saved_chat(api, store, configured_reviewer, monkeypatch, saved_mode):
     from core import session_manager
     monkeypatch.setattr(session_manager, 'SessionLocal', store.session_factory)
     manager = session_manager.SessionManager.__new__(session_manager.SessionManager)
@@ -50,12 +50,13 @@ async def test_created_session_api_defaults_to_ask_and_keeps_saved_chat(api, sto
         assert saved.status_code == 200
         preferences = (await c.get('/api/chat-settings')).json()
         assert preferences['last_explicit_mode'] == saved_mode
+        assert preferences['default_approval_mode'] == 'auto_approve'
         # Exercise the shared production session-creation transaction, without a provider call.
         manager.create_session('new', 'New chat', 'http://synthetic.invalid/v1', 'manual', owner='alice')
         for _ in range(2):
             new_chat = await c.get('/api/session/new/automation')
             assert new_chat.status_code == 200
-            assert new_chat.json()['approval_mode'] == 'always_ask'
+            assert new_chat.json()['approval_mode'] == 'auto_approve'
             assert new_chat.json()['policy_revision'] == 0
             existing = (await c.get('/api/session/a/automation')).json()
             assert existing['approval_mode'] == saved_mode

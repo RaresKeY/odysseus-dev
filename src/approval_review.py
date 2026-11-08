@@ -21,7 +21,7 @@ from src.tool_approvals import ExactToolApproval, PendingToolApproval, ToolAppro
 
 
 from src.approval_policy import (
-    APPROVAL_REVIEW_POLICY, INSTRUCTIONS, QUESTIONS, combine_assessment,
+    APPROVAL_REVIEW_POLICY, INSTRUCTIONS, QUESTIONS, REASONS, combine_assessment,
 )
 from src.approval_context import assemble
 from src.decisions.store import OUTAGE_FAILURES
@@ -131,6 +131,33 @@ def _authority_admits(pending: PendingToolApproval) -> bool:
         return False
 
 
+def _routine_workspace_read(pending):
+    """Only fixed native readers of already-resolved workspace resources."""
+    from src.agent_runtime.resources import NativeBackendResource
+    if pending.tool_name not in {"get_workspace", "read_file", "ls", "glob", "grep"}:
+        return False
+    backend = pending.backend_operation
+    if (not pending.workspace or backend is None
+            or not isinstance(backend.resource, NativeBackendResource)
+            or backend.resource.tool_id != pending.tool_name):
+        return False
+    authority = pending.request_authority
+    if authority is None or not any(root.path == pending.workspace for root in authority.resource_roots):
+        return False
+    if pending.tool_name == "get_workspace":
+        return True
+    operation = pending.resource_operation
+    if (operation is None or operation.operation.tool != pending.tool_name
+            or operation.request_id != authority.request_id
+            or any(binding.resource.root.path != pending.workspace for binding in operation.bindings)):
+        return False
+    try:
+        operation.validate()
+    except (ValueError, OSError, RuntimeError):
+        return False
+    return True
+
+
 class ApprovalReviewService:
     """One review with at most one technical fallback; never a broader grant."""
 
@@ -172,13 +199,28 @@ class ApprovalReviewService:
         if not self._current(pending, policy):
             self._retire(pending)
             return ReviewOutcome("stale", pending, reason="The action or its approval policy is no longer current.")
+        admitted = deterministically_admitted and _authority_admits(pending)
         requirement = review_requirement(policy, tool_name=pending.tool_name,
-                                         deterministically_admitted=(deterministically_admitted
-                                                                     and _authority_admits(pending)),
+                                         deterministically_admitted=admitted,
                                          hard_denied=hard_denied)
         if requirement is ReviewRequirement.DENY:
             self._retire(pending)
-            return ReviewOutcome("blocked", pending, reason="This action is outside current permissions.")
+            reason = ("This action is outside current permissions." if hard_denied or admitted else
+                      "This tool action does not match the current request. Choose an action "
+                      "covered by the request, or request the action explicitly.")
+            return ReviewOutcome("blocked", pending, reason=reason)
+        if requirement is ReviewRequirement.INDEPENDENT_MODEL and _routine_workspace_read(pending):
+            # This is an initial policy disposition, never a fallback after a
+            # model denial. Reserve/retire the exact proposal once; dispatch
+            # still revalidates policy, resource identities and containment.
+            if not self.store.begin_review(pending):
+                return ReviewOutcome("unavailable", pending, reason="This action already has a review attempt.")
+            self._retire(pending)
+            return ReviewOutcome("bypass", pending, decision={
+                "decision_source": "deterministic", "assessed": False,
+                "policy": APPROVAL_REVIEW_POLICY, "applied_rule": "workspace_read",
+                "reason": REASONS["workspace_read"],
+            })
         if requirement is ReviewRequirement.HUMAN:
             return ReviewOutcome("manual", pending, reason="Review this exact action before it runs.")
         if requirement is ReviewRequirement.NONE:
