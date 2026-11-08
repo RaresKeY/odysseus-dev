@@ -647,6 +647,7 @@ def test_repeated_retries_resolve_once_without_recursing_through_retry_turns():
     "make test.txt with some random text in it",
     "Please create a new file notes.txt with sample text.",
     "Make a doc test.txt with text.",
+    "Make a document test.txt\nwith some random text.",
     "Generate docs test.txt with text.",
     "Could you make a plain text report.md for me?",
 ])
@@ -677,3 +678,15 @@ def test_filename_creation_still_obeys_explicit_tool_denial(tmp_path):
     assert not grant.permits(ExactOperation.normalize("write_file", "test.txt\nRandom text."))
     guide = create_request_authority("Make test.txt. Do not use any tools.", workspace=str(tmp_path))
     assert not guide.permits(ExactOperation.normalize("write_file", "test.txt\nRandom text."))
+
+def test_filename_hint_preserves_independent_requested_capabilities(tmp_path):
+    grant = create_request_authority("Create a file answer.txt; list my tasks", workspace=str(tmp_path))
+    assert grant.permits(ExactOperation.normalize("write_file", "answer.txt\nText."))
+    assert grant.permits(ExactOperation.normalize("manage_tasks", '{"action":"list"}'))
+
+
+def test_literal_url_in_a_file_request_does_not_grant_web_access(tmp_path):
+    grant = create_request_authority(
+        "Create a file answer.txt containing the text https://example.test/source", workspace=str(tmp_path))
+    assert grant.permits(ExactOperation.normalize("write_file", "answer.txt\nText."))
+    assert not grant.permits(ExactOperation.normalize("web_fetch", '{"url":"https://example.test/source"}'))

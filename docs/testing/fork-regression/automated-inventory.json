@@ -4,9 +4,9 @@
   "counts": {
     "fixture-or-support": 64,
     "javascript-source": 108,
-    "pytest": 1678
+    "pytest": 1679
   },
-  "python_definitions": 13260,
+  "python_definitions": 13273,
   "files": [
     {
       "path": "tests/KNOWN_FAILURES.md",
@@ -3456,6 +3456,12 @@
       "kind": "pytest",
       "sha256": "ea075b2501b766e425344657269aa0666c9684d0217fc4fff75ff5a4d195e1db",
       "definitions": 3
+    },
+    {
+      "path": "tests/test_document_artifact_completion.py",
+      "kind": "pytest",
+      "sha256": "12f177a0513528a2e9af3ea2cab6ed1fa425cf078e3531e032081454bc918113",
+      "definitions": 11
     },
     {
       "path": "tests/test_document_close_clears_active_route.py",
@@ -8468,8 +8474,8 @@
     {
       "path": "tests/test_request_authority.py",
       "kind": "pytest",
-      "sha256": "aa5d2d95766462ee206c9f52d6938e50ee5eabf0078e3034282e6d6b1c31b195",
-      "definitions": 45
+      "sha256": "3016859ffeb6f3698a251c08b5c8c1d20021faee7d8af14d05197b4c6e50e4fd",
+      "definitions": 47
     },
     {
       "path": "tests/test_required_read_operation.py",

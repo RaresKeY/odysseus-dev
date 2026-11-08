@@ -54,6 +54,7 @@ def workspace_artifact_is_usable(path: Path) -> bool:
 class EvidenceKind(str, Enum):
     TOOL_RESULT = "tool_result"
     ARTIFACT_MUTATION = "artifact_mutation"
+    DOCUMENT_MUTATION = "document_mutation"
     ARTIFACT_VALIDATION = "artifact_validation"
     VERIFIER_RESULT = "verifier_result"
     MEDIA_INGRESS = "media_ingress"
@@ -79,11 +80,18 @@ class CompletionRequirements:
     # successful tool event is not enough: the declared artifact must also
     # exist in this workspace at completion time.
     workspace_root: str = ""
+    # These logical outputs may be native Documents or workspace files.
+    # Derived from the trusted request, never from a client-supplied flag.
+    document_alternatives: tuple[str, ...] = ()
 
     def to_dict(self) -> dict[str, Any]:
         data = asdict(self)
         data["required_artifacts"] = list(self.required_artifacts)
         data["verifier_commands"] = list(self.verifier_commands)
+        if self.document_alternatives:
+            data["document_alternatives"] = list(self.document_alternatives)
+        else:
+            data.pop("document_alternatives")
         return data
 
 
@@ -319,6 +327,21 @@ def _execution_obligation(requirements: CompletionRequirements) -> bool:
                 or requirements.executable_verifier_available or requirements.verifier_commands)
 
 
+def _document_alternatives(instruction: str, paths: Sequence[str]) -> tuple[str, ...]:
+    if not paths:
+        return ()
+    from src.turn_contract import requested_capabilities
+    if "documents" not in requested_capabilities(instruction):
+        return ()
+    scope = str(instruction)
+    for path in paths:
+        scope = scope.replace(path, "")
+    if re.search(r"\b(?:files?|folders?|director(?:y|ies)|workspace|filesystem|disk|"
+                 r"shell|terminal|repo(?:sitory)?)\b", scope, re.I):
+        return ()
+    return tuple(path for path in paths if "/" not in path and "\\" not in path)
+
+
 def infer_completion_requirements(
     instruction: str,
     *,
@@ -414,6 +437,7 @@ def infer_completion_requirements(
     )
     return CompletionRequirements(
         required_artifacts=tuple(paths),
+        document_alternatives=_document_alternatives(text, paths),
         verifier_required=verifier_required,
         executable_verifier_available=(
             executable_verifier_available or bool(cleaned_verifier_commands) or bool(explicit_test_request)
@@ -476,6 +500,7 @@ def requirements_from_runtime_context(
     ))
     return CompletionRequirements(
         required_artifacts=cleaned,
+        document_alternatives=_document_alternatives(instruction, cleaned),
         verifier_required=bool(raw.get("verifier_required")),
         executable_verifier_available=(
             bool(raw.get("executable_verifier_available"))
@@ -637,6 +662,7 @@ class EvidenceLedger:
         # Retain receipt command identity privately for presentation matching;
         # model prose and client dictionaries never populate this evidence.
         self._verifier_commands: dict[str, tuple[str, ...]] = {}
+        self._document_commands: dict[str, Mapping[str, Any]] = {}
         # Wave 4 effect assessments from the run's journal, plus the journal
         # order of actions so receipt evidence and effects share one ordering.
         self.effects: list[dict[str, Any]] = []
@@ -846,18 +872,29 @@ class EvidenceLedger:
             source=event,
         )
 
+        document = event.get("document_result")
+        if (tool == "create_document" and authoritative and event.get("action_id") and event.get("execution_id")
+                and isinstance(document, Mapping) and isinstance(document.get("id"), str) and document["id"]
+                and isinstance(document.get("title"), str) and document["title"].strip()
+                and document.get("nonempty") is True):
+            self._append(kind=EvidenceKind.DOCUMENT_MUTATION, success=success,
+                         authoritative=True, source=event, artifact_path=document["title"].strip(),
+                         detail="native Document " + document["id"])
+
+        if tool == "manage_documents" and event.get("action_id"):
+            try:
+                args = json.loads(command)
+            except (ValueError, TypeError):
+                args = None
+            self._document_commands[str(event["action_id"])] = args if isinstance(args, Mapping) else {}
+
         explicit_paths = _explicit_tool_paths(tool, command)
         mutation_paths = list(explicit_paths)
         observed_changes = event.get('artifact_changes')
         if isinstance(observed_changes, list) and tool in {'bash', 'python', 'host_shell'}:
             mutation_paths.extend(path for path in self.requirements.required_artifacts
                                   if artifact_identity(path, self.requirements.workspace_root) in observed_changes)
-        elif command_has_mutation_effect(command) and tool not in {
-            "write_file",
-            "edit_file",
-            "apply_patch",
-            "inspect_media",
-        }:
+        elif tool in {"bash", "python", "host_shell"} and command_has_mutation_effect(command):
             mutation_paths.extend(
                 path
                 for path in self.requirements.required_artifacts
@@ -949,7 +986,24 @@ class EvidenceLedger:
                 and all(any(_artifact_path_matches_required(word, path, self.requirements.workspace_root)
                             for word in words) for path in paths))
 
-    def _supports_artifact_claim(self, kind: EvidenceKind, paths: Sequence[str]) -> bool:
+    def _document_alternative(self, required: str) -> EvidenceEvent | None:
+        if required not in self.requirements.document_alternatives:
+            return None
+        for event in reversed(self.events):
+            if event.kind == EvidenceKind.TOOL_RESULT and event.execution_id:
+                if event.tool in {"edit_document", "update_document"}:
+                    return None  # A later document change needs fresh target evidence.
+                if event.tool == "manage_documents":
+                    command = self._document_commands.get(event.action_id, {})
+                    if command.get("action") not in {"list", "search", "find", "view", "read", "get"}:
+                        return None
+            if (event.kind == EvidenceKind.DOCUMENT_MUTATION and event.artifact_path == required
+                    and event.success and event.authoritative):
+                return event
+        return None
+
+    def _supports_artifact_claim(self, kind: EvidenceKind, paths: Sequence[str], *,
+                                 allow_documents: bool = True) -> bool:
         """Match every claimed artifact by identity, never by basename."""
         targets = tuple(paths) or self.requirements.required_artifacts
         if not targets or (not paths and len(targets) != 1):
@@ -958,6 +1012,8 @@ class EvidenceLedger:
             # An unnamed "I updated it" may mean the external effect.
             return False
         for path in targets:
+            if allow_documents and kind == EvidenceKind.ARTIFACT_MUTATION and self._document_alternative(path):
+                continue
             matching = [event for event in self.events if event.kind == kind and event.authoritative
                         and _artifact_path_matches_required(event.artifact_path, path, self.requirements.workspace_root)]
             successful = [event for event in matching if event.success]
@@ -1082,6 +1138,10 @@ class EvidenceLedger:
         unsettled: list[str] = []
         workspace_root = str(self.requirements.workspace_root or "").strip()
         for required in self.requirements.required_artifacts:
+            document = self._document_alternative(required)
+            if document is not None:
+                satisfied_ids.append(document.event_id)
+                continue
             matches = [
                 event for event in self.events
                 if event.kind == EvidenceKind.ARTIFACT_MUTATION
@@ -1135,7 +1195,7 @@ class EvidenceLedger:
             (
                 index
                 for index, event in enumerate(self.events)
-                if event.kind == EvidenceKind.ARTIFACT_MUTATION
+                if event.kind in {EvidenceKind.ARTIFACT_MUTATION, EvidenceKind.DOCUMENT_MUTATION}
                 and event.authoritative
                 and event.success
             ),

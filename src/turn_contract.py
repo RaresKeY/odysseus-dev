@@ -690,6 +690,9 @@ def _named_file_creation_families(text: str) -> frozenset[str]:
     )
     if not match or re.search(r"\b(?:library|editor)\b", text, re.I):
         return frozenset()
+    if re.search(r"https?://|(?:[;\n]\s*|\b(?:and|then)\s+)(?=" + _ACTION_REQUEST + r")", text, re.I):
+        # Source retrieval and compound operations retain the existing router.
+        return frozenset()
     kind = (match["kind"] or "").casefold()
     document = kind in {"doc", "docs"} or (6 <= len(kind) <= 11 and min(
         _damerau_distance(kind, noun) for noun in ("document", "documents")) <= 2)

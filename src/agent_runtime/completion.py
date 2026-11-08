@@ -124,7 +124,10 @@ def _supported_prose(text: str, ledger: EvidenceLedger, decision: CompletionDeci
                         or not ledger._supports_verifier_claim(identities, paths)):
                     why = 'no current passing executable verification supports the claim'
             elif claim == 'mutation':
-                if not ledger._supports_artifact_claim(EvidenceKind.ARTIFACT_MUTATION, paths):
+                filesystem_claim = bool(re.search(
+                    r"\b(?:workspace|disk|filesystem|directory|folder)\b|/workspace/", scope, re.I))
+                if not ledger._supports_artifact_claim(EvidenceKind.ARTIFACT_MUTATION, paths,
+                                                       allow_documents=not filesystem_claim):
                     why = 'no matching artifact mutation supports the execution claim'
             elif claim == 'execution':
                 # A generic assertion cannot be tied confidently to a receipt.
