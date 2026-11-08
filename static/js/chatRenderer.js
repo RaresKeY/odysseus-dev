@@ -2551,8 +2551,9 @@ export function createUserMsgFooter(msgElement) {
     if (bi >= 0) return 1;
     return 0;
   });
-  const visible = sorted.slice(0, _MAX_VISIBLE);
-  const overflow = sorted.slice(_MAX_VISIBLE);
+  // Keep Copy directly available; all other user actions belong in More.
+  const visible = sorted.filter(a => a.id === 'copy');
+  const overflow = sorted.filter(a => a.id !== 'copy');
 
   visible.forEach(a => {
     const btn = _makeActionBtn(a.cls, a.title, a.html ? '' : a.icon, (ev) => {
