@@ -247,3 +247,17 @@ async def test_read_policy_never_overrides_denials_or_unresolved_resources(store
         deterministically_admitted=case!='missing_authority',hard_denied=case=='hard_denied')
     assert result.status in {'blocked','unavailable'}
     assert result.approval is None
+
+
+def test_read_policy_activity_is_distinct_from_yolo_or_model_approval(store):
+    from src.decisions.observability import DecisionObservability
+    observer = DecisionObservability(store.session_factory)
+    observer.record_approval('alice','a','run', {
+        'decision_source':'deterministic','assessed':False,'status':'bypass',
+        'applied_rule':'workspace_read'})
+    item = observer.history('alice','a')['items'][0]
+    assert item['approval']['applied_rule'] == 'workspace_read'
+    assert item['approval']['decision_source'] == 'deterministic'
+    assert item['approval']['assessed'] is False
+    assert item['usage_provenance'] == 'not_applicable'
+    assert 'Native read within the selected workspace' in item['approval']['reason']

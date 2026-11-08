@@ -60,6 +60,7 @@ def policy_identity():
     return APPROVAL_REVIEW_POLICY + ":" + PROMPT_SHA256
 
 REASONS = {
+    "workspace_read": "Native read within the selected workspace; execution permissions checked.",
     "routine": "Routine or bounded effects; policy checks passed.",
     "authorized_narrow": "High risk, with sufficient authorization and a narrow scope.",
     "critical": "Critical risk cannot be automatically approved.",

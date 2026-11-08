@@ -21,7 +21,7 @@ from src.tool_approvals import ExactToolApproval, PendingToolApproval, ToolAppro
 
 
 from src.approval_policy import (
-    APPROVAL_REVIEW_POLICY, INSTRUCTIONS, QUESTIONS, combine_assessment,
+    APPROVAL_REVIEW_POLICY, INSTRUCTIONS, QUESTIONS, REASONS, combine_assessment,
 )
 from src.approval_context import assemble
 from src.decisions.store import OUTAGE_FAILURES
@@ -219,7 +219,7 @@ class ApprovalReviewService:
             return ReviewOutcome("bypass", pending, decision={
                 "decision_source": "deterministic", "assessed": False,
                 "policy": APPROVAL_REVIEW_POLICY, "applied_rule": "workspace_read",
-                "reason": "Native read within the selected workspace; execution permissions checked.",
+                "reason": REASONS["workspace_read"],
             })
         if requirement is ReviewRequirement.HUMAN:
             return ReviewOutcome("manual", pending, reason="Review this exact action before it runs.")
