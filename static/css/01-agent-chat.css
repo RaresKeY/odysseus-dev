@@ -3474,7 +3474,7 @@ body.bg-pattern-ascii-fireflies {
       gap: 4px;
       height: 21px;
       padding: 0 6px;
-      font-size: 11px;
+      font-size: 12px;
       font-weight: 500;
       font-family: inherit;
       background: none;
@@ -3507,8 +3507,8 @@ body.bg-pattern-ascii-fireflies {
       vertical-align: -2px;
     }
     .model-picker-logo svg {
-      width: 12px;
-      height: 12px;
+      width: 14px;
+      height: 14px;
       opacity: 0.7;
     }
     .model-picker-menu {

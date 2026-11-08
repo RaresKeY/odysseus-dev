@@ -234,3 +234,5 @@ Frontend cache revisions retain the established odysseus-vN-pr40-editor-precache
 `static/js/chatAutomation.js` renders the server-declared `default_approval_mode` from owner configuration when the composer has no materialized chat. Existing chats render their acknowledged saved policy instead. The fork server declares Auto-Approve for new chats/forks, while the client retains a conservative Ask fallback until configuration is acknowledged or when connected to an older server. Readiness/unavailable feedback remains unchanged; the declaration adds no folder grant or reviewer bypass. Service-worker cache generation 1155 publishes this default consistently.
 
 Own-message footers show Edit and Copy directly, with Delete and Resend in the existing More actions menu. Assistant footer recent-action behavior is unchanged.
+
+The compact Manual model selector shows the existing model/provider icon and model name at 12px with a 14px icon, omitting the provider/company prefix. Full model and endpoint identity remain in its tooltip and the expanded chooser; Auto routing and reasoning-effort selection are unchanged.
