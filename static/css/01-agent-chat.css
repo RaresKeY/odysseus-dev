@@ -3474,7 +3474,7 @@ body.bg-pattern-ascii-fireflies {
       gap: 4px;
       height: 21px;
       padding: 0 6px;
-      font-size: 12px;
+      font-size: 11px;
       font-weight: 500;
       font-family: inherit;
       background: none;
@@ -3493,6 +3493,7 @@ body.bg-pattern-ascii-fireflies {
       color: var(--fg);
     }
     .model-picker-btn #model-picker-label {
+      font-size: 12px;
       max-width: 120px;
       overflow: hidden;
       text-overflow: ellipsis;
