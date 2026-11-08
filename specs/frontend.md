@@ -91,6 +91,8 @@ Storage/secrets policy:
 
 KaTeX and Mermaid are self-hosted and lazy-loaded through memoized, retry-after-failure promises in `static/js/markdown.js`; math placeholders preserve source until KaTeX arrives, detached PDF export renders its own container, and Mermaid fetches only when a diagram exists. Pyodide remains a jsDelivr-loaded optional runtime, so offline/PWA behavior is not fully self-contained.
 
+Assistant message footers show two recent primary actions. Rewrite shorter stays in the More actions menu, including after it was recently used; its rewrite handler and prompt are unchanged.
+
 ## Module Ownership
 
 Current major frontend areas include:
