@@ -88,6 +88,7 @@ def main():
                         paneWidth:r.width,editorWidth:e.width,treeWidth:tree.width,modal:p.matches(':modal')};
                     })().ok""")
                     browser.wait("document.querySelectorAll('.files-entry').length>=3")
+                    browser.wait("!document.querySelector('.files-tree-status').textContent.includes('Loading')")
                     check("tree-"+str(width), "document.querySelectorAll('.files-entry').length>=3")
                     screen("file-"+str(width))
                     browser.evaluate("document.querySelector('[aria-label=\"Close files\"]').click()")

@@ -171,6 +171,9 @@ def main(argv=None):
                     rect = browser.evaluate("(() => {const r=document.querySelector('.model-picker-wrap').getBoundingClientRect();return {x:r.x,y:r.y,width:r.width,height:r.height,scale:1}})()")
                     png = browser.call("Page.captureScreenshot", {"format": "png", "clip": rect})["data"]
                     (args.output.parent / ("composer-" + str(width) + ".png")).write_bytes(base64.b64decode(png))
+            except Exception as error:
+                rows.append({"id": "UI-02", "status": "failed", "profile": "browser",
+                             "variant": str(width), "reason": type(error).__name__ + ": " + str(error)[:200]})
             finally:
                 browser.close()
         log_path.chmod(0o600)
