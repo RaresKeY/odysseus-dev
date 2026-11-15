@@ -7385,6 +7385,7 @@ import { attachColorPicker } from './colorPicker.js?v=20260910eyedropper1';
   }
 
   export function openPanel(options = {}) {
+    window.dispatchEvent(new Event('odysseus:document-open'));
     _minimizeNotesForDocumentOpen();
     if (isOpen) return;
     // Clear any pane/divider still sliding out from a just-fired close so we

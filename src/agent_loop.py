@@ -27645,11 +27645,9 @@ async def stream_agent_loop(
                         )
                     else:
                         _failure_text = (
-                            "The model provider returned no usable output after inspecting "
-                            "the workspace. No file was changed. Retry the request; the "
-                            "workspace bridge is still connected."
-                            if _workspace_read_requires_mutation
-                            else "The model provider returned no usable output. No workspace change was made."
+                            "The model provider returned no usable final response. "
+                            "Review the tool results for completed or partial actions "
+                            "before retrying."
                         )
                     yield f'data: {json.dumps({"type": "final_response", "content": _failure_text})}\n\n'
                 # A terminal provider/request failure is not a completed Agent

@@ -173,6 +173,18 @@ async def test_auto_route_does_not_retry_or_try_another_execution_provider(store
 async def test_unsupported_effective_effort_fails_without_weakening_provider_rules(store, monkeypatch):
     url = "https://api.openai.com/v1/chat/completions"
     turn, calls = await bind(store, url=url, model="gpt-5.2", effort="high"), []
+    from src.model_request_controls import DIALECT_OPENAI_CHAT, RequestControls
+    # The selected effort was valid at admission. A later explicit provider
+    # prohibition must still stop dispatch; function tools alone do not make
+    # GPT-5 reasoning unsupported.
+    unsupported = mc.DeterministicControl.build(
+        control=mc.CONTROL_REASONING_EFFORT, status=mc.ASSERTION_UNSUPPORTED,
+        source=mc.SOURCE_PROVIDER_CONTRACT, confidence=mc.CONFIDENCE_EXPLICIT,
+        evidence={"fixture": "provider constraint changed after binding"},
+    )
+    controls = RequestControls("openai", DIALECT_OPENAI_CHAT, "gpt-5.2",
+                               contract_controls=(unsupported,))
+    monkeypatch.setattr(llm_core, "_request_controls_for", lambda *args, **kwargs: controls)
     async with httpx.AsyncClient(transport=httpx.MockTransport(lambda req: calls.append(req))) as client:
         monkeypatch.setattr(llm_core, "_get_http_client", lambda: client)
         with turn.activate():

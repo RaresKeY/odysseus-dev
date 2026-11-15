@@ -81,6 +81,22 @@ def sensitive(value, _depth=0):
     return False
 
 
+def previous_assistant_observation(bound):
+    """Explain a reply's referent without promoting assistant text to consent."""
+    prior = getattr(bound, "prior_task", None) or {}
+    answer = prior.get("previous_answer")
+    if not isinstance(answer, str) or not answer:
+        return None
+    observation = {"source": "previous_assistant_response", "trusted": False,
+                   "submission_id": prior.get("submission_id"), "text": answer}
+    # Keep the entire short question or explicitly omit it; truncating an
+    # instruction's qualifier could reverse its apparent meaning.
+    if len(encode(observation)) > 2048 or sensitive(observation):
+        return {"source": "previous_assistant_response", "trusted": False,
+                "omitted": True, "reason": "size_or_sensitive_content"}
+    return observation
+
+
 def remember_observation(bound, tool, result):
     """Keep bounded tool evidence in the active turn only, never as consent."""
     try:

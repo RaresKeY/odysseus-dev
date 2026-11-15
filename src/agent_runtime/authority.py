@@ -475,8 +475,9 @@ def _trusted_local_mcp_request_tools(request_text: str, intent: SemanticIntent) 
 
 def create_request_authority(request_text, *, owner=None, session_id=None, workspace=None,
                              history=(), policy=None, active_document=False,
-                             image_attachment=False, capabilities=None, client_runtime_context=None):
-    """Deterministic server policy over semantic facts, never schema inventory."""
+                             image_attachment=False, capabilities=None, client_runtime_context=None,
+                             workspace_tools=()):
+    """Seal ingress permissions and request constraints, never schema inventory."""
     if not isinstance(request_text, str):
         raise TypeError("Authority requires trusted request text")
     if re.fullmatch(r"\s*(?:please\s+)?go\s+again[.!?]*\s*", request_text, re.I):
@@ -490,7 +491,8 @@ def create_request_authority(request_text, *, owner=None, session_id=None, works
             return create_request_authority(previous, owner=owner, session_id=session_id,
                 workspace=workspace, history=trusted[:index], active_document=active_document,
                 image_attachment=image_attachment, capabilities=capabilities,
-                client_runtime_context=client_runtime_context).restrict(policy)
+                client_runtime_context=client_runtime_context,
+                workspace_tools=workspace_tools).restrict(policy)
         history = ()  # Repeated retries without an antecedent grant no action.
     intent = interpret_request(request_text, history=history, active_document=active_document,
                                workspace=workspace, image_attachment=image_attachment)
@@ -529,6 +531,12 @@ def create_request_authority(request_text, *, owner=None, session_id=None, works
         if operation is not None and name == canonical_tool(operation.tool):
             inputs = frozenset({ExactOperation.normalize(name, _json(dict(operation.args))).input})
         grants.append(OperationGrant(name, actions, inputs))
+    # A selected interactive workspace is a permission profile, not a lexical
+    # inference. Keep its native tools across clarification turns; exact read
+    # constraints already present above remain narrower than this baseline.
+    existing = {grant.tool for grant in grants}
+    grants.extend(OperationGrant(name) for name in sorted(workspace_tools)
+                  if name in INTERACTIVE_WORKSPACE_TOOLS and name not in existing)
     from src.chat_automation import current_turn, effective_elevation_roots
     bound = current_turn()
     roots = None
@@ -572,6 +580,33 @@ def require_user_approval_request(request):
     if is_internal_tool_request(request):
         from fastapi import HTTPException
         raise HTTPException(403, "Tool requests cannot submit user approval decisions.")
+
+
+# Deliberately excludes host_shell, remote services, browser and dynamic MCP.
+# These operations still pass resource containment and per-action approval.
+INTERACTIVE_WORKSPACE_TOOLS = frozenset({
+    "bash", "python", "read_file", "write_file", "edit_file", "apply_patch",
+    "grep", "glob", "ls", "get_workspace", "manage_bg_jobs",
+})
+
+
+def interactive_workspace_tools(request, *, owner, session_id, workspace, agent_mode):
+    """Admit a workspace profile only at an active human chat ingress."""
+    from src.auth_helpers import effective_user, is_delegated_credential
+    from src.chat_automation import current_turn
+    from src.owner_identity import auth_disabled
+    if (not agent_mode or not workspace or is_internal_tool_request(request)
+            or is_delegated_credential(request) or active_request_authority() is not None):
+        return frozenset()
+    actor = effective_user(request)
+    if (not actor and not auth_disabled()) or _owner(actor) != _owner(owner):
+        return frozenset()
+    bound = current_turn()
+    if (bound is None or bound.policy.get("entrypoint") != "interactive"
+            or _owner(bound.owner) != _owner(owner)
+            or bound.session_id != str(session_id or "") or not bound.current()):
+        return frozenset()
+    return INTERACTIVE_WORKSPACE_TOOLS
 
 
 def request_authority_for_http(request, request_text, **context):

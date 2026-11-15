@@ -80,6 +80,7 @@ a status code. `scripts/odysseus-smoke --areas` prints the current list.
 | Area | What it asserts |
 |---|---|
 | Chat | a turn against the stub comes back rendered, on both the buffered and the streamed path, and is in the session history |
+| Fork user flows | new-chat Auto-Approve, saved per-chat permission after a fresh login, stale-setting rejection, workspace open/edit/download/conflict and private-path/anonymous denial |
 | Compare | a blind comparison streams both sides and the vote reveals which model produced which reply |
 | Notes | a note is listed, read back, edited, and 404s after delete |
 | Calendar | an event appears in the window the UI queries and is gone after delete |

@@ -1,0 +1,9 @@
+{
+  "schema": "odysseus-debian-test-plan/v1",
+  "expected_source": "0000000000000000000000000000000000000000",
+  "variants": [
+    {"name": "openai-gpt5-mini", "endpoint_id": "REGISTERED_OPENAI_ENDPOINT_ID", "model": "gpt-5-mini", "reported_model": "gpt-5-mini-2025-08-07"},
+    {"name": "gemini-flash", "endpoint_id": "REGISTERED_GOOGLE_ENDPOINT_ID", "model": "gemini-3.8-flash", "content_probe": true},
+    {"name": "gemma", "endpoint_id": "REGISTERED_GOOGLE_ENDPOINT_ID", "model": "gemma-4-26b-a4b-it", "native_delay_seconds": 60}
+  ]
+}

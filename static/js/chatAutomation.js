@@ -147,7 +147,8 @@ async function refresh({preserveAvailability=false}={}) {
     const chat = id ? await api(`/api/session/${encodeURIComponent(id)}/automation`) : null;
     if (ticket !== sequence || id !== sid()) return;
     configuration = config;
-    policy = chat || {session_id:null, route_mode:config.model_defaults?.route_mode || 'manual',
+    policy = chat || {session_id:null, approval_mode:config.default_approval_mode || 'always_ask',
+      route_mode:config.model_defaults?.route_mode || 'manual',
       auto_categories:config.model_defaults?.auto_categories || {}};
     reviewerAvailability=chat?.auto_approve_availability ?? config.auto_approve_availability;
     reviewerLoading=false;render();

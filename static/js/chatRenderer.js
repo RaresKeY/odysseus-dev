@@ -1,3 +1,4 @@
+import {workspaceFilePath} from './workspaceFileLinks.js';
 // static/js/chatRenderer.js
 // Extracted from chat.js — message rendering, sources, images, metrics
 
@@ -327,6 +328,13 @@ export function getToolActionTarget(tool, command, data = null) {
 
 export function renderToolIcon(tool, command, data = null) {
   const icon = getToolIcon(tool);
+  if (/^(read_file|write_file|edit_file)$/.test(String(tool))) {
+    let args;
+    try { args = JSON.parse(command || '{}'); } catch (_) {}
+    const raw = args?.path || args?.file_path || String(command || '').split('\n')[0].replace(/^path:\s*/i, '').trim();
+    const path = workspaceFilePath(raw);
+    if (path) return `<button type="button" class="agent-thread-tool-icon workspace-file-link" data-workspace-file="${uiModule.esc(path)}" title="Open ${uiModule.esc(path)} in Files" aria-label="Open ${uiModule.esc(path)} in Files">${icon}</button>`;
+  }
   if (!icon) return '';
   const target = getToolActionTarget(tool, command, data);
   if (!target) return `<span class="agent-thread-tool-icon">${icon}</span>`;
@@ -2289,7 +2297,7 @@ export function showWelcomeScreen() {
   }
 }
 
-// ── Dynamic action buttons (show 3 most recent, rest under ···) ──
+// ── Dynamic action buttons (show 2 most recent, rest under ···) ──
 const _ACTION_RECENTS_KEY = 'odysseus-msg-actions-recent';
 const _MAX_VISIBLE = 2;
 
@@ -2331,7 +2339,7 @@ export function createMsgFooter(msgElement, { animate = false } = {}) {
       e.stopPropagation();
       if (window.chatModule?.regenerateFrom) window.chatModule.regenerateFrom(msgElement);
     }},
-    { id: 'shorten', icon: '\u2702', title: 'Rewrite shorter', cls: 'msg-action-btn', handler(e) {
+    { id: 'shorten', icon: '\u2702', title: 'Rewrite shorter', cls: 'msg-action-btn', overflowOnly: true, handler(e) {
       e.stopPropagation();
       if (window.chatModule?.rewriteWith) window.chatModule.rewriteWith(msgElement, 'Rewrite your last response to be shorter and more concise. Keep the key information but cut the fluff.');
     }},
@@ -2352,7 +2360,7 @@ export function createMsgFooter(msgElement, { animate = false } = {}) {
   // Filter out unavailable actions (e.g. TTS when not enabled)
   const availableActions = allActions.filter(a => !a.available || a.available());
 
-  // Determine which 3 to show: use recent order, fallback to defaults
+  // Keep menu-only actions in overflow even after recent use.
   const recent = _getRecentActions();
   const defaults = ['copy', 'delete', 'fork'];
   const order = recent.length > 0 ? recent : defaults;
@@ -2363,8 +2371,8 @@ export function createMsgFooter(msgElement, { animate = false } = {}) {
     if (bi >= 0) return 1;
     return 0;
   });
-  const visible = sorted.slice(0, _MAX_VISIBLE);
-  const overflow = sorted.slice(_MAX_VISIBLE);
+  const visible = sorted.filter(a => !a.overflowOnly).slice(0, _MAX_VISIBLE);
+  const overflow = sorted.filter(a => !visible.includes(a));
 
   // Render visible buttons
   function _addBtn(action, container) {
@@ -2542,7 +2550,7 @@ export function createUserMsgFooter(msgElement) {
     }},
   ];
 
-  const defaults = ['edit', 'delete', 'copy'];
+  const defaults = ['edit', 'copy', 'delete'];
   const order = defaults;
   const sorted = [...allActions].sort((a, b) => {
     const ai = order.indexOf(a.id), bi = order.indexOf(b.id);
@@ -2551,8 +2559,9 @@ export function createUserMsgFooter(msgElement) {
     if (bi >= 0) return 1;
     return 0;
   });
-  const visible = sorted.slice(0, _MAX_VISIBLE);
-  const overflow = sorted.slice(_MAX_VISIBLE);
+  // Keep Copy directly available; all other user actions belong in More.
+  const visible = sorted.filter(a => a.id === 'copy');
+  const overflow = sorted.filter(a => a.id !== 'copy');
 
   visible.forEach(a => {
     const btn = _makeActionBtn(a.cls, a.title, a.html ? '' : a.icon, (ev) => {

@@ -21,6 +21,9 @@ There is no `src/provider_capability_schemas.py`, capability-specific diagnostic
 
 ## Runtime Control Evidence
 
+Streaming OpenAI chat requests preserve the selected reasoning effort when function tools are present. The transport does not force every GPT-5-family request to `none`; provider defaults remain omitted when no effort is selected. Existing exact-route control evidence still filters explicitly unsupported values. Original GPT-5/mini/nano accept `minimal` for minimal reasoning (official reference: https://developers.openai.com/cookbook/examples/gpt-5/gpt-5_new_params_and_tools). Regression coverage captures actual streamed request payloads for base, mini, nano, dated and newer models.
+
+
 `src/model_capability_cache.py` owns the bounded five-minute catalog cache. Its identity hashes the exact normalized route and complete request headers; raw provider payloads and header values are not retained. Missing, expired, ambiguous or vendor-inconsistent evidence stays unknown.
 
 `src/model_request_controls.py:request_controls_for()` binds the selected route, model, account headers and dialect to a `RequestControls` value. Both `src/llm_core.py` and `src/model_auto.py:execution_capabilities()` use this owner. Auto offers only recognized explicit reasoning-effort values accepted by the transport constraints; unknown evidence offers `default`. It does not use the model-only subscription compatibility cache. The preserved exact Google compatible-route contracts live in the shared owner and constrain request shaping too; they do not authorize proxy or look-alike routes. Conflicting constraints intersect rather than selecting the first claim.

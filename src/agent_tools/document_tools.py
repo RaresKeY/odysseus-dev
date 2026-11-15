@@ -600,10 +600,14 @@ class CreateDocumentTool:
                 summary=f"Created by {_active_model or 'AI'}",
                 source="ai",
             )
+            from src.agent_runtime.journal import mark_operation_started
+            mark_operation_started("native_document", document_id=doc_id)
             db.add(doc)
             db.add(ver)
             db.commit()
 
+            from src.agent_runtime.journal import record_document_commit
+            record_document_commit(doc_id, title, content)
             set_active_document(doc_id)
             try:
                 from src.event_bus import fire_event
@@ -612,6 +616,7 @@ class CreateDocumentTool:
                 logger.debug("document_created event dispatch failed", exc_info=True)
 
             return {
+                "exit_code": 0,
                 "action": "create",
                 "doc_id": doc_id,
                 "title": title,

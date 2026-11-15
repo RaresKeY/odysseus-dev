@@ -21,6 +21,7 @@ from src.automation_task_state import transition_status, submission_is_current
 from fastapi import HTTPException
 
 MODES = frozenset({"always_ask", "auto_approve", "yolo"})
+DEFAULT_APPROVAL_MODE = "auto_approve"
 APPROACHES = frozenset({"established_procedure", "bounded_domain", "approach_discovery"})
 EFFORTS = frozenset({None, "", "none", "minimal", "low", "medium", "high", "xhigh", "max", "ultra"})
 FEATURE_DEFAULTS = {"tool_routing": "existing", "effort_mode": "mapped", "followup_enabled": False,
@@ -101,10 +102,11 @@ class AutomationStore:
         prefs = self.owner(db, owner)
         row = db.query(d.ChatAutomationState).filter_by(session_id=str(session_id)).first()
         if row is None:
-            # Model preferences carry over only at birth; permissions require fresh consent.
+            # New chats use the fork default; legacy chats without policy retain Ask.
+            # Model preferences carry over only at birth, never folder grants.
             defaults = copy.deepcopy((prefs.configuration or {}).get("model_defaults") or {}) if new else {}
             row = d.ChatAutomationState(session_id=str(session_id), owner_key=owner_key(owner),
-                approval_mode="always_ask", policy_revision=0,
+                approval_mode=DEFAULT_APPROVAL_MODE if new else "always_ask", policy_revision=0,
                 route_mode="auto" if defaults.get("route_mode") == "auto" else "manual",
                 feature_settings={"auto_categories": defaults["auto_categories"]} if "auto_categories" in defaults else {},
                 elevation_grant=None)
@@ -146,13 +148,14 @@ class AutomationStore:
             return {"revision": p.revision, "authority_epoch": p.authority_epoch,
                     "last_explicit_mode": p.last_explicit_mode,
                     "elevation_ceiling": p.elevation_ceiling,
-                    **copy.deepcopy(p.configuration or {})}
+                    **copy.deepcopy(p.configuration or {}),
+                    "default_approval_mode": DEFAULT_APPROVAL_MODE}
 
     def fork(self, owner, source_id, target_id):
         with self.transaction() as db:
             _, source = self.state(db, owner, source_id)
             _, target = self.state(db, owner, target_id)
-            target.approval_mode, target.route_mode = "always_ask", source.route_mode
+            target.approval_mode, target.route_mode = DEFAULT_APPROVAL_MODE, source.route_mode
             target.feature_settings = {key: copy.deepcopy(value) for key, value in (source.feature_settings or {}).items()
                                        if not key.startswith('_approval_')}
             target.elevation_grant = None
@@ -311,7 +314,8 @@ class AutomationStore:
                 p.configuration, p.elevation_ceiling = config, ceiling
             return {"revision": p.revision, "authority_epoch": p.authority_epoch,
                     "last_explicit_mode": p.last_explicit_mode,
-                    "elevation_ceiling": p.elevation_ceiling, **copy.deepcopy(config)}
+                    "elevation_ceiling": p.elevation_ceiling, **copy.deepcopy(config),
+                    "default_approval_mode": DEFAULT_APPROVAL_MODE}
 
     def acquire(self, owner, session_id, raw_ask, entrypoint, submission_id=None, *, ephemeral_semantics=False, input_card_id=None):
         from src.owner_identity import effective_storage_owner

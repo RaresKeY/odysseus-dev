@@ -393,3 +393,7 @@ Run validation locally before opening or approving a PR. Practical checks:
 4. Add further tiny helpers only when the repeated semantics are clear.
 5. Start low-risk file moves only after helper conventions are documented.
 6. Avoid moving high-risk security/route regression files first.
+
+## Fork live acceptance
+
+The [Fork Regression Suite](../docs/testing/fork-regression/README.md) maps all product areas, fork-specific regressions and historical live failures to repeatable acceptance cases. It includes a complete automated source inventory and a bounded real-app client. Existing smoke/browser tests remain in their owning locations; fixture passes and live passes are reported separately.

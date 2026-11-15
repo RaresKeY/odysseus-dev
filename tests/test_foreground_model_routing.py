@@ -2588,15 +2588,20 @@ def test_agent_terminal_first_round_error_has_no_success_completion(monkeypatch,
     ("provider_status", "expected_status", "expected_message"),
     [
         (400, 400, "Model request failed (HTTP 400)"),
+        (429, 429, "Model request failed (HTTP 429)"),
         (429.9, None, "Model request failed"),
     ],
 )
+@pytest.mark.parametrize("partial", ["", "partial second-round prose"])
 def test_agent_terminal_later_round_error_stops_after_completed_tool(
     monkeypatch,
+    partial,
     provider_status,
     expected_status,
     expected_message,
 ):
+    from tests.runtime_evidence_helpers import authoritative_executor
+
     calls = 0
     monkeypatch.setattr(agent_loop, "get_setting", lambda key, default=None: default)
     monkeypatch.setattr(agent_loop, "get_mcp_manager", lambda: None)
@@ -2619,9 +2624,11 @@ def test_agent_terminal_later_round_error_stops_after_completed_tool(
             yield f'data: {json.dumps({"type": "tool_calls", "calls": [tool_call]})}\n\n'
             yield "data: [DONE]\n\n"
             return
-        yield 'data: {"delta": "partial second-round prose"}\n\n'
+        if partial:
+            yield f'data: {json.dumps({"delta": partial})}\n\n'
         yield f'event: error\ndata: {json.dumps({"status": provider_status, "error": "unsupported model"})}\n\n'
 
+    @authoritative_executor
     async def fake_execute(block, *args, **kwargs):
         return "bash", {"output": "ok", "exit_code": 0}
 
@@ -2656,13 +2663,19 @@ def test_agent_terminal_later_round_error_stops_after_completed_tool(
     }
     assert terminal["round_models"] == ["selected-model", "selected-model"]
     assert terminal["round_texts"][-1] == (
-        "partial second-round prose\n\n"
-        f"[Agent stopped: {expected_message}]"
+        (partial + "\n\n" if partial else "")
+        + f"[Agent stopped: {expected_message}]"
     )
     assert any(chunk.startswith("event: error") for chunk in chunks)
     assert not any('"type": "metrics"' in chunk for chunk in chunks)
     assert "data: [DONE]\n\n" not in chunks
     assert not any("empty response" in chunk.lower() for chunk in chunks)
+
+    final = json.loads(next(chunk for chunk in chunks if '"type": "final_response"' in chunk)[6:])["content"]
+    assert "No workspace change was made" not in final
+    assert "No file was changed" not in final
+    assert "Last command result: Bash, exit code 0." in final
+    assert "The task is incomplete: Model request failed." in final
 
 
 @pytest.mark.parametrize(

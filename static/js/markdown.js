@@ -1,3 +1,4 @@
+import {workspaceFilePath} from './workspaceFileLinks.js';
 // static/js/markdown.js
 
 /**
@@ -148,6 +149,10 @@ function safeLinkUrl(rawUrl) {
 }
 
 function linkHtml(text, url) {
+  const localPath = workspaceFilePath(url);
+  if (localPath && /\.[a-z\d]{1,12}$/i.test(localPath)) {
+    return `<a class="chat-link workspace-file-link" href="${escapeHtml(url)}" data-workspace-file="${escapeHtml(localPath)}" title="Open in Files">${escapeHtml(text)}</a>`;
+  }
   const safeUrl = safeLinkUrl(url);
   const safeText = escapeHtml(text);
   if (!safeUrl) return safeText;

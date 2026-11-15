@@ -90,18 +90,20 @@ document.addEventListener('DOMContentLoaded', markComposerUserEdited, { once: tr
   } catch (_) { /* anonymous / loopback mode — nothing to do */ }
 })();
 
-/* Sidebar section default-collapsed setup. The click-to-toggle handlers
+/* Sidebar section initial-state setup. The click-to-toggle handlers
    themselves live in js/section-management.js — attaching them in BOTH
    places caused two toggles per click, which read as "clicks aren't doing
    anything" (even-count parity). Keep only the initial-state-apply here. */
 {
-  const KEY = Storage.KEYS.SIDEBAR_COLLAPSED;
-  const saved = Storage.getJSON(KEY, {});
-  const _defaultCollapsed = { 'sessions-section': true };
+  // Current section toggles take precedence over legacy sidebar preferences.
+  const saved = {
+    ...Storage.getJSON(Storage.KEYS.SIDEBAR_COLLAPSED, {}),
+    ...Storage.getJSON('section-collapsed', {}),
+  };
   document.querySelectorAll('.sidebar .section').forEach((section) => {
     const id = section.id;
     if (!id) return;
-    const shouldCollapse = (id in saved) ? saved[id] : !!_defaultCollapsed[id];
+    const shouldCollapse = !!saved[id];
     if (shouldCollapse) section.classList.add('collapsed');
   });
   // Sessions-section notification dot: clear when the section becomes

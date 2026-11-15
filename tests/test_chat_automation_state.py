@@ -41,7 +41,7 @@ def configured_reviewer(store, monkeypatch):
 
 
 @pytest.mark.parametrize('saved_mode', ['always_ask', 'auto_approve', 'yolo'])
-def test_new_chats_and_forks_always_ask_without_resetting_saved_modes(store, configured_reviewer, saved_mode):
+def test_new_chats_and_forks_auto_approve_without_resetting_saved_modes(store, configured_reviewer, saved_mode):
     assert store.policy('alice', 'a')['approval_mode'] == 'always_ask'
     saved = store.update_chat('alice', 'a', {'approval_mode': saved_mode, 'followup_enabled': True}, 0)
     preferences = store.configuration('alice')
@@ -53,7 +53,7 @@ def test_new_chats_and_forks_always_ask_without_resetting_saved_modes(store, con
         db.flush()
         store.state(db, 'alice', 'new', new=True)
     reopened = AutomationStore(store.session_factory)
-    assert reopened.policy('alice', 'new')['approval_mode'] == 'always_ask'
+    assert reopened.policy('alice', 'new')['approval_mode'] == 'auto_approve'
     assert reopened.policy('alice', 'a') == saved
     # The creation flag must also leave an already-saved chat untouched.
     with reopened.transaction() as db:
@@ -62,7 +62,7 @@ def test_new_chats_and_forks_always_ask_without_resetting_saved_modes(store, con
     assert reopened.configuration('alice') == preferences
     store.fork('alice', 'a', 'fork')
     forked = reopened.policy('alice', 'fork')
-    assert forked['approval_mode'] == 'always_ask' and forked['followup_enabled'] is True
+    assert forked['approval_mode'] == 'auto_approve' and forked['followup_enabled'] is True
     assert forked['elevation_grant'] is None
     assert reopened.policy('alice', 'a') == saved
     assert reopened.configuration('alice') == preferences

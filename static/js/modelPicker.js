@@ -1058,7 +1058,7 @@ export function updateModelPicker() {
     const effortWrap=document.getElementById('reasoning-effort-wrap');if(effortWrap)effortWrap.style.display='none';
     return;
   }
-  let displayName = modelId ? modelId.split('/').pop() : 'Select model';
+  const displayName = modelId ? modelId.split('/').pop() : 'Select model';
   const routeItems = window.modelsModule?.getCachedItems?.() || [];
   const candidates = routeItems.filter(item => (item.models || []).concat(item.models_extra || []).includes(modelId));
   const selectedId = s?.endpoint_id || latestPending?.endpointId;
@@ -1068,15 +1068,6 @@ export function updateModelPicker() {
     : normalizeRouteUrl(item.url) === normalizeRouteUrl(selectedUrl));
   const routeName = s?.endpoint_name || selectedEndpoint?.endpoint_name || '';
   const endpointUrl = selectedUrl || selectedEndpoint?.url || '';
-  const detectedProvider = selectedEndpoint?.category === 'local'
-    ? 'Local' : providerLabel(endpointUrl || routeName);
-  let addressLabel = !routeName;
-  try {
-    const endpoint = new URL(endpointUrl);
-    addressLabel = addressLabel || [endpoint.host, endpoint.hostname, endpointUrl].includes(routeName);
-  } catch (_) {}
-  const provider = addressLabel ? detectedProvider : routeName;
-  if (modelId && provider) displayName = `${provider} · ${displayName}`;
   // Keep route details and the full model ID available without putting raw
   // local addresses in the compact picker label.
   label.title = modelId ? [...new Set([modelId, routeName, endpointUrl].filter(Boolean))].join(' · ') : '';

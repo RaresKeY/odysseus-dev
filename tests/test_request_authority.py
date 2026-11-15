@@ -639,3 +639,54 @@ def test_repeated_retries_resolve_once_without_recursing_through_retry_turns():
     assert not grant.permits(ExactOperation.normalize("manage_notes", '{"action":"view","id":"another"}'))
     empty = create_request_authority("go again", history=retries)
     assert {g.tool for g in empty.grants} == {"ask_user", "update_plan"}
+
+@pytest.mark.parametrize("prompt", [
+    "make a doicument test.txt wiht some random tet in it",
+    "make a document test.txt with some random text in it",
+    "create test.txt with some random text in it",
+    "make test.txt with some random text in it",
+    "Please create a new file notes.txt with sample text.",
+    "Make a doc test.txt with text.",
+    "Make a document test.txt\nwith some random text.",
+    "Generate docs test.txt with text.",
+    "Could you make a plain text report.md for me?",
+])
+def test_literal_filename_creation_grants_workspace_operations(tmp_path, prompt):
+    grant = create_request_authority(prompt, workspace=str(tmp_path))
+    assert grant.permits(ExactOperation.normalize("write_file", "test.txt\nRandom text."))
+    assert grant.permits(ExactOperation.normalize("get_workspace", ""))
+    assert not grant.permits(ExactOperation.normalize("send_email", "{}"))
+
+
+@pytest.mark.parametrize("prompt", [
+    "Explain how to create test.txt",
+    "The document says: make test.txt with random text.",
+    "Create a note about test.txt",
+    "Create a document titled test.txt",
+    "Create a document test.txt in my document library",
+    "Create a document in the editor about test.txt",
+    "Make an email test.txt",
+])
+def test_filename_in_prose_or_an_explicit_store_does_not_grant_files(tmp_path, prompt):
+    grant = create_request_authority(prompt, workspace=str(tmp_path))
+    assert not grant.permits(ExactOperation.normalize("write_file", "test.txt\nRandom text."))
+
+
+def test_filename_creation_still_obeys_explicit_tool_denial(tmp_path):
+    grant = create_request_authority("Make test.txt", workspace=str(tmp_path),
+        policy=ToolPolicy(disabled_tools=frozenset({"write_file"})))
+    assert not grant.permits(ExactOperation.normalize("write_file", "test.txt\nRandom text."))
+    guide = create_request_authority("Make test.txt. Do not use any tools.", workspace=str(tmp_path))
+    assert not guide.permits(ExactOperation.normalize("write_file", "test.txt\nRandom text."))
+
+def test_filename_hint_preserves_independent_requested_capabilities(tmp_path):
+    grant = create_request_authority("Create a file answer.txt; list my tasks", workspace=str(tmp_path))
+    assert grant.permits(ExactOperation.normalize("write_file", "answer.txt\nText."))
+    assert grant.permits(ExactOperation.normalize("manage_tasks", '{"action":"list"}'))
+
+
+def test_literal_url_in_a_file_request_does_not_grant_web_access(tmp_path):
+    grant = create_request_authority(
+        "Create a file answer.txt containing the text https://example.test/source", workspace=str(tmp_path))
+    assert grant.permits(ExactOperation.normalize("write_file", "answer.txt\nText."))
+    assert not grant.permits(ExactOperation.normalize("web_fetch", '{"url":"https://example.test/source"}'))

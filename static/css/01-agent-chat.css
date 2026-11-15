@@ -3493,6 +3493,7 @@ body.bg-pattern-ascii-fireflies {
       color: var(--fg);
     }
     .model-picker-btn #model-picker-label {
+      font-size: 12px;
       max-width: 120px;
       overflow: hidden;
       text-overflow: ellipsis;
@@ -3507,8 +3508,8 @@ body.bg-pattern-ascii-fireflies {
       vertical-align: -2px;
     }
     .model-picker-logo svg {
-      width: 12px;
-      height: 12px;
+      width: 14px;
+      height: 14px;
       opacity: 0.7;
     }
     .model-picker-menu {
@@ -3640,7 +3641,7 @@ body.bg-pattern-ascii-fireflies {
     }
     .model-picker-action-btn:hover svg,
     .model-picker-action-btn:focus-visible svg {
-      transform: rotate(90deg);
+      transform: none;
     }
     .model-picker-list {
       max-height: min(280px, 50dvh);

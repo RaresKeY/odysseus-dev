@@ -6,7 +6,7 @@ Auto-Approve is selectable when either the configured decision endpoint or this 
 
 ## Independent assessments and deterministic enforcement
 
-`src/approval_policy.py` owns `odysseus-approval-review/v3`, its complete prompt, finite choices, thresholds, reasons and host combiner. `src/approval_review.py` sends one `DecisionRequest` through the existing provider, using `risk_level` as its primary question and `additional_questions` for `user_authorization`, `policy_check` and `effect_scope`. Both supported protocols keep their existing transport. No execution-model completion or browser-action choice is reused as approval.
+`src/approval_policy.py` owns `odysseus-approval-review/v4`, its complete prompt, finite choices, thresholds, reasons and host combiner. `src/approval_review.py` sends one `DecisionRequest` through the existing provider, using `risk_level` as its primary question and `additional_questions` for `user_authorization`, `policy_check` and `effect_scope`. Both supported protocols keep their existing transport. No execution-model completion or browser-action choice is reused as approval.
 
 | Assessment | Values |
 | --- | --- |
@@ -29,6 +29,8 @@ Risk concerns effects and current state. An ordinary file write can be low risk 
 Every policy veto overrides the matrix, including explicit restrictions and injection for low-risk actions. `insufficient_evidence` stops as uncertain. Low-risk actions require confidence and selected probability of at least 0.50 on risk and policy; medium risk requires 0.70. Authorization and scope uncertainty do not veto these branches, whose matrix permits every valid label. High-risk actions require 0.85 on all four assessments, with sufficient authorization and narrow effects. Every answer still requires a complete valid distribution, and every explicit veto applies regardless of confidence. The v3 policy identity invalidates older pending/consumed grants. These are operating thresholds, not calibrated safety probabilities. There is no final model `allow` label that can override the combiner, and no numeric freedom score. Missing, extra, incomplete, nonfinite, non-normalized or contradictory answers fail closed. Provider model identity, primary-answer projection, attempt identity and known usage remain required.
 
 The entire policy fits the existing 4,000-character instruction field. The approval-only `server_user_evidence` contract distinguishes server-provenance authorization evidence from ordinary state. Other decision purposes retain their existing instructions. The prompt version and SHA-256 are recorded; policy is never truncated or assembled from model-controlled text.
+
+Auto-Approve admits fixed native reads within the selected workspace through deterministic resource checks before invoking a model. No model denial is overridden: an already-started review cannot enter this path. Filesystem targets must be sealed, current and rooted in that workspace; delegated/disabled/missing authority remains denied. Always Ask, writes, commands, remote tools and elevated reads keep their review requirements. The previous assistant response is bounded untrusted context, never authenticated user consent. See [workspace permissions](../specs/chat-automation.md#interactive-workspace-permissions).
 
 ## Conversation-model fallback
 

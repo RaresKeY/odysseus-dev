@@ -47,6 +47,8 @@ The browser runtime is a static native-ES-module SPA served by FastAPI, without 
 
 `static/index.html` owns the DOM shell and script loading order. It loads browser ES modules directly. Current boot order includes nonce-bearing inline boot scripts, self-hosted highlight.js, modulepreloads, ordered module script tags, `static/app.js`, `static/js/init.js`, `static/js/a11y.js`, workspace/chat helpers, provider device-flow helpers, and service-worker registration. KaTeX and Mermaid are vendored under `static/lib` and injected only on first real math/diagram use rather than loading in the initial HTML.
 
+Chats starts expanded when no collapse preference is saved. Current section toggle preferences in `section-collapsed` take precedence over legacy `sidebar-collapsed` values, including an explicit expanded choice. Saved collapse choices remain durable.
+
 The two first-paint Fira Code faces are preloaded so the shell does not wait for later CSS discovery. `static/js/startupShell.js` lets the visible shell initialize before session loading completes; session/transcript hydration is deferred and coordinated by `static/js/sessions.js` plus history/session routes rather than blocking first paint.
 
 Exact script URL identity matters. Versioned script tags, unversioned imports, and service-worker precache entries must stay aligned. `static/sw.js` deliberately separates first-paint `PRECACHE` from lazy `PANEL_PRECACHE`; the latter contains the image-editor module graph so an editor never opened online can still open offline. The Notes feature graph and shared confetti are explicitly in `PRECACHE`, together with their exact legacy helper URLs. KaTeX scripts/styles/fonts are also precached. Current service-worker coverage is not a generated full module-graph manifest, so changes still need direct verification.
@@ -91,6 +93,8 @@ Storage/secrets policy:
 
 KaTeX and Mermaid are self-hosted and lazy-loaded through memoized, retry-after-failure promises in `static/js/markdown.js`; math placeholders preserve source until KaTeX arrives, detached PDF export renders its own container, and Mermaid fetches only when a diagram exists. Pyodide remains a jsDelivr-loaded optional runtime, so offline/PWA behavior is not fully self-contained.
 
+Assistant message footers show two recent primary actions. Rewrite shorter stays in the More actions menu, including after it was recently used; its rewrite handler and prompt are unchanged. User message footers keep Copy directly available; Edit, Delete, and Resend stay in the More actions menu.
+
 ## Module Ownership
 
 Current major frontend areas include:
@@ -118,7 +122,7 @@ Coordinator ownership:
 
 `static/js/windowDrag.js` coalesces movement per animation frame and owns one paused transform animation for a gesture, avoiding inline-style selector invalidation during movement. It commits fixed coordinates once on release and releases the effect/frame/listeners on mouseup, lost buttons, pointer cancellation, blur or detached-window movement. Resize-hover geometry reads pause while buttons are pressed. `tileManager.js` snapshots rendered pre-snap coordinates and clears cancelled/lost tracking; the drag helper flushes movement before the tile release handler. Snapping, resize persistence, double-click size reset and desktop touch cancellation retain their existing contracts.
 
-Sidebar navigation icons use 1.125rem in expanded desktop rows and 18px on mobile; collapsed rail SVGs use 20px within the existing buttons. Expanded section rows grow enough for enlarged text/icons. Icon artwork and interaction targets are unchanged.
+Sidebar navigation icons use 1.125rem in expanded desktop rows and 18px on mobile; collapsed rail SVGs use 20px within the existing buttons. Expanded section rows grow enough for enlarged text/icons. The expanded sidebar toggle reuses the normal panel-left outline without a close badge; its opening hamburger, accessible labels, interaction targets and state transitions are unchanged.
 
 Chat history and the sidebar use native scrolling without wheel-driven transforms or snap-back animations on their content containers. Chat auto-scroll advances by at least one CSS pixel per frame while more than one pixel remains, so rounded subpixel writes cannot leave a live animation frame loop stuck just above the bottom. Fractional rubber-band translations previously shifted text at scroll boundaries and during the return animation. Scrolling within long chats, sidebar lists and nested code blocks retains its native behavior; chat auto-scroll/scroll anchoring and the separate mobile pull-to-refresh indicator keep their existing contracts.
 
@@ -209,7 +213,7 @@ The composer model menu keeps Auto and opens `modelAutoDialog.js` in the native 
 
 ## Decision activity pane
 
-`decision-activity.js` mounts only for the acknowledged owned session. The compact Decisions header button opens a closed-by-default native dialog: an attached flex side pane on desktop and a modal overlay at900px and below. Close/Escape returns focus to its header trigger, including Escape after focus returns to chat on desktop; a newer native modal keeps its own Escape. Narrow mode uses native modal focus containment. Resizing preserves the open pane while changing modality. No full-width disclosure remains in the composer/message flow. Inline chat/action errors remain inline.
+`decision-activity.js` mounts only for the acknowledged owned session. The shared upper-right side-panel toggle opens Files or Decisions, with a common switching header inside the open pane. Decisions is a closed-by-default native dialog: an attached flex side pane on desktop and a modal overlay at900px and below. Close/Escape returns focus to the shared side-panel toggle, including Escape after focus returns to chat on desktop; a newer native modal keeps its own Escape. Narrow mode uses native modal focus containment. Resizing preserves the open pane while changing modality. No full-width disclosure remains in the composer/message flow. Inline chat/action errors remain inline.
 
 Activity GET polling runs only while the pane is open and the document visible. Close/navigation aborts in-flight reads and invalidates their generation; late responses cannot populate a new chat. Stable attempt rows preserve open probability disclosures and keyboard focus across polling. Loading/unavailable/empty/Refresh, task/context/advice status, choice confidence, complete reported distributions, native known/null usage, failure status, execution handoffs and exact owner/session export links remain inspectable. Explicit next-turn redacted capture/delete actions retain existing API/expiry/privacy semantics and cannot run inference or tools. Capture consent is never enabled just by opening activity. The service-worker cache revision refreshes changed controls without modifying user storage.
 
@@ -228,3 +232,11 @@ Workspace choices remain browser preferences, cleared on authenticated user swit
 Permission menu radio rows size to their wrapped descriptions rather than the global fixed button height; the selected border/background contains the whole row and the checkmark aligns with its label. Hover, selected and keyboard-focus states stay distinct. The Decisions trigger uses a compact 32px desktop target and 44px narrow target, with separate hover/open styles. Disabled permission and Decisions triggers stay transparent on hover. Menu focus follows the selected available mode after refresh and ignores stale, closed or already-navigated menu requests. Escape dismisses the menu during that pending refresh as well. Approval and decision execution policies are unchanged.
 
 Frontend cache revisions retain the established odysseus-vN-pr40-editor-precache family; current revision is 1116. The Decisions stylesheet uses the same cache-bust token as the other app stylesheets and app.js, with exact URL agreement between index.html and service-worker precache.
+
+## Fork permission default
+
+`static/js/chatAutomation.js` renders the server-declared `default_approval_mode` from owner configuration when the composer has no materialized chat. Existing chats render their acknowledged saved policy instead. The fork server declares Auto-Approve for new chats/forks, while the client retains a conservative Ask fallback until configuration is acknowledged or when connected to an older server. Readiness/unavailable feedback remains unchanged; the declaration adds no folder grant or reviewer bypass. Service-worker cache generation 1155 publishes this default consistently.
+
+Own-message footers show Edit and Copy directly, with Delete and Resend in the existing More actions menu. Assistant footer recent-action behavior is unchanged.
+
+The compact Manual model selector shows the existing model/provider icon and model name at 12px with a 14px icon, omitting the provider/company prefix. Full model and endpoint identity remain in its tooltip and the expanded chooser; Auto routing and reasoning-effort selection are unchanged.
