@@ -14,6 +14,8 @@ Every catalogue case retains its own passed/failed/blocked/skipped/not_run statu
 
 Browser checks use preinstalled headless Chromium, a temporary profile and the real auth JSON API through a loopback bridge. Desktop/phone checks cover long composer control visibility, repeated permission-menu opening/icons and real wheel scrolling. Login files are private regular files, or arrive on stdin; target state must be disposable.
 
+The fork user-flow smoke module additionally checks persisted per-chat permissions across a new login, new-chat Auto-Approve, stale-policy rejection, real workspace edit/download/conflict and private-path/anonymous denial. Its scratch files live only in the smoke-owned agent workspace. JUnit failures retain a bounded diagnostic summary. Operator live tests are in `docs/testing/fork-regression/manual-acceptance.md`; they are not automated live-provider receipts.
+
 Release smoke boots a temporary source/state copy through the ordinary dev launcher and existing smoke suite, using prepared dependencies and synthetic model/email services. It performs no dependency installation, disables scheduled effects and vector service startup, and stops only its own instance. Its results do not imply live-provider, vector, browser or platform qualification.
 
 ## Current Gaps

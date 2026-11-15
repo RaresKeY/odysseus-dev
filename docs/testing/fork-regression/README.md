@@ -11,6 +11,8 @@ The scope is behavior: actual app/API/browser/native execution and provider
 responses. Syntax checks, source snapshots and fixture assertions remain useful
 supporting gates, but they are not live acceptance results.
 
+[Manual acceptance](manual-acceptance.md) is the prioritized operator checklist for testing the real deployment after synthetic smoke. [Upstream contribution plan](../../upstream-contribution-plan.md) separates proposed changes from fork policy.
+
 ## What to run
 
 | Layer | Entry point | What a pass establishes |
