@@ -93,7 +93,7 @@ Storage/secrets policy:
 
 KaTeX and Mermaid are self-hosted and lazy-loaded through memoized, retry-after-failure promises in `static/js/markdown.js`; math placeholders preserve source until KaTeX arrives, detached PDF export renders its own container, and Mermaid fetches only when a diagram exists. Pyodide remains a jsDelivr-loaded optional runtime, so offline/PWA behavior is not fully self-contained.
 
-Message content is painted by an inner `.msg-plate`; metrics, context and action controls sit below it as a sibling footer. The original message node and body remain stable for history, streaming completion, editing and copy handlers. Sidebar trailing actions use 18px glyphs with 32px desktop targets and 44px touch/phone targets, including collapse, sort, compose, create and settings controls.
+Message content is painted by an inner `.msg-plate`; metrics, context and action controls sit below it as a sibling footer. The original message node and body remain stable for history, streaming completion, editing and copy handlers. Live and grouped messages prepare the plate before attachment. Already-connected legacy messages use a state-preserving move where supported; browsers without that operation keep the original live footer rather than reset focused inputs or embedded frames. Sidebar trailing actions use 18px glyphs with 32px desktop targets and 44px touch/phone targets, including collapse, sort, compose, create and settings controls.
 
 Assistant message footers show two recent primary actions. Rewrite shorter stays in the More actions menu, including after it was recently used; its rewrite handler and prompt are unchanged. User message footers keep Copy directly available; Edit, Delete, and Resend stay in the More actions menu.
 

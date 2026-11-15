@@ -127,6 +127,34 @@ def main():
                         check("footer-replacement-keeps-one-plate", """(() => {const m=document.querySelector('#probe-ai'),body=m.querySelector('.body');m.querySelector('.msg-footer').remove();m.append(probeRenderer.createMsgFooter(m));probeRenderer.displayMetrics(m,{tokens_per_second:4.49,response_time:1,context_percent:1,input_tokens:100,context_length:128000,model:'gemma-4-26b-a4b-it'});return m.querySelectorAll('.msg-plate').length===1&&m.querySelector('.body')===body&&m.querySelectorAll('.msg-footer').length===1})()""")
                         check("image-footer-outside-plate", """(()=>{const m=probeRenderer.buildImageBubble('data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mP8/x8AAwMCAO+jMZkAAAAASUVORK5CYII=','Synthetic image','image', '1x1','standard');document.querySelector('#chat-history').append(m);const ok=!!m.querySelector(':scope > .msg-plate .body')&&!!m.querySelector(':scope > .msg-footer');m.remove();return ok})()""")
                         check("thread-footer-stays-unwrapped", """(()=>{const m=document.createElement('div');m.className='agent-thread';m.append(probeRenderer.createMsgFooter(m));return !m.querySelector('.msg-plate')&&m.querySelectorAll('.msg-footer').length===1})()""")
+                        for mode in ("prepared-legacy", "connected-move", "connected-legacy"):
+                            check("stateful-footer-"+mode, """(async(mode)=>{
+                              const descriptor=Object.getOwnPropertyDescriptor(Element.prototype,'moveBefore');
+                              const nativeMove=Element.prototype.moveBefore;
+                              const message=document.createElement('div');message.className='msg msg-ai';
+                              const role=document.createElement('div');role.className='role';
+                              const body=document.createElement('div');body.className='body';
+                              const input=document.createElement('input');input.value='unsent draft';
+                              const frame=document.createElement('iframe');frame.src='about:blank';
+                              body.append(input,frame);message.append(role,body);
+                              try {
+                                if(mode!=='connected-move')Element.prototype.moveBefore=undefined;
+                                if(mode==='prepared-legacy')probeRenderer.prepareMessagePlate(message);
+                                document.querySelector('#chat-history').append(message);
+                                await new Promise(r=>setTimeout(r,100));
+                                frame.contentWindow.plateProbe=123;input.focus();
+                                message.append(probeRenderer.createMsgFooter(message));
+                                await new Promise(r=>setTimeout(r,100));
+                                const hasPlate=!!message.querySelector(':scope > .msg-plate');
+                                const expectedPlate=mode==='prepared-legacy'||(mode==='connected-move'&&typeof nativeMove==='function');
+                                return document.activeElement===input&&input.value==='unsent draft'&&frame.contentWindow.plateProbe===123&&hasPlate===expectedPlate&&message.querySelectorAll('.msg-footer').length===1;
+                              } finally {
+                                if(descriptor)Object.defineProperty(Element.prototype,'moveBefore',descriptor);
+                                else delete Element.prototype.moveBefore;
+                                message.remove();
+                              }
+                            })("""+json.dumps(mode)+")")
+
                         png = browser.call("Page.captureScreenshot", {"format": "png"})["data"]
                         (args.output / ("messages-" + str(width) + ".png")).write_bytes(base64.b64decode(png))
             except Exception as error:
