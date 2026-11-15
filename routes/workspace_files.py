@@ -61,9 +61,9 @@ def _resolve(workspace, path):
 
 def _component(value):
     # Each openat argument must be exactly one filename, never a new root or
-    # a parent traversal. basename also makes this boundary visible to SAST.
+    # a parent traversal.
     name = os.path.basename(value)
-    if name != value or name in {"", ".", ".."} or "\\" in name:
+    if name != value or name in {"", ".", ".."} or "\\" in name or "\0" in name:
         raise HTTPException(404, "File is unavailable in this workspace")
     return name
 
@@ -75,38 +75,32 @@ def _opened(root, target, *, directory=False):
     target = os.path.abspath(target)
     if os.path.commonpath([root, target]) != root:
         raise HTTPException(404, "File is unavailable in this workspace")
+    if os.name != "posix" or os.open not in os.supports_dir_fd or os.stat not in os.supports_dir_fd or not hasattr(os, "O_NOFOLLOW"):
+        raise HTTPException(501, "Workspace file access is unavailable on this platform")
     opened = []
     flags = os.O_RDONLY | getattr(os, "O_NONBLOCK", 0) | getattr(os, "O_NOFOLLOW", 0)
     try:
         parent = None
-        if os.open in os.supports_dir_fd and hasattr(os, "O_NOFOLLOW"):
-            # Opening root in one call only protects its final component: a
-            # replaced ancestor could still redirect the complete workspace.
-            drive, tail = os.path.splitdrive(root)
-            fd = os.open(drive + os.sep, flags | os.O_DIRECTORY)
+        # Opening root in one call only protects its final component: a
+        # replaced ancestor could still redirect the complete workspace.
+        fd = os.open(os.sep, flags | os.O_DIRECTORY)
+        opened.append(fd)
+        for part in root.split(os.sep):
+            if not part:
+                continue
+            fd = os.open(_component(part), flags | os.O_DIRECTORY, dir_fd=fd)
             opened.append(fd)
-            for part in tail.split(os.sep):
-                if not part:
-                    continue
+        parts = os.path.relpath(target, root).split(os.sep)
+        if parts == ["."]:
+            expected = os.fstat(fd)
+        else:
+            for part in parts[:-1]:
                 fd = os.open(_component(part), flags | os.O_DIRECTORY, dir_fd=fd)
                 opened.append(fd)
-            parts = os.path.relpath(target, root).split(os.sep)
-            if parts == ["."]:
-                expected = os.fstat(fd)
-            else:
-                for part in parts[:-1]:
-                    fd = os.open(_component(part), flags | os.O_DIRECTORY, dir_fd=fd)
-                    opened.append(fd)
-                parent = fd
-                name = _component(parts[-1])
-                expected = os.stat(name, dir_fd=parent, follow_symlinks=False)
-                fd = os.open(name, flags | (os.O_DIRECTORY if directory else 0), dir_fd=parent)
-                opened.append(fd)
-        else:
-            # Read-only fallback retains the existing platform contract. Its
-            # identity check cannot provide POSIX descriptor-walk guarantees.
-            expected = os.stat(target, follow_symlinks=False)
-            fd = os.open(target, flags)
+            parent = fd
+            name = _component(parts[-1])
+            expected = os.stat(name, dir_fd=parent, follow_symlinks=False)
+            fd = os.open(name, flags | (os.O_DIRECTORY if directory else 0), dir_fd=parent)
             opened.append(fd)
         actual = os.fstat(fd)
         if (actual.st_dev, actual.st_ino, actual.st_ctime_ns, actual.st_size) != (expected.st_dev, expected.st_ino, expected.st_ctime_ns, expected.st_size):
@@ -162,8 +156,9 @@ def setup_workspace_file_routes():
         root, target, relative = _resolve(workspace, path)
         entries, truncated = [], False
         with _opened(root, target, directory=True) as (fd, _, _parent):
-            source = fd if os.scandir in os.supports_fd else target
-            with os.scandir(source) as children:
+            if os.scandir not in os.supports_fd:
+                raise HTTPException(501, "Workspace file browsing is unavailable on this platform")
+            with os.scandir(fd) as children:
                 for index, child in enumerate(children):
                     if index >= SCAN_LIMIT or len(entries) >= ENTRY_LIMIT:
                         truncated = True
@@ -252,12 +247,12 @@ def setup_workspace_file_routes():
                         raise ValueError("Parent changed")
                 except (ValueError, OSError, HTTPException):
                     raise HTTPException(409, "File location changed; refresh before saving") from None
-                current = os.stat(os.path.basename(target), dir_fd=parent, follow_symlinks=False)
+                current = os.stat(_component(os.path.basename(target)), dir_fd=parent, follow_symlinks=False)
                 after = os.fstat(fd)
                 identity = lambda value: (value.st_dev, value.st_ino, value.st_size, value.st_mtime_ns, value.st_ctime_ns)
                 if identity(current) != identity(info) or identity(after) != identity(info):
                     raise HTTPException(409, "File changed on disk; reload before saving")
-                os.replace(temporary, os.path.basename(target), src_dir_fd=parent, dst_dir_fd=parent)
+                os.replace(temporary, _component(os.path.basename(target)), src_dir_fd=parent, dst_dir_fd=parent)
                 created = False
             finally:
                 if created:

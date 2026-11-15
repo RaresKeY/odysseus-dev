@@ -223,3 +223,11 @@ def test_workspace_root_ancestor_symlink_swap_is_refused(tmp_path):
         with files._opened(str(root), str(root / "test.txt")):
             pytest.fail("a replaced workspace ancestor was followed")
     assert error.value.status_code in (404, 409)
+
+
+def test_unsupported_descriptor_platform_fails_closed(explorer, monkeypatch):
+    client, root = explorer
+    monkeypatch.setattr(files.os, "supports_dir_fd", set())
+    response = client.get("/api/workspace/file", params=params(root))
+    assert response.status_code == 501
+    assert "sample text" not in response.text
