@@ -4,9 +4,9 @@
   "counts": {
     "fixture-or-support": 64,
     "javascript-source": 108,
-    "pytest": 1681
+    "pytest": 1682
   },
-  "python_definitions": 13291,
+  "python_definitions": 13294,
   "files": [
     {
       "path": "tests/KNOWN_FAILURES.md",
@@ -3240,6 +3240,12 @@
       "kind": "pytest",
       "sha256": "264ccbd5e2b52cbcf785657422c3d1b859dfc5d043b6cd9318cf70c6da9b84ed",
       "definitions": 3
+    },
+    {
+      "path": "tests/test_debian_browser_protocol.py",
+      "kind": "pytest",
+      "sha256": "6d96c0c76bfec2d26897f03e0dcb59be784d8460526af2ddf58e7f5c5d55286b",
+      "definitions": 2
     },
     {
       "path": "tests/test_debian_deployed_tests.py",
@@ -10862,8 +10868,8 @@
     {
       "path": "tests/test_workspace_files.py",
       "kind": "pytest",
-      "sha256": "6288c5102392178143b33f60004c336b1f03bec20ecedc7b4d8a10f609e2d6c4",
-      "definitions": 15
+      "sha256": "2c891c5b4a3da2bdce2f0c5d489e66a871fa4dc95e545ffebfb4802b4023c6a7",
+      "definitions": 16
     },
     {
       "path": "tests/test_write_file_empty_body.py",
