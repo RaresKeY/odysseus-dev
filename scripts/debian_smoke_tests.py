@@ -62,7 +62,14 @@ def main(argv=None):
             for case in ET.parse(xml).iter("testcase"):
                 status = ("failed" if case.find("failure") is not None or case.find("error") is not None
                           else "skipped" if case.find("skipped") is not None else "passed")
-                tests.append({"name": case.get("name"), "module": case.get("classname"), "status": status})
+                entry = {"name": case.get("name"), "module": case.get("classname"), "status": status}
+                problem = case.find("failure")
+                if problem is None:
+                    problem = case.find("error")
+                if problem is not None:
+                    entry["failure_type"] = problem.get("type", "test_failure")
+                    entry["failure_summary"] = (problem.get("message") or "").splitlines()[0][:300]
+                tests.append(entry)
         report = {"schema": "odysseus-debian-smoke/v1", "expected_source": args.expected_source,
                   "status": "passed" if result is not None and result.returncode == 0 and tests else "failed",
                   "tests": tests, "boot_exit": boot.returncode,
