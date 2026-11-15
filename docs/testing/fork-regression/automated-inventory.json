@@ -3,10 +3,10 @@
   "scope": "Every file under tests except symlinks and generated caches. Pytest files, JavaScript scenario/support sources and remaining fixture/support files are distinguished; definitions are not expanded parametrizations.",
   "counts": {
     "fixture-or-support": 64,
-    "javascript-source": 108,
-    "pytest": 1682
+    "javascript-source": 109,
+    "pytest": 1691
   },
-  "python_definitions": 13294,
+  "python_definitions": 13372,
   "files": [
     {
       "path": "tests/KNOWN_FAILURES.md",
@@ -31,7 +31,7 @@
     {
       "path": "tests/TESTING_STANDARD.md",
       "kind": "fixture-or-support",
-      "sha256": "590a7fee2e713439fc505c3ccd66b2663fa2015781102919081591ba659b55dd"
+      "sha256": "9d02107c036d106d46aea6a7fb0e2db3afaadcb22e82afbea31d6e0fad78571d"
     },
     {
       "path": "tests/WAVE6_TEST_PERFORMANCE_REPORT.md",
@@ -774,6 +774,11 @@
       "path": "tests/helpers/document_source.py",
       "kind": "fixture-or-support",
       "sha256": "e7f0c128f9b2b774b07e7c7830b7d68e5444eb7d12f6ef707e714d36310bba10"
+    },
+    {
+      "path": "tests/helpers/email_move_menu_runner.cjs",
+      "kind": "javascript-source",
+      "sha256": "e1b0c25300bf97143ac02becaae32345b729e516d57015e898d7717e19c76ea5"
     },
     {
       "path": "tests/helpers/embedding_lanes.py",
@@ -1724,6 +1729,12 @@
       "definitions": 1
     },
     {
+      "path": "tests/test_bg_effect_clock_js.py",
+      "kind": "pytest",
+      "sha256": "324de747ff046e51678301233771e3585776d348e90bf36a39199095311b90ef",
+      "definitions": 10
+    },
+    {
       "path": "tests/test_bg_job_tools.py",
       "kind": "pytest",
       "sha256": "5db99c65e84159a2e3e9f48cc3006db9e4615fb856846bbe6375e08bf9759425",
@@ -1966,7 +1977,7 @@
     {
       "path": "tests/test_caldav_client_cleanup.py",
       "kind": "pytest",
-      "sha256": "76df6ca00e532ed42c677c9b363f9a596ca7f59a9125e4a62e56bbb28475846a",
+      "sha256": "50bc8722bd83fa66c23426d8a198eb1c03d6e79a404691b039d0e4563d9abc14",
       "definitions": 5
     },
     {
@@ -2062,13 +2073,25 @@
     {
       "path": "tests/test_calendar_event_contrast.py",
       "kind": "pytest",
-      "sha256": "4648d3a81d23c39ecc7669283c7fd880633d29246173bce1101a0c8b1348eb8a",
+      "sha256": "53aba42a924961c59369d6e3f67c89ca9ed74193dcc6e1c38f349e026a54a256",
       "definitions": 3
+    },
+    {
+      "path": "tests/test_calendar_event_day_coverage.py",
+      "kind": "pytest",
+      "sha256": "f6ab1565b32974826408dd87efb50fb5c97032a876d47b07e445505d2c1d1e00",
+      "definitions": 2
     },
     {
       "path": "tests/test_calendar_explicit_timezone.py",
       "kind": "pytest",
       "sha256": "31533bfb2f389c8a69d5353b67435fe4a5148c7d1c328bd3f14657b809fe7989",
+      "definitions": 4
+    },
+    {
+      "path": "tests/test_calendar_fallback_timezone.py",
+      "kind": "pytest",
+      "sha256": "b53929776658f9cc739c6d82a9f2b0fcbc8926159cfc264df948ad55683fd275",
       "definitions": 4
     },
     {
@@ -2138,6 +2161,12 @@
       "definitions": 7
     },
     {
+      "path": "tests/test_calendar_rrule_source_tz.py",
+      "kind": "pytest",
+      "sha256": "9afce4e0c85a89be92517e5996ed7a1f68af5d3f9dd39decd5855789d259f69a",
+      "definitions": 4
+    },
+    {
       "path": "tests/test_calendar_rrule_until_utc.py",
       "kind": "pytest",
       "sha256": "2eb408a589795506a8e2a915d93032359aee6033d2720664451534ab13640ba8",
@@ -2170,7 +2199,7 @@
     {
       "path": "tests/test_calendar_visual_static.py",
       "kind": "pytest",
-      "sha256": "6a1471249a626b8d813eb2e0bdc57933329a28f9996482ca6fffc52e708f1f88",
+      "sha256": "ee1589fdff29c32238fc67af77013320bd8e3f07acddab2234319b86cdcb52b4",
       "definitions": 27
     },
     {
@@ -2388,6 +2417,12 @@
       "kind": "pytest",
       "sha256": "474d4e30e720c23d3939cef545bba00ad06155f9baa0d29cf2593cf7bfbbc71f",
       "definitions": 3
+    },
+    {
+      "path": "tests/test_chat_timeout_message_static.py",
+      "kind": "pytest",
+      "sha256": "df98bbdc76f39d1c0ed5a9d1dd2f0fa41cc25e4697fc19abf0179332204d4f9d",
+      "definitions": 1
     },
     {
       "path": "tests/test_chat_tool_screenshot_xss.py",
@@ -2896,8 +2931,8 @@
     {
       "path": "tests/test_context_compactor.py",
       "kind": "pytest",
-      "sha256": "6fb27c9e2accab139b80f6040eb018381871495643231cc037b05b8ad90bfa60",
-      "definitions": 32
+      "sha256": "83409179269791def7de0ce1c154d3c6ffde6355686c70e25d24df5897a72b82",
+      "definitions": 44
     },
     {
       "path": "tests/test_context_compactor_nonstring.py",
@@ -3540,6 +3575,12 @@
       "kind": "pytest",
       "sha256": "61bb8b7d4cca537117821ca7e5c4512da632f08fd8662f6f983c7a529a700428",
       "definitions": 2
+    },
+    {
+      "path": "tests/test_document_library_delete_snapshot.py",
+      "kind": "pytest",
+      "sha256": "7c7a1884e73714c659c80a46ec12de6f0474726203e0f237dc7c01e01615076a",
+      "definitions": 5
     },
     {
       "path": "tests/test_document_library_expanded_export.py",
@@ -5299,6 +5340,18 @@
       "definitions": 8
     },
     {
+      "path": "tests/test_email_mime_disposition.py",
+      "kind": "pytest",
+      "sha256": "957f22afb7d181b54b577bf1ab368fef216b1a7f1954b7c3c4c2bb8b9a890aa9",
+      "definitions": 4
+    },
+    {
+      "path": "tests/test_email_move_menu_results.py",
+      "kind": "pytest",
+      "sha256": "871042291bacb469d1a2c4feec5c62e89c423ae8964b5742b51982557282c961",
+      "definitions": 2
+    },
+    {
       "path": "tests/test_email_oauth.py",
       "kind": "pytest",
       "sha256": "17af423b186c5b36e4eeb98c4c19617c8c1e3e89d74d0130b55f1b4d9a1f8a0d",
@@ -5823,7 +5876,7 @@
     {
       "path": "tests/test_featherless_provider.py",
       "kind": "pytest",
-      "sha256": "9c394eb3af916c5db5d95c8c091804928b523670e85a943b9e155032c61cf30c",
+      "sha256": "5af3039fe00ef0fccb4ecf7ada9329b8d181809c44ad114e810b11e2865209f6",
       "definitions": 18
     },
     {
@@ -6542,7 +6595,7 @@
     {
       "path": "tests/test_inspect_media_tool.py",
       "kind": "pytest",
-      "sha256": "a4af9582a0ff2b6f80bf22aa19bed62538fc49fdd814c2bbf78925979250a95a",
+      "sha256": "10c2030537c6285a9975317808a6a46d4a2867f9b8f340c4a8a99290edda3dfa",
       "definitions": 70
     },
     {
@@ -7526,8 +7579,8 @@
     {
       "path": "tests/test_model_routes.py",
       "kind": "pytest",
-      "sha256": "6a2ad99d705630bda1f0b83e3de5102a7bc7013b4d876e9eba249e7faded0216",
-      "definitions": 139
+      "sha256": "de1d8912476dd3ba459134f4895dc5e9b04009a40355e2ed1bff4d7a0b17c88a",
+      "definitions": 143
     },
     {
       "path": "tests/test_model_sort_js.py",
@@ -8180,7 +8233,7 @@
     {
       "path": "tests/test_provider_classification.py",
       "kind": "pytest",
-      "sha256": "e9d07043214ebdbe20ca859f79af006b2bfdebf306e19e42da7bbc0771720fad",
+      "sha256": "4035f3006f34883eb79d7a1205a4dc6e42ead176151f239e4d53e95e636583e1",
       "definitions": 9
     },
     {
@@ -8252,8 +8305,8 @@
     {
       "path": "tests/test_provider_label_js.py",
       "kind": "pytest",
-      "sha256": "8b32481c66e36002245580e266dded5932a9409501fcdd24920cb06a54bc78a7",
-      "definitions": 1
+      "sha256": "491e1a98db09062bfd6e13236d5749606738352b679a1a63e2caf6ffbd78b912",
+      "definitions": 2
     },
     {
       "path": "tests/test_providers_mixtral_logo_js.py",
@@ -8990,8 +9043,8 @@
     {
       "path": "tests/test_search_provider_json.py",
       "kind": "pytest",
-      "sha256": "3c0235e36fe9d34e57a6c828882d0888fe0bb16e69139dfdadff14e717842ba1",
-      "definitions": 4
+      "sha256": "263d242e08a829b0556d1846f4b081c3d7a33d327ad3ef9413c10675fd6fd0c1",
+      "definitions": 5
     },
     {
       "path": "tests/test_search_publication_intent.py",
@@ -9086,8 +9139,8 @@
     {
       "path": "tests/test_searxng_settings_migration.py",
       "kind": "pytest",
-      "sha256": "7869beb69b7dd7cd1e891ab45c7882eecceb7529c37848b3dd5d1e85cd172565",
-      "definitions": 14
+      "sha256": "885090779b9bbcd6954405e9710196e12ad67376dcc413605fd2874dcbf41f68",
+      "definitions": 16
     },
     {
       "path": "tests/test_searxng_validation.py",
@@ -9194,7 +9247,7 @@
     {
       "path": "tests/test_service_search_provider_guards.py",
       "kind": "pytest",
-      "sha256": "4bd5e14c78925dbb26213627ab9abae5fbe26e4ef138dae3d261af8f8d9ba1a6",
+      "sha256": "7fa547a9eab2bf7af57f94fcbde90d1bb0267be3e12e2684f2b4314daef9dd43",
       "definitions": 31
     },
     {
@@ -10876,6 +10929,12 @@
       "kind": "pytest",
       "sha256": "9a5402aedbb574f79d95211d1adfe76be8b488c8f7e01309a9c7b3d6af09bb2a",
       "definitions": 35
+    },
+    {
+      "path": "tests/test_you_com_search_provider.py",
+      "kind": "pytest",
+      "sha256": "604e3ba387237d87e75de540ff00645311aec7c60008f0fce54bdf7bdb501f6a",
+      "definitions": 26
     },
     {
       "path": "tests/test_youtube_comments_timeout.py",

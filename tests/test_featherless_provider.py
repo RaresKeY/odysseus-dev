@@ -243,6 +243,14 @@ class _FakeDb:
 
 
 def test_create_featherless_endpoint(monkeypatch):
+    # Keep the real URL guard, but do not depend on public DNS or Tailscale.
+    from src.url_safety import check_outbound_url
+    monkeypatch.setattr("src.endpoint_resolver.resolve_url", lambda url: url)
+    def resolve_fixture_host(host):
+        assert host == "api.featherless.ai"
+        return ["93.184.216.34"]
+    monkeypatch.setattr(model_routes, "check_outbound_url", lambda url, **kw:
+        check_outbound_url(url, resolver=resolve_fixture_host, **kw))
     create = _route_endpoint(_ROUTER, "/api/model-endpoints", "POST")
     added = []
     class FakeDb:
