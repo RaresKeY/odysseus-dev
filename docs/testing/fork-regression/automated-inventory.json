@@ -4,9 +4,9 @@
   "counts": {
     "fixture-or-support": 64,
     "javascript-source": 108,
-    "pytest": 1679
+    "pytest": 1681
   },
-  "python_definitions": 13274,
+  "python_definitions": 13291,
   "files": [
     {
       "path": "tests/KNOWN_FAILURES.md",
@@ -968,12 +968,12 @@
     {
       "path": "tests/smoke/README.md",
       "kind": "fixture-or-support",
-      "sha256": "299e9bab1b194d0a97215275d6c5f8e2d92ec3737cab1568f824dc6eed3318b5"
+      "sha256": "ea94f52e63414bedb92f5fa11250afad8d69970e867120ce0fe85aa07cddf750"
     },
     {
       "path": "tests/smoke/areas.py",
       "kind": "fixture-or-support",
-      "sha256": "6935a514de6f5dca8b0310da3b24319d10c152ee8ad8859c680efd471fee55c2"
+      "sha256": "fe3dc5fe2229284df6f4759831261014f82ed508fd47f89e322b544102d7af2f"
     },
     {
       "path": "tests/smoke/conftest.py",
@@ -1026,6 +1026,12 @@
       "kind": "pytest",
       "sha256": "0364330a4c224324fa8a1dc46b3d3497adf0e08ef3150897d5fb97f39e4b9c14",
       "definitions": 1
+    },
+    {
+      "path": "tests/smoke/test_fork_user_flows_smoke.py",
+      "kind": "pytest",
+      "sha256": "c63db83abcb84f7a68ec6932e768f6ede22fa9f472ca7fd6a71e5dbff6dd14b1",
+      "definitions": 4
     },
     {
       "path": "tests/smoke/test_memory_smoke.py",
@@ -6570,6 +6576,12 @@
       "definitions": 3
     },
     {
+      "path": "tests/test_interactive_workspace_permissions.py",
+      "kind": "pytest",
+      "sha256": "70bcff81362deba6a9dfc036080fab91b98e819fa569b0e0d5386a572c04d0c6",
+      "definitions": 10
+    },
+    {
       "path": "tests/test_internal_api_base.py",
       "kind": "pytest",
       "sha256": "9b52f85c48c0d3b5fcb68ddb382c2e0bb7ea00cffd81ff974aa32c73cde6abed",
@@ -10850,8 +10862,8 @@
     {
       "path": "tests/test_workspace_files.py",
       "kind": "pytest",
-      "sha256": "5dfaaa6bceade61e3b74654193a6258a2a17c01bec5422a46bef32e3d5c48677",
-      "definitions": 12
+      "sha256": "6288c5102392178143b33f60004c336b1f03bec20ecedc7b4d8a10f609e2d6c4",
+      "definitions": 15
     },
     {
       "path": "tests/test_write_file_empty_body.py",
