@@ -39,7 +39,12 @@ def test_hardware_is_detected(client):
 
     gpus = client.get(GPUS_PATH)
     assert gpus.status_code == 200, gpus.text
-    assert gpus.json().get("ok") is True, gpus.text
+    gpu_state = gpus.json()
+    assert isinstance(gpu_state.get("gpus"), list), gpu_state
+    if gpu_state.get("ok") is not True:
+        assert (system.get("gpu_count") or 0) == 0, system
+        assert gpu_state.get("gpus") == [], gpu_state
+        assert gpu_state.get("error") == "nvidia-smi not found", gpu_state
 
 
 def test_fresh_install_explains_how_to_populate_the_catalog(client):
