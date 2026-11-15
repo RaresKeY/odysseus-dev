@@ -190,21 +190,6 @@ DEFAULT_CHATGPT_MODEL_CATALOG: dict[str, dict[str, Any]] = {
 CHATGPT_MODEL_CATALOG_CACHE: dict[str, dict[str, Any]] = dict(DEFAULT_CHATGPT_MODEL_CATALOG)
 
 
-def _extract_reasoning_levels(item: dict) -> list[str]:
-    raw_levels = item.get("supported_reasoning_levels") or item.get("supportedReasoningEfforts")
-    if not isinstance(raw_levels, list):
-        return []
-    levels: list[str] = []
-    for entry in raw_levels:
-        if isinstance(entry, dict):
-            effort = entry.get("effort") or entry.get("level") or entry.get("name")
-            if effort and isinstance(effort, str):
-                levels.append(effort.strip().lower())
-        elif isinstance(entry, str) and entry.strip():
-            levels.append(entry.strip().lower())
-    return levels
-
-
 def get_chatgpt_model_metadata(slug: str) -> Optional[dict[str, Any]]:
     slug = (slug or "").strip()
     if not slug:
@@ -254,36 +239,40 @@ def fetch_available_models(access_token: str, timeout: float = 10.0) -> list[str
         data = response.json()
     except Exception:
         return []
-    entries = data.get("models", []) if isinstance(data, dict) else []
-    sortable: list[tuple[int, str]] = []
-    for item in entries:
-        if not isinstance(item, dict):
-            continue
-        slug = item.get("slug")
-        if not isinstance(slug, str) or not slug.strip():
-            continue
-        slug_clean = slug.strip()
-        visibility = item.get("visibility", "")
-        if isinstance(visibility, str) and visibility.strip().lower() in {"hide", "hidden"}:
-            continue
-        levels = _extract_reasoning_levels(item)
-        default_lvl = item.get("default_reasoning_level") or item.get("defaultReasoningEffort")
-        if levels:
-            CHATGPT_MODEL_CATALOG_CACHE[slug_clean] = {
-                "default_reasoning_level": str(default_lvl).strip().lower() if default_lvl else (levels[0] if levels else "medium"),
-                "supported_reasoning_levels": levels,
-            }
-        priority = item.get("priority")
-        rank = int(priority) if isinstance(priority, (int, float)) else 10_000
-        sortable.append((rank, slug_clean))
-    sortable.sort(key=lambda item: (item[0], item[1]))
-    ordered: list[str] = []
-    seen: set[str] = set()
-    for _, slug in sortable:
-        if slug not in seen:
-            ordered.append(slug)
-            seen.add(slug)
-    return ordered
+    from src.model_capability_cache import remember_catalog
+    from src.model_capability_readers.base import VENDOR_CHATGPT_SUBSCRIPTION
+    records = remember_catalog(
+        data,
+        base_url="https://chatgpt.com/backend-api/codex",
+        headers=chatgpt_headers(access_token),
+        vendor=VENDOR_CHATGPT_SUBSCRIPTION,
+    )
+    # The older picker metadata remains a compatibility projection. Request
+    # controls use the scoped typed snapshot above, never this model-only map.
+    from src import model_capabilities as mc
+    for record in records:
+        for control in record.deterministic_controls:
+            if control.control != mc.CONTROL_REASONING_EFFORT or control.status not in {
+                mc.ASSERTION_CLAIMED, mc.ASSERTION_VERIFIED,
+            }:
+                continue
+            evidence = dict(control.evidence)
+            levels = evidence.get("allowed_values")
+            if levels:
+                CHATGPT_MODEL_CATALOG_CACHE[record.model_id] = {
+                    "default_reasoning_level": evidence.get("default") or levels[0],
+                    "supported_reasoning_levels": list(levels),
+                }
+    # This API's request identity is models[].slug. A generic catalog fallback
+    # can recover other vendors' id/name fields, but those are not valid Codex
+    # discovery identities. Preserve the native contract and exact casing.
+    items = data.get("models") if isinstance(data, dict) else None
+    slugs = {
+        item["slug"].strip()
+        for item in (items if isinstance(items, list) else [])
+        if isinstance(item, dict) and isinstance(item.get("slug"), str) and item["slug"].strip()
+    }
+    return list(dict.fromkeys(record.model_id for record in records if record.model_id in slugs))
 
 
 def _raise_for_oauth_response(response: httpx.Response, action: str) -> None:
