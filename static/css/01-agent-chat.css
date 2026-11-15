@@ -1204,7 +1204,7 @@ body.bg-pattern-ascii-fireflies {
       height: 1.125rem;
     }
     /* Size the button, not just its glyph: the surrounding row remains clickable. */
-    .sidebar :is(.section-header-btn, .section-collapse-btn, .list-item-plus-btn, .user-bar-btn) {
+    #sidebar :is(.section-header-btn, .section-collapse-btn, .list-item-plus-btn, .user-bar-btn) {
       box-sizing: border-box;
       flex-shrink: 0;
       min-width: 32px !important;
@@ -1214,12 +1214,12 @@ body.bg-pattern-ascii-fireflies {
       justify-content: center;
       left: 0;
     }
-    .sidebar :is(.section-header-btn, .section-collapse-btn, .list-item-plus-btn, .user-bar-btn) svg {
+    #sidebar :is(.section-header-btn, .section-collapse-btn, .list-item-plus-btn, .user-bar-btn) svg {
       width: 18px;
       height: 18px;
       flex-shrink: 0;
     }
-    .sidebar :is(.section-header-btn, .section-collapse-btn, .list-item-plus-btn, .user-bar-btn):focus-visible {
+    #sidebar :is(.section-header-btn, .section-collapse-btn, .list-item-plus-btn, .user-bar-btn):focus-visible {
       outline: 2px solid var(--fg);
       outline-offset: 1px;
       opacity: 1;
@@ -1238,7 +1238,7 @@ body.bg-pattern-ascii-fireflies {
     .sidebar #session-sort-btn { transform: none; }
     .sidebar .list-item-plus-label { font-size: 12px; }
     @media (pointer: coarse), (max-width: 768px) {
-      .sidebar :is(.section-header-btn, .section-collapse-btn, .list-item-plus-btn, .user-bar-btn) {
+      #sidebar :is(.section-header-btn, .section-collapse-btn, .list-item-plus-btn, .user-bar-btn) {
         min-width: 44px !important;
         min-height: 44px !important;
         height: 44px !important;

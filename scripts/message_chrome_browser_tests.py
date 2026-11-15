@@ -69,7 +69,7 @@ def main():
                                  "deviceScaleFactor": 1, "mobile": width < 500})
                     browser.call("Emulation.setTouchEmulationEnabled", {"enabled": width < 500})
                     if args.suite in ("all", "sidebar"):
-                        browser.evaluate("document.getElementById('sidebar').classList.remove('collapsed'); document.body.classList.add('sidebar-open'); document.getElementById('tools-section').classList.remove('collapsed')")
+                        browser.evaluate("document.getElementById('sidebar').classList.remove('collapsed'); document.body.classList.add('sidebar-open'); document.getElementById('tools-section').classList.remove('collapsed');document.getElementById('sessions-section').classList.remove('collapsed');document.getElementById('sessions-section').style.setProperty('display','block','important')")
                         check("sidebar-targets", """(() => {
                           const selectors=['#session-sort-btn','#email-compose-btn','#library-new-doc-btn','#notes-new-note-btn','#tools-section .section-collapse-btn','#user-bar-settings'];
                           const targets=selectors.map(s=>{const b=document.querySelector(s),r=b.getBoundingClientRect(),i=b.querySelector('svg').getBoundingClientRect();return {selector:s,width:r.width,height:r.height,icon:i.width}});
@@ -83,7 +83,7 @@ def main():
                         check("sidebar-padding-click", "document.getElementById('tools-section').classList.contains('collapsed')")
                         browser.evaluate("document.querySelector('#tools-section .section-collapse-btn').focus()")
                         for kind in ("keyDown", "keyUp"):
-                            browser.call("Input.dispatchKeyEvent", {"type": kind, "key": "Enter", "code": "Enter", "windowsVirtualKeyCode": 13})
+                            browser.call("Input.dispatchKeyEvent", {"type": kind, "key": "Enter", "code": "Enter", "windowsVirtualKeyCode": 13, "nativeVirtualKeyCode": 13, **({"text":"\r"} if kind == "keyDown" else {})})
                         time.sleep(.7)
                         check("sidebar-keyboard-toggle", "!document.getElementById('tools-section').classList.contains('collapsed')")
                         if width == 1440:
