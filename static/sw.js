@@ -7,7 +7,7 @@
 //   - Other static assets (images/fonts/libs): cache-first with bg refresh.
 //   - API / non-GET: never cached.
 // Bump CACHE_NAME whenever the precache list or SW logic changes.
-const CACHE_NAME = 'odysseus-v1161-pr40-editor-precache';
+const CACHE_NAME = 'odysseus-v1162-message-plate';
 
 // KaTeX resolves these from its own stylesheet, so caching the CSS without them
 // gives offline math fallback glyphs instead of proper typesetting.
@@ -52,7 +52,7 @@ const PRECACHE = [
   '/static/js/decision-activity.js',
   '/',
   '/static/css/00-tokens.css?v=20261021confirmalign1',
-  '/static/css/01-agent-chat.css?v=20261021confirmalign1',
+  '/static/css/01-agent-chat.css?v=20261115messageplate1',
   '/static/css/02-compare.css?v=20261021confirmalign1',
   '/static/css/03-agent-chat.css?v=20261021confirmalign1',
   '/static/css/04-memory.css?v=20261021confirmalign1',

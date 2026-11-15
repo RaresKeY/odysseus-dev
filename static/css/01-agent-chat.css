@@ -1203,6 +1203,47 @@ body.bg-pattern-ascii-fireflies {
       width: 1.125rem;
       height: 1.125rem;
     }
+    /* Size the button, not just its glyph: the surrounding row remains clickable. */
+    .sidebar :is(.section-header-btn, .section-collapse-btn, .list-item-plus-btn, .user-bar-btn) {
+      box-sizing: border-box;
+      flex-shrink: 0;
+      min-width: 32px !important;
+      min-height: 32px !important;
+      height: 32px !important;
+      padding: 0 7px !important;
+      justify-content: center;
+      left: 0;
+    }
+    .sidebar :is(.section-header-btn, .section-collapse-btn, .list-item-plus-btn, .user-bar-btn) svg {
+      width: 18px;
+      height: 18px;
+      flex-shrink: 0;
+    }
+    .sidebar :is(.section-header-btn, .section-collapse-btn, .list-item-plus-btn, .user-bar-btn):focus-visible {
+      outline: 2px solid var(--fg);
+      outline-offset: 1px;
+      opacity: 1;
+    }
+    .sidebar .section-header-flex {
+      height: auto;
+      min-height: 36px;
+      padding-top: 2px;
+      padding-bottom: 2px;
+    }
+    .sidebar .list-item:has(> .list-item-plus-btn) {
+      min-height: 36px;
+      padding-top: 2px;
+      padding-bottom: 2px;
+    }
+    .sidebar #session-sort-btn { transform: none; }
+    .sidebar .list-item-plus-label { font-size: 12px; }
+    @media (pointer: coarse), (max-width: 768px) {
+      .sidebar :is(.section-header-btn, .section-collapse-btn, .list-item-plus-btn, .user-bar-btn) {
+        min-width: 44px !important;
+        min-height: 44px !important;
+        height: 44px !important;
+      }
+    }
     /* Shared notification dot for sidebar section titles. Single source of
        truth so chats / email / assistant / future-section dots all sit at
        the same offset from their label. */
@@ -4038,6 +4079,44 @@ body.bg-pattern-ascii-fireflies {
       color:var(--color-muted-alt); font-size:0.75rem;
       position: relative;
     }
+    .msg.msg-separated-footer {
+      padding: 0;
+      background: transparent;
+      border: 0;
+      overflow: visible;
+    }
+    .msg-plate {
+      box-sizing: border-box;
+      display: flex;
+      flex-direction: column;
+      align-items: inherit;
+      width: 100%;
+      min-width: 0;
+      padding: 10px 12px;
+      border: 1px solid var(--bubble-border, var(--border));
+      border-radius: inherit;
+      overflow: hidden;
+    }
+    .msg-ai > .msg-plate { background: var(--ai-bubble-bg, var(--panel)); }
+    .msg-user > .msg-plate {
+      background: var(--user-bubble-bg, color-mix(in srgb, var(--fg) 8%, var(--bg)));
+    }
+    .msg-user-queued > .msg-plate {
+      border: 1px dashed color-mix(in srgb, var(--accent, var(--red)) 55%, transparent);
+      background: color-mix(in srgb, var(--accent, var(--red)) 8%, var(--input-bg, var(--panel)));
+    }
+    .msg-user-queued:hover > .msg-plate {
+      border-color: color-mix(in srgb, var(--accent, var(--red)) 85%, transparent);
+    }
+    .msg-separated-footer > .msg-footer {
+      box-sizing: border-box;
+      align-self: stretch;
+      max-width: 100%;
+      min-width: 0;
+      margin-top: 4px;
+      padding: 0 12px;
+    }
+    .msg-user.msg-separated-footer > .msg-footer { justify-content: flex-end; }
     .msg-footer .timestamp {
       font-size:0.75rem; color:var(--color-muted-alt);
       margin:0; opacity:1;
