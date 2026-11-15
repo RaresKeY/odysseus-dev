@@ -1188,6 +1188,48 @@ body.bg-pattern-ascii-fireflies {
       left: -1px;
       color: var(--accent, var(--red));
     }
+    /* Size the button, not just its glyph: the surrounding row remains clickable. */
+    #sidebar :is(.section-header-btn, .section-collapse-btn, .list-item-plus-btn, .user-bar-btn, .session-menu-btn, .folder-delete-btn, .session-bulk-btn) {
+      box-sizing: border-box;
+      flex-shrink: 0;
+      min-width: 32px !important;
+      min-height: 32px !important;
+      height: 32px !important;
+      padding: 0 7px !important;
+      justify-content: center;
+      left: 0;
+    }
+    #sidebar .folder-delete-btn { font-size: 18px; }
+    #sidebar :is(.section-header-btn, .section-collapse-btn, .list-item-plus-btn, .user-bar-btn, .session-menu-btn, .folder-delete-btn, .session-bulk-btn) svg {
+      width: 18px;
+      height: 18px;
+      flex-shrink: 0;
+    }
+    #sidebar :is(.section-header-btn, .section-collapse-btn, .list-item-plus-btn, .user-bar-btn, .session-menu-btn, .folder-delete-btn, .session-bulk-btn):focus-visible {
+      outline: 2px solid var(--fg);
+      outline-offset: 1px;
+      opacity: 1;
+    }
+    .sidebar .section-header-flex {
+      height: auto;
+      min-height: 36px;
+      padding-top: 2px;
+      padding-bottom: 2px;
+    }
+    .sidebar .list-item:has(> .list-item-plus-btn) {
+      min-height: 36px;
+      padding-top: 2px;
+      padding-bottom: 2px;
+    }
+    .sidebar #session-sort-btn { transform: none; }
+    .sidebar .list-item-plus-label { font-size: 12px; }
+    @media (pointer: coarse), (max-width: 768px) {
+      #sidebar :is(.section-header-btn, .section-collapse-btn, .list-item-plus-btn, .user-bar-btn, .session-menu-btn, .folder-delete-btn, .session-bulk-btn) {
+        min-width: 44px !important;
+        min-height: 44px !important;
+        height: 44px !important;
+      }
+    }
     /* Shared notification dot for sidebar section titles. Single source of
        truth so chats / email / assistant / future-section dots all sit at
        the same offset from their label. */
