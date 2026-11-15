@@ -69,7 +69,8 @@ def main():
                                  "deviceScaleFactor": 1, "mobile": width < 500})
                     browser.call("Emulation.setTouchEmulationEnabled", {"enabled": width < 500})
                     if args.suite in ("all", "sidebar"):
-                        browser.evaluate("document.getElementById('sidebar').classList.remove('collapsed'); document.body.classList.add('sidebar-open'); document.getElementById('tools-section').classList.remove('collapsed');document.getElementById('sessions-section').classList.remove('collapsed');document.getElementById('sessions-section').style.setProperty('display','block','important')")
+                        browser.evaluate("document.getElementById('sidebar').classList.remove('hidden'); document.body.classList.remove('sidebar-collapsed'); document.getElementById('tools-section').classList.remove('collapsed');document.getElementById('sessions-section').classList.remove('collapsed');document.getElementById('sessions-section').style.setProperty('display','block','important')")
+                        time.sleep(.35)
                         check("sidebar-targets", """(() => {
                           const selectors=['#session-sort-btn','#email-compose-btn','#library-new-doc-btn','#notes-new-note-btn','#tools-section .section-collapse-btn','#user-bar-settings'];
                           const targets=selectors.map(s=>{const b=document.querySelector(s),r=b.getBoundingClientRect(),i=b.querySelector('svg').getBoundingClientRect();return {selector:s,width:r.width,height:r.height,icon:i.width}});
@@ -92,7 +93,7 @@ def main():
 
                     if args.suite in ("all", "footer"):
                         browser.evaluate("""(async () => {
-                          document.body.classList.remove('sidebar-open');
+                          document.getElementById('sidebar').classList.toggle('hidden',innerWidth<500);document.body.classList.toggle('sidebar-collapsed',innerWidth<500);
                           const url=[...document.scripts].find(s=>s.src.includes('/chatRenderer.js')).src;
                           window.probeRenderer=await import(url);
                           document.querySelector('#chat-history').replaceChildren();
@@ -105,7 +106,7 @@ def main():
                         })()""")
                         time.sleep(.3)
                         check("footer-below-both-plates", """(() => {
-                          const boxes=['probe-user','probe-ai'].map(id=>{const m=document.getElementById(id),p=m.querySelector(':scope > .msg-plate'),f=m.querySelector(':scope > .msg-footer');if(!p||!f)return {id,ok:false};const a=p.getBoundingClientRect(),b=f.getBoundingClientRect();return {id,ok:!p.contains(f)&&b.top>=a.bottom&&a.left>=0&&a.right<=innerWidth+1,plateBottom:a.bottom,footerTop:b.top}});
+                          const boxes=['probe-user','probe-ai'].map(id=>{const m=document.getElementById(id),p=m.querySelector(':scope > .msg-plate'),f=m.querySelector(':scope > .msg-footer');if(!p||!f)return {id,ok:false};const a=p.getBoundingClientRect(),b=f.getBoundingClientRect();return {id,ok:!p.contains(f)&&b.top>=a.bottom&&a.left>=0&&a.right<=Math.min(innerWidth,visualViewport.width)+1,plateBottom:a.bottom,footerTop:b.top,right:a.right,viewport:visualViewport.width}});
                           return {ok:boxes.every(b=>b.ok),boxes};
                         })()""")
                         check("metrics-and-context-once", "document.querySelectorAll('#probe-ai > .msg-footer .response-metrics').length===1 && document.querySelectorAll('#probe-ai > .msg-footer .ctx-ring').length===1")
@@ -120,7 +121,12 @@ def main():
                         browser.evaluate("document.querySelectorAll('.msg-overflow-menu').forEach(p=>p._dismiss?p._dismiss():p.remove());document.querySelector('#probe-ai .msg-more-btn').click()")
                         check("assistant-menu", """(() => {const e=document.querySelector('.msg-overflow-menu'),r=e?.getBoundingClientRect();return !!r&&r.left>=0&&r.right<=innerWidth+1&&r.top>=0&&r.bottom<=innerHeight})()""")
                         browser.evaluate("document.dispatchEvent(new KeyboardEvent('keydown',{key:'Escape',bubbles:true}))")
+                        check("user-inline-edit-cancel", """(async()=>{const m=document.querySelector('#probe-user');await window.chatModule.editUserMessage(m);const inside=!!m.querySelector('.msg-plate .edit-textarea');m.querySelector('.edit-cancel-btn').click();return inside&&m.querySelector('.body').textContent.includes('please show')&&!m.querySelector('textarea')})()""")
+                        check("assistant-inline-edit-cancel", """(async()=>{const m=document.querySelector('#probe-ai');await window.chatModule.editAIMessage(m);const inside=!!m.querySelector('.msg-plate .msg-edit-textarea');m.querySelector('.msg-edit-cancel').click();return inside&&!m.querySelector('textarea')&&getComputedStyle(m.querySelector('.body')).display!=='none'})()""")
+                        check("expanded-thinking-keeps-footer-below", """(async()=>{const m=document.querySelector('#probe-ai');m.querySelector('.thinking-header').click();await new Promise(r=>setTimeout(r,350));return m.querySelector('.msg-footer').getBoundingClientRect().top>=m.querySelector('.msg-plate').getBoundingClientRect().bottom})()""")
                         check("footer-replacement-keeps-one-plate", """(() => {const m=document.querySelector('#probe-ai'),body=m.querySelector('.body');m.querySelector('.msg-footer').remove();m.append(probeRenderer.createMsgFooter(m));probeRenderer.displayMetrics(m,{tokens_per_second:4.49,response_time:1,context_percent:1,input_tokens:100,context_length:128000,model:'gemma-4-26b-a4b-it'});return m.querySelectorAll('.msg-plate').length===1&&m.querySelector('.body')===body&&m.querySelectorAll('.msg-footer').length===1})()""")
+                        check("image-footer-outside-plate", """(()=>{const m=probeRenderer.buildImageBubble('data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mP8/x8AAwMCAO+jMZkAAAAASUVORK5CYII=','Synthetic image','image', '1x1','standard');document.querySelector('#chat-history').append(m);const ok=!!m.querySelector(':scope > .msg-plate .body')&&!!m.querySelector(':scope > .msg-footer');m.remove();return ok})()""")
+                        check("thread-footer-stays-unwrapped", """(()=>{const m=document.createElement('div');m.className='agent-thread';m.append(probeRenderer.createMsgFooter(m));return !m.querySelector('.msg-plate')&&m.querySelectorAll('.msg-footer').length===1})()""")
                         png = browser.call("Page.captureScreenshot", {"format": "png"})["data"]
                         (args.output / ("messages-" + str(width) + ".png")).write_bytes(base64.b64decode(png))
             except Exception as error:

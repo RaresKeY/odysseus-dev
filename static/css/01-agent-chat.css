@@ -1204,7 +1204,7 @@ body.bg-pattern-ascii-fireflies {
       height: 1.125rem;
     }
     /* Size the button, not just its glyph: the surrounding row remains clickable. */
-    #sidebar :is(.section-header-btn, .section-collapse-btn, .list-item-plus-btn, .user-bar-btn) {
+    #sidebar :is(.section-header-btn, .section-collapse-btn, .list-item-plus-btn, .user-bar-btn, .session-menu-btn, .folder-delete-btn, .session-bulk-btn) {
       box-sizing: border-box;
       flex-shrink: 0;
       min-width: 32px !important;
@@ -1214,12 +1214,13 @@ body.bg-pattern-ascii-fireflies {
       justify-content: center;
       left: 0;
     }
-    #sidebar :is(.section-header-btn, .section-collapse-btn, .list-item-plus-btn, .user-bar-btn) svg {
+    #sidebar .folder-delete-btn { font-size: 18px; }
+    #sidebar :is(.section-header-btn, .section-collapse-btn, .list-item-plus-btn, .user-bar-btn, .session-menu-btn, .folder-delete-btn, .session-bulk-btn) svg {
       width: 18px;
       height: 18px;
       flex-shrink: 0;
     }
-    #sidebar :is(.section-header-btn, .section-collapse-btn, .list-item-plus-btn, .user-bar-btn):focus-visible {
+    #sidebar :is(.section-header-btn, .section-collapse-btn, .list-item-plus-btn, .user-bar-btn, .session-menu-btn, .folder-delete-btn, .session-bulk-btn):focus-visible {
       outline: 2px solid var(--fg);
       outline-offset: 1px;
       opacity: 1;
@@ -1238,7 +1239,7 @@ body.bg-pattern-ascii-fireflies {
     .sidebar #session-sort-btn { transform: none; }
     .sidebar .list-item-plus-label { font-size: 12px; }
     @media (pointer: coarse), (max-width: 768px) {
-      #sidebar :is(.section-header-btn, .section-collapse-btn, .list-item-plus-btn, .user-bar-btn) {
+      #sidebar :is(.section-header-btn, .section-collapse-btn, .list-item-plus-btn, .user-bar-btn, .session-menu-btn, .folder-delete-btn, .session-bulk-btn) {
         min-width: 44px !important;
         min-height: 44px !important;
         height: 44px !important;
@@ -1762,8 +1763,8 @@ body.bg-pattern-ascii-fireflies {
       font-size: 9px;
     }
     /* Inline "+" action on a tool/section row (Library → new document,
-       Email → compose). Sizing forced + min-* zeroed so the mobile
-       touch-target rule (44px) can't inflate it. Selector intentionally
+       Email → compose). Sidebar target sizing is owned by the scoped rule
+       above; these legacy dimensions also serve non-sidebar uses. Selector intentionally
        NOT scoped to `.list-item` so the same class also styles buttons
        sitting in `.section-header-flex` (e.g. #email-compose-btn). */
     .list-item-plus-btn {
