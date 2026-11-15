@@ -3102,6 +3102,7 @@ import { invalidateSettings } from './appConfig.js';
         researchBtn.disabled = true;
         researchBtn.classList.remove('active');
       }
+      chatRenderer.prepareMessagePlate(holder);
       box.appendChild(holder);
       uiModule.scrollHistory();
 
@@ -3354,6 +3355,7 @@ import { invalidateSettings } from './appConfig.js';
         const newBody = document.createElement('div');
         newBody.className = 'body';
         newWrap.appendChild(newBody);
+        chatRenderer.prepareMessagePlate(newWrap);
         box.appendChild(newWrap);
         if (lastToolThread && lastToolThread.isConnected) lastToolThread.classList.add('has-bottom');
         roundHolder = newWrap;
@@ -3622,6 +3624,7 @@ import { invalidateSettings } from './appConfig.js';
         _thinkMsg._spinner = _ts;
         _thinkMsg.appendChild(_thinkBody);
         _thinkingSpinnerEl = _thinkMsg;
+        chatRenderer.prepareMessagePlate(_thinkMsg);
         chatBox.appendChild(_thinkMsg);
         uiModule.scrollHistory();
       }
@@ -5454,6 +5457,7 @@ import { invalidateSettings } from './appConfig.js';
                 const newBody = document.createElement('div');
                 newBody.className = 'body';
                 newWrap.appendChild(newBody);
+                chatRenderer.prepareMessagePlate(newWrap);
                 box.appendChild(newWrap);
                 roundHolder = newWrap;
                 roundText = '';
@@ -6290,6 +6294,7 @@ import { invalidateSettings } from './appConfig.js';
               var _timeoutMsg = document.createElement('div');
               _timeoutMsg.className = 'msg msg-ai';
               _timeoutMsg.innerHTML = '<div class="role">Odysseus</div><div class="body" style="opacity:0.6;font-style:italic;">Research clarification timed out. Toggle research again to start over.</div>';
+              chatRenderer.prepareMessagePlate(_timeoutMsg);
               _box.appendChild(_timeoutMsg);
               uiModule.scrollHistory();
             }
@@ -6645,6 +6650,7 @@ import { invalidateSettings } from './appConfig.js';
     const replayMarker = document.createComment('live-stream-turn');
     box.appendChild(replayMarker);
     const replayRendering = createTurnRendering({ root: box, start: replayMarker });
+    chatRenderer.prepareMessagePlate(holder);
     box.appendChild(holder);
     const replayNodes = [holder];
 
@@ -7020,6 +7026,7 @@ import { invalidateSettings } from './appConfig.js';
         var errHolder = document.createElement('div');
         errHolder.className = 'msg msg-ai';
         errHolder.innerHTML = '<div class="body"><i style="color: var(--color-error);">[Background stream encountered an error]</i></div>';
+        chatRenderer.prepareMessagePlate(errHolder);
         box.appendChild(errHolder);
       }
       return;
@@ -7860,6 +7867,7 @@ import { invalidateSettings } from './appConfig.js';
               _wrap.appendChild(_body);
               _wrap.appendChild(chatRenderer.createMsgFooter(_wrap));
               _appendViewReportLink(_wrap, sessionId);
+              chatRenderer.prepareMessagePlate(_wrap);
               _box.appendChild(_wrap);
               if (window.hljs) _wrap.querySelectorAll('pre code').forEach(function(b) { window.hljs.highlightElement(b); });
               uiModule.scrollHistory();
@@ -7886,6 +7894,7 @@ import { invalidateSettings } from './appConfig.js';
       const agentModelLabel = _shortModel(agentMeta?.model);
       holder.innerHTML = `<div class="role">${uiModule.esc(agentModelLabel)} <span class="role-timestamp">${roleTs}</span></div><div class="body"></div>`;
       _applyModelColor(holder.querySelector('.role'), agentMeta?.model);
+      chatRenderer.prepareMessagePlate(holder);
       box.appendChild(holder);
 
       const bodyDiv = holder.querySelector('.body');

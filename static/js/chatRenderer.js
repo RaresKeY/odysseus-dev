@@ -2295,18 +2295,23 @@ function _trackAction(id) {
   localStorage.setItem(_ACTION_RECENTS_KEY, JSON.stringify(recent));
 }
 
-// Keep the message node stable for streaming, editing and action handlers.
-// Only its content gets the painted plate; the footer remains a sibling.
-function prepareMessagePlate(message) {
+// Prepare before attachment so live content never needs reparenting on completion.
+// For legacy connected messages, use a state-preserving move when available.
+export function prepareMessagePlate(message) {
   if (!message.classList.contains('msg')) return;
   if (message.querySelector(':scope > .msg-plate')) return;
+  const connected = message.isConnected;
+  // Older browsers keep the original live footer rather than resetting embeds.
+  if (connected && typeof message.moveBefore !== 'function') return;
+  const children = Array.from(message.childNodes).filter(child =>
+    !(child.nodeType === 1 && child.classList.contains('msg-footer')));
   const plate = document.createElement('div');
   plate.className = 'msg-plate';
-  for (const child of Array.from(message.childNodes)) {
-    if (child.nodeType === 1 && child.classList.contains('msg-footer')) continue;
-    plate.appendChild(child);
-  }
   message.prepend(plate);
+  for (const child of children) {
+    if (connected) plate.moveBefore(child, null);
+    else plate.appendChild(child);
+  }
   message.classList.add('msg-separated-footer');
 }
 
@@ -3387,6 +3392,7 @@ export function addMessage(role, content, modelName, metadata) {
           wrap.appendChild(body);
           wrap.dataset.raw = txt;
           if (metadata?._db_id) wrap.dataset.dbId = metadata._db_id;
+          prepareMessagePlate(wrap);
           box.appendChild(wrap);
           lastWrap = wrap;
           if (!firstMsgAi) firstMsgAi = wrap;
@@ -3531,6 +3537,7 @@ export function addMessage(role, content, modelName, metadata) {
       body.appendChild(hint);
       wrap.appendChild(roleEl);
       wrap.appendChild(body);
+      prepareMessagePlate(wrap);
       box.appendChild(wrap);
       return wrap;
     }
@@ -3846,6 +3853,8 @@ export function addMessage(role, content, modelName, metadata) {
       wrap.appendChild(createUserMsgFooter(wrap));
     }
 
+    prepareMessagePlate(wrap);
+
     box.appendChild(wrap);
 
     // TTS is now part of the msg-actions system
@@ -3888,6 +3897,7 @@ const chatRenderer = {
   buildImageBubble,
   hideWelcomeScreen,
   showWelcomeScreen,
+  prepareMessagePlate,
   createMsgFooter,
   displayMetrics,
   addMessage,
