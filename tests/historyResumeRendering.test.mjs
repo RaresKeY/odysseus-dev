@@ -7,6 +7,9 @@ import { chromium } from 'playwright';
 // adapters. These are behavioral DOM tests, not assertions about source text.
 const renderer = await readFile(new URL('../static/js/chatRenderer.js', import.meta.url), 'utf8');
 const chat = await readFile(new URL('../static/js/chat.js', import.meta.url), 'utf8');
+// These entry functions call the production plate helper while still detached.
+const plateStart = renderer.indexOf('export function prepareMessagePlate(');
+const prepareMessagePlate = renderer.slice(plateStart, renderer.indexOf('\n}\n', plateStart) + 2).replace('export ', '');
 const addMessage = renderer.slice(renderer.indexOf('export function addMessage('), renderer.indexOf('\nconst chatRenderer =')).replace('export ', '');
 const resume = chat.slice(chat.indexOf('export async function resumeStream('), chat.indexOf('\n  /**\n   * Check for background streams')).replace('export ', '');
 let browser;
@@ -24,7 +27,7 @@ async function setup() {
     return route.fulfill({ contentType: 'text/javascript', body: source });
   });
   await page.goto('http://render.test/');
-  await page.evaluate(async ({ addMessage, resume }) => {
+  await page.evaluate(async ({ addMessage, resume, prepareMessagePlate }) => {
     const noop = () => {};
     const esc = value => { const node = document.createElement('div'); node.textContent = String(value ?? ''); return node.innerHTML; };
     Object.assign(window, {
@@ -58,9 +61,10 @@ async function setup() {
     window.applyModelRouteEventState = (await import('/static/js/chatModelProvenance.js')).applyModelRouteEventState;
     window.createTerminalStreamError = (await import('/static/js/chatStreamErrors.js')).createTerminalStreamError;
     window.generatedImageResult = (await import('/static/js/generatedImageResult.js')).generatedImageResult;
+    window.prepareMessagePlate = (0, eval)('(' + prepareMessagePlate + ')');
     window.addMessage = (0, eval)('(' + addMessage + ')');
     window.resumeStream = (0, eval)('(' + resume + ')');
-    window.chatRenderer = { addMessage: window.addMessage, recordSessionMetricsCost: noop, buildSourcesBox, buildFindingsBox, buildRagSourcesBox };
+    window.chatRenderer = { prepareMessagePlate: window.prepareMessagePlate, addMessage: window.addMessage, recordSessionMetricsCost: noop, buildSourcesBox, buildFindingsBox, buildRagSourcesBox };
     let controller;
     const stream = new ReadableStream({ start(value) { controller = value; } });
     window.send = event => controller.enqueue(new TextEncoder().encode('data: ' + (typeof event === 'string' ? event : JSON.stringify(event)) + '\n\n'));
@@ -68,7 +72,7 @@ async function setup() {
     window.fetch = async url => String(url).includes('/api/chat/resume/')
       ? new Response(stream, { headers: { 'X-Odysseus-Run-Id': 'run-1' } })
       : new Response(JSON.stringify({ history: window.savedHistory }));
-  }, { addMessage, resume });
+  }, { addMessage, resume, prepareMessagePlate });
   return page;
 }
 

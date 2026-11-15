@@ -745,6 +745,7 @@ function _createGroupBubble(model, box) {
   spinner.start();
   wrap._spinner = spinner;
 
+  chatRenderer.prepareMessagePlate(wrap);
   box.appendChild(wrap);
   return wrap;
 }
