@@ -1409,21 +1409,6 @@ def _provider_label(url: str) -> str:
     return host or "provider"
 
 
-def _is_openai_hosted_chat_url(url: str) -> bool:
-    try:
-        parsed = urlparse(url or "")
-    except Exception:
-        return False
-    path = (parsed.path or "").rstrip("/")
-    return _host_match(url, "openai.com") and path.endswith("/chat/completions")
-
-
-def _model_disallows_reasoning_effort_with_chat_tools(model: str) -> bool:
-    """OpenAI GPT 5.x variants reject reasoning_effort + tools on chat completions."""
-    m = (model or "").strip().lower()
-    return bool(re.match(r"^(?:openai/)?gpt-5(?:[.\-]\d+)?(?:[-_:].*)?$", m))
-
-
 # gpt-oss (harmony) ships BUILT-IN tools named `python` and `browser`, invoked
 # with the raw body as the argument (`to=python` + bare source), while custom
 # functions use `to=functions.NAME` + JSON. A tool we expose under a built-in's
@@ -1473,16 +1458,6 @@ def _unalias_harmony_tool_name(name: str, model: str) -> str:
     if not _is_harmony_model(model):
         return name
     return _HARMONY_TOOL_ALIASES_REVERSE.get(name, name)
-
-
-def _scrub_openai_chat_tool_reasoning(payload: Dict, target_url: str, model: str) -> None:
-    if not payload.get("tools"):
-        return
-    if not _is_openai_hosted_chat_url(target_url):
-        return
-    if not _model_disallows_reasoning_effort_with_chat_tools(model):
-        return
-    payload["reasoning_effort"] = "none"
 
 
 def _apply_deepseek_v4_reasoning_defaults(
@@ -2369,10 +2344,10 @@ def normalize_model_id(
     return None
 
 
-def _apply_explicit_nonstream_reasoning_effort(
+def _apply_explicit_reasoning_effort(
     payload: Dict, reasoning_effort: Optional[str]
 ) -> None:
-    """Apply explicit effort to an OpenAI-compatible non-streaming request.
+    """Apply explicit effort to an OpenAI-compatible request.
 
     No explicit effort preserves existing provider-specific defaults.
     Native Ollama, Anthropic and ChatGPT Responses use separate builders.
@@ -2477,7 +2452,7 @@ def llm_call(url: str, model: str, messages: List[Dict], temperature: float = LL
         )
         if provider == "mistral" and _supports_thinking(model):
             payload["reasoning_effort"] = _MISTRAL_REASONING_EFFORT
-        _apply_explicit_nonstream_reasoning_effort(payload, reasoning_effort)
+        _apply_explicit_reasoning_effort(payload, reasoning_effort)
         _apply_openai_request_controls(payload, url, model, headers, provider)
     try:
         note_model_activity(target_url, model)
@@ -2885,7 +2860,7 @@ async def llm_call_async(
         _apply_deepseek_v4_reasoning_defaults(
             payload, target_url, model, thinking_mode
         )
-        _apply_explicit_nonstream_reasoning_effort(payload, reasoning_effort)
+        _apply_explicit_reasoning_effort(payload, reasoning_effort)
         unfiltered_compatible_payload = copy.deepcopy(payload)
         _apply_openai_request_controls(payload, url, model, headers, provider)
 
@@ -3166,7 +3141,7 @@ async def _stream_llm_inner(url: str, model: str, messages: List[Dict], temperat
         _apply_deepseek_v4_reasoning_defaults(
             payload, target_url, model, thinking_mode
         )
-        _scrub_openai_chat_tool_reasoning(payload, target_url, model)
+        _apply_explicit_reasoning_effort(payload, reasoning_effort)
         _apply_openai_request_controls(payload, url, model, headers, provider)
         h = _provider_headers(provider, headers)
         if provider == "copilot":
