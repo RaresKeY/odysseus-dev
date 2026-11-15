@@ -2224,6 +2224,7 @@ export function buildImageBubble(imageUrl, prompt, model, size, quality, imageId
   metrics.textContent = parts.join(' \u00B7 ');
   footer.appendChild(metrics);
 
+  prepareMessagePlate(wrap);
   wrap.appendChild(footer);
   return wrap;
 }
@@ -2294,10 +2295,26 @@ function _trackAction(id) {
   localStorage.setItem(_ACTION_RECENTS_KEY, JSON.stringify(recent));
 }
 
+// Keep the message node stable for streaming, editing and action handlers.
+// Only its content gets the painted plate; the footer remains a sibling.
+function prepareMessagePlate(message) {
+  if (!message.classList.contains('msg')) return;
+  if (message.querySelector(':scope > .msg-plate')) return;
+  const plate = document.createElement('div');
+  plate.className = 'msg-plate';
+  for (const child of Array.from(message.childNodes)) {
+    if (child.nodeType === 1 && child.classList.contains('msg-footer')) continue;
+    plate.appendChild(child);
+  }
+  message.prepend(plate);
+  message.classList.add('msg-separated-footer');
+}
+
 /**
  * Create a footer row for an AI message with timestamp and action buttons.
  */
 export function createMsgFooter(msgElement, { animate = false } = {}) {
+  prepareMessagePlate(msgElement);
   const footer = document.createElement('div');
   footer.className = 'msg-footer';
   if (animate) footer.classList.add('msg-footer-enter');
@@ -2517,6 +2534,7 @@ function _trackUserAction(id) {
 }
 
 export function createUserMsgFooter(msgElement) {
+  prepareMessagePlate(msgElement);
   const footer = document.createElement('div');
   footer.className = 'msg-footer';
 
