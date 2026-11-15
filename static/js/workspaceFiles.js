@@ -370,6 +370,7 @@ export function initWorkspaceFiles() {
   // on each stream delta, and never touch executable fenced code or user text.
   const history=document.getElementById('chat-history');if(!history)return;
   const queued=new Set();let timer=0;
+  const messageBodies='.msg-ai > .body,.msg-ai > .msg-plate > .body,.agent-thread .body';
   function enhance(body) {
     if(!body.isConnected||body.closest('.msg-user'))return;
     for(const code of body.querySelectorAll('code:not(pre code)')){
@@ -386,11 +387,11 @@ export function initWorkspaceFiles() {
   function flush(){timer=0;for(const body of queued)enhance(body);queued.clear();}
   function queue(element){
     if(element.nodeType!==1)element=element.parentElement;if(!element)return;
-    const body=element.closest('.msg-ai > .body,.agent-thread .body');
+    const body=element.closest(messageBodies);
     if(body)queued.add(body);
-    else element.querySelectorAll?.('.msg-ai > .body,.agent-thread .body').forEach(item=>queued.add(item));
+    else element.querySelectorAll?.(messageBodies).forEach(item=>queued.add(item));
     if(queued.size&&!timer)timer=setTimeout(flush,120);
   }
-  history.querySelectorAll('.msg-ai > .body,.agent-thread .body').forEach(enhance);
+  history.querySelectorAll(messageBodies).forEach(enhance);
   new MutationObserver(records=>{for(const record of records){queue(record.target);for(const child of record.addedNodes)queue(child);}}).observe(history,{childList:true,subtree:true,characterData:true});
 }

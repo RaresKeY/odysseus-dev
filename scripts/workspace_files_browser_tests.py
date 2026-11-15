@@ -70,11 +70,10 @@ def main():
                 for width in (1440, 390, 320):
                     browser.call("Emulation.setDeviceMetricsOverride", {"width": width, "height": 1000, "deviceScaleFactor": 1, "mobile": width < 500})
                     browser.evaluate(r"""(async()=>{
-                      const markdown=await import('/static/js/markdown.js');
-                      const box=document.createElement('div');box.className='msg msg-ai';box.id='files-synthetic-message';
-                      const body=document.createElement('div');body.className='body';
-                      body.innerHTML=markdown.default.mdToHtml('Created `test.txt` with sample text. Also [test.txt](test.txt).');
-                      box.append(body);document.getElementById('chat-history').append(box);
+                      const url=[...document.scripts].find(s=>s.src.includes('/chatRenderer.js')).src;
+                      const renderer=await import(url);
+                      const box=renderer.addMessage('assistant','Created `test.txt` with sample text. Also [test.txt](test.txt).','gemini-3.8-flash',{});
+                      box.id='files-synthetic-message';
                     })()""")
                     browser.wait("document.querySelectorAll('#files-synthetic-message [data-workspace-file]').length===2")
                     check("inline-and-markdown-links-"+str(width), "document.querySelectorAll('#files-synthetic-message button.workspace-file-link').length===1")
