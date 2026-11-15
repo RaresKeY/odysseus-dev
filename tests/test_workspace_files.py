@@ -207,3 +207,19 @@ def test_resolver_requires_containment_even_if_shared_resolver_regresses(explore
     response = client.get("/api/workspace/file", params=params(root))
     assert response.status_code == 404
     assert "outside" not in response.text
+
+
+def test_workspace_root_ancestor_symlink_swap_is_refused(tmp_path):
+    parent = tmp_path / "parent"
+    root = parent / "workspace"
+    root.mkdir(parents=True)
+    (root / "test.txt").write_text("original")
+    outside = tmp_path / "outside"
+    (outside / "workspace").mkdir(parents=True)
+    (outside / "workspace/test.txt").write_text("private outside bytes")
+    parent.rename(tmp_path / "original-parent")
+    parent.symlink_to(outside, target_is_directory=True)
+    with pytest.raises(files.HTTPException) as error:
+        with files._opened(str(root), str(root / "test.txt")):
+            pytest.fail("a replaced workspace ancestor was followed")
+    assert error.value.status_code in (404, 409)

@@ -59,13 +59,18 @@ def _resolve(workspace, path):
         raise HTTPException(404, "File is unavailable in this workspace") from None
 
 
+def _component(value):
+    # Each openat argument must be exactly one filename, never a new root or
+    # a parent traversal. basename also makes this boundary visible to SAST.
+    name = os.path.basename(value)
+    if name != value or name in {"", ".", ".."} or "\\" in name:
+        raise HTTPException(404, "File is unavailable in this workspace")
+    return name
+
+
 @contextmanager
 def _opened(root, target, *, directory=False):
-    """Pin ancestors with no-follow directory handles on supported platforms.
-
-    The fallback compares the opened object to the policy-checked identity
-    before reading. Editing requires dir-fd support rather than a racy fallback.
-    """
+    """Hold every ancestor, including ancestors above the selected root."""
     root = os.path.abspath(root)
     target = os.path.abspath(target)
     if os.path.commonpath([root, target]) != root:
@@ -73,32 +78,43 @@ def _opened(root, target, *, directory=False):
     opened = []
     flags = os.O_RDONLY | getattr(os, "O_NONBLOCK", 0) | getattr(os, "O_NOFOLLOW", 0)
     try:
-        expected = os.stat(target, follow_symlinks=False)
-        dirfd = None
+        parent = None
         if os.open in os.supports_dir_fd and hasattr(os, "O_NOFOLLOW"):
-            fd = os.open(root, flags | os.O_DIRECTORY)
+            # Opening root in one call only protects its final component: a
+            # replaced ancestor could still redirect the complete workspace.
+            drive, tail = os.path.splitdrive(root)
+            fd = os.open(drive + os.sep, flags | os.O_DIRECTORY)
             opened.append(fd)
+            for part in tail.split(os.sep):
+                if not part:
+                    continue
+                fd = os.open(_component(part), flags | os.O_DIRECTORY, dir_fd=fd)
+                opened.append(fd)
             parts = os.path.relpath(target, root).split(os.sep)
-            if parts != ["."]:
+            if parts == ["."]:
+                expected = os.fstat(fd)
+            else:
                 for part in parts[:-1]:
-                    fd = os.open(part, flags | os.O_DIRECTORY, dir_fd=fd)
+                    fd = os.open(_component(part), flags | os.O_DIRECTORY, dir_fd=fd)
                     opened.append(fd)
-                dirfd = fd
-                fd = os.open(parts[-1], flags | (os.O_DIRECTORY if directory else 0), dir_fd=dirfd)
+                parent = fd
+                name = _component(parts[-1])
+                expected = os.stat(name, dir_fd=parent, follow_symlinks=False)
+                fd = os.open(name, flags | (os.O_DIRECTORY if directory else 0), dir_fd=parent)
                 opened.append(fd)
         else:
+            # Read-only fallback retains the existing platform contract. Its
+            # identity check cannot provide POSIX descriptor-walk guarantees.
+            expected = os.stat(target, follow_symlinks=False)
             fd = os.open(target, flags)
             opened.append(fd)
         actual = os.fstat(fd)
         if (actual.st_dev, actual.st_ino, actual.st_ctime_ns, actual.st_size) != (expected.st_dev, expected.st_ino, expected.st_ctime_ns, expected.st_size):
             raise HTTPException(409, "File changed while opening; refresh and try again")
-        if directory:
-            valid = stat.S_ISDIR(actual.st_mode)
-        else:
-            valid = stat.S_ISREG(actual.st_mode) and actual.st_nlink == 1
+        valid = stat.S_ISDIR(actual.st_mode) if directory else stat.S_ISREG(actual.st_mode) and actual.st_nlink == 1
         if not valid:
             raise HTTPException(404, "File is unavailable")
-        yield fd, actual, dirfd
+        yield fd, actual, parent
     except FileNotFoundError:
         raise HTTPException(404, "File no longer exists") from None
     except (PermissionError, OSError):
@@ -228,12 +244,13 @@ def setup_workspace_file_routes():
                     os.fsync(stream.fileno())
                 from src.tool_execution import _resolve_tool_path_in_workspace
                 try:
-                    current_parent = os.stat(os.path.dirname(target), follow_symlinks=False)
+                    with _opened(root, os.path.dirname(target), directory=True) as (_current_fd, current_parent, _ancestor):
+                        pass
                     pinned_parent = os.fstat(parent)
                     same_parent = (current_parent.st_dev, current_parent.st_ino) == (pinned_parent.st_dev, pinned_parent.st_ino)
                     if not same_parent or _resolve_tool_path_in_workspace(root, body.path) != target:
                         raise ValueError("Parent changed")
-                except (ValueError, OSError):
+                except (ValueError, OSError, HTTPException):
                     raise HTTPException(409, "File location changed; refresh before saving") from None
                 current = os.stat(os.path.basename(target), dir_fd=parent, follow_symlinks=False)
                 after = os.fstat(fd)
