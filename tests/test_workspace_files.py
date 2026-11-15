@@ -185,3 +185,25 @@ def test_structured_documents_use_native_viewer_even_if_ascii(explorer):
     (root / "original.pdf").write_bytes(b"%PDF-1.4 ascii body")
     assert client.get("/api/workspace/file", params=params(root, "original.pdf")).status_code == 415
     assert client.get("/api/workspace/file/download", params=params(root, "original.pdf")).content == b"%PDF-1.4 ascii body"
+
+
+def test_opened_rejects_outside_target_before_filesystem_io(tmp_path):
+    root = tmp_path / "workspace"
+    root.mkdir()
+    outside = tmp_path / "workspace-neighbor"
+    outside.write_text("outside")
+    with pytest.raises(files.HTTPException) as error:
+        with files._opened(str(root), str(outside)):
+            pytest.fail("outside target was opened")
+    assert error.value.status_code == 404
+
+
+def test_resolver_requires_containment_even_if_shared_resolver_regresses(explorer, monkeypatch):
+    from src import tool_execution
+    client, root = explorer
+    outside = root.parent / "outside.txt"
+    outside.write_text("outside")
+    monkeypatch.setattr(tool_execution, "_resolve_tool_path_in_workspace", lambda *_: str(outside))
+    response = client.get("/api/workspace/file", params=params(root))
+    assert response.status_code == 404
+    assert "outside" not in response.text

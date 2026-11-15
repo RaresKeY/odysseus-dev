@@ -42,6 +42,12 @@ def _resolve(workspace, path):
         raise HTTPException(404, "Workspace is unavailable")
     try:
         target = _resolve_tool_path_in_workspace(root, path or ".")
+        # Keep confinement explicit at the HTTP boundary as well as in the
+        # shared tool policy, before any pathname reaches filesystem I/O.
+        root = os.path.abspath(root)
+        target = os.path.abspath(target)
+        if os.path.commonpath([root, target]) != root:
+            raise ValueError("Outside workspace")
         parts = os.path.relpath(target, root).replace(os.sep, "/").split("/")
         if any(part.casefold() in {".git", ".hg", ".svn", ".codex", ".odysseus"}
                or part.casefold().startswith((".env.", ".env-", ".odysseus-edit-")) for part in parts):
@@ -60,6 +66,10 @@ def _opened(root, target, *, directory=False):
     The fallback compares the opened object to the policy-checked identity
     before reading. Editing requires dir-fd support rather than a racy fallback.
     """
+    root = os.path.abspath(root)
+    target = os.path.abspath(target)
+    if os.path.commonpath([root, target]) != root:
+        raise HTTPException(404, "File is unavailable in this workspace")
     opened = []
     flags = os.O_RDONLY | getattr(os, "O_NONBLOCK", 0) | getattr(os, "O_NOFOLLOW", 0)
     try:
