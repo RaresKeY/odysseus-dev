@@ -24,17 +24,19 @@ import urllib.parse
 
 class Browser:
     def __init__(self, executable, profile, log):
-        self.process = subprocess.Popen(["bash", "-c", 'exec "$1" --headless --no-first-run --no-default-browser-check --disable-extensions --remote-debugging-pipe --user-data-dir="$2" about:blank 3<&0 4>&1', "cdp", executable, str(profile)], stdin=subprocess.PIPE, stdout=subprocess.PIPE, stderr=log, start_new_session=True)
+        self.process = subprocess.Popen(["bash", "-c", 'exec "$1" --headless --disable-background-networking --no-first-run --no-default-browser-check --disable-extensions --remote-debugging-pipe --user-data-dir="$2" about:blank 3<&0 4>&1', "cdp", executable, str(profile)], stdin=subprocess.PIPE, stdout=subprocess.PIPE, stderr=log, start_new_session=True)
         self.counter = 0
         self.buffer = b""
         self.session = None
         target = self.call("Target.createTarget", {"url": "about:blank"}, scoped=False)["targetId"]
         self.session = self.call("Target.attachToTarget", {"targetId": target, "flatten": True}, scoped=False)["sessionId"]
         self.call("Page.enable")
+        self.call("Fetch.enable", {"patterns": [{"urlPattern": "*"}]})
 
     def call(self, method, params=None, scoped=True):
         self.counter += 1
-        request = {"id": self.counter, "method": method, "params": params or {}}
+        request_id = self.counter
+        request = {"id": request_id, "method": method, "params": params or {}}
         if scoped and self.session:
             request["sessionId"] = self.session
         self.process.stdin.write(json.dumps(request).encode() + b"\0")
@@ -53,7 +55,21 @@ class Browser:
             if not raw:
                 continue
             response = json.loads(raw)
-            if response.get("id") == self.counter:
+            if response.get("method") == "Fetch.requestPaused":
+                paused = response["params"]
+                url = urllib.parse.urlsplit(paused["request"]["url"])
+                allowed = (url.scheme in {"about", "data", "blob"} or
+                           (url.scheme == "http" and url.hostname in {"127.0.0.1", "localhost", "::1"}))
+                self.counter += 1
+                decision = {"id": self.counter, "sessionId": response.get("sessionId", self.session),
+                            "method": "Fetch.continueRequest" if allowed else "Fetch.failRequest",
+                            "params": {"requestId": paused["requestId"]}}
+                if not allowed:
+                    decision["params"]["errorReason"] = "BlockedByClient"
+                self.process.stdin.write(json.dumps(decision).encode() + b"\0")
+                self.process.stdin.flush()
+                continue
+            if response.get("id") == request_id:
                 if "error" in response:
                     raise RuntimeError("browser_protocol_error")
                 return response.get("result", {})

@@ -36,6 +36,10 @@ def main():
     with tempfile.TemporaryDirectory(prefix="odysseus-files-browser-") as temporary:
         with (args.output / "browser.log").open("w") as log:
             browser = Browser(args.chromium, Path(temporary) / "profile", log)
+            def screen(name):
+                raw = browser.call("Page.captureScreenshot", {"format": "png"})["data"]
+                (args.output / (name + ".png")).write_bytes(base64.b64decode(raw))
+
             try:
                 browser.call("Page.navigate", {"url": args.origin})
                 if args.login_file:
@@ -58,10 +62,6 @@ def main():
                     rows.append({"id": name, "passed": bool(value), "evidence": value})
                     if not value:
                         raise AssertionError(name)
-
-                def screen(name):
-                    raw = browser.call("Page.captureScreenshot", {"format": "png"})["data"]
-                    (args.output / (name + ".png")).write_bytes(base64.b64decode(raw))
 
                 def open_file(name):
                     browser.evaluate("import('/static/js/workspaceFiles.js').then(m=>m.openWorkspaceFile("+literal(name)+"))")
